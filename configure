@@ -529,8 +529,6 @@ fi
 if test "$mingw32" = "yes" -o "$mingwce" = "yes"; then
     AFTLDFLAGS='-Wl'
     EXESUF=".exe"
-    if test "$force_prefix" != yes; then PREFIX="$PROGRAMFILES/Aften"; fi
-    if test "$force_libdir" != yes; then bindir="$PREFIX"; fi
 fi
 
 # Combine AFTLDFLAGS, EXTRALDFLAGS and the LDFLAGS environment variable.
