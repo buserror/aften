@@ -1,5 +1,5 @@
 /**
- * Audio filter routines
+ * Aften: A/52 audio encoder
  * Copyright (c) 2006  Justin Ruggles <jruggle@eathlink.net>
  *
  * This library is free software; you can redistribute it and/or
@@ -18,9 +18,8 @@
  */
 
 /**
+ * @file wavfilter.c
  * Console WAV File Filter Utility
- *
- * Copyright (c) 2006 Justin Ruggles
  */
 
 #include "common.h"

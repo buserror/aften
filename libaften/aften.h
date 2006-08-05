@@ -22,7 +22,7 @@
 
 /**
  * @file aften.h
- * This is the libaften public header file.
+ * libaften public header
  */
 
 #ifndef AFTEN_H

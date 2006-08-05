@@ -20,6 +20,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+/**
+ * @file a52enc.c
+ * A/52 encoder
+ */
+
 #include "common.h"
 
 #include <stdlib.h>

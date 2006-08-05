@@ -1,11 +1,9 @@
 /**
- * Bitwise File Writer
- * Copyright (c) 2006 Justin Ruggles
+ * Aften: A/52 audio encoder
+ * Copyright (c) 2006  Justin Ruggles <jruggle@eathlink.net>
  *
- * derived from ffmpeg/libavcodec/bitstream.h
- * Common bit i/o utils
- * Copyright (c) 2000, 2001 Fabrice Bellard
- * Copyright (c) 2002-2004 Michael Niedermayer
+ * Based on "The simplest AC3 encoder" from FFmpeg
+ * Copyright (c) 2000 Fabrice Bellard.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,6 +18,11 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
+
+/**
+ * @file bitio.h
+ * Bitwise file writer header
  */
 
 #ifndef BITIO_H

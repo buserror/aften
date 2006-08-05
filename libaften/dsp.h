@@ -20,6 +20,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+/**
+ * @file dsp.h
+ * Signal processing header
+ */
+
 #ifndef DSP_H
 #define DSP_H
 

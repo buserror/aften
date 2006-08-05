@@ -20,6 +20,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+/**
+ * @file bitalloc.h
+ * A/52 bit allocation header
+ */
+
 #ifndef BITALLOC_H
 #define BITALLOC_H
 
