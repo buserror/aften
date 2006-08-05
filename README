@@ -1,0 +1,19 @@
+-------------------------------------------------------------------------------
+Aften: A/52 audio encoder
+
+A simple AC3-compatible audio encoder based on FFmpeg.
+
+-------------------------------------------------------------------------------
+Aften, Copyright (c) 2006 Justin Ruggles <jruggle@earthlink.net>
+http://jbr.homelinux.org/aften/
+-------------------------------------------------------------------------------
+FFmpeg, Copyright (c) 2000-2004 Fabrice Bellard
+http://ffmpeg.sourceforge.net/
+-------------------------------------------------------------------------------
+
+Legal notice: The author makes no claims that this software or any content 
+created with this software is Dolby(R) Digital compliant.  As such, any 
+content which is created with this software should not be labeled as 
+containing Dolby(R) Digital technology, nor should it bear any registered 
+trademarks of Dolby Laboratories or any other trademark holder unless 
+otherwise authorized.

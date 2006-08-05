@@ -1,0 +1,59 @@
+Aften TODO list
+---------------
+- Channel coupling (this will be a large undertaking)
+- Dynamic Range Compression
+- Configuration system improvement
+- E/AC-3 bitstream format and encoding (need a good decoder & samples first)
+- ABR encoding mode
+- 2-pass encoding
+- Frame parser / analyzer
+- AIFF file support for the MAC people
+- CAFF file support
+- Improve exponent strategy decision
+- Option to downmix/upmix/resample prior to encoding
+    - 2-channel surround-matrix downmix
+    - 2-channel headphone downmix
+    - Stereo to 5.1 upmix
+- Shared lib/DLL support
+
+Aften Changelog
+---------------
+version 0.04 : 05 August 2006
+- fixed VBR to lower quality if needed to fit in largest available frame size
+- small adjustment to exponent strategy decision
+- WAVE_FORMAT_EXTENSIBLE fix by Tebasuna
+- Alternate bit stream syntax with new commandline options
+- Better encoding structure
+- filter library
+- changed sample type from float to double
+- moved CRC code to a separate file
+- LFE low-pass filter
+- DC high-pass filter
+- bandwidth low-pass filter
+- Improved variable bandwidth selection
+- Channel bandwidth low-pass filter
+- Created separate library and frontend
+- changed default mode to CBR
+- allow for specification of max bitrate in VBR mode
+
+version 0.03 : 20 July 2006
+- support for WAV with sample types 8-bit, 24-bit, 32-bit, float, or double.
+- better multi-channel support, better mapping with WAV_FORMAT_EXTENSIBLE.
+- adjustments to VBR, changed default quality from 200 to 220.
+- adjustments to variable bandwidth, increased average bandwidth settings.
+
+version 0.02 : 09 July 2006
+- commandline options and customizable settings for:
+    - mix levels
+    - dialog normalization
+    - dolby surround flag
+
+version 0.01 : 09 July 2006 (first versioned release)
+- simple configure script
+- piped input and output
+- 6-channel mapping
+- corrected defaults for mix levels
+- commandline options
+- quiet mode (no console output)
+- per-frame or average statistics
+- big-endian support
