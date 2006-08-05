@@ -31,6 +31,7 @@ install: install-progs install-libs install-headers
 
 install-progs: progs
 	$(MAKE) -C aften install
+	$(MAKE) -C util install
 
 install-libs:
 	$(MAKE) -C libaften install-libs
