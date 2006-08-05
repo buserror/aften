@@ -28,7 +28,9 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
 
 #include <math.h>
 #ifndef M_PI

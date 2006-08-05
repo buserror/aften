@@ -841,9 +841,9 @@ else
 fi
 
 test "$needmdynamicnopic" = yes && add_cflags -mdynamic-no-pic
+add_cflags -DHAVE_CONFIG_H
 
 echo "OPTFLAGS=$CFLAGS" >> config.mak
-echo "CFLAGS=$CFLAGS" >> config.mak
 echo "LDFLAGS=$LDFLAGS" >> config.mak
 echo "LDCONFIG=$LDCONFIG" >> config.mak
 echo "LIBOBJFLAGS=$LIBOBJFLAGS" >> config.mak
