@@ -43,6 +43,7 @@ uninstall: uninstall-progs uninstall-libs uninstall-headers
 
 uninstall-progs:
 	$(MAKE) -C aften uninstall-progs
+	$(MAKE) -C util uninstall-progs
 
 uninstall-libs:
 	$(MAKE) -C libaften uninstall-libs
