@@ -29,7 +29,16 @@ wavfilter$(EXESUF): wavfilter.o ../aften/wav.o ../libaften/filter.o
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-install:
+install: install-progs
+
+install-progs: $(PROGS)
+	install -d "$(bindir)"
+	install -c $(INSTALLSTRIP) -m 755 $(PROGS) "$(bindir)"
+
+uninstall: uninstall-progs
+
+uninstall-progs:
+	rm -f $(addprefix $(bindir)/, $(PROGS))
 
 dep:	depend
 

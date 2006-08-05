@@ -67,7 +67,6 @@ clean:
 	$(MAKE) -C util     clean
 	rm -f *.o *.d *~
 
-# Note well: config.log is NOT removed.
 distclean: clean
 	$(MAKE) -C libaften distclean
 	$(MAKE) -C aften    distclean
@@ -81,7 +80,7 @@ FILE=aften-$(shell grep "\#define AFTEN_VERSION " libaften/aften.h | \
 tar: distclean
 	rm -rf /tmp/$(FILE)
 	cp -r . /tmp/$(FILE)
-	(tar --exclude config.mak -C /tmp -jcvf $(FILE).tar.bz2 $(FILE) )
+	(tar --exclude config.mak --exclude .svn -C /tmp -jcvf $(FILE).tar.bz2 $(FILE) )
 	rm -rf /tmp/$(FILE)
 
 config.mak:
