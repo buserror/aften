@@ -1,5 +1,5 @@
 #
-# Aften Makefile
+# Aften Program Makefile
 #
 include ../config.mak
 

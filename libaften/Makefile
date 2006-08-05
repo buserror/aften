@@ -1,5 +1,5 @@
 #
-# libaften Makefile
+# Aften Library Makefile
 #
 include ../config.mak
 
