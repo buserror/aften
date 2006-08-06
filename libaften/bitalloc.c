@@ -468,7 +468,7 @@ bit_alloc(A52Context *ctx, int csnroffst, int fsnroffst)
         mant_cnt[0] = mant_cnt[1] = mant_cnt[2] = 0;
         for(ch=0; ch<ctx->n_all_channels; ch++) {
             memset(block->bap[ch], 0, 256);
-	    a52_bit_allocation(block->bap[ch], blk, ch,
+            a52_bit_allocation(block->bap[ch], blk, ch,
                                frame->ncoefs[ch], snroffset,
                                frame->bit_alloc.floor);
             bits += compute_mantissa_size(mant_cnt, block->bap[ch], frame->ncoefs[ch]);
