@@ -1,6 +1,7 @@
 /**
  * Aften: A/52 audio encoder
  * Copyright (c) 2006  Justin Ruggles <jruggle@eathlink.net>
+ *                     Prakash Punnoor <prakash@punnoor.de>
  *
  * Based on "The simplest AC3 encoder" from FFmpeg
  * Copyright (c) 2000 Fabrice Bellard.
@@ -131,6 +132,9 @@ static const uint8_t bndsz[50]={
 static uint8_t masktab[253];
 static uint8_t bndtab[51];
 static uint16_t frmsizetab[38][3];
+static int16_t psd_blkch[A52_NUM_BLOCKS][A52_MAX_CHANNELS][256];
+static int16_t mask_blkch[A52_NUM_BLOCKS][A52_MAX_CHANNELS][50];
+static int end_blkch[A52_NUM_BLOCKS][A52_MAX_CHANNELS][50];
 
 void
 bitalloc_init()
@@ -193,28 +197,29 @@ calc_lowcomp(int a, int b0, int b1, int bin)
     return a;
 }
 
-// A52 bit allocation.
+/* A52 bit allocation preparation to speed up matching left bits. */
 static void
-a52_bit_allocation(A52BitAllocParams *s, uint8_t *bap, uint8_t *exp,
-                   int start, int end, int snroffset, int fgain, int is_lfe,
+a52_bit_allocation_prepare(A52BitAllocParams *s, int blk, int ch, uint8_t *exp,
+                   int end, int fgain, int is_lfe,
                    int deltbae,int deltnseg, uint8_t *deltoffst,
                    uint8_t *deltlen, uint8_t *deltba)
 {
     int bin, i, j, k, end1, v, v1, bndstrt, bndend, lowcomp, begin;
-    int fastleak, slowleak, address, tmp;
-    int16_t psd[256];   // scaled exponents
-    int16_t bndpsd[50]; // interpolated exponents
-    int16_t excite[50]; // excitation
-    int16_t mask[50];   // masking value
+    int fastleak, slowleak, tmp;
+    int16_t bndpsd[50];                     // interpolated exponents
+    int16_t excite[50];                     // excitation
+    int16_t *psd = psd_blkch[blk][ch];      // scaled exponents
+    int16_t *mask = mask_blkch[blk][ch];    // masking value
+    int *endj = end_blkch[blk][ch];;
 
     // exponent mapping to PSD
-    for(bin=start; bin<end; bin++) {
+    for(bin=0; bin<end; bin++) {
         psd[bin] = (3072 - (exp[bin] << 7));
     }
 
     // PSD integration
-    j = start;
-    k = masktab[start];
+    j = 0;
+    k = masktab[0];
     do {
         v = psd[j];
         j++;
@@ -241,7 +246,7 @@ a52_bit_allocation(A52BitAllocParams *s, uint8_t *bap, uint8_t *exp,
     } while(end > bndtab[k]);
 
     // excitation function
-    bndstrt = masktab[start];
+    bndstrt = masktab[0];
     bndend = masktab[end-1] + 1;
 
     if(bndstrt == 0) {
@@ -336,28 +341,39 @@ a52_bit_allocation(A52BitAllocParams *s, uint8_t *bap, uint8_t *exp,
         }
     }
 
-    // compute bit allocation
-    i = start;
-    j = masktab[start];
-    do {
-        v = mask[j];
+    for (j = masktab[0]; end > bndtab[j]; ++j) {
+        *endj = bndtab[j] + bndsz[j];
+        if(*endj > end) *endj = end;
+        ++endj;
+    }
+}
+
+/* A52 bit allocation */
+static void
+a52_bit_allocation(uint8_t *bap, int blk, int ch, int end, int snroffset, int floor)
+{
+    int j;
+    int i;
+    int16_t *psd = psd_blkch[blk][ch];
+    int16_t *mask = mask_blkch[blk][ch];
+    int *endj = end_blkch[blk][ch];
+
+    for (i = 0, j = masktab[0]; end > bndtab[j]; ++j) {
+        int v = mask[j];
         v -= snroffset;
-        v -= s->floor;
-        if(v < 0) v = 0;
+        v -= floor;
+        v = (v < 0) ? 0 : v;
         v &= 0x1fe0;
-        v += s->floor;
+        v += floor;
 
-        end1 = bndtab[j] + bndsz[j];
-        if(end1 > end) end1 = end;
-
-        for(k=i; k<end1; k++) {
-            address = (psd[i] - v) >> 5;
-            if(address < 0) address = 0;
-            else if(address > 63) address = 63;
+        while (i < endj[j]) {
+            int address = (psd[i] - v) >> 5;
+            if (address < 0) address = 0;
+            else if (address > 63) address = 63;
             bap[i] = baptab[address];
-            i++;
+            ++i;
         }
-    } while(end > bndtab[j++]);
+    }
 }
 
 /** return the size in bits taken by the mantissas */
@@ -409,6 +425,29 @@ compute_exponent_size(int expstr, int ncoefs)
     return (4 + (ngrps * 7));
 }
 
+/* call to prepare bit allocation */
+static void
+bit_alloc_prepare(A52Context *ctx)
+{
+    int blk, ch;
+    A52Frame *frame;
+    A52Block *block;
+
+    frame = &ctx->frame;
+
+    for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+        block = &ctx->frame.blocks[blk];
+        for(ch=0; ch<ctx->n_all_channels; ch++) {
+            a52_bit_allocation_prepare(&frame->bit_alloc, blk, ch,
+                               block->exp[ch],
+                               frame->ncoefs[ch],
+                               fgaintab[frame->fgaincod],
+                               (ch == ctx->lfe_channel),
+                               2, 0, NULL, NULL, NULL);
+        }
+    }
+}
+
 /** returns number of mantissa & exponent bits used */
 static int
 bit_alloc(A52Context *ctx, int csnroffst, int fsnroffst)
@@ -428,12 +467,9 @@ bit_alloc(A52Context *ctx, int csnroffst, int fsnroffst)
         mant_cnt[0] = mant_cnt[1] = mant_cnt[2] = 0;
         for(ch=0; ch<ctx->n_all_channels; ch++) {
             memset(block->bap[ch], 0, 256);
-            a52_bit_allocation(&frame->bit_alloc, block->bap[ch],
-                               block->exp[ch],
-                               0, frame->ncoefs[ch], snroffset,
-                               fgaintab[frame->fgaincod],
-                               (ch == ctx->lfe_channel),
-                               2, 0, NULL, NULL, NULL);
+	    a52_bit_allocation(block->bap[ch], blk, ch,
+                               frame->ncoefs[ch], snroffset,
+                               frame->bit_alloc.floor);
             bits += compute_mantissa_size(mant_cnt, block->bap[ch], frame->ncoefs[ch]);
             bits += compute_exponent_size(block->exp_strategy[ch], frame->ncoefs[ch]);
         }
@@ -498,7 +534,7 @@ count_frame_bits(A52Context *ctx)
 }
 
 static int
-cbr_bit_allocation(A52Context *ctx)
+cbr_bit_allocation(A52Context *ctx, int prepare)
 {
     int csnroffst, fsnroffst;
     int current_bits, avail_bits, leftover;
@@ -512,6 +548,8 @@ cbr_bit_allocation(A52Context *ctx)
     csnroffst = ctx->last_csnroffst;
     fsnroffst = 0;
 
+    if(prepare)
+         bit_alloc_prepare(ctx);
     // decrease csnroffst if necessary until data fits in frame
     leftover = avail_bits - bit_alloc(ctx, csnroffst, fsnroffst);
     while(csnroffst > 0 && leftover < 0) {
@@ -587,6 +625,7 @@ vbr_bit_allocation(A52Context *ctx)
         fsnroffst += 16;
     }
 
+    bit_alloc_prepare(ctx);
     // find an A52 frame size that can hold the data.
     frame_size = frame_bits = 0;
     for(i=0; i<=ctx->frmsizecod; i++) {
@@ -605,7 +644,7 @@ vbr_bit_allocation(A52Context *ctx)
     // run CBR bit allocation.
     // this will increase snroffst to make optimal use of the frame bits.
     // also it will lower snroffst if vbr frame won't fit in largest frame.
-    return cbr_bit_allocation(ctx);
+    return cbr_bit_allocation(ctx, 0);
 }
 
 int
@@ -629,7 +668,7 @@ compute_bit_allocation(A52Context *ctx)
             return -1;
         }
     } else if(ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
-        if(cbr_bit_allocation(ctx)) {
+        if(cbr_bit_allocation(ctx, 1)) {
             return -1;
         }
     } else {
