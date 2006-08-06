@@ -291,6 +291,7 @@ aften_encode_init(AftenContext *s)
     A52Context *ctx;
 
     ctx = &ctx0;
+    ctx->private = NULL;
 
     // channel configuration
     if(s->channels < 1 || s->channels > 6) {
