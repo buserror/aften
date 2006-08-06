@@ -942,9 +942,6 @@ echo "EXTRALIBS=$extralibs" >> config.mak
 
 if test "$mingw32" = "yes" ; then
   echo "CONFIG_MINGW=yes" >> config.mak
-  echo "HAVE_W32THREADS=yes" >> config.mak
-  echo "#define HAVE_W32THREADS 1" >> $TMPH
-  echo "#define HAVE_THREADS 1" >> $TMPH
   echo "#ifndef __MINGW32__" >> $TMPH
   echo "#define __MINGW32__ 1" >> $TMPH
   echo "#endif" >> $TMPH
