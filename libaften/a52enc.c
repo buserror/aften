@@ -1039,6 +1039,7 @@ calc_rematrixing(A52Context *ctx)
         if(blk == 0) block->rematstr = 1;
 
         for(bnd=0; bnd<4; bnd++) {
+            block->rematflg[bnd] = 0;
             sum[bnd][0] = sum[bnd][1] = sum[bnd][2] = sum[bnd][3] = 0;
             for(i=rematbndtab[bnd][0]; i<=rematbndtab[bnd][1]; i++) {
                 if(i == ctx->frame.ncoefs[0]) break;
@@ -1049,9 +1050,7 @@ calc_rematrixing(A52Context *ctx)
                 sum[bnd][2] += (lt + rt) * (lt + rt);
                 sum[bnd][3] += (lt - rt) * (lt - rt);
             }
-            if(sum[bnd][0]+sum[bnd][1] < (sum[bnd][2]+sum[bnd][3])/2.0) {
-                block->rematflg[bnd] = 0;
-            } else {
+            if(sum[bnd][0]+sum[bnd][1] >= (sum[bnd][2]+sum[bnd][3])/2.0) {
                 block->rematflg[bnd] = 1;
                 for(i=rematbndtab[bnd][0]; i<=rematbndtab[bnd][1]; i++) {
                     if(i == ctx->frame.ncoefs[0]) break;
