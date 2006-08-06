@@ -1015,7 +1015,7 @@ calc_rematrixing(A52Context *ctx)
 {
     double sum[4][4];
     double lt, rt, ctmp1, ctmp2;
-    int blk, bnd, i, chmin;
+    int blk, bnd, i;
     A52Block *block;
 
     if(ctx->acmod != 2) return;
@@ -1040,6 +1040,7 @@ calc_rematrixing(A52Context *ctx)
         for(bnd=0; bnd<4; bnd++) {
             sum[bnd][0] = sum[bnd][1] = sum[bnd][2] = sum[bnd][3] = 0;
             for(i=rematbndtab[bnd][0]; i<=rematbndtab[bnd][1]; i++) {
+                if(i == ctx->frame.ncoefs[0]) break;
                 lt = block->mdct_coef[0][i];
                 rt = block->mdct_coef[1][i];
                 sum[bnd][0] += lt * lt;
@@ -1047,18 +1048,12 @@ calc_rematrixing(A52Context *ctx)
                 sum[bnd][2] += (lt + rt) * (lt + rt);
                 sum[bnd][3] += (lt - rt) * (lt - rt);
             }
-            chmin = 0;
-            if(sum[bnd][1] < sum[bnd][chmin])
-                chmin = 1;
-            if(sum[bnd][2] < sum[bnd][chmin])
-                chmin = 2;
-            if(sum[bnd][3] < sum[bnd][chmin])
-                chmin = 3;
-            if(chmin < 2) {
+            if(sum[bnd][0]+sum[bnd][1] < (sum[bnd][2]+sum[bnd][3])/2.0) {
                 block->rematflg[bnd] = 0;
             } else {
                 block->rematflg[bnd] = 1;
                 for(i=rematbndtab[bnd][0]; i<=rematbndtab[bnd][1]; i++) {
+                    if(i == ctx->frame.ncoefs[0]) break;
                     ctmp1 = block->mdct_coef[0][i] * 0.5;
                     ctmp2 = block->mdct_coef[1][i] * 0.5;
                     block->mdct_coef[0][i] = ctmp1 + ctmp2;
