@@ -396,7 +396,7 @@ a52_bit_allocation(uint8_t *bap, int blk, int ch, int end, int snroffset, int fl
 
 /** return the size in bits taken by the mantissas */
 static int
-compute_mantissa_size(int *mant_cnt, uint8_t *bap, int ncoefs)
+compute_mantissa_size(int mant_cnt[3], uint8_t *bap, int ncoefs)
 {
     int bits, b, i;
 
@@ -405,16 +405,16 @@ compute_mantissa_size(int *mant_cnt, uint8_t *bap, int ncoefs)
         b = bap[i];
         switch(b) {
             case 0:  break;
-            case 1:  if(mant_cnt[0] == 0) bits += 5;
-                     mant_cnt[0] = (mant_cnt[0] + 1) % 3;
+            case 1:  if(!(mant_cnt[0] & 2)) bits += 5;
+                     mant_cnt[0]++;
                      break;
-            case 2:  if(mant_cnt[1] == 0) bits += 7;
-                     mant_cnt[1] = (mant_cnt[1] + 1) % 3;
+            case 2:  if(!(mant_cnt[1] & 2)) bits += 7;
+                     mant_cnt[1]++;
                      break;
             case 3:  bits += 3;
                      break;
-            case 4:  if(mant_cnt[2] == 0) bits += 7;
-                     mant_cnt[2] = (mant_cnt[2] + 1) % 2;
+            case 4:  if(!(mant_cnt[2] & 1)) bits += 7;
+                     mant_cnt[2]++;
                      break;
             case 14: bits += 14;
                      break;
