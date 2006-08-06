@@ -533,5 +533,7 @@ main(int argc, char **argv)
     fclose(ifp);
     fclose(ofp);
 
+    aften_encode_close(&s);
+
     return 0;
 }
