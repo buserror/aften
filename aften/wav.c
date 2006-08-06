@@ -198,7 +198,7 @@ wavfile_read_samples(WavFile *wf, double *output, int num_samples)
         }
     } else if(bps == 4) {
         if(wf->format == WAVE_FORMAT_IEEEFLOAT) {
-            double *fbuf = (double *)buffer;
+            float *fbuf = (float *)buffer;
 #ifdef WORDS_BIG_ENDIAN
             uint32_t *buf32 = (uint32_t *)buffer;
             for(i=0; i<nr*wf->channels; i++) {
