@@ -132,6 +132,7 @@ static const uint8_t bndsz[50]={
 static uint8_t masktab[253];
 static uint8_t bndtab[51];
 static uint16_t frmsizetab[38][3];
+static int expsizetab[3][256];
 static int16_t psd_blkch[A52_NUM_BLOCKS][A52_MAX_CHANNELS][256];
 static int16_t mask_blkch[A52_NUM_BLOCKS][A52_MAX_CHANNELS][50];
 static int end_blkch[A52_NUM_BLOCKS][A52_MAX_CHANNELS][50];
@@ -157,6 +158,23 @@ bitalloc_init()
             v = a52_bitratetab[i] * 96000 / a52_freqs[j];
             frmsizetab[i*2][j] = frmsizetab[i*2+1][j] = v * 16;
             if(j == 1) frmsizetab[i*2+1][j] += 16;
+        }
+    }
+
+    // compute expsizetab
+    for(i=1; i<4; i++) {
+        for(j=0; j<256; j++) {
+            int grpsize = i;
+            int ngrps = 0;
+            if(i == EXP_D45) {
+                grpsize = 4;
+            }
+            if(j == 7) {
+                ngrps = 2;
+            } else {
+                ngrps = (j + (grpsize * 3) - 4) / (3 * grpsize);
+            }
+            expsizetab[i-1][j] = (4 + (ngrps * 7));
         }
     }
 }
@@ -408,23 +426,6 @@ compute_mantissa_size(int *mant_cnt, uint8_t *bap, int ncoefs)
     return bits;
 }
 
-static int
-compute_exponent_size(int expstr, int ncoefs)
-{
-    int grpsize = expstr;
-    int ngrps = 0;
-    if(expstr == EXP_REUSE) return 0;
-    if(expstr == EXP_D45) {
-        grpsize = 4;
-    }
-    if(ncoefs == 7) {
-        ngrps = 2;
-    } else {
-        ngrps = (ncoefs + (grpsize * 3) - 4) / (3 * grpsize);
-    }
-    return (4 + (ngrps * 7));
-}
-
 /* call to prepare bit allocation */
 static void
 bit_alloc_prepare(A52Context *ctx)
@@ -471,7 +472,9 @@ bit_alloc(A52Context *ctx, int csnroffst, int fsnroffst)
                                frame->ncoefs[ch], snroffset,
                                frame->bit_alloc.floor);
             bits += compute_mantissa_size(mant_cnt, block->bap[ch], frame->ncoefs[ch]);
-            bits += compute_exponent_size(block->exp_strategy[ch], frame->ncoefs[ch]);
+            if(block->exp_strategy[ch] > 0) {
+                bits += expsizetab[block->exp_strategy[ch]-1][frame->ncoefs[ch]];
+            }
         }
     }
 
