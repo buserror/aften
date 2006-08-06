@@ -469,6 +469,10 @@ main(int argc, char **argv)
 
     frame = malloc(A52_MAX_CODED_FRAME_SIZE);
     fwav = malloc(A52_FRAME_SIZE * wf.channels * sizeof(double));
+    if(frame == NULL || fwav == NULL) {
+        aften_encode_close(&s);
+        exit(1);
+    }
 
     samplecount = bytecount = t0 = t1 = percent = 0;
     qual = bw = 0.0;
