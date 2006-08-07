@@ -227,34 +227,29 @@ a52_bit_allocation_prepare(A52BitAllocParams *s, int blk, int ch,
     int16_t bndpsd[50];                     // interpolated exponents
     int16_t excite[50];                     // excitation
 
+    if(end <= 0) return;
+
     // exponent mapping to PSD
     for(bin=0; bin<end; bin++) {
         psd[bin] = psdtab[exp[bin]];
     }
 
     // PSD integration
-    j = 0;
-    k = masktab[0];
-    do {
-        v = psd[j];
-        j++;
+    for(j=0,k=masktab[0]; bndtab[k]<end; k++) {
+        v = psd[j++];
         end1 = bndtab[k+1];
         if(end1 > end) end1 = end;
-        for(i=j; i<end1; i++) {
-            int adr;
+        for(i=j; i<end1; i++,j++) {
             // logadd
-            v1 = psd[j];
-            adr = MIN((ABS(v-v1) >> 1), 255);
-            if(v1 <= v) {
+            int adr = MIN((ABS(v-psd[j]) >> 1), 255);
+            if(psd[j] <= v) {
                 v = v + latab[adr];
             } else {
-                v = v1 + latab[adr];
+                v = psd[j] + latab[adr];
             }
-            j++;
         }
         bndpsd[k] = v;
-        k++;
-    } while(end > bndtab[k]);
+    }
 
     // excitation function
     bndstrt = masktab[0];
@@ -281,8 +276,7 @@ a52_bit_allocation_prepare(A52BitAllocParams *s, int blk, int ch,
             }
         }
 
-        end1 = bndend;
-        if(end1 > 22) end1 = 22;
+        end1 = MIN(bndend, 22);
 
         for(bin=begin; bin<end1; bin++) {
             if(!(is_lfe && bin == 6))
@@ -311,15 +305,10 @@ a52_bit_allocation_prepare(A52BitAllocParams *s, int blk, int ch,
 
     for(bin=begin; bin<bndend; bin++) {
         fastleak -= s->fdecay;
-        v = bndpsd[bin] - fgain;
-        if(fastleak < v) fastleak = v;
+        fastleak = MAX(fastleak, bndpsd[bin]-fgain);
         slowleak -= s->sdecay;
-        v = bndpsd[bin] - s->sgain;
-        if(slowleak < v) slowleak = v;
-
-        v = fastleak;
-        if(slowleak > v) v = slowleak;
-        excite[bin] = v;
+        slowleak = MAX(slowleak, bndpsd[bin]-s->sgain);
+        excite[bin] = MAX(slowleak, fastleak);
     }
 
     // compute masking curve
@@ -330,8 +319,7 @@ a52_bit_allocation_prepare(A52BitAllocParams *s, int blk, int ch,
             v1 += tmp >> 2;
         }
         v = hth[bin >> s->halfratecod][s->fscod];
-        if(v1 > v) v = v1;
-        mask[bin] = v;
+        mask[bin] = MAX(v, v1);
     }
 
     // delta bit allocation
@@ -359,20 +347,14 @@ a52_bit_allocation(uint8_t *bap, int16_t *psd, int16_t *mask,
                    int blk, int ch, int end, int snroffset, int floor)
 {
     int i, j, endj;
+    int v, address;
 
     for (i = 0, j = masktab[0]; end > bndtab[j]; ++j) {
-        int v = mask[j];
-        v -= snroffset;
-        v -= floor;
-        v = (v < 0) ? 0 : v;
-        v &= 0x1fe0;
-        v += floor;
-
+        v = (MAX(mask[j] - (snroffset + floor), 0) & 0x1FE0) + floor;
         endj = MIN(bndtab[j] + bndsz[j], end);
         while (i < endj) {
-            int address = (psd[i] - v) >> 5;
-            if (address < 0) address = 0;
-            else if (address > 63) address = 63;
+            address = (psd[i] - v) >> 5;
+            address = MAX(MIN(address, 63), 0);
             bap[i] = baptab[address];
             ++i;
         }
