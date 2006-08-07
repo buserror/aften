@@ -829,7 +829,7 @@ output_frame_end(A52Context *ctx)
     n = 2 * fs - (bitcount>>3) - 2;
     if(n < 0) {
         fprintf(stderr, "fs=%d data=%d\n", 2*fs-2, bitcount>>3);
-        assert(n >= 0);
+        return -1;
     }
     if(n > 0) memset(&ctx->bw.buffer[bitcount>>3], 0, n);
 
