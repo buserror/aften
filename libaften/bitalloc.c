@@ -218,7 +218,7 @@ calc_lowcomp(int a, int b0, int b1, int bin)
 static void
 a52_bit_allocation_prepare(A52BitAllocParams *s, int blk, int ch,
                    uint8_t *exp, int16_t *psd, int16_t *mask,
-                   int end, int fgain, int is_lfe,
+                   int end, int is_lfe,
                    int deltbae,int deltnseg, uint8_t *deltoffst,
                    uint8_t *deltlen, uint8_t *deltba)
 {
@@ -258,14 +258,14 @@ a52_bit_allocation_prepare(A52BitAllocParams *s, int blk, int ch,
     if(bndstrt == 0) {
         lowcomp = 0;
         lowcomp = calc_lowcomp1(lowcomp, bndpsd[0], bndpsd[1]);
-        excite[0] = bndpsd[0] - fgain - lowcomp;
+        excite[0] = bndpsd[0] - s->fgain - lowcomp;
         lowcomp = calc_lowcomp1(lowcomp, bndpsd[1], bndpsd[2]);
-        excite[1] = bndpsd[1] - fgain - lowcomp ;
+        excite[1] = bndpsd[1] - s->fgain - lowcomp ;
         begin = 7;
         for(bin=2; bin<7; bin++) {
             if(!(is_lfe && bin == 6))
                 lowcomp = calc_lowcomp1(lowcomp, bndpsd[bin], bndpsd[bin+1]);
-            fastleak = bndpsd[bin] - fgain;
+            fastleak = bndpsd[bin] - s->fgain;
             slowleak = bndpsd[bin] - s->sgain;
             excite[bin] = fastleak - lowcomp;
             if(!(is_lfe && bin == 6)) {
@@ -283,7 +283,7 @@ a52_bit_allocation_prepare(A52BitAllocParams *s, int blk, int ch,
                 lowcomp = calc_lowcomp(lowcomp, bndpsd[bin], bndpsd[bin+1], bin);
 
             fastleak -= s->fdecay;
-            v = bndpsd[bin] - fgain;
+            v = bndpsd[bin] - s->fgain;
             if(fastleak < v) fastleak = v;
 
             slowleak -= s->sdecay;
@@ -305,7 +305,7 @@ a52_bit_allocation_prepare(A52BitAllocParams *s, int blk, int ch,
 
     for(bin=begin; bin<bndend; bin++) {
         fastleak -= s->fdecay;
-        fastleak = MAX(fastleak, bndpsd[bin]-fgain);
+        fastleak = MAX(fastleak, bndpsd[bin]-s->fgain);
         slowleak -= s->sdecay;
         slowleak = MAX(slowleak, bndpsd[bin]-s->sgain);
         excite[bin] = MAX(slowleak, fastleak);
@@ -409,7 +409,6 @@ bit_alloc_prepare(A52Context *ctx)
             a52_bit_allocation_prepare(&frame->bit_alloc, blk, ch,
                                block->exp[ch], block->psd[ch], block->mask[ch],
                                frame->ncoefs[ch],
-                               fgaintab[frame->fgaincod],
                                (ch == ctx->lfe_channel),
                                2, 0, NULL, NULL, NULL);
         }
@@ -628,6 +627,7 @@ compute_bit_allocation(A52Context *ctx)
     f->bit_alloc.halfratecod = ctx->halfratecod;
     f->bit_alloc.sdecay = sdecaytab[f->sdecaycod] >> ctx->halfratecod;
     f->bit_alloc.fdecay = fdecaytab[f->fdecaycod] >> ctx->halfratecod;
+    f->bit_alloc.fgain = fgaintab[f->fgaincod];
     f->bit_alloc.sgain = sgaintab[f->sgaincod];
     f->bit_alloc.dbknee = dbkneetab[f->dbkneecod];
     f->bit_alloc.floor = floortab[f->floorcod];

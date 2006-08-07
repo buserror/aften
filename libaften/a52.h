@@ -76,7 +76,7 @@ typedef struct A52Block {
 typedef struct A52BitAllocParams {
     int fscod;
     int halfratecod;
-    int sgain, sdecay, fdecay, dbknee, floor;
+    int fgain, sgain, sdecay, fdecay, dbknee, floor;
     int cplfleak, cplsleak;
 } A52BitAllocParams;
 
