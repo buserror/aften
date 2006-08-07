@@ -62,6 +62,8 @@ typedef struct A52Block {
     double transient_samples[A52_MAX_CHANNELS][512];
     double mdct_coef[A52_MAX_CHANNELS][256];
     uint8_t exp[A52_MAX_CHANNELS][256];
+    int16_t psd[A52_MAX_CHANNELS][256];
+    int16_t mask[A52_MAX_CHANNELS][50];
     uint8_t exp_strategy[A52_MAX_CHANNELS];
     uint8_t nexpgrps[A52_MAX_CHANNELS];
     uint8_t grp_exp[A52_MAX_CHANNELS][85];

@@ -129,18 +129,21 @@ static const uint8_t bndsz[50]={
      3,  6,  6,  6,  6,  6,  6, 12, 12, 12, 12, 24, 24, 24, 24, 24
 };
 
+static uint16_t psdtab[25];
 static uint8_t masktab[253];
 static uint8_t bndtab[51];
 static uint16_t frmsizetab[38][3];
 static int expsizetab[3][256];
-static int16_t psd_blkch[A52_NUM_BLOCKS][A52_MAX_CHANNELS][256];
-static int16_t mask_blkch[A52_NUM_BLOCKS][A52_MAX_CHANNELS][50];
-static int end_blkch[A52_NUM_BLOCKS][A52_MAX_CHANNELS][50];
 
 void
 bitalloc_init()
 {
     int i, j, k, l, v;
+
+    // compute psdtab
+    for(i=0; i<25; i++) {
+        psdtab[i] = 3072 - (i << 7);
+    }
 
     // compute bndtab and masktab from bandsz
     k = l = i = 0;
@@ -217,7 +220,8 @@ calc_lowcomp(int a, int b0, int b1, int bin)
 
 /* A52 bit allocation preparation to speed up matching left bits. */
 static void
-a52_bit_allocation_prepare(A52BitAllocParams *s, int blk, int ch, uint8_t *exp,
+a52_bit_allocation_prepare(A52BitAllocParams *s, int blk, int ch,
+                   uint8_t *exp, int16_t *psd, int16_t *mask,
                    int end, int fgain, int is_lfe,
                    int deltbae,int deltnseg, uint8_t *deltoffst,
                    uint8_t *deltlen, uint8_t *deltba)
@@ -226,13 +230,10 @@ a52_bit_allocation_prepare(A52BitAllocParams *s, int blk, int ch, uint8_t *exp,
     int fastleak, slowleak, tmp;
     int16_t bndpsd[50];                     // interpolated exponents
     int16_t excite[50];                     // excitation
-    int16_t *psd = psd_blkch[blk][ch];      // scaled exponents
-    int16_t *mask = mask_blkch[blk][ch];    // masking value
-    int *endj = end_blkch[blk][ch];;
 
     // exponent mapping to PSD
     for(bin=0; bin<end; bin++) {
-        psd[bin] = (3072 - (exp[bin] << 7));
+        psd[bin] = psdtab[exp[bin]];
     }
 
     // PSD integration
@@ -358,23 +359,14 @@ a52_bit_allocation_prepare(A52BitAllocParams *s, int blk, int ch, uint8_t *exp,
             }
         }
     }
-
-    for (j = masktab[0]; end > bndtab[j]; ++j) {
-        *endj = bndtab[j] + bndsz[j];
-        if(*endj > end) *endj = end;
-        ++endj;
-    }
 }
 
 /* A52 bit allocation */
 static void
-a52_bit_allocation(uint8_t *bap, int blk, int ch, int end, int snroffset, int floor)
+a52_bit_allocation(uint8_t *bap, int16_t *psd, int16_t *mask,
+                   int blk, int ch, int end, int snroffset, int floor)
 {
-    int j;
-    int i;
-    int16_t *psd = psd_blkch[blk][ch];
-    int16_t *mask = mask_blkch[blk][ch];
-    int *endj = end_blkch[blk][ch];
+    int i, j, endj;
 
     for (i = 0, j = masktab[0]; end > bndtab[j]; ++j) {
         int v = mask[j];
@@ -384,7 +376,8 @@ a52_bit_allocation(uint8_t *bap, int blk, int ch, int end, int snroffset, int fl
         v &= 0x1fe0;
         v += floor;
 
-        while (i < endj[j]) {
+        endj = MIN(bndtab[j] + bndsz[j], end);
+        while (i < endj) {
             int address = (psd[i] - v) >> 5;
             if (address < 0) address = 0;
             else if (address > 63) address = 63;
@@ -440,7 +433,7 @@ bit_alloc_prepare(A52Context *ctx)
         block = &ctx->frame.blocks[blk];
         for(ch=0; ch<ctx->n_all_channels; ch++) {
             a52_bit_allocation_prepare(&frame->bit_alloc, blk, ch,
-                               block->exp[ch],
+                               block->exp[ch], block->psd[ch], block->mask[ch],
                                frame->ncoefs[ch],
                                fgaintab[frame->fgaincod],
                                (ch == ctx->lfe_channel),
@@ -468,8 +461,8 @@ bit_alloc(A52Context *ctx, int csnroffst, int fsnroffst)
         mant_cnt[0] = mant_cnt[1] = mant_cnt[2] = 0;
         for(ch=0; ch<ctx->n_all_channels; ch++) {
             memset(block->bap[ch], 0, 256);
-            a52_bit_allocation(block->bap[ch], blk, ch,
-                               frame->ncoefs[ch], snroffset,
+            a52_bit_allocation(block->bap[ch], block->psd[ch], block->mask[ch],
+                               blk, ch, frame->ncoefs[ch], snroffset,
                                frame->bit_alloc.floor);
             bits += compute_mantissa_size(mant_cnt, block->bap[ch], frame->ncoefs[ch]);
             if(block->exp_strategy[ch] > 0) {
