@@ -73,7 +73,7 @@ distclean: clean
 	$(MAKE) -C libaften distclean
 	$(MAKE) -C aften    distclean
 	$(MAKE) -C util     distclean
-	rm -f .depend config.* *.pc
+	rm -f .depend config.* *.pc *.wav *.ac3
 
 # tar release (use 'make -k tar' on a checkouted tree)
 FILE=aften-$(shell grep "\#define AFTEN_VERSION " libaften/aften.h | \
