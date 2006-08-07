@@ -133,8 +133,7 @@ encode_exp(uint8_t *exp, int exp_strategy)
     for(i=1; i<=ngrps; i++) {
         exp_min = exp[k];
         for(j=1; j<grpsize; j++) {
-            if(exp[k+j] < exp_min)
-                exp_min = exp[k+j];
+            exp_min = MIN(exp_min, exp[k+j]);
         }
         exp1[i] = exp_min;
         k += grpsize;
@@ -384,7 +383,7 @@ aften_encode_init(AftenContext *s)
     } else if(ctx->params.bwcode == -1) {
         int cutoff = ((ctx->last_quality-120) * 120) + 4000;
         ctx->fixed_bwcode = ((cutoff * 512 / ctx->sample_rate) - 73) / 3;
-        ctx->fixed_bwcode = MIN(MAX(ctx->fixed_bwcode, 0), 60);
+        ctx->fixed_bwcode = CLIP(ctx->fixed_bwcode, 0, 60);
     } else {
         ctx->fixed_bwcode = ctx->params.bwcode;
     }
@@ -514,7 +513,7 @@ frame_init(A52Context *ctx)
     if(ctx->params.bwcode == -2) {
         cutoff = ((ctx->last_quality-120) * 120) + 4000;
         frame->bwcode = ((cutoff * 512 / ctx->sample_rate) - 73) / 3;
-        frame->bwcode = MIN(MAX(frame->bwcode, 0), 60);
+        frame->bwcode = CLIP(frame->bwcode, 0, 60);
     } else {
         frame->bwcode = ctx->fixed_bwcode;
     }
@@ -607,8 +606,7 @@ asym_quant(int c, int e, int qbits)
     else v = c >> (-lshift);
 
     m = (1 << (qbits-1));
-    if(v >= m) v = m - 1;
-    if(v < -m) v = -m;
+    v = CLIP(v, -m, m-1);
 
     return v & ((1 << qbits)-1);
 }
@@ -938,15 +936,13 @@ detect_transient(double *in)
     double level1[2];
     double level2[4];
     double level3[8];
-    double v;
     double *xx = in;
 
     // level 1 (2 x 256)
     for(i=0; i<2; i++) {
         level1[i] = 0;
         for(j=0; j<256; j++) {
-            v = fabs(xx[i*256+j]);
-            if(v > level1[i]) level1[i] = v;
+            level1[i] = MAX(fabs(xx[i*256+j]), level1[i]);
         }
         if(level1[i] < (100.0 / 32768.0)) {
             return 0;
@@ -960,8 +956,7 @@ detect_transient(double *in)
     for(i=1; i<4; i++) {
         level2[i] = 0;
         for(j=0; j<128; j++) {
-            v = fabs(xx[i*128+j]);
-            if(v > level2[i]) level2[i] = v;
+            level2[i] = MAX(fabs(xx[i*128+j]), level2[i]);
         }
         if((i > 1) && (level2[i] * 0.075 > level2[i-1])) {
             return 1;
@@ -972,8 +967,7 @@ detect_transient(double *in)
     for(i=3; i<8; i++) {
         level3[i] = 0;
         for(j=0; j<64; j++) {
-            v = fabs(xx[i*64+j]);
-            if(v > level3[i]) level3[i] = v;
+            level3[i] = MAX(fabs(xx[i*64+j]), level3[i]);
         }
         if((i > 3) && (level3[i] * 0.050 > level3[i-1])) {
             return 1;

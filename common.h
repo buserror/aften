@@ -55,6 +55,7 @@ typedef unsigned __int64 uint64_t;
 #define ABS(a) ((a) >= 0 ? (a) : (-(a)))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #define MIN(a,b) ((a) > (b) ? (b) : (a))
+#define CLIP(x,min,max) MAX(MIN((x), (max)), (min))
 
 static const uint8_t log2tab[256] = {
     0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4,

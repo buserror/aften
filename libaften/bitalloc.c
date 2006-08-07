@@ -354,7 +354,7 @@ a52_bit_allocation(uint8_t *bap, int16_t *psd, int16_t *mask,
         endj = MIN(bndtab[j] + bndsz[j], end);
         while (i < endj) {
             address = (psd[i] - v) >> 5;
-            address = MAX(MIN(address, 63), 0);
+            address = CLIP(address, 0, 63);
             bap[i] = baptab[address];
             ++i;
         }
@@ -427,7 +427,7 @@ bit_alloc(A52Context *ctx, int csnroffst, int fsnroffst)
 
     frame = &ctx->frame;
     bits = 0;
-    snroffset = (((csnroffst-15) << 4) + fsnroffst) << 2;
+    snroffset = SNROFFST(csnroffst, fsnroffst);
 
     for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
         block = &ctx->frame.blocks[blk];
@@ -562,7 +562,7 @@ cbr_bit_allocation(A52Context *ctx, int prepare)
     ctx->last_csnroffst = csnroffst;
     frame->csnroffst = csnroffst;
     frame->fsnroffst = fsnroffst;
-    frame->quality = (((((csnroffst-15) << 4) + fsnroffst) << 2)+960)/4;
+    frame->quality = QUALITY(csnroffst, fsnroffst);
     ctx->last_quality = frame->quality;
 
     return 0;
@@ -602,7 +602,7 @@ vbr_bit_allocation(A52Context *ctx)
         frame_bits = current_bits + bit_alloc(ctx, csnroffst, fsnroffst);
         if(frame_size >= frame_bits) break;
     }
-    if(i > ctx->frmsizecod) i = ctx->frmsizecod;
+    i = MIN(i, ctx->frmsizecod);
     frame->bit_rate = a52_bitratetab[i/2] >> ctx->halfratecod;
 
     frame->frmsizecod = i;
