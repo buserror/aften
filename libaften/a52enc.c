@@ -469,7 +469,7 @@ aften_encode_init(AftenContext *s)
         }
     }
 
-    ctx = malloc(sizeof(A52Context));
+    ctx = calloc(sizeof(A52Context), 1);
     memcpy(ctx, &ctx0, sizeof(A52Context));
     s->private = ctx;
 

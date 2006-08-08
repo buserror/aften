@@ -66,12 +66,10 @@ calc_crc(const uint16_t *table, int bits, const uint8_t *data, uint32_t len)
 {
 	uint16_t crc, v1, v2;
 
-    if(data == NULL || table == NULL) return 0;
     crc = 0;
     while(len--) {
         v1 = (crc << 8) & ((1 << bits) - 1);
         v2 = (crc >> (bits - 8)) ^ *data++;
-        if(v2 > 255) v2 &= 0xFF;
         crc = v1 ^ table[v2];
     }
     return crc;

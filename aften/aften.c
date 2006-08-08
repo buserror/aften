@@ -467,8 +467,8 @@ main(int argc, char **argv)
         return 1;
     }
 
-    frame = malloc(A52_MAX_CODED_FRAME_SIZE);
-    fwav = malloc(A52_FRAME_SIZE * wf.channels * sizeof(double));
+    frame = calloc(A52_MAX_CODED_FRAME_SIZE, 1);
+    fwav = calloc(A52_FRAME_SIZE * wf.channels, sizeof(double));
     if(frame == NULL || fwav == NULL) {
         aften_encode_close(&s);
         exit(1);
