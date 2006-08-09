@@ -286,11 +286,10 @@ int
 aften_encode_init(AftenContext *s)
 {
     int i, j, brate;
-    A52Context ctx0;
     A52Context *ctx;
 
-    ctx = &ctx0;
-    s->private = NULL;
+    ctx = calloc(sizeof(A52Context), 1);
+    s->private = ctx;
 
     // channel configuration
     if(s->channels < 1 || s->channels > 6) {
@@ -468,10 +467,6 @@ aften_encode_init(AftenContext *s)
             return -1;
         }
     }
-
-    ctx = calloc(sizeof(A52Context), 1);
-    memcpy(ctx, &ctx0, sizeof(A52Context));
-    s->private = ctx;
 
     return 0;
 }

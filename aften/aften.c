@@ -464,6 +464,7 @@ main(int argc, char **argv)
 
     if(aften_encode_init(&s)) {
         fprintf(stderr, "error initializing encoder\n");
+        aften_encode_close(&s);
         return 1;
     }
 

@@ -216,19 +216,15 @@ void
 mdct512(double *out, double *in)
 {
     int i;
-    double xx[512];
-    double coef[256];
+    double *xx;
 
+    xx = calloc(512, sizeof(double));
     for(i=0; i<512; i++) {
         if(i < 128) xx[i] = -in[i+384];
         else xx[i] = in[i-128];
     }
-
-    dct_iv(coef, xx, 9);
-
-    for(i=0; i<256; i++) {
-        out[i] = coef[i];
-    }
+    dct_iv(out, xx, 9);
+    free(xx);
 }
 
 #if 0
@@ -261,9 +257,11 @@ void
 mdct256(double *out, double *in)
 {
     int i;
-    double coef_a[128];
-    double coef_b[128];
-    double xx[256];
+    double *coef_a, *coef_b, *xx;
+
+    coef_a = calloc(128, sizeof(double));
+    coef_b = calloc(128, sizeof(double));
+    coef_a = calloc(256, sizeof(double));
 
     dct_iv(coef_a, in, 8);
 
@@ -277,6 +275,10 @@ mdct256(double *out, double *in)
         out[2*i] = coef_a[i];
         out[2*i+1] = coef_b[i];
     }
+
+    free(coef_a);
+    free(coef_b);
+    free(xx);
 }
 
 static double a52_window[256];
