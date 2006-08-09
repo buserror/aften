@@ -280,6 +280,11 @@ aften_set_defaults(AftenContext *s)
     s->meta.dsurexmod = 0;
     s->meta.dheadphonmod = 0;
     s->meta.adconvtyp = 0;
+
+    s->status.frame_num = 0;
+    s->status.quality = 0;
+    s->status.bit_rate = 0;
+    s->status.bwcode = 0;
 }
 
 int
@@ -480,6 +485,8 @@ frame_init(A52Context *ctx)
     A52Frame *frame;
 
     frame = &ctx->frame;
+    memset(frame, 0, sizeof(A52Frame));
+
     frame->frame_num = ctx->frame_cnt;
 
     for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
