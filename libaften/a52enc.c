@@ -243,7 +243,10 @@ encode_exponents(A52Context *ctx)
 void
 aften_set_defaults(AftenContext *s)
 {
-    if(s == NULL) return;
+    if(s == NULL) {
+        fprintf(stderr, "NULL parameter passed to aften_set_defaults\n");
+        return;
+    }
 
     /**
      * These 4 must be set explicitly before initialization.
@@ -293,6 +296,10 @@ aften_encode_init(AftenContext *s)
     int i, j, brate;
     A52Context *ctx;
 
+    if(s == NULL) {
+        fprintf(stderr, "NULL parameter passed to aften_encode_init\n");
+        return -1;
+    }
     ctx = calloc(sizeof(A52Context), 1);
     s->private = ctx;
 
@@ -1130,6 +1137,10 @@ aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, double *samples)
     A52Context *ctx;
     A52Frame *frame;
 
+    if(s == NULL || frame_buffer == NULL || samples == NULL) {
+        fprintf(stderr, "One or more NULL parameters passed to aften_encode_frame\n");
+        return -1;
+    }
     ctx = s->private;
     frame = &ctx->frame;
 

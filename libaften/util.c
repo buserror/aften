@@ -25,6 +25,7 @@
 #include "common.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "aften.h"
@@ -36,6 +37,10 @@
 void
 aften_wav_chmask_to_acmod(int ch, int chmask, int *acmod, int *lfe)
 {
+    if(acmod == NULL || lfe == NULL) {
+        fprintf(stderr, "One or more NULL parameters passed to aften_wav_chmask_to_acmod\n");
+        return;
+    }
     if(*lfe < 0) {
         *lfe = !!(chmask & 0x08);
     }
@@ -81,6 +86,10 @@ aften_wav_chmask_to_acmod(int ch, int chmask, int *acmod, int *lfe)
 void
 aften_plain_wav_to_acmod(int ch, int *acmod, int *lfe)
 {
+    if(acmod == NULL || lfe == NULL) {
+        fprintf(stderr, "One or more NULL parameters passed to aften_plain_wav_to_acmod\n");
+        return;
+    }
     if(*lfe < 0) {
         *lfe = !!(ch == 6);
         ch--;
@@ -110,6 +119,10 @@ aften_remap_wav_to_a52_u8(uint8_t *samples, int n, int ch,
     int i, j;
     uint8_t tmp[6];
 
+    if(samples == NULL) {
+        fprintf(stderr, "NULL parameter passed to aften_remap_wav_to_a52_u8\n");
+        return;
+    }
     if(ch > 3 && acmod != 4 && acmod != 6) {
         if(ch == 6) {
             for(i=0; i<n*6; i+=6) {
@@ -135,6 +148,10 @@ aften_remap_wav_to_a52_s16(int16_t *samples, int n, int ch,
     int i, j;
     int16_t tmp[6];
 
+    if(samples == NULL) {
+        fprintf(stderr, "NULL parameter passed to aften_remap_wav_to_a52_s16\n");
+        return;
+    }
     if(ch > 3 && acmod != 4 && acmod != 6) {
         if(ch == 6) {
             for(i=0; i<n*6; i+=6) {
@@ -160,6 +177,10 @@ aften_remap_wav_to_a52_s32(int32_t *samples, int n, int ch,
     int i, j;
     int32_t tmp[6];
 
+    if(samples == NULL) {
+        fprintf(stderr, "NULL parameter passed to aften_remap_wav_to_a52_s32\n");
+        return;
+    }
     if(ch > 3 && acmod != 4 && acmod != 6) {
         if(ch == 6) {
             for(i=0; i<n*6; i+=6) {
@@ -185,6 +206,10 @@ aften_remap_wav_to_a52_float(float *samples, int n, int ch,
     int i, j;
     float tmp[6];
 
+    if(samples == NULL) {
+        fprintf(stderr, "NULL parameter passed to aften_remap_wav_to_a52_float\n");
+        return;
+    }
     if(ch > 3 && acmod != 4 && acmod != 6) {
         if(ch == 6) {
             for(i=0; i<n*6; i+=6) {
@@ -210,6 +235,10 @@ aften_remap_wav_to_a52_double(double *samples, int n, int ch,
     int i, j;
     double tmp[6];
 
+    if(samples == NULL) {
+        fprintf(stderr, "NULL parameter passed to aften_remap_wav_to_a52_double\n");
+        return;
+    }
     if(ch > 3 && acmod != 4 && acmod != 6) {
         if(ch == 6) {
             for(i=0; i<n*6; i+=6) {
