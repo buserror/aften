@@ -261,7 +261,7 @@ mdct256(double *out, double *in)
 
     coef_a = calloc(128, sizeof(double));
     coef_b = calloc(128, sizeof(double));
-    coef_a = calloc(256, sizeof(double));
+    xx = calloc(256, sizeof(double));
 
     dct_iv(coef_a, in, 8);
 
