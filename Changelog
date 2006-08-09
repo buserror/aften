@@ -18,6 +18,9 @@ Aften TODO list
 
 Aften Changelog
 ---------------
+version SVN : current
+- bit allocation speedup by Prakash Punnoor <prakash@punnoor.de>
+
 version 0.04 : 05 August 2006
 - fixed VBR to lower quality if needed to fit in largest available frame size
 - small adjustment to exponent strategy decision
