@@ -492,7 +492,6 @@ frame_init(A52Context *ctx)
     A52Frame *frame;
 
     frame = &ctx->frame;
-    memset(frame, 0, sizeof(A52Frame));
 
     frame->frame_num = ctx->frame_cnt;
 
