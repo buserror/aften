@@ -92,6 +92,8 @@ typedef struct A52Frame {
     double input_audio[A52_MAX_CHANNELS][A52_FRAME_SIZE];
     A52Block blocks[A52_NUM_BLOCKS];
     int frame_bits;
+    int exp_bits;
+    int mant_bits;
     unsigned int frame_size_min; // minimum frame size
     unsigned int frame_size;     // current frame size in words
     unsigned int frmsizecod;

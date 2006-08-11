@@ -129,7 +129,6 @@ static uint16_t psdtab[25];
 static uint8_t masktab[253];
 static uint8_t bndtab[51];
 static uint16_t frmsizetab[38][3];
-static int expsizetab[3][256];
 
 void
 bitalloc_init()
@@ -157,23 +156,6 @@ bitalloc_init()
             v = a52_bitratetab[i] * 96000 / a52_freqs[j];
             frmsizetab[i*2][j] = frmsizetab[i*2+1][j] = v * 16;
             if(j == 1) frmsizetab[i*2+1][j] += 16;
-        }
-    }
-
-    // compute expsizetab
-    for(i=1; i<4; i++) {
-        for(j=0; j<256; j++) {
-            int grpsize = i;
-            int ngrps = 0;
-            if(i == EXP_D45) {
-                grpsize = 4;
-            }
-            if(j == 7) {
-                ngrps = 2;
-            } else {
-                ngrps = (j + (grpsize * 3) - 4) / (3 * grpsize);
-            }
-            expsizetab[i-1][j] = (4 + (ngrps * 7));
         }
     }
 }
@@ -415,7 +397,7 @@ bit_alloc_prepare(A52Context *ctx)
     }
 }
 
-/** returns number of mantissa & exponent bits used */
+/** returns number of mantissa bits used */
 static int
 bit_alloc(A52Context *ctx, int csnroffst, int fsnroffst)
 {
@@ -438,9 +420,7 @@ bit_alloc(A52Context *ctx, int csnroffst, int fsnroffst)
                                blk, ch, frame->ncoefs[ch], snroffset,
                                frame->bit_alloc.floor);
             bits += compute_mantissa_size(mant_cnt, block->bap[ch], frame->ncoefs[ch]);
-            if(block->exp_strategy[ch] > 0) {
-                bits += expsizetab[block->exp_strategy[ch]-1][frame->ncoefs[ch]];
-            }
+
         }
     }
 
@@ -511,7 +491,7 @@ cbr_bit_allocation(A52Context *ctx, int prepare)
     A52Block *blocks;
 
     frame = &ctx->frame;
-    current_bits = frame->frame_bits;
+    current_bits = frame->frame_bits + frame->exp_bits;
     blocks = frame->blocks;
     avail_bits = (16 * frame->frame_size) - current_bits;
     csnroffst = ctx->last_csnroffst;
@@ -557,7 +537,7 @@ cbr_bit_allocation(A52Context *ctx, int prepare)
         leftover = avail_bits - bit_alloc(ctx, csnroffst, fsnroffst+1);
     }
 
-    bit_alloc(ctx, csnroffst, fsnroffst);
+    frame->mant_bits = bit_alloc(ctx, csnroffst, fsnroffst);
 
     ctx->last_csnroffst = csnroffst;
     frame->csnroffst = csnroffst;
@@ -579,7 +559,7 @@ vbr_bit_allocation(A52Context *ctx)
     A52Block *blocks;
 
     frame = &ctx->frame;
-    current_bits = frame->frame_bits;
+    current_bits = frame->frame_bits + frame->exp_bits;
     blocks = frame->blocks;
 
     // convert quality in range 0 to 1023 to csnroffst & fsnroffst
