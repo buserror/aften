@@ -37,6 +37,17 @@
 #define WAV_SEEK_CUR 1
 #define WAV_SEEK_END 2
 
+enum WavSampleFormat {
+    WAV_SAMPLE_FMT_UNKNOWN = -1,
+    WAV_SAMPLE_FMT_U8 = 0,
+    WAV_SAMPLE_FMT_S16,
+    WAV_SAMPLE_FMT_S20,
+    WAV_SAMPLE_FMT_S24,
+    WAV_SAMPLE_FMT_S32,
+    WAV_SAMPLE_FMT_FLT,
+    WAV_SAMPLE_FMT_DBL,
+};
+
 typedef struct WavFile {
     FILE *fp;
     uint32_t filepos;
@@ -52,11 +63,13 @@ typedef struct WavFile {
     int bytes_per_sec;
     int block_align;
     int bit_width;
+    enum WavSampleFormat source_format; // set by wavfile_init
+    enum WavSampleFormat read_format;   // set by user
 } WavFile;
 
 extern int wavfile_init(WavFile *wf, FILE *fp);
 
-extern int wavfile_read_samples(WavFile *wf, double *buffer, int num_samples);
+extern int wavfile_read_samples(WavFile *wf, void *buffer, int num_samples);
 
 extern int wavfile_seek_samples(WavFile *wf, int32_t offset, int whence);
 
