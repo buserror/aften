@@ -461,7 +461,7 @@ main(int argc, char **argv)
     s.channels = wf.channels;
     aften_wav_chmask_to_acmod(wf.channels, wf.ch_mask, &s.acmod, &s.lfe);
     s.samplerate = wf.sample_rate;
-    s.sample_format = SAMPLE_FMT_DBL;
+    s.sample_format = A52_SAMPLE_FMT_DBL;
 
     if(aften_encode_init(&s)) {
         fprintf(stderr, "error initializing encoder\n");
