@@ -233,7 +233,7 @@ remap_wav_to_a52_double(double *samples, int n, int ch, int acmod, int lfe)
 }
 
 void
-aften_remap_wav_to_a52(void *samples, int n, int ch, enum SampleFormat fmt,
+aften_remap_wav_to_a52(void *samples, int n, int ch, enum A52SampleFormat fmt,
                        int acmod, int lfe)
 {
     if(samples == NULL) {
@@ -242,17 +242,17 @@ aften_remap_wav_to_a52(void *samples, int n, int ch, enum SampleFormat fmt,
     }
 
     switch(fmt) {
-        case SAMPLE_FMT_U8:  remap_wav_to_a52_u8(samples, n, ch, acmod, lfe);
-                             break;
-        case SAMPLE_FMT_S16: remap_wav_to_a52_s16(samples, n, ch, acmod, lfe);
-                             break;
-        case SAMPLE_FMT_S20:
-        case SAMPLE_FMT_S24:
-        case SAMPLE_FMT_S32: remap_wav_to_a52_s32(samples, n, ch, acmod, lfe);
-                             break;
-        case SAMPLE_FMT_FLT: remap_wav_to_a52_float(samples, n, ch, acmod, lfe);
-                             break;
-        case SAMPLE_FMT_DBL: remap_wav_to_a52_double(samples, n, ch, acmod, lfe);
-                             break;
+        case A52_SAMPLE_FMT_U8:  remap_wav_to_a52_u8(samples, n, ch, acmod, lfe);
+                                 break;
+        case A52_SAMPLE_FMT_S16: remap_wav_to_a52_s16(samples, n, ch, acmod, lfe);
+                                 break;
+        case A52_SAMPLE_FMT_S20:
+        case A52_SAMPLE_FMT_S24:
+        case A52_SAMPLE_FMT_S32: remap_wav_to_a52_s32(samples, n, ch, acmod, lfe);
+                                 break;
+        case A52_SAMPLE_FMT_FLT: remap_wav_to_a52_float(samples, n, ch, acmod, lfe);
+                                 break;
+        case A52_SAMPLE_FMT_DBL: remap_wav_to_a52_double(samples, n, ch, acmod, lfe);
+                                 break;
     }
 }

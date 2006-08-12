@@ -56,7 +56,7 @@ aften_set_defaults(AftenContext *s)
      */
     s->channels = -1;
     s->samplerate = -1;
-    s->sample_format = SAMPLE_FMT_S16;
+    s->sample_format = A52_SAMPLE_FMT_S16;
     s->acmod = -1;
     s->lfe = -1;
 
@@ -751,20 +751,20 @@ copy_samples(A52Context *ctx, void *vsamples)
     nsmp = sinc * A52_FRAME_SIZE;
     samples = calloc(nsmp, sizeof(double));
     switch(ctx->sample_format) {
-        case SAMPLE_FMT_U8:  fmt_convert_from_u8(samples, vsamples, nsmp);
-                             break;
-        case SAMPLE_FMT_S16: fmt_convert_from_s16(samples, vsamples, nsmp);
-                             break;
-        case SAMPLE_FMT_S20: fmt_convert_from_s20(samples, vsamples, nsmp);
-                             break;
-        case SAMPLE_FMT_S24: fmt_convert_from_s24(samples, vsamples, nsmp);
-                             break;
-        case SAMPLE_FMT_S32: fmt_convert_from_s32(samples, vsamples, nsmp);
-                             break;
-        case SAMPLE_FMT_FLT: fmt_convert_from_float(samples, vsamples, nsmp);
-                             break;
-        case SAMPLE_FMT_DBL: fmt_convert_from_double(samples, vsamples, nsmp);
-                             break;
+        case A52_SAMPLE_FMT_U8:  fmt_convert_from_u8(samples, vsamples, nsmp);
+                                 break;
+        case A52_SAMPLE_FMT_S16: fmt_convert_from_s16(samples, vsamples, nsmp);
+                                 break;
+        case A52_SAMPLE_FMT_S20: fmt_convert_from_s20(samples, vsamples, nsmp);
+                                 break;
+        case A52_SAMPLE_FMT_S24: fmt_convert_from_s24(samples, vsamples, nsmp);
+                                 break;
+        case A52_SAMPLE_FMT_S32: fmt_convert_from_s32(samples, vsamples, nsmp);
+                                 break;
+        case A52_SAMPLE_FMT_FLT: fmt_convert_from_float(samples, vsamples, nsmp);
+                                 break;
+        case A52_SAMPLE_FMT_DBL: fmt_convert_from_double(samples, vsamples, nsmp);
+                                 break;
     }
     for(ch=0; ch<sinc; ch++) {
         for(j=0; j<A52_FRAME_SIZE; j++) {

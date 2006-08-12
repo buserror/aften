@@ -38,14 +38,14 @@
 #define AFTEN_ENC_MODE_CBR    0
 #define AFTEN_ENC_MODE_VBR    1
 
-enum SampleFormat {
-    SAMPLE_FMT_U8 = 0,
-    SAMPLE_FMT_S16,
-    SAMPLE_FMT_S20,
-    SAMPLE_FMT_S24,
-    SAMPLE_FMT_S32,
-    SAMPLE_FMT_FLT,
-    SAMPLE_FMT_DBL,
+enum A52SampleFormat {
+    A52_SAMPLE_FMT_U8 = 0,
+    A52_SAMPLE_FMT_S16,
+    A52_SAMPLE_FMT_S20,
+    A52_SAMPLE_FMT_S24,
+    A52_SAMPLE_FMT_S32,
+    A52_SAMPLE_FMT_FLT,
+    A52_SAMPLE_FMT_DBL,
 };
 
 typedef struct {
@@ -228,9 +228,9 @@ typedef struct {
 
     /**
      * Audio sample format
-     * default: SAMPLE_FMT_S16
+     * default: A52_SAMPLE_FMT_S16
      */
-    enum SampleFormat sample_format;
+    enum A52SampleFormat sample_format;
 
     /**
      * Used internally by the encoder. The user should leave this alone.
@@ -271,6 +271,6 @@ extern void aften_plain_wav_to_acmod(int ch, int *acmod, int *lfe);
  * channel order based on the acmod and lfe parameters.
  */
 extern void aften_remap_wav_to_a52(void *samples, int n, int ch,
-                                   enum SampleFormat fmt, int acmod, int lfe);
+                                   enum A52SampleFormat fmt, int acmod, int lfe);
 
 #endif /* AFTEN_H */
