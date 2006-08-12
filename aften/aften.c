@@ -461,6 +461,7 @@ main(int argc, char **argv)
     s.channels = wf.channels;
     aften_wav_chmask_to_acmod(wf.channels, wf.ch_mask, &s.acmod, &s.lfe);
     s.samplerate = wf.sample_rate;
+    s.sample_format = SAMPLE_FMT_DBL;
 
     if(aften_encode_init(&s)) {
         fprintf(stderr, "error initializing encoder\n");
@@ -480,7 +481,8 @@ main(int argc, char **argv)
 
     nr = wavfile_read_samples(&wf, fwav, A52_FRAME_SIZE);
     while(nr > 0) {
-        aften_remap_wav_to_a52_double(fwav, nr, wf.channels, s.acmod, s.lfe);
+        aften_remap_wav_to_a52(fwav, nr, wf.channels, s.sample_format,
+                               s.acmod, s.lfe);
 
         fs = aften_encode_frame(&s, frame, fwav);
         if(fs <= 0) {

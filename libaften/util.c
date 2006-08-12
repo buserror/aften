@@ -112,17 +112,12 @@ aften_plain_wav_to_acmod(int ch, int *acmod, int *lfe)
 
 static const int wav_chmap[6] = { 0, 2, 1, 4, 5, 3 };
 
-void
-aften_remap_wav_to_a52_u8(uint8_t *samples, int n, int ch,
-                          int acmod, int lfe)
+static void
+remap_wav_to_a52_u8(uint8_t *samples, int n, int ch, int acmod, int lfe)
 {
     int i, j;
     uint8_t tmp[6];
 
-    if(samples == NULL) {
-        fprintf(stderr, "NULL parameter passed to aften_remap_wav_to_a52_u8\n");
-        return;
-    }
     if(ch > 3 && acmod != 4 && acmod != 6) {
         if(ch == 6) {
             for(i=0; i<n*6; i+=6) {
@@ -141,17 +136,12 @@ aften_remap_wav_to_a52_u8(uint8_t *samples, int n, int ch,
     }
 }
 
-void
-aften_remap_wav_to_a52_s16(int16_t *samples, int n, int ch,
-                           int acmod, int lfe)
+static void
+remap_wav_to_a52_s16(int16_t *samples, int n, int ch, int acmod, int lfe)
 {
     int i, j;
     int16_t tmp[6];
 
-    if(samples == NULL) {
-        fprintf(stderr, "NULL parameter passed to aften_remap_wav_to_a52_s16\n");
-        return;
-    }
     if(ch > 3 && acmod != 4 && acmod != 6) {
         if(ch == 6) {
             for(i=0; i<n*6; i+=6) {
@@ -170,17 +160,12 @@ aften_remap_wav_to_a52_s16(int16_t *samples, int n, int ch,
     }
 }
 
-void
-aften_remap_wav_to_a52_s32(int32_t *samples, int n, int ch,
-                           int acmod, int lfe)
+static void
+remap_wav_to_a52_s32(int32_t *samples, int n, int ch, int acmod, int lfe)
 {
     int i, j;
     int32_t tmp[6];
 
-    if(samples == NULL) {
-        fprintf(stderr, "NULL parameter passed to aften_remap_wav_to_a52_s32\n");
-        return;
-    }
     if(ch > 3 && acmod != 4 && acmod != 6) {
         if(ch == 6) {
             for(i=0; i<n*6; i+=6) {
@@ -199,17 +184,12 @@ aften_remap_wav_to_a52_s32(int32_t *samples, int n, int ch,
     }
 }
 
-void
-aften_remap_wav_to_a52_float(float *samples, int n, int ch,
-                             int acmod, int lfe)
+static void
+remap_wav_to_a52_float(float *samples, int n, int ch, int acmod, int lfe)
 {
     int i, j;
     float tmp[6];
 
-    if(samples == NULL) {
-        fprintf(stderr, "NULL parameter passed to aften_remap_wav_to_a52_float\n");
-        return;
-    }
     if(ch > 3 && acmod != 4 && acmod != 6) {
         if(ch == 6) {
             for(i=0; i<n*6; i+=6) {
@@ -228,17 +208,12 @@ aften_remap_wav_to_a52_float(float *samples, int n, int ch,
     }
 }
 
-void
-aften_remap_wav_to_a52_double(double *samples, int n, int ch,
-                              int acmod, int lfe)
+static void
+remap_wav_to_a52_double(double *samples, int n, int ch, int acmod, int lfe)
 {
     int i, j;
     double tmp[6];
 
-    if(samples == NULL) {
-        fprintf(stderr, "NULL parameter passed to aften_remap_wav_to_a52_double\n");
-        return;
-    }
     if(ch > 3 && acmod != 4 && acmod != 6) {
         if(ch == 6) {
             for(i=0; i<n*6; i+=6) {
@@ -254,5 +229,30 @@ aften_remap_wav_to_a52_double(double *samples, int n, int ch,
                 samples[i+2] = tmp[0];
             }
         }
+    }
+}
+
+void
+aften_remap_wav_to_a52(void *samples, int n, int ch, enum SampleFormat fmt,
+                       int acmod, int lfe)
+{
+    if(samples == NULL) {
+        fprintf(stderr, "NULL parameter passed to aften_remap_wav_to_a52\n");
+        return;
+    }
+
+    switch(fmt) {
+        case SAMPLE_FMT_U8:  remap_wav_to_a52_u8(samples, n, ch, acmod, lfe);
+                             break;
+        case SAMPLE_FMT_S16: remap_wav_to_a52_s16(samples, n, ch, acmod, lfe);
+                             break;
+        case SAMPLE_FMT_S20:
+        case SAMPLE_FMT_S24:
+        case SAMPLE_FMT_S32: remap_wav_to_a52_s32(samples, n, ch, acmod, lfe);
+                             break;
+        case SAMPLE_FMT_FLT: remap_wav_to_a52_float(samples, n, ch, acmod, lfe);
+                             break;
+        case SAMPLE_FMT_DBL: remap_wav_to_a52_double(samples, n, ch, acmod, lfe);
+                             break;
     }
 }

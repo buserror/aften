@@ -119,6 +119,7 @@ typedef struct {
     int lfe;
     int lfe_channel;
     int sample_rate;
+    enum SampleFormat sample_format;
     int halfratecod;
     int bsid;
     int fscod;

@@ -38,6 +38,16 @@
 #define AFTEN_ENC_MODE_CBR    0
 #define AFTEN_ENC_MODE_VBR    1
 
+enum SampleFormat {
+    SAMPLE_FMT_U8 = 0,
+    SAMPLE_FMT_S16,
+    SAMPLE_FMT_S20,
+    SAMPLE_FMT_S24,
+    SAMPLE_FMT_S32,
+    SAMPLE_FMT_FLT,
+    SAMPLE_FMT_DBL,
+};
+
 typedef struct {
 
     /**
@@ -217,6 +227,12 @@ typedef struct {
     int samplerate;
 
     /**
+     * Audio sample format
+     * default: SAMPLE_FMT_S16
+     */
+    enum SampleFormat sample_format;
+
+    /**
      * Used internally by the encoder. The user should leave this alone.
      * It is allocated in aften_encode_init and free'd in aften_encode_close.
      */
@@ -230,7 +246,7 @@ extern void aften_set_defaults(AftenContext *s);
 extern int aften_encode_init(AftenContext *s);
 
 extern int aften_encode_frame(AftenContext *s, unsigned char *frame_buffer,
-                              double *samples);
+                              void *samples);
 
 extern void aften_encode_close(AftenContext *s);
 
@@ -250,25 +266,11 @@ extern void aften_wav_chmask_to_acmod(int ch, int chmask, int *acmod, int *lfe);
 extern void aften_plain_wav_to_acmod(int ch, int *acmod, int *lfe);
 
 /**
- * The 6 functions below take a channel-interleaved array of audio samples,
- * where the channel order is the default WAV order. The samples are rearranged
- * to the proper AC-3 channel order based on the acmod and lfe parameters.
+ * Takes a channel-interleaved array of audio samples, where the channel order
+ * is the default WAV order. The samples are rearranged to the proper A/52
+ * channel order based on the acmod and lfe parameters.
  */
-extern void aften_remap_wav_to_a52_u8(unsigned char *samples, int n, int ch,
-                                      int acmod, int lfe);
-
-extern void aften_remap_wav_to_a52_s16(short *samples, int n, int ch,
-                                       int acmod, int lfe);
-
-#define aften_remap_wav_to_a52_s24 aften_remap_wav_to_a52_s32
-
-extern void aften_remap_wav_to_a52_s32(int *samples, int n, int ch,
-                                       int acmod, int lfe);
-
-extern void aften_remap_wav_to_a52_float(float *samples, int n, int ch,
-                                         int acmod, int lfe);
-
-extern void aften_remap_wav_to_a52_double(double *samples, int n, int ch,
-                                          int acmod, int lfe);
+extern void aften_remap_wav_to_a52(void *samples, int n, int ch,
+                                   enum SampleFormat fmt, int acmod, int lfe);
 
 #endif /* AFTEN_H */
