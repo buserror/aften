@@ -144,7 +144,7 @@ exponent_min(uint8_t *exp, uint8_t *exp1, int n)
 
 /* update the exponents so that they are the ones the decoder will decode.*/
 static void
-encode_exp_blk_ch(uint8_t *exp, int exp_strategy)
+encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
 {
     int grpsize, ngrps, i, j, k, exp_min;
     uint8_t exp1[256];
@@ -152,10 +152,11 @@ encode_exp_blk_ch(uint8_t *exp, int exp_strategy)
     // group count based on full bandwidth (253 coefs)
     grpsize = ngrps = 0;
     switch(exp_strategy) {
-        case EXP_D15: grpsize = 1; ngrps = 252;
-        case EXP_D25: grpsize = 2; ngrps = 126;
-        case EXP_D45: grpsize = 4; ngrps = 63;
+        case EXP_D15: grpsize = 1; break;
+        case EXP_D25: grpsize = 2; break;
+        case EXP_D45: grpsize = 4; break;
     }
+    ngrps = ((ncoefs + (grpsize * 3) - 4) / (3 * grpsize)) * 3;
 
     // for each group, compute the minimum exponent
     exp1[0] = exp[0]; // DC exponent is handled separately
@@ -267,7 +268,8 @@ encode_exponents(A52Context *ctx)
                              A52_MAX_COEFS);
                 j++;
             }
-            encode_exp_blk_ch(blocks[i].exp[ch], blocks[i].exp_strategy[ch]);
+            encode_exp_blk_ch(blocks[i].exp[ch], frame->ncoefs[ch],
+                              blocks[i].exp_strategy[ch]);
             // copy encoded exponents for reuse case
             for(k=i+1; k<j; k++) {
                 memcpy(blocks[k].exp[ch], blocks[i].exp[ch], A52_MAX_COEFS);
