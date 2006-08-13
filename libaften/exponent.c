@@ -74,19 +74,6 @@ expsizetab_init()
     }
 }
 
-static int
-count_ch_exp_bits(uint8_t exp_strategy[A52_NUM_BLOCKS], int ncoefs) {
-    int blk, bits;
-
-    bits = 0;
-    for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
-        if(exp_strategy[blk] > 0) {
-            bits += expsizetab[exp_strategy[blk]-1][ncoefs];
-        }
-    }
-    return bits;
-}
-
 static void
 compute_exponent_strategy(A52Context *ctx)
 {
