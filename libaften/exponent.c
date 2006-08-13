@@ -136,7 +136,6 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
     int grpsize, ngrps, i, j, k, exp_min;
     uint8_t exp1[256];
 
-    // group count based on full bandwidth (253 coefs)
     grpsize = ngrps = 0;
     switch(exp_strategy) {
         case EXP_D15: grpsize = 1; break;
