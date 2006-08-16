@@ -206,7 +206,7 @@ aften_encode_init(AftenContext *s)
 
     bitalloc_init();
     crc_init();
-    dsp_init();
+    dsp_init(ctx);
     expsizetab_init();
 
     // can't do block switching with low sample rate due to the high-pass filter
@@ -898,9 +898,9 @@ generate_coefs(A52Context *ctx)
             //if(block->blksw[ch]) printf("\nshort block\n");
             apply_a52_window(block->input_samples[ch]);
             if(block->blksw[ch]) {
-                mdct256(block->mdct_coef[ch], block->input_samples[ch]);
+                mdct256(ctx, block->mdct_coef[ch], block->input_samples[ch]);
             } else {
-                mdct512(block->mdct_coef[ch], block->input_samples[ch]);
+                mdct512(ctx, block->mdct_coef[ch], block->input_samples[ch]);
             }
             for(i=ctx->frame.ncoefs[ch]; i<256; i++) {
                 block->mdct_coef[ch][i] = 0.0;
@@ -1061,8 +1061,9 @@ void
 aften_encode_close(AftenContext *s)
 {
     if(s != NULL && s->private != NULL) {
-        free(s->private);
+        A52Context *ctx = s->private;
+        dsp_close(ctx);
+        free(ctx);
         s->private = NULL;
     }
-    return;
 }

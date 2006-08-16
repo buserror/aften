@@ -33,53 +33,113 @@
 #include <assert.h>
 
 #include "a52.h"
+#include "dsp.h"
 
 typedef struct Complex {
     double re, im;
 } Complex;
 
-static double costab[2][64];
-static double sintab[2][64];
-static int   fft_rev[2][512];
-
 static void
-fft_init(int ln, double *ctab, double *stab, int *rev)
+fft_init(FFTContext *fft, int len)
 {
-    int i, j, m, n;
-    double alpha;
+    int i, j, m, nbits, n2;
+    double c;
 
-    n = 1 << ln;
+    fft->length = len;
+    nbits = log2i(len);
+    n2 = len >> 1;
+    c = 2.0 * M_PI / len;
 
-    for(i=0; i<(n/2); i++) {
-        alpha = 2.0 * M_PI * i / n;
-        ctab[i] = cos(alpha);
-        stab[i] = sin(alpha);
+    fft->costab = calloc(n2, sizeof(double));
+    fft->sintab = calloc(n2, sizeof(double));
+    fft->revtab = calloc(len, sizeof(double));
+
+    for(i=0; i<n2; i++) {
+        fft->costab[i] = cos(c * i);
+        fft->sintab[i] = sin(c * i);
     }
 
-    for(i=0; i<n; i++) {
+    for(i=0; i<len; i++) {
         m = 0;
-        for(j=0; j<ln; j++) {
-            m |= ((i >> j) & 1) << (ln-j-1);
+        for(j=0; j<nbits; j++) {
+            m |= ((i >> j) & 1) << (nbits-j-1);
         }
-        rev[i] = m;
+        fft->revtab[i] = m;
     }
 }
 
-static double xcos1[2][128];
-static double xsin1[2][128];
+static void
+fft_close(FFTContext *fft) {
+    if(fft) {
+        fft->length = 0;
+        if(fft->costab) {
+            free(fft->costab);
+            fft->costab = NULL;
+        }
+        if(fft->sintab) {
+            free(fft->sintab);
+            fft->sintab = NULL;
+        }
+        if(fft->revtab) {
+            free(fft->revtab);
+            fft->revtab = NULL;
+        }
+    }
+}
 
 static void
-mdct_init(int n, double *xc, double *xs)
+mdct_init(MDCTContext *mdct, int len)
 {
-    int i, n2, n4;
-    double alpha;
+    int n4;
+    int i;
+    double alpha, c;
 
-    n2 = n >> 1;
-    n4 = n >> 2;
+    mdct->length = len;
+    c = 2.0 * M_PI / mdct->length;
+    n4 = mdct->length >> 2;
+
+    mdct->xcos1 = calloc(n4, sizeof(double));
+    mdct->xsin1 = calloc(n4, sizeof(double));
+
     for(i=0; i<n4; i++) {
-        alpha = M_PI * (i + 0.125) / n2;
-        xc[i] = -cos(alpha);
-        xs[i] = -sin(alpha);
+        alpha = c * (i + 0.125);
+        mdct->xcos1[i] = -cos(alpha);
+        mdct->xsin1[i] = -sin(alpha);
+    }
+
+    mdct->fft = calloc(1, sizeof(FFTContext));
+    fft_init(mdct->fft, n4);
+
+    mdct->buffer = calloc(len, sizeof(double));
+    mdct->cbuffer = calloc(n4, sizeof(Complex));
+}
+
+static void
+mdct_close(MDCTContext *mdct)
+{
+    if(mdct) {
+        mdct->length = 0;
+        if(mdct->xcos1) {
+            free(mdct->xcos1);
+            mdct->xcos1 = NULL;
+        }
+        if(mdct->xsin1) {
+            free(mdct->xsin1);
+            mdct->xsin1 = NULL;
+        }
+        if(mdct->fft) {
+            fft_close(mdct->fft);
+            free(mdct->fft);
+            mdct->fft = NULL;
+        }
+        if(mdct->buffer) {
+            free(mdct->buffer);
+            mdct->buffer = NULL;
+        }
+        if(mdct->cbuffer) {
+            free(mdct->cbuffer);
+            mdct->cbuffer = NULL;
+        }
     }
 }
 
@@ -102,20 +162,20 @@ complex_mul(Complex *p, Complex *a, Complex *b)
 
 /* do a 2^n point complex fft on 2^ln points. */
 static void
-fft(Complex *z, int ln)
+fft(FFTContext *fft, Complex *z)
 {
     int j, l, np, np2;
     int nblocks, nloops;
     Complex *p, *q;
     Complex tmp, tmp1;
 
-    np = 1 << ln;
+    np = fft->length;
 
     // reverse
     for(j=0; j<np; j++) {
         int k;
-        k = fft_rev[ln-6][j];
-        if (k < j) {
+        k = fft->revtab[j];
+        if(k < j) {
             tmp = z[k];
             z[k] = z[j];
             z[j] = tmp;
@@ -160,8 +220,8 @@ fft(Complex *z, int ln)
             p++;
             q++;
             for(l = nblocks; l < np2; l += nblocks) {
-                tmp1.re = costab[ln-6][l];
-                tmp1.im = -sintab[ln-6][l];
+                tmp1.re = fft->costab[l];
+                tmp1.im = -fft->sintab[l];
                 complex_mul(&tmp, &tmp1, q);
                 butterfly(&p->re, &p->im, &q->re, &q->im,
                           p->re, p->im, tmp.re, tmp.im);
@@ -177,54 +237,51 @@ fft(Complex *z, int ln)
 }
 
 static void
-dct_iv(double *out, double *in, int ln)
+dct_iv(MDCTContext *mdct, double *out, double *in)
 {
     int i;
     Complex tmp, tmp1;
     int n, n2, n4;
     Complex *x;
 
-    n = 1 << ln;
+    n = mdct->length;
     n2 = n >> 1;
     n4 = n >> 2;
-    x = malloc(n4 * sizeof(Complex));
+    x = mdct->cbuffer;
 
     // pre rotation
     for(i=0; i<n4; i++) {
         tmp.re = (in[2*i] - in[n-1-2*i]) / 2.0;
         tmp.im = -(in[n2+2*i] - in[n2-1-2*i]) / 2.0;
-        tmp1.re = -xcos1[ln-8][i];
-        tmp1.im = xsin1[ln-8][i];
+        tmp1.re = -mdct->xcos1[i];
+        tmp1.im = mdct->xsin1[i];
         complex_mul(&x[i], &tmp, &tmp1);
     }
 
-    fft(x, ln-2);
+    fft(mdct->fft, x);
 
     // post rotation
-    for(i=0;i<n4;i++) {
-        tmp1.re = xsin1[ln-8][i];
-        tmp1.im = xcos1[ln-8][i];
+    for(i=0; i<n4; i++) {
+        tmp1.re = mdct->xsin1[i];
+        tmp1.im = mdct->xcos1[i];
         complex_mul(&tmp, &x[i], &tmp1);
         out[2*i] = tmp.im;
         out[n2-1-2*i] = tmp.re;
     }
-
-    free(x);
 }
 
 void
-mdct512(double *out, double *in)
+mdct512(A52Context *ctx, double *out, double *in)
 {
     int i;
     double *xx;
 
-    xx = calloc(512, sizeof(double));
+    xx = ctx->mdct_ctx_512.buffer;
     for(i=0; i<512; i++) {
         if(i < 128) xx[i] = -in[i+384];
         else xx[i] = in[i-128];
     }
-    dct_iv(out, xx, 9);
-    free(xx);
+    dct_iv(&ctx->mdct_ctx_512, out, xx);
 }
 
 #if 0
@@ -254,31 +311,28 @@ mdct256_slow(double *out, double *in)
 #endif
 
 void
-mdct256(double *out, double *in)
+mdct256(A52Context *ctx, double *out, double *in)
 {
     int i;
     double *coef_a, *coef_b, *xx;
 
-    coef_a = calloc(128, sizeof(double));
-    coef_b = calloc(128, sizeof(double));
-    xx = calloc(256, sizeof(double));
+    coef_a = out;
+    coef_b = &out[128];
+    xx = ctx->mdct_ctx_256.buffer;
 
-    dct_iv(coef_a, in, 8);
+    dct_iv(&ctx->mdct_ctx_256, coef_a, in);
 
     for(i=0; i<128; i++) {
         xx[i] = -in[i+384];
         xx[i+128] = in[i+256];
     }
-    dct_iv(coef_b, xx, 8);
+    dct_iv(&ctx->mdct_ctx_256, coef_b, xx);
 
     for(i=0; i<128; i++) {
-        out[2*i] = coef_a[i];
-        out[2*i+1] = coef_b[i];
+        xx[2*i] = coef_a[i];
+        xx[2*i+1] = coef_b[i];
     }
-
-    free(coef_a);
-    free(coef_b);
-    free(xx);
+    memcpy(out, xx, 256 * sizeof(double));
 }
 
 static double a52_window[256];
@@ -324,11 +378,16 @@ apply_a52_window(double *samples)
 }
 
 void
-dsp_init()
+dsp_init(A52Context *ctx)
 {
     kbd_window_init(5.0, a52_window, 512, 50);
-    fft_init(6, costab[0], sintab[0], fft_rev[0]);
-    fft_init(7, costab[1], sintab[1], fft_rev[1]);
-    mdct_init(256, xcos1[0], xsin1[0]);
-    mdct_init(512, xcos1[1], xsin1[1]);
+    mdct_init(&ctx->mdct_ctx_512, 512);
+    mdct_init(&ctx->mdct_ctx_256, 256);
+}
+
+void
+dsp_close(A52Context *ctx)
+{
+    mdct_close(&ctx->mdct_ctx_512);
+    mdct_close(&ctx->mdct_ctx_256);
 }

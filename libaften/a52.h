@@ -32,6 +32,7 @@
 #include "bitio.h"
 #include "aften.h"
 #include "filter.h"
+#include "dsp.h"
 
 #define A52_MAX_CHANNELS 7
 #define CPL_CH 6
@@ -107,7 +108,7 @@ typedef struct A52Frame {
     int ncoefs[A52_MAX_CHANNELS];
 } A52Frame;
 
-typedef struct {
+typedef struct A52Context {
     A52Frame frame;
     BitWriter bw;
     AftenEncParams params;
@@ -141,6 +142,9 @@ typedef struct {
     double last_transient_samples[A52_MAX_CHANNELS][256];
     int last_csnroffst;
     int last_quality;
+
+    MDCTContext mdct_ctx_512;
+    MDCTContext mdct_ctx_256;
 } A52Context;
 
 #endif /* A52_H */
