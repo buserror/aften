@@ -25,6 +25,8 @@
 #ifndef FILTER_H
 #define FILTER_H
 
+#include "common.h"
+
 enum FilterType {
     FILTER_TYPE_LOWPASS,
     FILTER_TYPE_HIGHPASS,
@@ -48,15 +50,15 @@ typedef struct {
     void *private;
     enum FilterType type;
     int cascaded;
-    double cutoff;
-    double cutoff2;
-    double samplerate;
+    FLOAT cutoff;
+    FLOAT cutoff2;
+    FLOAT samplerate;
     int taps;
 } FilterContext;
 
 extern int filter_init(FilterContext *f, enum FilterID id);
 
-extern void filter_run(FilterContext *f, double *out, double *in, int n);
+extern void filter_run(FilterContext *f, FLOAT *out, FLOAT *in, int n);
 
 extern void filter_close(FilterContext *f);
 

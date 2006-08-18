@@ -395,7 +395,7 @@ int
 main(int argc, char **argv)
 {
     uint8_t *frame;
-    double *fwav;
+    FLOAT *fwav;
     int nr, fs, err;
     FILE *ifp;
     FILE *ofp;
@@ -403,7 +403,7 @@ main(int argc, char **argv)
     CommandOptions opts;
     AftenContext s;
     uint32_t samplecount, bytecount, t0, t1, percent;
-    double kbps, qual, bw;
+    FLOAT kbps, qual, bw;
 
     opts.s = &s;
     aften_set_defaults(&s);
@@ -461,8 +461,13 @@ main(int argc, char **argv)
     s.channels = wf.channels;
     aften_wav_chmask_to_acmod(wf.channels, wf.ch_mask, &s.acmod, &s.lfe);
     s.samplerate = wf.sample_rate;
+#ifdef CONFIG_FLOAT
+    wf.read_format = WAV_SAMPLE_FMT_FLT;
+    s.sample_format = A52_SAMPLE_FMT_FLT;
+#else
     wf.read_format = WAV_SAMPLE_FMT_DBL;
     s.sample_format = A52_SAMPLE_FMT_DBL;
+#endif
 
     if(aften_encode_init(&s)) {
         fprintf(stderr, "error initializing encoder\n");
@@ -471,7 +476,7 @@ main(int argc, char **argv)
     }
 
     frame = calloc(A52_MAX_CODED_FRAME_SIZE, 1);
-    fwav = calloc(A52_FRAME_SIZE * wf.channels, sizeof(double));
+    fwav = calloc(A52_FRAME_SIZE * wf.channels, sizeof(FLOAT));
     if(frame == NULL || fwav == NULL) {
         aften_encode_close(&s);
         exit(1);

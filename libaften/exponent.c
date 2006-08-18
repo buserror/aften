@@ -39,11 +39,11 @@ static int expsizetab[3][256];
 #define EXP_DIFF_THRESHOLD 0.75
 
 /* sum of absolute difference between exponents in adjacent blocks */
-static double
+static FLOAT
 calc_exp_diff(uint8_t *exp1, uint8_t *exp2, int n)
 {
     int i;
-    double sum;
+    FLOAT sum;
     sum = 0;
     for(i=0; i<n; i++) {
         sum += ABS(exp1[i]-exp2[i]);

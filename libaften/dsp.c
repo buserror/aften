@@ -36,23 +36,23 @@
 #include "dsp.h"
 
 typedef struct Complex {
-    double re, im;
+    FLOAT re, im;
 } Complex;
 
 static void
 fft_init(FFTContext *fft, int len)
 {
     int i, j, m, nbits, n2;
-    double c;
+    FLOAT c;
 
     fft->length = len;
     nbits = log2i(len);
     n2 = len >> 1;
     c = 2.0 * M_PI / len;
 
-    fft->costab = calloc(n2, sizeof(double));
-    fft->sintab = calloc(n2, sizeof(double));
-    fft->revtab = calloc(len, sizeof(double));
+    fft->costab = calloc(n2, sizeof(FLOAT));
+    fft->sintab = calloc(n2, sizeof(FLOAT));
+    fft->revtab = calloc(len, sizeof(FLOAT));
 
     for(i=0; i<n2; i++) {
         fft->costab[i] = cos(c * i);
@@ -92,14 +92,14 @@ mdct_init(MDCTContext *mdct, int len)
 {
     int n4;
     int i;
-    double alpha, c;
+    FLOAT alpha, c;
 
     mdct->length = len;
     c = 2.0 * M_PI / mdct->length;
     n4 = mdct->length >> 2;
 
-    mdct->xcos1 = calloc(n4, sizeof(double));
-    mdct->xsin1 = calloc(n4, sizeof(double));
+    mdct->xcos1 = calloc(n4, sizeof(FLOAT));
+    mdct->xsin1 = calloc(n4, sizeof(FLOAT));
 
     for(i=0; i<n4; i++) {
         alpha = c * (i + 0.125);
@@ -110,7 +110,7 @@ mdct_init(MDCTContext *mdct, int len)
     mdct->fft = calloc(1, sizeof(FFTContext));
     fft_init(mdct->fft, n4);
 
-    mdct->buffer = calloc(len, sizeof(double));
+    mdct->buffer = calloc(len, sizeof(FLOAT));
     mdct->cbuffer = calloc(n4, sizeof(Complex));
 }
 
@@ -144,8 +144,8 @@ mdct_close(MDCTContext *mdct)
 }
 
 static inline void
-butterfly(double *p_re, double *p_im, double *q_re, double *q_im,
-          double p1_re, double p1_im, double q1_re, double q1_im)
+butterfly(FLOAT *p_re, FLOAT *p_im, FLOAT *q_re, FLOAT *q_im,
+          FLOAT p1_re, FLOAT p1_im, FLOAT q1_re, FLOAT q1_im)
 {
     *p_re = (p1_re + q1_re) * 0.5;
     *p_im = (p1_im + q1_im) * 0.5;
@@ -237,7 +237,7 @@ fft(FFTContext *fft, Complex *z)
 }
 
 static void
-dct_iv(MDCTContext *mdct, double *out, double *in)
+dct_iv(MDCTContext *mdct, FLOAT *out, FLOAT *in)
 {
     int i;
     Complex tmp, tmp1;
@@ -271,10 +271,10 @@ dct_iv(MDCTContext *mdct, double *out, double *in)
 }
 
 void
-mdct512(A52Context *ctx, double *out, double *in)
+mdct512(A52Context *ctx, FLOAT *out, FLOAT *in)
 {
     int i;
-    double *xx;
+    FLOAT *xx;
 
     xx = ctx->mdct_ctx_512.buffer;
     for(i=0; i<512; i++) {
@@ -286,10 +286,10 @@ mdct512(A52Context *ctx, double *out, double *in)
 
 #if 0
 static void
-mdct256_slow(double *out, double *in)
+mdct256_slow(FLOAT *out, FLOAT *in)
 {
     int k, n;
-    double s, a;
+    FLOAT s, a;
 
     for(k=0; k<128; k++) {
         s = 0;
@@ -311,10 +311,10 @@ mdct256_slow(double *out, double *in)
 #endif
 
 void
-mdct256(A52Context *ctx, double *out, double *in)
+mdct256(A52Context *ctx, FLOAT *out, FLOAT *in)
 {
     int i;
-    double *coef_a, *coef_b, *xx;
+    FLOAT *coef_a, *coef_b, *xx;
 
     coef_a = out;
     coef_b = &out[128];
@@ -332,10 +332,10 @@ mdct256(A52Context *ctx, double *out, double *in)
         xx[2*i] = coef_a[i];
         xx[2*i+1] = coef_b[i];
     }
-    memcpy(out, xx, 256 * sizeof(double));
+    memcpy(out, xx, 256 * sizeof(FLOAT));
 }
 
-static double a52_window[256];
+static FLOAT a52_window[256];
 
 /**
  * Generate a Kaiser-Bessel Derived Window.
@@ -345,10 +345,10 @@ static double a52_window[256];
  * @param iter          Number of iterations to use in BesselI0
  */
 static void
-kbd_window_init(int alpha, double *window, int n, int iter)
+kbd_window_init(int alpha, FLOAT *window, int n, int iter)
 {
     int j, k, n2;
-    double a, x, wlast;
+    FLOAT a, x, wlast;
 
     n2 = n >> 1;
     a = alpha * M_PI / 256;
@@ -368,7 +368,7 @@ kbd_window_init(int alpha, double *window, int n, int iter)
 }
 
 void
-apply_a52_window(double *samples)
+apply_a52_window(FLOAT *samples)
 {
     int i;
     for(i=0; i<256; i++) {

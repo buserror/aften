@@ -49,6 +49,7 @@ show_help(){
   echo "  --disable-opts           disable compiler optimizations"
   echo "  --enable-memalign-hack   emulate memalign, interferes with memory debuggers"
   echo "  --disable-strip          disable stripping of executables and shared libraries"
+  echo "  --enable-float           enable use of floats instead of doubles"
   echo ""
   echo "NOTE: Object files are built at the place where configure is launched."
   exit 1
@@ -354,6 +355,7 @@ LIB='$(LIBPREF)$(NAME)$(LIBSUF)'
 EXESUF=""
 BUILDSUF=""
 memalignhack="no"
+usefloats="no"
 
 # OS specific
 targetos=`uname -s`
@@ -507,6 +509,8 @@ for opt do
   --enable-memalign-hack) memalignhack="yes"
   ;;
   --disable-strip) dostrip="no"
+  ;;
+  --enable-float) usefloats="yes"
   ;;
   --help) show_help
   ;;
@@ -993,6 +997,10 @@ fi
 
 if test "$memalignhack" = "yes" ; then
   echo "#define MEMALIGN_HACK 1" >> $TMPH
+fi
+
+if test "$usefloats" = "yes" ; then
+  echo "#define CONFIG_FLOAT 1" >> $TMPH
 fi
 
 echo "#define restrict $_restrict" >> $TMPH

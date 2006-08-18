@@ -273,4 +273,14 @@ extern void aften_plain_wav_to_acmod(int ch, int *acmod, int *lfe);
 extern void aften_remap_wav_to_a52(void *samples, int n, int ch,
                                    enum A52SampleFormat fmt, int acmod, int lfe);
 
+enum FloatType {
+    FLOAT_TYPE_DOUBLE,
+    FLOAT_TYPE_FLOAT
+};
+
+/**
+ * Tells whether libaften was configured to use floats or doubles
+ */
+extern enum FloatType aften_get_float_type(void);
+
 #endif /* AFTEN_H */

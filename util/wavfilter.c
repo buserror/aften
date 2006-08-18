@@ -33,10 +33,10 @@
 #include "filter.h"
 
 static void
-wav_filter(double *samples, int ch, int n, FilterContext *f)
+wav_filter(FLOAT *samples, int ch, int n, FilterContext *f)
 {
-    double samples2[ch][n];
-    double tmp[n];
+    FLOAT samples2[ch][n];
+    FLOAT tmp[n];
     int j, i, c;
 
     for(i=0,j=0; i<n; i++) {
@@ -46,7 +46,7 @@ wav_filter(double *samples, int ch, int n, FilterContext *f)
     }
 
     for(c=0; c<ch; c++) {
-        memcpy(tmp, samples2[c], n * sizeof(double));
+        memcpy(tmp, samples2[c], n * sizeof(FLOAT));
         filter_run(&f[c], samples2[c], tmp, n);
     }
 
@@ -94,7 +94,7 @@ output_wav_header(FILE *ofp, WavFile *wf)
 }
 
 static void
-output_wav_data(FILE *ofp, double *samples, int ch, int n)
+output_wav_data(FILE *ofp, FLOAT *samples, int ch, int n)
 {
     int16_t s16[1];
     uint16_t *u16 = (uint16_t *)s16;
@@ -113,7 +113,7 @@ main(int argc, char **argv)
 {
     FILE *ifp, *ofp;
     WavFile wf;
-    double *buf;
+    FLOAT *buf;
     int frame_size;
     int nr;
     int i;
@@ -151,11 +151,17 @@ main(int argc, char **argv)
     }
     output_wav_header(ofp, &wf);
 
+#ifdef CONFIG_FLOAT
+    wf.read_format = WAV_SAMPLE_FMT_FLT;
+#else
+    wf.read_format = WAV_SAMPLE_FMT_DBL;
+#endif
+
     for(i=0; i<wf.channels; i++) {
         f[i].type = ftype;
         f[i].cascaded = 1;
-        f[i].cutoff = (double)atoi(argv[2]);
-        f[i].samplerate = (double)wf.sample_rate;
+        f[i].cutoff = (FLOAT)atoi(argv[2]);
+        f[i].samplerate = (FLOAT)wf.sample_rate;
         if(filter_init(&f[i], FILTER_ID_BUTTERWORTH_II)) {
             fprintf(stderr, "error initializing filter\n");
             exit(1);
@@ -163,7 +169,7 @@ main(int argc, char **argv)
     }
 
     frame_size = 512;
-    buf = malloc(frame_size * wf.channels * sizeof(double));
+    buf = malloc(frame_size * wf.channels * sizeof(FLOAT));
 
     nr = wavfile_read_samples(&wf, buf, frame_size);
     while(nr > 0) {

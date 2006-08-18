@@ -34,20 +34,20 @@ typedef struct Filter {
     enum FilterID id;
     int private_size;
     int (*init)(FilterContext *f);
-    void (*filter)(FilterContext *f, double *out, double *in, int n);
+    void (*filter)(FilterContext *f, FLOAT *out, FLOAT *in, int n);
 } Filter;
 
 
 typedef struct {
-    double coefs[5];
-    double state[2][5];
+    FLOAT coefs[5];
+    FLOAT state[2][5];
 } BiquadContext;
 
 static void
-biquad_generate_lowpass(BiquadContext *f, double fc)
+biquad_generate_lowpass(BiquadContext *f, FLOAT fc)
 {
-    double omega, alpha, cs;
-    double a[3], b[3];
+    FLOAT omega, alpha, cs;
+    FLOAT a[3], b[3];
 
     omega = 2.0 * M_PI * fc;
     alpha = sin(omega) / 2.0;
@@ -68,10 +68,10 @@ biquad_generate_lowpass(BiquadContext *f, double fc)
 }
 
 static void
-biquad_generate_highpass(BiquadContext *f, double fc)
+biquad_generate_highpass(BiquadContext *f, FLOAT fc)
 {
-    double omega, alpha, cs;
-    double a[3], b[3];
+    FLOAT omega, alpha, cs;
+    FLOAT a[3], b[3];
 
     omega = 2.0 * M_PI * fc;
     alpha = sin(omega) / 2.0;
@@ -96,7 +96,7 @@ biquad_init(FilterContext *f)
 {
     int i, j;
     BiquadContext *b = f->private;
-    double fc;
+    FLOAT fc;
 
     if(f->samplerate <= 0) {
         return -1;
@@ -124,11 +124,11 @@ biquad_init(FilterContext *f)
 }
 
 static void
-biquad_i_run_filter(FilterContext *f, double *out, double *in, int n)
+biquad_i_run_filter(FilterContext *f, FLOAT *out, FLOAT *in, int n)
 {
     int i, j, datasize, loops;
-    double v;
-    double *tmp;
+    FLOAT v;
+    FLOAT *tmp;
     BiquadContext *b = f->private;
 
     datasize = 0;
@@ -136,7 +136,7 @@ biquad_i_run_filter(FilterContext *f, double *out, double *in, int n)
     loops = 1;
     if(f->cascaded) {
         loops = 2;
-        datasize = n * sizeof(double);
+        datasize = n * sizeof(FLOAT);
         tmp = malloc(datasize);
         memcpy(tmp, in, datasize);
     }
@@ -171,11 +171,11 @@ biquad_i_run_filter(FilterContext *f, double *out, double *in, int n)
 }
 
 static void
-biquad_ii_run_filter(FilterContext *f, double *out, double *in, int n)
+biquad_ii_run_filter(FilterContext *f, FLOAT *out, FLOAT *in, int n)
 {
     int i, j, datasize, loops;
-    double v;
-    double *tmp;
+    FLOAT v;
+    FLOAT *tmp;
     BiquadContext *b = f->private;
 
     datasize = 0;
@@ -183,7 +183,7 @@ biquad_ii_run_filter(FilterContext *f, double *out, double *in, int n)
     loops = 1;
     if(f->cascaded) {
         loops = 2;
-        datasize = n * sizeof(double);
+        datasize = n * sizeof(FLOAT);
         tmp = malloc(datasize);
         memcpy(tmp, in, datasize);
     }
@@ -231,10 +231,10 @@ Filter biquad_ii_filter = {
 #endif
 
 static void
-butterworth_generate_lowpass(BiquadContext *f, double fc)
+butterworth_generate_lowpass(BiquadContext *f, FLOAT fc)
 {
-    double c = 1.0 / tan(M_PI * fc);
-    double c2 = (c * c);
+    FLOAT c = 1.0 / tan(M_PI * fc);
+    FLOAT c2 = (c * c);
 
     f->coefs[0] = 1.0 / (c2 + M_SQRT2 * c + 1.0);
     f->coefs[1] = 2.0 * f->coefs[0];
@@ -244,10 +244,10 @@ butterworth_generate_lowpass(BiquadContext *f, double fc)
 }
 
 static void
-butterworth_generate_highpass(BiquadContext *f, double fc)
+butterworth_generate_highpass(BiquadContext *f, FLOAT fc)
 {
-    double c = tan(M_PI * fc);
-    double c2 = (c * c);
+    FLOAT c = tan(M_PI * fc);
+    FLOAT c2 = (c * c);
 
     f->coefs[0] = 1.0 / (c2 + M_SQRT2 * c + 1.0);
     f->coefs[1] = -2.0 * f->coefs[0];
@@ -261,7 +261,7 @@ butterworth_init(FilterContext *f)
 {
     int i, j;
     BiquadContext *b = f->private;
-    double fc;
+    FLOAT fc;
 
     if(f->samplerate <= 0) {
         return -1;
@@ -308,14 +308,14 @@ Filter butterworth_ii_filter = {
 /* One-pole, One-zero filter */
 
 typedef struct {
-    double p;
-    double last;
+    FLOAT p;
+    FLOAT last;
 } OnePoleContext;
 
 static void
-onepole_generate_lowpass(OnePoleContext *o, double fc)
+onepole_generate_lowpass(OnePoleContext *o, FLOAT fc)
 {
-    double omega, cs;
+    FLOAT omega, cs;
 
     omega = 2.0 * M_PI * fc;
     cs = 2.0 - cos(omega);
@@ -324,9 +324,9 @@ onepole_generate_lowpass(OnePoleContext *o, double fc)
 }
 
 static void
-onepole_generate_highpass(OnePoleContext *o, double fc)
+onepole_generate_highpass(OnePoleContext *o, FLOAT fc)
 {
-    double omega, cs;
+    FLOAT omega, cs;
 
     omega = 2.0 * M_PI * fc;
     cs = 2.0 + cos(omega);
@@ -338,7 +338,7 @@ static int
 onepole_init(FilterContext *f)
 {
     OnePoleContext *o = f->private;
-    double fc;
+    FLOAT fc;
 
     if(f->cascaded) {
         return -1;
@@ -364,11 +364,11 @@ onepole_init(FilterContext *f)
 }
 
 static void
-onepole_run_filter(FilterContext *f, double *out, double *in, int n)
+onepole_run_filter(FilterContext *f, FLOAT *out, FLOAT *in, int n)
 {
     int i;
-    double v;
-    double p1 = 0;
+    FLOAT v;
+    FLOAT p1 = 0;
     OnePoleContext *o = f->private;
 
     if(f->type == FILTER_TYPE_LOWPASS) {
@@ -421,7 +421,7 @@ filter_init(FilterContext *f, enum FilterID id)
 }
 
 void
-filter_run(FilterContext *f, double *out, double *in, int n)
+filter_run(FilterContext *f, FLOAT *out, FLOAT *in, int n)
 {
     f->filter->filter(f, out, in, n);
 }

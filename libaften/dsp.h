@@ -28,21 +28,23 @@
 #ifndef DSP_H
 #define DSP_H
 
+#include "common.h"
+
 struct A52Context;
 
 typedef struct {
     int length;
-    double *costab;
-    double *sintab;
+    FLOAT *costab;
+    FLOAT *sintab;
     int *revtab;
 } FFTContext;
 
 typedef struct {
     int length;
-    double *xcos1;
-    double *xsin1;
+    FLOAT *xcos1;
+    FLOAT *xsin1;
     FFTContext *fft;
-    double *buffer;
+    FLOAT *buffer;
     void *cbuffer;
 } MDCTContext;
 
@@ -50,10 +52,10 @@ extern void dsp_init(struct A52Context *ctx);
 
 extern void dsp_close(struct A52Context *ctx);
 
-extern void apply_a52_window(double *samples);
+extern void apply_a52_window(FLOAT *samples);
 
-extern void mdct512(struct A52Context *ctx, double *out, double *in);
+extern void mdct512(struct A52Context *ctx, FLOAT *out, FLOAT *in);
 
-extern void mdct256(struct A52Context *ctx, double *out, double *in);
+extern void mdct256(struct A52Context *ctx, FLOAT *out, FLOAT *in);
 
 #endif /* DSP_H */

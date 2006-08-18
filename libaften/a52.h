@@ -62,9 +62,9 @@ typedef struct A52Block {
     int block_num;
     int blksw[A52_MAX_CHANNELS];
     int dithflag[A52_MAX_CHANNELS];
-    double input_samples[A52_MAX_CHANNELS][512];
-    double transient_samples[A52_MAX_CHANNELS][512];
-    double mdct_coef[A52_MAX_CHANNELS][256];
+    FLOAT input_samples[A52_MAX_CHANNELS][512];
+    FLOAT transient_samples[A52_MAX_CHANNELS][512];
+    FLOAT mdct_coef[A52_MAX_CHANNELS][256];
     uint8_t exp[A52_MAX_CHANNELS][256];
     int16_t psd[A52_MAX_CHANNELS][256];
     int16_t mask[A52_MAX_CHANNELS][50];
@@ -90,7 +90,7 @@ typedef struct A52Frame {
     int bit_rate;
     int bwcode;
 
-    double input_audio[A52_MAX_CHANNELS][A52_FRAME_SIZE];
+    FLOAT input_audio[A52_MAX_CHANNELS][A52_FRAME_SIZE];
     A52Block blocks[A52_NUM_BLOCKS];
     int frame_bits;
     int exp_bits;
@@ -138,8 +138,8 @@ typedef struct A52Context {
     FilterContext bw_filter[A52_MAX_CHANNELS];
     FilterContext lfe_filter;
 
-    double last_samples[A52_MAX_CHANNELS][256];
-    double last_transient_samples[A52_MAX_CHANNELS][256];
+    FLOAT last_samples[A52_MAX_CHANNELS][256];
+    FLOAT last_transient_samples[A52_MAX_CHANNELS][256];
     int last_csnroffst;
     int last_quality;
 

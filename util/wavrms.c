@@ -33,9 +33,9 @@
 #include "wav.h"
 
 static uint8_t
-calculate_rms(double *samples, int ch, int n)
+calculate_rms(FLOAT *samples, int ch, int n)
 {
-    double rms_all, rms_left, rms_right;
+    FLOAT rms_all, rms_left, rms_right;
     int i;
 
     // Calculate RMS values
@@ -102,7 +102,7 @@ main(int argc, char **argv)
 {
     FILE *fp;
     WavFile wf;
-    double *buf;
+    FLOAT *buf;
     uint8_t rms;
     uint8_t *rms_list;
     int list_size, frame_size;
@@ -134,7 +134,7 @@ main(int argc, char **argv)
 
     list_size = 8192;
     rms_list = malloc(list_size);
-    buf = malloc(frame_size * wf.channels * sizeof(double));
+    buf = malloc(frame_size * wf.channels * sizeof(FLOAT));
 
     frame_count = 0;
     avg_rms = 0;

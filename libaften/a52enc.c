@@ -220,7 +220,7 @@ aften_encode_init(AftenContext *s)
             ctx->bs_filter[i].type = FILTER_TYPE_HIGHPASS;
             ctx->bs_filter[i].cascaded = 1;
             ctx->bs_filter[i].cutoff = 8000;
-            ctx->bs_filter[i].samplerate = (double)ctx->sample_rate;
+            ctx->bs_filter[i].samplerate = (FLOAT)ctx->sample_rate;
             if(filter_init(&ctx->bs_filter[i], FILTER_ID_BIQUAD_I)) {
                 fprintf(stderr, "error initializing transient-detect filter\n");
                 return -1;
@@ -235,7 +235,7 @@ aften_encode_init(AftenContext *s)
             ctx->dc_filter[i].type = FILTER_TYPE_HIGHPASS;
             ctx->dc_filter[i].cascaded = 0;
             ctx->dc_filter[i].cutoff = 3;
-            ctx->dc_filter[i].samplerate = (double)ctx->sample_rate;
+            ctx->dc_filter[i].samplerate = (FLOAT)ctx->sample_rate;
             if(filter_init(&ctx->dc_filter[i], FILTER_ID_ONEPOLE)) {
                 fprintf(stderr, "error initializing dc filter\n");
                 return -1;
@@ -260,7 +260,7 @@ aften_encode_init(AftenContext *s)
                 ctx->bw_filter[i].type = FILTER_TYPE_LOWPASS;
                 ctx->bw_filter[i].cascaded = 1;
                 ctx->bw_filter[i].cutoff = cutoff;
-                ctx->bw_filter[i].samplerate = (double)ctx->sample_rate;
+                ctx->bw_filter[i].samplerate = (FLOAT)ctx->sample_rate;
                 if(filter_init(&ctx->bw_filter[i], FILTER_ID_BUTTERWORTH_II)) {
                     fprintf(stderr, "error initializing bandwidth filter\n");
                     return -1;
@@ -279,7 +279,7 @@ aften_encode_init(AftenContext *s)
         ctx->lfe_filter.type = FILTER_TYPE_LOWPASS;
         ctx->lfe_filter.cascaded = 1;
         ctx->lfe_filter.cutoff = 120;
-        ctx->lfe_filter.samplerate = (double)ctx->sample_rate;
+        ctx->lfe_filter.samplerate = (FLOAT)ctx->sample_rate;
         if(filter_init(&ctx->lfe_filter, FILTER_ID_BUTTERWORTH_II)) {
             fprintf(stderr, "error initializing lfe filter\n");
             return -1;
@@ -670,7 +670,7 @@ output_frame_end(A52Context *ctx)
 }
 
 static void
-fmt_convert_from_u8(double *dest, uint8_t *src, int n)
+fmt_convert_from_u8(FLOAT *dest, uint8_t *src, int n)
 {
     int i;
     for(i=0; i<n; i++) {
@@ -679,7 +679,7 @@ fmt_convert_from_u8(double *dest, uint8_t *src, int n)
 }
 
 static void
-fmt_convert_from_s16(double *dest, int16_t *src, int n)
+fmt_convert_from_s16(FLOAT *dest, int16_t *src, int n)
 {
     int i;
     for(i=0; i<n; i++) {
@@ -688,7 +688,7 @@ fmt_convert_from_s16(double *dest, int16_t *src, int n)
 }
 
 static void
-fmt_convert_from_s20(double *dest, int32_t *src, int n)
+fmt_convert_from_s20(FLOAT *dest, int32_t *src, int n)
 {
     int i;
     for(i=0; i<n; i++) {
@@ -697,7 +697,7 @@ fmt_convert_from_s20(double *dest, int32_t *src, int n)
 }
 
 static void
-fmt_convert_from_s24(double *dest, int32_t *src, int n)
+fmt_convert_from_s24(FLOAT *dest, int32_t *src, int n)
 {
     int i;
     for(i=0; i<n; i++) {
@@ -706,7 +706,7 @@ fmt_convert_from_s24(double *dest, int32_t *src, int n)
 }
 
 static void
-fmt_convert_from_s32(double *dest, int32_t *src, int n)
+fmt_convert_from_s32(FLOAT *dest, int32_t *src, int n)
 {
     int i;
     for(i=0; i<n; i++) {
@@ -715,7 +715,7 @@ fmt_convert_from_s32(double *dest, int32_t *src, int n)
 }
 
 static void
-fmt_convert_from_float(double *dest, float *src, int n)
+fmt_convert_from_float(FLOAT *dest, float *src, int n)
 {
     int i;
     for(i=0; i<n; i++) {
@@ -724,15 +724,12 @@ fmt_convert_from_float(double *dest, float *src, int n)
 }
 
 static void
-fmt_convert_from_double(double *dest, double *src, int n)
+fmt_convert_from_double(FLOAT *dest, double *src, int n)
 {
-    /*
     int i;
     for(i=0; i<n; i++) {
         dest[i] = src[i];
     }
-    */
-    memcpy(dest, src, n*sizeof(double));
 }
 
 static void
@@ -740,8 +737,8 @@ copy_samples(A52Context *ctx, void *vsamples)
 {
     int ch, blk, j;
     int sinc, nsmp;
-    double *samples;
-    double filtered_audio[A52_FRAME_SIZE];
+    FLOAT *samples;
+    FLOAT filtered_audio[A52_FRAME_SIZE];
     A52Frame *frame;
     A52Block *block;
 
@@ -749,7 +746,7 @@ copy_samples(A52Context *ctx, void *vsamples)
     frame = &ctx->frame;
 
     nsmp = sinc * A52_FRAME_SIZE;
-    samples = calloc(nsmp, sizeof(double));
+    samples = calloc(nsmp, sizeof(FLOAT));
     switch(ctx->sample_format) {
         case A52_SAMPLE_FMT_U8:  fmt_convert_from_u8(samples, vsamples, nsmp);
                                  break;
@@ -779,7 +776,7 @@ copy_samples(A52Context *ctx, void *vsamples)
             filter_run(&ctx->dc_filter[ch], filtered_audio,
                        frame->input_audio[ch], A52_FRAME_SIZE);
             memcpy(frame->input_audio[ch], filtered_audio,
-                   A52_FRAME_SIZE * sizeof(double));
+                   A52_FRAME_SIZE * sizeof(FLOAT));
         }
     }
 
@@ -789,7 +786,7 @@ copy_samples(A52Context *ctx, void *vsamples)
             filter_run(&ctx->bw_filter[ch], filtered_audio,
                        frame->input_audio[ch], A52_FRAME_SIZE);
             memcpy(frame->input_audio[ch], filtered_audio,
-                   A52_FRAME_SIZE * sizeof(double));
+                   A52_FRAME_SIZE * sizeof(FLOAT));
         }
     }
 
@@ -801,11 +798,11 @@ copy_samples(A52Context *ctx, void *vsamples)
             for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
                 block = &frame->blocks[blk];
                 memcpy(block->transient_samples[ch],
-                       ctx->last_transient_samples[ch], 256 * sizeof(double));
+                       ctx->last_transient_samples[ch], 256 * sizeof(FLOAT));
                 memcpy(&block->transient_samples[ch][256],
-                       &filtered_audio[256*blk], 256 * sizeof(double));
+                       &filtered_audio[256*blk], 256 * sizeof(FLOAT));
                 memcpy(ctx->last_transient_samples[ch],
-                       &filtered_audio[256*blk], 256 * sizeof(double));
+                       &filtered_audio[256*blk], 256 * sizeof(FLOAT));
             }
         }
     }
@@ -816,31 +813,31 @@ copy_samples(A52Context *ctx, void *vsamples)
         filter_run(&ctx->lfe_filter, filtered_audio,
                    frame->input_audio[ch], A52_FRAME_SIZE);
         memcpy(frame->input_audio[ch], filtered_audio,
-               A52_FRAME_SIZE * sizeof(double));
+               A52_FRAME_SIZE * sizeof(FLOAT));
     }
 
     for(ch=0; ch<sinc; ch++) {
         for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
             block = &frame->blocks[blk];
             memcpy(block->input_samples[ch], ctx->last_samples[ch],
-                   256 * sizeof(double));
+                   256 * sizeof(FLOAT));
             memcpy(&block->input_samples[ch][256],
-                   &frame->input_audio[ch][256*blk], 256 * sizeof(double));
+                   &frame->input_audio[ch][256*blk], 256 * sizeof(FLOAT));
             memcpy(ctx->last_samples[ch],
-                   &frame->input_audio[ch][256*blk], 256 * sizeof(double));
+                   &frame->input_audio[ch][256*blk], 256 * sizeof(FLOAT));
         }
     }
 }
 
 /* determines block length by detecting transients */
 static int
-detect_transient(double *in)
+detect_transient(FLOAT *in)
 {
     int i, j;
-    double level1[2];
-    double level2[4];
-    double level3[8];
-    double *xx = in;
+    FLOAT level1[2];
+    FLOAT level2[4];
+    FLOAT level3[8];
+    FLOAT *xx = in;
 
     // level 1 (2 x 256)
     for(i=0; i<2; i++) {
@@ -912,8 +909,8 @@ generate_coefs(A52Context *ctx)
 static void
 calc_rematrixing(A52Context *ctx)
 {
-    double sum[4][4];
-    double lt, rt, ctmp1, ctmp2;
+    FLOAT sum[4][4];
+    FLOAT lt, rt, ctmp1, ctmp2;
     int blk, bnd, i;
     A52Block *block;
 
