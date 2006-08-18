@@ -544,8 +544,11 @@ cbr_bit_allocation(A52Context *ctx, int prepare)
     // decrease csnroffst if necessary until data fits in frame
     leftover = avail_bits - bit_alloc(ctx, csnroffst, fsnroffst);
     while(csnroffst > 0 && leftover < 0) {
-        csnroffst--;
-        if(csnroffst == 0) fsnroffst = 1;
+        csnroffst -= 4;
+        if(csnroffst <= 0) {
+            csnroffst = 0;
+            fsnroffst = 1;
+        }
         leftover = avail_bits - bit_alloc(ctx, csnroffst, fsnroffst);
     }
 
