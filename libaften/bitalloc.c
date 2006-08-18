@@ -242,6 +242,20 @@ calc_lowcomp(int a, int b0, int b1, int bin)
     return a;
 }
 
+static int
+psd_combine(int16_t *psd, int bins)
+{
+    int i, adr;
+    int v;
+
+    v = psd[0];
+    for(i=1; i<bins; i++) {
+        adr = MIN((ABS(v-psd[i]) >> 1), 255);
+        v = MAX(v, psd[i]) + latab[adr];
+    }
+    return v;
+}
+
 /* A52 bit allocation preparation to speed up matching left bits. */
 static void
 a52_bit_allocation_prepare(A52BitAllocParams *s, int blk, int ch,
@@ -250,7 +264,7 @@ a52_bit_allocation_prepare(A52BitAllocParams *s, int blk, int ch,
                    int deltbae,int deltnseg, uint8_t *deltoffst,
                    uint8_t *deltlen, uint8_t *deltba)
 {
-    int bnd, i, j, end1, v, bndstrt, bndend, lowcomp, begin;
+    int bnd, i, end1, bndstrt, bndend, lowcomp, begin;
     int fastleak, slowleak;
     int16_t bndpsd[50]; // power spectral density for critical bands
     int16_t excite[50]; // excitation function
@@ -262,18 +276,14 @@ a52_bit_allocation_prepare(A52BitAllocParams *s, int blk, int ch,
         psd[i] = psdtab[exp[i]];
     }
 
-    // use log addition to integrate PSD for each critical band
+    // use log addition to combine PSD for each critical band
     bndstrt = masktab[0];
     bndend = masktab[end-1] + 1;
-    j = 0;
+    i = 0;
     for(bnd=bndstrt; bnd<bndend; bnd++) {
-        v = psd[j++];
-        end1 = MIN(bndtab[bnd+1], end);
-        for(i=j; i<end1; i++,j++) {
-            int adr = MIN((ABS(v-psd[j]) >> 1), 255);
-            v = MAX(v, psd[j]) + latab[adr];
-        }
-        bndpsd[bnd] = v;
+        int bins = MIN(bndtab[bnd+1], end) - i;
+        bndpsd[bnd] = psd_combine(&psd[i], bins);
+        i += bins;
     }
 
     // excitation function
