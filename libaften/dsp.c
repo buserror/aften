@@ -277,9 +277,11 @@ mdct512(A52Context *ctx, FLOAT *out, FLOAT *in)
     FLOAT *xx;
 
     xx = ctx->mdct_ctx_512.buffer;
-    for(i=0; i<512; i++) {
-        if(i < 128) xx[i] = -in[i+384];
-        else xx[i] = in[i-128];
+    for(i=0; i<128; i++) {
+        xx[i] = -in[i+384];
+    }
+    for(; i<512; i++) {
+        xx[i] = in[i-128];
     }
     dct_iv(&ctx->mdct_ctx_512, out, xx);
 }
