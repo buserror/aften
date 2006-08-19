@@ -118,6 +118,10 @@ wavfile_init(WavFile *wf, FILE *fp)
                     chunksize -= 10;
                 }
 
+                if(wf->format == WAVE_FORMAT_PCM || wf->format == WAVE_FORMAT_IEEEFLOAT) {
+                    wf->block_align = ((wf->bit_width + 7) >> 3) * wf->channels;
+                }
+
                 // make up channel mask if not using WAVE_FORMAT_EXTENSIBLE
                 // or if ch_mask is set to zero (unspecified configuration)
                 // TODO: select default configurations for >6 channels
