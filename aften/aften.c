@@ -60,7 +60,7 @@ print_help(FILE *out)
                  "                       1 = show average stats (default)\n"
                  "                       2 = show each frame's stats\n"
                  "    [-b #]         CBR bitrate in kbps (default: about 96kbps per channel)\n"
-                 "    [-q #]         VBR quality [1 - 1023] (default: 220)\n"
+                 "    [-q #]         VBR quality [0 - 1023] (default: 220)\n"
                  "    [-w #]         Bandwidth\n"
                  "                       0 to 60 = fixed bandwidth (28%%-99%% of full bandwidth)\n"
                  "                      -1 = fixed adaptive bandwidth (default)\n"
@@ -344,8 +344,8 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
                     if(i >= argc) return 1;
                     opts->s->params.quality = atoi(argv[i]);
                     opts->s->params.encoding_mode = AFTEN_ENC_MODE_VBR;
-                    if(opts->s->params.quality < 1 || opts->s->params.quality > 1023) {
-                        fprintf(stderr, "invalid quality: %d. must be 1 to 1023.\n", opts->s->params.quality);
+                    if(opts->s->params.quality < 0 || opts->s->params.quality > 1023) {
+                        fprintf(stderr, "invalid quality: %d. must be 0 to 1023.\n", opts->s->params.quality);
                         return 1;
                     }
                 } else if(argv[i][1] == 'w') {

@@ -373,6 +373,13 @@ a52_bit_allocation(uint8_t *bap, int16_t *psd, int16_t *mask,
     int i, j, endj;
     int v, address;
 
+    if(snroffset == SNROFFST(0, 0)) {
+        for(i=0; i<end; i++) {
+            bap[i] = 0;
+        }
+        return;
+    }
+
     for (i = 0, j = masktab[0]; end > bndtab[j]; ++j) {
         v = (MAX(mask[j] - (snroffset + floor), 0) & 0x1FE0) + floor;
         endj = MIN(bndtab[j] + bndsz[j], end);
@@ -544,11 +551,7 @@ cbr_bit_allocation(A52Context *ctx, int prepare)
     // decrease csnroffst if necessary until data fits in frame
     leftover = avail_bits - bit_alloc(ctx, csnroffst, fsnroffst);
     while(csnroffst > 0 && leftover < 0) {
-        csnroffst -= 4;
-        if(csnroffst <= 0) {
-            csnroffst = 0;
-            fsnroffst = 1;
-        }
+        csnroffst = MAX(csnroffst-4, 0);
         leftover = avail_bits - bit_alloc(ctx, csnroffst, fsnroffst);
     }
 
@@ -609,8 +612,6 @@ vbr_bit_allocation(A52Context *ctx)
 
     // convert quality in range 0 to 1023 to csnroffst & fsnroffst
     // csnroffst has range 0 to 63, fsnroffst has range 0 to 15
-    // quality of 0 (csnr=0,fsnr=0) is within spec, but seems to have
-    // decoding issues...maybe a bug in bit allocation or in liba52?
     snroffst = (ctx->params.quality - 240);
     csnroffst = (snroffst / 16) + 15;
     fsnroffst = (snroffst % 16);

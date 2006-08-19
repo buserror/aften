@@ -158,7 +158,7 @@ aften_encode_init(AftenContext *s)
             }
         }
     } else if(ctx->params.encoding_mode == AFTEN_ENC_MODE_VBR) {
-        if(s->params.quality < 1 || s->params.quality > 1023) {
+        if(s->params.quality < 0 || s->params.quality > 1023) {
             return -1;
         }
     } else {

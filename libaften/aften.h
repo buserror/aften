@@ -119,7 +119,7 @@ typedef struct {
     /**
      * VBR Quality.
      * This option sets the target quality for VBR encoding mode.
-     * The range is 1 to 1023 and corresponds to the SNR offset.
+     * The range is 0 to 1023 and corresponds to the SNR offset.
      * default is 220
      */
     int quality;
