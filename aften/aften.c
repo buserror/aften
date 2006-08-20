@@ -461,12 +461,12 @@ main(int argc, char **argv)
     s.channels = wf.channels;
     aften_wav_chmask_to_acmod(wf.channels, wf.ch_mask, &s.acmod, &s.lfe);
     s.samplerate = wf.sample_rate;
-#ifdef CONFIG_FLOAT
-    wf.read_format = WAV_SAMPLE_FMT_FLT;
-    s.sample_format = A52_SAMPLE_FMT_FLT;
-#else
+#ifdef CONFIG_DOUBLE
     wf.read_format = WAV_SAMPLE_FMT_DBL;
     s.sample_format = A52_SAMPLE_FMT_DBL;
+#else
+    wf.read_format = WAV_SAMPLE_FMT_FLT;
+    s.sample_format = A52_SAMPLE_FMT_FLT;
 #endif
 
     if(aften_encode_init(&s)) {

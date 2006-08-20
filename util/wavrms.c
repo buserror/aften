@@ -132,6 +132,12 @@ main(int argc, char **argv)
     }
     frame_size = wf.sample_rate * 50 / 1000;
 
+#ifdef CONFIG_DOUBLE
+    wf.read_format = WAV_SAMPLE_FMT_DBL;
+#else
+    wf.read_format = WAV_SAMPLE_FMT_FLT;
+#endif
+
     list_size = 8192;
     rms_list = malloc(list_size);
     buf = malloc(frame_size * wf.channels * sizeof(FLOAT));

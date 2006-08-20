@@ -260,9 +260,9 @@ aften_remap_wav_to_a52(void *samples, int n, int ch, enum A52SampleFormat fmt,
 enum FloatType
 aften_get_float_type(void)
 {
-#ifdef CONFIG_FLOAT
-    return FLOAT_TYPE_FLOAT;
-#else
+#ifdef CONFIG_DOUBLE
     return FLOAT_TYPE_DOUBLE;
+#else
+    return FLOAT_TYPE_FLOAT;
 #endif
 }

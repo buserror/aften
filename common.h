@@ -52,10 +52,10 @@ typedef unsigned __int64 uint64_t;
 #endif
 #endif /* EMULATE_INTTYPES */
 
-#ifdef CONFIG_FLOAT
-typedef float FLOAT;
-#else
+#ifdef CONFIG_DOUBLE
 typedef double FLOAT;
+#else
+typedef float FLOAT;
 #endif
 
 #define ABS(a) ((a) >= 0 ? (a) : (-(a)))

@@ -49,7 +49,7 @@ show_help(){
   echo "  --disable-opts           disable compiler optimizations"
   echo "  --enable-memalign-hack   emulate memalign, interferes with memory debuggers"
   echo "  --disable-strip          disable stripping of executables and shared libraries"
-  echo "  --enable-float           enable use of floats instead of doubles"
+  echo "  --enable-double          enable use of doubles instead of floats"
   echo ""
   echo "NOTE: Object files are built at the place where configure is launched."
   exit 1
@@ -355,7 +355,7 @@ LIB='$(LIBPREF)$(NAME)$(LIBSUF)'
 EXESUF=""
 BUILDSUF=""
 memalignhack="no"
-usefloats="no"
+usedoubles="no"
 
 # OS specific
 targetos=`uname -s`
@@ -510,7 +510,7 @@ for opt do
   ;;
   --disable-strip) dostrip="no"
   ;;
-  --enable-float) usefloats="yes"
+  --enable-double) usedoubles="yes"
   ;;
   --help) show_help
   ;;
@@ -815,6 +815,7 @@ fi
 echo "debug symbols    $debug"
 echo "strip symbols    $dostrip"
 echo "optimize         $optimize"
+echo "use doubles      $usedoubles"
 
 echo "Creating config.mak and config.h..."
 
@@ -999,8 +1000,8 @@ if test "$memalignhack" = "yes" ; then
   echo "#define MEMALIGN_HACK 1" >> $TMPH
 fi
 
-if test "$usefloats" = "yes" ; then
-  echo "#define CONFIG_FLOAT 1" >> $TMPH
+if test "$use doubles" = "yes" ; then
+  echo "#define CONFIG_DOUBLE 1" >> $TMPH
 fi
 
 echo "#define restrict $_restrict" >> $TMPH

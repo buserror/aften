@@ -151,10 +151,10 @@ main(int argc, char **argv)
     }
     output_wav_header(ofp, &wf);
 
-#ifdef CONFIG_FLOAT
-    wf.read_format = WAV_SAMPLE_FMT_FLT;
-#else
+#ifdef CONFIG_DOUBLE
     wf.read_format = WAV_SAMPLE_FMT_DBL;
+#else
+    wf.read_format = WAV_SAMPLE_FMT_FLT;
 #endif
 
     for(i=0; i<wf.channels; i++) {
