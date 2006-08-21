@@ -385,10 +385,10 @@ a52_bit_allocation(uint8_t *bap, int16_t *psd, int16_t *mask,
     int i, j, endj;
     int v, address1, address2, offset;
 
+    // csnroffst=0 & fsnroffst=0 is a special-case scenario in which all baps
+    // are set to zero and the core bit allocation is skipped.
     if(snroffset == SNROFFST(0, 0)) {
-        for(i=0; i<end; i++) {
-            bap[i] = 0;
-        }
+        memset(bap, 0, end);
         return;
     }
 
