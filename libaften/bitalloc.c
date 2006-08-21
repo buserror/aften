@@ -419,33 +419,38 @@ a52_bit_allocation(uint8_t *bap, int16_t *psd, int16_t *mask,
  * This is determined solely by the bit allocation pointers.
  */
 static int
-compute_mantissa_size(int mant_cnt[3], uint8_t *bap, int ncoefs)
+compute_mantissa_size(int mant_cnt[5], uint8_t *bap, int ncoefs)
 {
     int bits, b, i;
 
     bits = 0;
     for(i=0; i<ncoefs; i++) {
         b = bap[i];
-        switch(b) {
-            case 0:  break;
-            case 1:  if(!(mant_cnt[0] & 2)) bits += 5;
-                     mant_cnt[0]++;
-                     break;
-            case 2:  if(!(mant_cnt[1] & 2)) bits += 7;
-                     mant_cnt[1]++;
-                     break;
-            case 3:  bits += 3;
-                     break;
-            case 4:  if(!(mant_cnt[2] & 1)) bits += 7;
-                     mant_cnt[2]++;
-                     break;
-            case 14: bits += 14;
-                     break;
-            case 15: bits += 16;
-                     break;
-            default: bits += b - 1;
+        if(b <= 4) {
+            // bap=1 to bap=4 will be counted in compute_mantissa_size_final
+            ++mant_cnt[b];
+        } else if(b <= 13) {
+            // bap=5 to bap=13 use (bap-1) bits
+            bits += b-1;
+        } else {
+            // bap=14 uses 14 bits and bap=15 uses 16 bits
+            bits += 14 + ((b-14)<<1);
         }
     }
+    return bits;
+}
+
+/** Finalize the mantissa bit count by adding in the grouped mantissas */
+static int
+compute_mantissa_size_final(int mant_cnt[5])
+{
+    // bap=1 : 3 mantissas in 5 bits
+    int bits = (mant_cnt[1] / 3) * 5;
+    // bap=2 : 3 mantissas in 7 bits
+    // bap=4 : 2 mantissas in 7 bits
+    bits += ((mant_cnt[2] / 3) + (mant_cnt[4] >> 1)) * 7;
+    // bap=3 : each mantissa is 3 bits
+    bits += mant_cnt[3] * 3;
     return bits;
 }
 
@@ -480,7 +485,7 @@ bit_alloc(A52Context *ctx, int csnroffst, int fsnroffst)
 {
     int blk, ch;
     int snroffset, bits;
-    int mant_cnt[3];
+    int mant_cnt[5];
     A52Frame *frame;
     A52Block *block;
 
@@ -490,7 +495,12 @@ bit_alloc(A52Context *ctx, int csnroffst, int fsnroffst)
 
     for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
         block = &ctx->frame.blocks[blk];
-        mant_cnt[0] = mant_cnt[1] = mant_cnt[2] = 0;
+        // initialize grouped mantissa counts. these are set so that they are
+        // padded to the next whole group size when bits are counted in
+        // compute_mantissa_size_final
+        mant_cnt[0] = mant_cnt[3] = 0;
+        mant_cnt[1] = mant_cnt[2] = 2;
+        mant_cnt[4] = 1;
         for(ch=0; ch<ctx->n_all_channels; ch++) {
             memset(block->bap[ch], 0, 256);
             a52_bit_allocation(block->bap[ch], block->psd[ch], block->mask[ch],
@@ -499,6 +509,7 @@ bit_alloc(A52Context *ctx, int csnroffst, int fsnroffst)
             bits += compute_mantissa_size(mant_cnt, block->bap[ch], frame->ncoefs[ch]);
 
         }
+        bits += compute_mantissa_size_final(mant_cnt);
     }
 
     return bits;
