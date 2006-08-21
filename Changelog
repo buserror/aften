@@ -19,7 +19,13 @@ Aften TODO list
 Aften Changelog
 ---------------
 version SVN : current
+
+version 0.05 : 21 August 2006
 - bit allocation speedup by Prakash Punnoor <prakash@punnoor.de>
+- compile-time choice of using floats or doubles internally
+- internal restructuring of MDCT functions
+- more bit allocation speed-ups and bug fixes
+- quality=0 is now a valid setting
 
 version 0.04 : 05 August 2006
 - fixed VBR to lower quality if needed to fit in largest available frame size
