@@ -502,7 +502,6 @@ bit_alloc(A52Context *ctx, int csnroffst, int fsnroffst)
         mant_cnt[1] = mant_cnt[2] = 2;
         mant_cnt[4] = 1;
         for(ch=0; ch<ctx->n_all_channels; ch++) {
-            memset(block->bap[ch], 0, 256);
             a52_bit_allocation(block->bap[ch], block->psd[ch], block->mask[ch],
                                blk, ch, frame->ncoefs[ch], snroffset,
                                frame->bit_alloc.floor);
