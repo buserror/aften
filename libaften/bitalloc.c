@@ -242,6 +242,7 @@ calc_lowcomp(int a, int b0, int b1, int bin)
     return a;
 }
 
+/** combine psd value in multiple bins into a single psd value */
 static int
 psd_combine(int16_t *psd, int bins)
 {
@@ -256,7 +257,11 @@ psd_combine(int16_t *psd, int bins)
     return v;
 }
 
-/* A52 bit allocation preparation to speed up matching left bits. */
+/**
+ * A52 bit allocation preparation to speed up matching left bits.
+ * This generates the power-spectral densities and the masking curve based on
+ * the mdct coefficient exponents and bit allocation parameters.
+ */
 static void
 a52_bit_allocation_prepare(A52BitAllocParams *s, int blk, int ch,
                    uint8_t *exp, int16_t *psd, int16_t *mask,
@@ -365,7 +370,14 @@ a52_bit_allocation_prepare(A52BitAllocParams *s, int blk, int ch,
     }
 }
 
-/* A52 bit allocation */
+/**
+ * A52 bit allocation
+ * Generate bit allocation pointers for each mantissa, which determines the
+ * number of bits allocated for each mantissa.  The fine-grain power-spectral
+ * densities and the masking curve have been pre-generated in the preparation
+ * step.  They are used along with the given snroffset and floor values to
+ * calculate each bap value.
+ */
 static void
 a52_bit_allocation(uint8_t *bap, int16_t *psd, int16_t *mask,
                    int blk, int ch, int end, int snroffset, int floor)
@@ -402,7 +414,10 @@ a52_bit_allocation(uint8_t *bap, int16_t *psd, int16_t *mask,
     }
 }
 
-/** return the size in bits taken by the mantissas */
+/**
+ * Calculate the size in bits taken by the mantissas.
+ * This is determined solely by the bit allocation pointers.
+ */
 static int
 compute_mantissa_size(int mant_cnt[3], uint8_t *bap, int ncoefs)
 {
@@ -456,7 +471,10 @@ bit_alloc_prepare(A52Context *ctx)
     }
 }
 
-/** returns number of mantissa bits used */
+/**
+ * Run the bit allocation routine using the given snroffset values.
+ * Returns number of mantissa bits used.
+ */
 static int
 bit_alloc(A52Context *ctx, int csnroffst, int fsnroffst)
 {
@@ -541,6 +559,10 @@ count_frame_bits(A52Context *ctx)
     frame->frame_bits = frame_bits;
 }
 
+/**
+ * Calculates the snroffset values which, when used, keep the size of the
+ * encoded data within a fixed frame size.
+ */
 static int
 cbr_bit_allocation(A52Context *ctx, int prepare)
 {
@@ -606,6 +628,10 @@ cbr_bit_allocation(A52Context *ctx, int prepare)
     return 0;
 }
 
+/**
+ * Finds the frame size which will hold all of the data when using an
+ * snroffset value as determined by the user-selected quality setting.
+ */
 static int
 vbr_bit_allocation(A52Context *ctx)
 {
@@ -652,6 +678,11 @@ vbr_bit_allocation(A52Context *ctx)
     return cbr_bit_allocation(ctx, 0);
 }
 
+/**
+ * Run the bit allocation encoding routine.
+ * This loads the bit allocation parameters and runs the bit allocation in
+ * either CBR or VBR mode, depending on the mode selected by the user.
+ */
 int
 compute_bit_allocation(A52Context *ctx)
 {
