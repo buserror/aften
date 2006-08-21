@@ -371,7 +371,7 @@ a52_bit_allocation(uint8_t *bap, int16_t *psd, int16_t *mask,
                    int blk, int ch, int end, int snroffset, int floor)
 {
     int i, j, endj;
-    int v, address;
+    int v, address1, address2, offset;
 
     if(snroffset == SNROFFST(0, 0)) {
         for(i=0; i<end; i++) {
@@ -380,14 +380,24 @@ a52_bit_allocation(uint8_t *bap, int16_t *psd, int16_t *mask,
         return;
     }
 
+    offset = snroffset + floor;
     for (i = 0, j = masktab[0]; end > bndtab[j]; ++j) {
-        v = (MAX(mask[j] - (snroffset + floor), 0) & 0x1FE0) + floor;
+        v = (MAX(mask[j] - offset, 0) & 0x1FE0) + floor;
         endj = MIN(bndtab[j] + bndsz[j], end);
-        while (i < endj) {
-            address = (psd[i] - v) >> 5;
-            address = CLIP(address, 0, 63);
-            bap[i] = baptab[address];
+        if ((endj-i) & 1) {
+            address1 = (psd[i] - v) >> 5;
+            address1 = CLIP(address1, 0, 63);
+            bap[i] = baptab[address1];
             ++i;
+        }
+        while (i < endj) {
+            address1 = (psd[i  ] - v) >> 5;
+            address2 = (psd[i+1] - v) >> 5;
+            address1 = CLIP(address1, 0, 63);
+            address2 = CLIP(address2, 0, 63);
+            bap[i  ] = baptab[address1];
+            bap[i+1] = baptab[address2];
+            i+=2;
         }
     }
 }
