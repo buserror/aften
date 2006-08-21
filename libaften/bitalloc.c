@@ -658,10 +658,10 @@ vbr_bit_allocation(A52Context *ctx)
 
     bit_alloc_prepare(ctx);
     // find an A52 frame size that can hold the data.
-    frame_size = frame_bits = 0;
+    frame_size = 0;
+    frame_bits = current_bits + bit_alloc(ctx, csnroffst, fsnroffst);
     for(i=0; i<=ctx->frmsizecod; i++) {
         frame_size = frmsizetab[i][ctx->fscod];
-        frame_bits = current_bits + bit_alloc(ctx, csnroffst, fsnroffst);
         if(frame_size >= frame_bits) break;
     }
     i = MIN(i, ctx->frmsizecod);
