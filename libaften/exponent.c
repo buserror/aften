@@ -74,7 +74,7 @@ expsizetab_init()
             } else {
                 ngrps = (j + (grpsize * 3) - 4) / (3 * grpsize);
             }
-            expsizetab[i-1][j] = (4 + (ngrps * 7));
+            expsizetab[i-1][j] = ngrps;
         }
     }
 }
@@ -202,13 +202,9 @@ group_exponents(A52Context *ctx)
                 block->nexpgrps[ch] = 0;
                 continue;
             }
-            if(gsize == EXP_D45) gsize = 4;
-            if(ch == ctx->lfe_channel) {
-                block->nexpgrps[ch] = 2;
-            } else {
-                block->nexpgrps[ch] = (frame->ncoefs[ch]+(gsize*3)-4)/(3*gsize);
-            }
+            block->nexpgrps[ch] = expsizetab[gsize-1][frame->ncoefs[ch]];
             bits += (4 + (block->nexpgrps[ch] * 7));
+            if(gsize == EXP_D45) gsize = 4;
             p = block->exp[ch];
 
             exp1 = *p++;
