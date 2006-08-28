@@ -34,8 +34,7 @@
 #include "filter.h"
 #include "dsp.h"
 
-#define A52_MAX_CHANNELS 7
-#define CPL_CH 6
+#define A52_MAX_CHANNELS 6
 
 #define A52_MAX_COEFS 253
 
