@@ -61,7 +61,13 @@ static const uint8_t latab[260]= {
      0,  0,  0,  0,  0,  0,  0,  0,  0,  0
 };
 
-/* hearing threshold table */
+/**
+ * absolute hearing threshold table
+ * values are in log-psd units (128 psd = -6dB)
+ * each table entry corresponds to a critical frequency band
+ * each entry has 3 values, 1 for each base sample rate
+ * { 48kHz, 44.1kHz, 32kHz }
+ */
 static const uint16_t hth[50][3]= {
     { 1232, 1264, 1408 },
     { 1232, 1264, 1408 },
@@ -467,6 +473,7 @@ bit_alloc_prepare(A52Context *ctx)
     for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
         block = &ctx->frame.blocks[blk];
         for(ch=0; ch<ctx->n_all_channels; ch++) {
+            // We don't have to run the bit allocation when reusing exponents
             if(block->exp_strategy[ch] != EXP_REUSE) {
                 a52_bit_allocation_prepare(&frame->bit_alloc, blk, ch,
                                block->exp[ch], block->psd[ch], block->mask[ch],
@@ -504,6 +511,10 @@ bit_alloc(A52Context *ctx, int csnroffst, int fsnroffst)
         mant_cnt[1] = mant_cnt[2] = 2;
         mant_cnt[4] = 1;
         for(ch=0; ch<ctx->n_all_channels; ch++) {
+            // Currently the encoder is setup so that the only parameter which
+            // varies across blocks within a frame is the exponent values.
+            // We can take advantage of that by reusing the bit allocation
+            // pointers whenever we reuse exponents.
             if(block->exp_strategy[ch] == EXP_REUSE) {
                 memcpy(block->bap[ch], ctx->frame.blocks[blk-1].bap[ch], 256);
             } else {
