@@ -467,11 +467,13 @@ bit_alloc_prepare(A52Context *ctx)
     for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
         block = &ctx->frame.blocks[blk];
         for(ch=0; ch<ctx->n_all_channels; ch++) {
-            a52_bit_allocation_prepare(&frame->bit_alloc, blk, ch,
+            if(block->exp_strategy[ch] != EXP_REUSE) {
+                a52_bit_allocation_prepare(&frame->bit_alloc, blk, ch,
                                block->exp[ch], block->psd[ch], block->mask[ch],
                                frame->ncoefs[ch],
                                (ch == ctx->lfe_channel),
                                2, 0, NULL, NULL, NULL);
+            }
         }
     }
 }
@@ -502,9 +504,13 @@ bit_alloc(A52Context *ctx, int csnroffst, int fsnroffst)
         mant_cnt[1] = mant_cnt[2] = 2;
         mant_cnt[4] = 1;
         for(ch=0; ch<ctx->n_all_channels; ch++) {
-            a52_bit_allocation(block->bap[ch], block->psd[ch], block->mask[ch],
-                               blk, ch, frame->ncoefs[ch], snroffset,
-                               frame->bit_alloc.floor);
+            if(block->exp_strategy[ch] == EXP_REUSE) {
+                memcpy(block->bap[ch], ctx->frame.blocks[blk-1].bap[ch], 256);
+            } else {
+                a52_bit_allocation(block->bap[ch], block->psd[ch], block->mask[ch],
+                                   blk, ch, frame->ncoefs[ch], snroffset,
+                                   frame->bit_alloc.floor);
+            }
             bits += compute_mantissa_size(mant_cnt, block->bap[ch], frame->ncoefs[ch]);
 
         }
