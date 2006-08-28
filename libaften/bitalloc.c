@@ -511,10 +511,10 @@ bit_alloc(A52Context *ctx, int csnroffst, int fsnroffst)
         mant_cnt[1] = mant_cnt[2] = 2;
         mant_cnt[4] = 1;
         for(ch=0; ch<ctx->n_all_channels; ch++) {
-            // Currently the encoder is setup so that the only parameter which
-            // varies across blocks within a frame is the exponent values.
-            // We can take advantage of that by reusing the bit allocation
-            // pointers whenever we reuse exponents.
+            // Currently the encoder is setup so that the only bit allocation
+            // parameter which varies across blocks within a frame is the
+            // exponent values.  We can take advantage of that by reusing the
+            // bit allocation pointers whenever we reuse exponents.
             if(block->exp_strategy[ch] == EXP_REUSE) {
                 memcpy(block->bap[ch], ctx->frame.blocks[blk-1].bap[ch], 256);
             } else {
