@@ -838,17 +838,21 @@ detect_transient(FLOAT *in)
     FLOAT level2[4];
     FLOAT level3[8];
     FLOAT *xx = in;
+    FLOAT tmax = 100.0 / 32768.0;
+    FLOAT t1 = 0.100;
+    FLOAT t2 = 0.075;
+    FLOAT t3 = 0.050;
 
     // level 1 (2 x 256)
     for(i=0; i<2; i++) {
         level1[i] = 0;
         for(j=0; j<256; j++) {
-            level1[i] = MAX(fabs(xx[i*256+j]), level1[i]);
+            level1[i] = MAX(AFT_FABS(xx[i*256+j]), level1[i]);
         }
-        if(level1[i] < (100.0 / 32768.0)) {
+        if(level1[i] < tmax) {
             return 0;
         }
-        if((i > 0) && (level1[i] * 0.100 > level1[i-1])) {
+        if((i > 0) && (level1[i] * t1 > level1[i-1])) {
             return 1;
         }
     }
@@ -857,9 +861,9 @@ detect_transient(FLOAT *in)
     for(i=1; i<4; i++) {
         level2[i] = 0;
         for(j=0; j<128; j++) {
-            level2[i] = MAX(fabs(xx[i*128+j]), level2[i]);
+            level2[i] = MAX(AFT_FABS(xx[i*128+j]), level2[i]);
         }
-        if((i > 1) && (level2[i] * 0.075 > level2[i-1])) {
+        if((i > 1) && (level2[i] * t2 > level2[i-1])) {
             return 1;
         }
     }
@@ -868,9 +872,9 @@ detect_transient(FLOAT *in)
     for(i=3; i<8; i++) {
         level3[i] = 0;
         for(j=0; j<64; j++) {
-            level3[i] = MAX(fabs(xx[i*64+j]), level3[i]);
+            level3[i] = MAX(AFT_FABS(xx[i*64+j]), level3[i]);
         }
-        if((i > 3) && (level3[i] * 0.050 > level3[i-1])) {
+        if((i > 3) && (level3[i] * t3 > level3[i-1])) {
             return 1;
         }
     }

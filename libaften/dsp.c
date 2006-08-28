@@ -35,6 +35,14 @@
 #include "a52.h"
 #include "dsp.h"
 
+#ifdef CONFIG_DOUBLE
+#define ONE 1.0
+#define TWO 2.0
+#else
+#define ONE 1.0f
+#define TWO 2.0f
+#endif
+
 typedef struct Complex {
     FLOAT re, im;
 } Complex;
@@ -48,15 +56,15 @@ fft_init(FFTContext *fft, int len)
     fft->length = len;
     nbits = log2i(len);
     n2 = len >> 1;
-    c = 2.0 * M_PI / len;
+    c = TWO * AFT_PI / len;
 
     fft->costab = calloc(n2, sizeof(FLOAT));
     fft->sintab = calloc(n2, sizeof(FLOAT));
     fft->revtab = calloc(len, sizeof(FLOAT));
 
     for(i=0; i<n2; i++) {
-        fft->costab[i] = cos(c * i);
-        fft->sintab[i] = sin(c * i);
+        fft->costab[i] = AFT_COS(c * i);
+        fft->sintab[i] = AFT_SIN(c * i);
     }
 
     for(i=0; i<len; i++) {
@@ -95,7 +103,7 @@ mdct_init(MDCTContext *mdct, int len)
     FLOAT alpha, c;
 
     mdct->length = len;
-    c = 2.0 * M_PI / mdct->length;
+    c = TWO * AFT_PI / mdct->length;
     n4 = mdct->length >> 2;
 
     mdct->xcos1 = calloc(n4, sizeof(FLOAT));
@@ -103,8 +111,8 @@ mdct_init(MDCTContext *mdct, int len)
 
     for(i=0; i<n4; i++) {
         alpha = c * (i + 0.125);
-        mdct->xcos1[i] = -cos(alpha);
-        mdct->xsin1[i] = -sin(alpha);
+        mdct->xcos1[i] = -AFT_COS(alpha);
+        mdct->xsin1[i] = -AFT_SIN(alpha);
     }
 
     mdct->fft = calloc(1, sizeof(FFTContext));
@@ -147,10 +155,10 @@ static inline void
 butterfly(FLOAT *p_re, FLOAT *p_im, FLOAT *q_re, FLOAT *q_im,
           FLOAT p1_re, FLOAT p1_im, FLOAT q1_re, FLOAT q1_im)
 {
-    *p_re = (p1_re + q1_re) * 0.5;
-    *p_im = (p1_im + q1_im) * 0.5;
-    *q_re = (p1_re - q1_re) * 0.5;
-    *q_im = (p1_im - q1_im) * 0.5;
+    *p_re = (p1_re + q1_re) / TWO;
+    *p_im = (p1_im + q1_im) / TWO;
+    *q_re = (p1_re - q1_re) / TWO;
+    *q_im = (p1_im - q1_im) / TWO;
 }
 
 static inline void
@@ -251,8 +259,8 @@ dct_iv(MDCTContext *mdct, FLOAT *out, FLOAT *in)
 
     // pre rotation
     for(i=0; i<n4; i++) {
-        tmp.re = (in[2*i] - in[n-1-2*i]) / 2.0;
-        tmp.im = -(in[n2+2*i] - in[n2-1-2*i]) / 2.0;
+        tmp.re = (in[2*i] - in[n-1-2*i]) / TWO;
+        tmp.im = -(in[n2+2*i] - in[n2-1-2*i]) / TWO;
         tmp1.re = -mdct->xcos1[i];
         tmp1.im = mdct->xsin1[i];
         complex_mul(&x[i], &tmp, &tmp1);
@@ -353,19 +361,19 @@ kbd_window_init(int alpha, FLOAT *window, int n, int iter)
     FLOAT a, x, wlast;
 
     n2 = n >> 1;
-    a = alpha * M_PI / 256;
+    a = alpha * AFT_PI / 256;
     a = a*a;
     for(k=0; k<n2; k++) {
         x = k * (n2 - k) * a;
-        window[k] = 1.0;
+        window[k] = ONE;
         for(j=iter; j>0; j--) {
-            window[k] = (window[k] * x / (j*j)) + 1.0;
+            window[k] = (window[k] * x / (j*j)) + ONE;
         }
         if(k > 0) window[k] = window[k-1] + window[k];
     }
-    wlast = sqrt(window[n2-1]+1);
+    wlast = AFT_SQRT(window[n2-1]+ONE);
     for(k=0; k<n2; k++) {
-        window[k] = sqrt(window[k]) / wlast;
+        window[k] = AFT_SQRT(window[k]) / wlast;
     }
 }
 

@@ -36,19 +36,24 @@
 
 static int expsizetab[3][256];
 
+#ifdef CONFIG_DOUBLE
 #define EXP_DIFF_THRESHOLD 0.75
+#else
+#define EXP_DIFF_THRESHOLD 0.75f
+#endif
 
 /* sum of absolute difference between exponents in adjacent blocks */
 static FLOAT
 calc_exp_diff(uint8_t *exp1, uint8_t *exp2, int n)
 {
     int i;
-    FLOAT sum;
+    int sum;
+    FLOAT fsum;
     sum = 0;
     for(i=0; i<n; i++) {
         sum += ABS(exp1[i]-exp2[i]);
     }
-    sum /= n;
+    fsum = ((FLOAT)sum) / ((FLOAT)n);
     return sum;
 }
 
@@ -78,7 +83,7 @@ static void
 compute_exponent_strategy(A52Context *ctx)
 {
     int ch, i, j;
-    int exp_diff;
+    FLOAT exp_diff;
     int is_lfe;
     A52Frame *frame;
     A52Block *blocks;
@@ -269,15 +274,16 @@ static void
 extract_exponents(A52Context *ctx)
 {
     int blk, ch, j;
-    int mul, v;
+    int v;
+    FLOAT mul;
     A52Block *block;
 
-    mul = (1 << 24);
+    mul = (FLOAT)(1 << 24);
     for(ch=0; ch<ctx->n_all_channels; ch++) {
         for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
             block = &ctx->frame.blocks[blk];
             for(j=0; j<256; j++) {
-                v = fabs(block->mdct_coef[ch][j] * mul);
+                v = (int)AFT_FABS(block->mdct_coef[ch][j] * mul);
                 block->exp[ch][j] = (v == 0)? 24 : 23 - log2i(v);
             }
         }

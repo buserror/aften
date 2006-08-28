@@ -36,6 +36,9 @@
 #ifndef M_PI
 #define M_PI  3.14159265358979323846
 #endif
+#ifndef M_SQRT2
+#define M_SQRT2 1.41421356237309504880
+#endif
 
 #ifndef EMULATE_INTTYPES
 #include <inttypes.h>
@@ -54,8 +57,22 @@ typedef unsigned __int64 uint64_t;
 
 #ifdef CONFIG_DOUBLE
 typedef double FLOAT;
+#define AFT_COS cos
+#define AFT_SIN sin
+#define AFT_TAN tan
+#define AFT_FABS fabs
+#define AFT_SQRT sqrt
+#define AFT_PI M_PI
+#define AFT_SQRT2 M_SQRT2
 #else
 typedef float FLOAT;
+#define AFT_COS cosf
+#define AFT_SIN sinf
+#define AFT_TAN tanf
+#define AFT_FABS fabsf
+#define AFT_SQRT sqrtf
+#define AFT_PI 3.14159265358979323846f
+#define AFT_SQRT2 1.41421356237309504880f
 #endif
 
 #define ABS(a) ((a) >= 0 ? (a) : (-(a)))
