@@ -140,8 +140,8 @@ static const uint16_t dbkneetab[4]= {
 };
 
 /* floor table */
-static const uint16_t floortab[8]= {
-    752, 688, 624, 560, 496, 368, 240, 63488,
+static const int16_t floortab[8]= {
+    752, 688, 624, 560, 496, 368, 240, -2048,
 };
 
 /* band size table (number of bins in each band) */

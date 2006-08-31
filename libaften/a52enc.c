@@ -347,7 +347,7 @@ frame_init(A52Context *ctx)
     frame->fdecaycod = 1;
     frame->sgaincod = 1;
     frame->dbkneecod = 2;
-    frame->floorcod = 4;
+    frame->floorcod = 7;
     frame->fgaincod = 4;
 }
 
