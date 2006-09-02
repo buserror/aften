@@ -607,7 +607,7 @@ cbr_bit_allocation(A52Context *ctx, int prepare)
         bit_alloc_prepare(ctx);
 
     // narrow search range
-    snroffst = snr0 = snr1 = QUALITY(ctx->last_csnroffst, 0);
+    snroffst = snr0 = snr1 = ctx->last_quality;
     leftover = leftover0 = leftover1 = avail_bits - bit_alloc(ctx, snr0);
     if(leftover != 0) {
         if(leftover > 0) {
