@@ -490,17 +490,17 @@ bit_alloc_prepare(A52Context *ctx)
  * Returns number of mantissa bits used.
  */
 static int
-bit_alloc(A52Context *ctx, int csnroffst, int fsnroffst)
+bit_alloc(A52Context *ctx, int snroffst)
 {
     int blk, ch;
-    int snroffset, bits;
+    int bits;
     int mant_cnt[5];
     A52Frame *frame;
     A52Block *block;
 
     frame = &ctx->frame;
     bits = 0;
-    snroffset = SNROFFST(csnroffst, fsnroffst);
+    snroffst = (snroffst << 2) - 960;
 
     for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
         block = &ctx->frame.blocks[blk];
@@ -519,7 +519,7 @@ bit_alloc(A52Context *ctx, int csnroffst, int fsnroffst)
                 memcpy(block->bap[ch], ctx->frame.blocks[blk-1].bap[ch], 256);
             } else {
                 a52_bit_allocation(block->bap[ch], block->psd[ch], block->mask[ch],
-                                   blk, ch, frame->ncoefs[ch], snroffset,
+                                   blk, ch, frame->ncoefs[ch], snroffst,
                                    frame->bit_alloc.floor);
             }
             bits += compute_mantissa_size(mant_cnt, block->bap[ch], frame->ncoefs[ch]);
@@ -595,57 +595,79 @@ cbr_bit_allocation(A52Context *ctx, int prepare)
 {
     int csnroffst, fsnroffst;
     int current_bits, avail_bits, leftover;
+    int leftover0, snroffst;
+    int snr0, snr1;
     A52Frame *frame;
-    A52Block *blocks;
 
     frame = &ctx->frame;
     current_bits = frame->frame_bits + frame->exp_bits;
-    blocks = frame->blocks;
     avail_bits = (16 * frame->frame_size) - current_bits;
-    csnroffst = ctx->last_csnroffst;
-    fsnroffst = 0;
 
     if(prepare)
-         bit_alloc_prepare(ctx);
-    // decrease csnroffst if necessary until data fits in frame
-    leftover = avail_bits - bit_alloc(ctx, csnroffst, fsnroffst);
-    while(csnroffst > 0 && leftover < 0) {
-        csnroffst = MAX(csnroffst-4, 0);
-        leftover = avail_bits - bit_alloc(ctx, csnroffst, fsnroffst);
+        bit_alloc_prepare(ctx);
+
+    // narrow search range
+    snroffst = snr0 = snr1 = QUALITY(ctx->last_csnroffst, 0);
+    leftover = leftover0 = avail_bits - bit_alloc(ctx, snr0);
+    if(leftover != 0) {
+        while(1) {
+            snr1 = CLIP((snr0 + (leftover0 >> 5)), 0, 1023);
+            if(snr1 == snr0) break;
+            leftover = avail_bits - bit_alloc(ctx, snr1);
+            if(leftover0 == 0) {
+                snr1 = snr0;
+                break;
+            }
+            if(leftover == 0) {
+                snr0 = snr1;
+                break;
+            }
+            if((leftover0 < 0 && leftover > 0) || (leftover < 0 && leftover0 > 0)) {
+                break;
+            }
+            snr0 = snr1;
+            leftover0 = leftover;
+        }
+        snroffst = MIN(snr0, snr1);
+        snr1 = MAX(snr0, snr1);
+        snr0 = snroffst;
     }
 
-    // if data still won't fit with lowest snroffst, exit with error
+    // binary search
+    if(snr0 != snr1) {
+        snroffst = (snr0 + snr1) / 2;
+        leftover0 = avail_bits - bit_alloc(ctx, snroffst);
+        leftover = leftover0;
+        while(1) {
+            if(leftover0 == 0) {
+                break;
+            } else if(leftover0 < 0) {
+                snr1 = snroffst;
+            } else {
+                snr0 = snroffst;
+            }
+            snroffst = (snr0 + snr1) / 2;
+            leftover = avail_bits - bit_alloc(ctx, snroffst);
+            if(snroffst == snr1 || snroffst == snr0) break;
+            leftover0 = leftover;
+        }
+    }
+    frame->mant_bits = avail_bits - leftover;
     if(leftover < 0) {
         fprintf(stderr, "bitrate: %d kbps too small\n", frame->bit_rate);
         return -1;
     }
 
-    // increase csnroffst while data fits in frame
-    leftover = avail_bits - bit_alloc(ctx, csnroffst+4, fsnroffst);
-    while((csnroffst+4) <= 63 && leftover >= 0) {
-        csnroffst+=4;
-        leftover = avail_bits - bit_alloc(ctx, csnroffst+4, fsnroffst);
-    }
-    leftover = avail_bits - bit_alloc(ctx, csnroffst+1, fsnroffst);
-    while((csnroffst+1) <= 63 && leftover >= 0) {
-        csnroffst++;
-        leftover = avail_bits - bit_alloc(ctx, csnroffst+1, fsnroffst);
+    // calculate csnroffst and fsnroffst
+    snroffst = (snroffst - 240);
+    csnroffst = (snroffst / 16) + 15;
+    fsnroffst = (snroffst % 16);
+    while(fsnroffst < 0) {
+        csnroffst--;
+        fsnroffst += 16;
     }
 
-    // increase fsnroffst while data fits in frame
-    leftover = avail_bits - bit_alloc(ctx, csnroffst, fsnroffst+4);
-    while((fsnroffst+4) <= 15 && leftover >= 0) {
-        fsnroffst += 4;
-        leftover = avail_bits - bit_alloc(ctx, csnroffst, fsnroffst+4);
-    }
-    leftover = avail_bits - bit_alloc(ctx, csnroffst, fsnroffst+1);
-    while((fsnroffst+1) <= 15 && leftover >= 0) {
-        fsnroffst++;
-        leftover = avail_bits - bit_alloc(ctx, csnroffst, fsnroffst+1);
-    }
-
-    frame->mant_bits = bit_alloc(ctx, csnroffst, fsnroffst);
-
+    // set encoding parameters
     ctx->last_csnroffst = csnroffst;
     frame->csnroffst = csnroffst;
     frame->fsnroffst = fsnroffst;
@@ -664,7 +686,7 @@ vbr_bit_allocation(A52Context *ctx)
 {
     int i;
     int frame_size;
-    int snroffst, csnroffst, fsnroffst;
+    int quality, snroffst, csnroffst, fsnroffst;
     int frame_bits, current_bits;
     A52Frame *frame;
     A52Block *blocks;
@@ -675,7 +697,8 @@ vbr_bit_allocation(A52Context *ctx)
 
     // convert quality in range 0 to 1023 to csnroffst & fsnroffst
     // csnroffst has range 0 to 63, fsnroffst has range 0 to 15
-    snroffst = (ctx->params.quality - 240);
+    quality = ctx->params.quality;
+    snroffst = (quality - 240);
     csnroffst = (snroffst / 16) + 15;
     fsnroffst = (snroffst % 16);
     while(fsnroffst < 0) {
@@ -686,7 +709,7 @@ vbr_bit_allocation(A52Context *ctx)
     bit_alloc_prepare(ctx);
     // find an A52 frame size that can hold the data.
     frame_size = 0;
-    frame_bits = current_bits + bit_alloc(ctx, csnroffst, fsnroffst);
+    frame_bits = current_bits + bit_alloc(ctx, quality);
     for(i=0; i<=ctx->frmsizecod; i++) {
         frame_size = frmsizetab[i][ctx->fscod];
         if(frame_size >= frame_bits) break;
