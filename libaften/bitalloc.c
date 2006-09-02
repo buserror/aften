@@ -636,12 +636,11 @@ cbr_bit_allocation(A52Context *ctx, int prepare)
     // binary search
     if(snr0 != snr1) {
         snroffst = (snr0 + snr1) / 2;
-        leftover0 = avail_bits - bit_alloc(ctx, snroffst);
-        leftover = leftover0;
+        leftover = avail_bits - bit_alloc(ctx, snroffst);
         while(1) {
-            if(leftover0 == 0) {
+            if(leftover == 0) {
                 break;
-            } else if(leftover0 < 0) {
+            } else if(leftover < 0) {
                 snr1 = snroffst;
             } else {
                 snr0 = snroffst;
@@ -649,7 +648,6 @@ cbr_bit_allocation(A52Context *ctx, int prepare)
             snroffst = (snr0 + snr1) / 2;
             leftover = avail_bits - bit_alloc(ctx, snroffst);
             if(snroffst == snr1 || snroffst == snr0) break;
-            leftover0 = leftover;
         }
     }
     frame->mant_bits = avail_bits - leftover;
