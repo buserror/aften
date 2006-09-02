@@ -595,7 +595,7 @@ cbr_bit_allocation(A52Context *ctx, int prepare)
 {
     int csnroffst, fsnroffst;
     int current_bits, avail_bits, leftover;
-    int leftover0, snroffst;
+    int leftover0, leftover1, snroffst;
     int snr0, snr1;
     A52Frame *frame;
 
@@ -606,48 +606,27 @@ cbr_bit_allocation(A52Context *ctx, int prepare)
     if(prepare)
         bit_alloc_prepare(ctx);
 
-    // narrow search range
-    snroffst = snr0 = snr1 = QUALITY(ctx->last_csnroffst, 0);
-    leftover = leftover0 = avail_bits - bit_alloc(ctx, snr0);
-    if(leftover != 0) {
-        while(1) {
-            snr1 = CLIP((snr0 + (leftover0 >> 5)), 0, 1023);
-            if(snr1 == snr0) break;
-            leftover = avail_bits - bit_alloc(ctx, snr1);
-            if(leftover0 == 0) {
-                snr1 = snr0;
-                break;
-            }
-            if(leftover == 0) {
-                snr0 = snr1;
-                break;
-            }
-            if((leftover0 < 0 && leftover > 0) || (leftover < 0 && leftover0 > 0)) {
-                break;
-            }
-            snr0 = snr1;
+    // weighted binary search
+    snr0 = 0;
+    snr1 = 1023;
+    leftover0 = avail_bits - bit_alloc(ctx, snr0);
+    leftover1 = avail_bits - bit_alloc(ctx, snr1);
+    snroffst = snr0 + ((snr1-snr0) * leftover0 / (leftover0-leftover1));
+    leftover = avail_bits - bit_alloc(ctx, snroffst);
+    while(1) {
+        if(leftover == 0) {
+            break;
+        } else if(leftover < 0) {
+            snr1 = snroffst;
+            leftover1 = leftover;
+        } else {
+            snr0 = snroffst;
             leftover0 = leftover;
         }
-        snroffst = MIN(snr0, snr1);
-        snr1 = MAX(snr0, snr1);
-        snr0 = snroffst;
-    }
-
-    // binary search
-    if(snr0 != snr1) {
-        snroffst = (snr0 + snr1) / 2;
+        snroffst = snr0 + ((snr1-snr0) * leftover0 / (leftover0-leftover1));
         leftover = avail_bits - bit_alloc(ctx, snroffst);
-        while(1) {
-            if(leftover == 0) {
-                break;
-            } else if(leftover < 0) {
-                snr1 = snroffst;
-            } else {
-                snr0 = snroffst;
-            }
-            snroffst = (snr0 + snr1) / 2;
-            leftover = avail_bits - bit_alloc(ctx, snroffst);
-            if(snroffst == snr1 || snroffst == snr0) break;
+        if(snroffst == snr0) {
+            break;
         }
     }
     frame->mant_bits = avail_bits - leftover;
