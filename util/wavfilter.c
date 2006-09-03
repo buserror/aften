@@ -169,7 +169,7 @@ main(int argc, char **argv)
     }
 
     frame_size = 512;
-    buf = malloc(frame_size * wf.channels * sizeof(FLOAT));
+    buf = calloc(frame_size * wf.channels, sizeof(FLOAT));
 
     nr = wavfile_read_samples(&wf, buf, frame_size);
     while(nr > 0) {

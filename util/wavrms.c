@@ -139,8 +139,8 @@ main(int argc, char **argv)
 #endif
 
     list_size = 8192;
-    rms_list = malloc(list_size);
-    buf = malloc(frame_size * wf.channels * sizeof(FLOAT));
+    rms_list = calloc(list_size, sizeof(uint8_t));
+    buf = calloc(frame_size * wf.channels, sizeof(FLOAT));
 
     frame_count = 0;
     avg_rms = 0;

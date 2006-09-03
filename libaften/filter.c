@@ -145,7 +145,7 @@ biquad_i_run_filter(FilterContext *f, FLOAT *out, FLOAT *in, int n)
     if(f->cascaded) {
         loops = 2;
         datasize = n * sizeof(FLOAT);
-        tmp = malloc(datasize);
+        tmp = calloc(datasize, 1);
         memcpy(tmp, in, datasize);
     }
 
@@ -189,7 +189,7 @@ biquad_ii_run_filter(FilterContext *f, FLOAT *out, FLOAT *in, int n)
     if(f->cascaded) {
         loops = 2;
         datasize = n * sizeof(FLOAT);
-        tmp = malloc(datasize);
+        tmp = calloc(datasize, 1);
         memcpy(tmp, in, datasize);
     }
 
@@ -408,7 +408,7 @@ filter_init(FilterContext *f, enum FilterID id)
         default:                        return -1;
     }
 
-    f->private_context = malloc(f->filter->private_size);
+    f->private_context = calloc(f->filter->private_size, 1);
 
     return f->filter->init(f);
 }
