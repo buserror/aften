@@ -47,7 +47,6 @@ show_help(){
   echo "                           (may fail or perform badly on other CPUs)"
   echo "  --disable-debug          disable debugging symbols"
   echo "  --disable-opts           disable compiler optimizations"
-  echo "  --enable-memalign-hack   emulate memalign, interferes with memory debuggers"
   echo "  --disable-strip          disable stripping of executables and shared libraries"
   echo "  --enable-double          enable use of doubles instead of floats"
   echo ""
@@ -354,7 +353,6 @@ LIBSUF=".a"
 LIB='$(LIBPREF)$(NAME)$(LIBSUF)'
 EXESUF=""
 BUILDSUF=""
-memalignhack="no"
 usedoubles="no"
 
 # OS specific
@@ -505,8 +503,6 @@ for opt do
   --disable-debug) debug="no"
   ;;
   --disable-opts) optimize="no"
-  ;;
-  --enable-memalign-hack) memalignhack="yes"
   ;;
   --disable-strip) dostrip="no"
   ;;
@@ -741,21 +737,6 @@ EOF
 # ---
 # check availability of some header files
 
-_memalign=no
-_malloc_h=no
-if check_header malloc.h; then
-    _malloc_h=yes
-    _memalign=yes
-    check_func memalign || _memalign="no"
-fi
-
-if test "$_memalign" = "no" -a "$mmx" = "yes" -a \
-        "$memalignhack" != "yes" -a "$targetos" != "Darwin" ; then
-    die "Error, no memalign() but SSE enabled, disable it or use --enable-memalign-hack."
-fi
-
-check_func localtime_r && localtime_r=yes || localtime_r=no
-
 # test for lrintf in math.h
 check_exec <<EOF && have_lrintf=yes || have_lrintf=no
 #define _ISOC9X_SOURCE  1
@@ -982,22 +963,6 @@ fi
 if test "$targetos" = "Darwin"; then
   echo "#define CONFIG_DARWIN 1"  >> $TMPH
   echo "CONFIG_DARWIN=yes" >> config.mak
-fi
-
-if test "$_malloc_h" = "yes" ; then
-  echo "#define HAVE_MALLOC_H 1" >> $TMPH
-else
-  echo "#undef  HAVE_MALLOC_H" >> $TMPH
-fi
-
-if test "$_memalign" = "yes" ; then
-  echo "#define HAVE_MEMALIGN 1" >> $TMPH
-else
-  echo "#undef  HAVE_MEMALIGN" >> $TMPH
-fi
-
-if test "$memalignhack" = "yes" ; then
-  echo "#define MEMALIGN_HACK 1" >> $TMPH
 fi
 
 if test "$use doubles" = "yes" ; then
