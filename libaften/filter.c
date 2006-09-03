@@ -103,7 +103,7 @@ static int
 biquad_init(FilterContext *f)
 {
     int i, j;
-    BiquadContext *b = f->private;
+    BiquadContext *b = f->private_context;
     FLOAT fc;
 
     if(f->samplerate <= 0) {
@@ -137,7 +137,7 @@ biquad_i_run_filter(FilterContext *f, FLOAT *out, FLOAT *in, int n)
     int i, j, datasize, loops;
     FLOAT v;
     FLOAT *tmp;
-    BiquadContext *b = f->private;
+    BiquadContext *b = f->private_context;
 
     datasize = 0;
     tmp = in;
@@ -181,7 +181,7 @@ biquad_ii_run_filter(FilterContext *f, FLOAT *out, FLOAT *in, int n)
     int i, j, datasize, loops;
     FLOAT v;
     FLOAT *tmp;
-    BiquadContext *b = f->private;
+    BiquadContext *b = f->private_context;
 
     datasize = 0;
     tmp = in;
@@ -257,7 +257,7 @@ static int
 butterworth_init(FilterContext *f)
 {
     int i, j;
-    BiquadContext *b = f->private;
+    BiquadContext *b = f->private_context;
     FLOAT fc;
 
     if(f->samplerate <= 0) {
@@ -334,7 +334,7 @@ onepole_generate_highpass(OnePoleContext *o, FLOAT fc)
 static int
 onepole_init(FilterContext *f)
 {
-    OnePoleContext *o = f->private;
+    OnePoleContext *o = f->private_context;
     FLOAT fc;
 
     if(f->cascaded) {
@@ -366,7 +366,7 @@ onepole_run_filter(FilterContext *f, FLOAT *out, FLOAT *in, int n)
     int i;
     FLOAT v;
     FLOAT p1 = 0;
-    OnePoleContext *o = f->private;
+    OnePoleContext *o = f->private_context;
 
     if(f->type == FILTER_TYPE_LOWPASS) {
         p1 = ONE - o->p;
@@ -408,7 +408,7 @@ filter_init(FilterContext *f, enum FilterID id)
         default:                        return -1;
     }
 
-    f->private = malloc(f->filter->private_size);
+    f->private_context = malloc(f->filter->private_size);
 
     return f->filter->init(f);
 }
@@ -423,9 +423,9 @@ void
 filter_close(FilterContext *f)
 {
     if(!f) return;
-    if(f->private) {
-        free(f->private);
-        f->private = NULL;
+    if(f->private_context) {
+        free(f->private_context);
+        f->private_context = NULL;
     }
     f->filter = NULL;
 }

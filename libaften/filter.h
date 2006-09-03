@@ -47,7 +47,7 @@ struct Filter;
 
 typedef struct {
     struct Filter *filter;
-    void *private;
+    void *private_context;
     enum FilterType type;
     int cascaded;
     FLOAT cutoff;
