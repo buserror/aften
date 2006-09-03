@@ -125,7 +125,7 @@ exponent_min(uint8_t *exp, uint8_t *exp1, int n)
 {
     int i;
     for(i=0; i<n; i++) {
-        if(exp1[i] < exp[i]) exp[i] = exp1[i];
+        exp[i] = MIN(exp[i], exp1[i]);
     }
 }
 
@@ -145,19 +145,26 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
     ngrps = ((ncoefs + (grpsize * 3) - 4) / (3 * grpsize)) * 3;
 
     // for each group, compute the minimum exponent
-    exp1[0] = exp[0]; // DC exponent is handled separately
-    k = 1;
-    for(i=1; i<=ngrps; i++) {
-        exp_min = exp[k];
-        for(j=1; j<grpsize; j++) {
-            exp_min = MIN(exp_min, exp[k+j]);
+    if(grpsize == 1) {
+        memcpy(exp1, exp, ngrps+1);
+    } else {
+        exp1[0] = exp[0]; // DC exponent is handled separately
+        k = 1;
+        for(i=1; i<=ngrps; i++) {
+            if(grpsize == 2) {
+                exp1[i] = MIN(exp[k], exp[k+1]);
+            } else {
+                exp_min = MIN(exp[k], exp[k+1]);
+                exp_min = MIN(exp_min, exp[k+2]);
+                exp_min = MIN(exp_min, exp[k+3]);
+                exp1[i] = exp_min;
+            }
+            k += grpsize;
         }
-        exp1[i] = exp_min;
-        k += grpsize;
     }
 
     // constraint for DC exponent
-    if(exp1[0] > 15) exp1[0] = 15;
+    exp1[0] = MIN(exp1[0], 15);
 
     // Decrease the delta between each groups to within 2
     // so that they can be differentially encoded
@@ -167,13 +174,21 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
         exp1[i] = MIN(exp1[i], exp1[i+1]+2);
 
     // now we have the exponent values the decoder will see
-    exp[0] = exp1[0];
-    k = 1;
-    for(i=1; i<=ngrps; i++) {
-        for(j=0; j<grpsize; j++) {
-            exp[k+j] = exp1[i];
+    if(grpsize == 1) {
+        memcpy(exp, exp1, ngrps+1);
+    } else {
+        exp[0] = exp1[0];
+        k = 1;
+        for(i=1; i<=ngrps; i++) {
+            uint8_t v = exp1[i];
+            exp[k] = v;
+            exp[k+1] = v;
+            if(grpsize == 4) {
+                exp[k+2] = v;
+                exp[k+3] = v;
+            }
+            k += grpsize;
         }
-        k += grpsize;
     }
 }
 
