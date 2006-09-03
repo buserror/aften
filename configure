@@ -1007,36 +1007,3 @@ else
 fi
 
 rm -f $TMPO $TMPC $TMPE $TMPS $TMPH
-
-
-# build pkg-config files libav*.pc and libpostproc.pc
-# libavutil.pc
-cat <<EOF >libaften.pc
-prefix=$PREFIX
-exec_prefix=\${prefix}
-libdir=\${exec_prefix}/lib
-includedir=\${prefix}/include
-
-Name: libaften
-Description: Aften A/52 audio encoding library
-Version: $aften_version
-Requires:
-Conflicts:
-Libs: -L\${libdir} -laften $extralibs
-Cflags: -I\${includedir} -I\${includedir}/aften
-EOF
-
-cat <<EOF >libaften-uninstalled.pc
-prefix=
-exec_prefix=
-libdir=\${pcfiledir}/libaften
-includedir=\${pcfiledir}/libaften
-
-Name: libaften
-Description: Aften A/52 audio encoding library
-Version: $aften_version
-Requires:
-Conflicts:
-Libs: \${libdir}/${LIBPREF}aften${LIBSUF} $extralibs
-Cflags: -I\${includedir}
-EOF

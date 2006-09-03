@@ -63,7 +63,6 @@ install-headers:
 	install -d "$(incdir)"
 	install -d "$(libdir)/pkgconfig"
 	install -m 644 $(addprefix "$(SRC_DIR)"/,$(HEADERS)) "$(incdir)"
-	install -m 644 $(BUILD_ROOT)/lib$(NAME).pc "$(libdir)/pkgconfig"
 
 uninstall: uninstall-libs uninstall-headers
 
@@ -72,7 +71,6 @@ uninstall-libs:
 
 uninstall-headers:
 	rm -f $(addprefix $(incdir)/,$(HEADERS))
-	rm -f $(libdir)/pkgconfig/lib$(NAME).pc
 
 ../config.mak:
 	touch ../config.mak
