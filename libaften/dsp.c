@@ -60,7 +60,7 @@ fft_init(FFTContext *fft, int len)
 
     fft->costab = calloc(n2, sizeof(FLOAT));
     fft->sintab = calloc(n2, sizeof(FLOAT));
-    fft->revtab = calloc(len, sizeof(FLOAT));
+    fft->revtab = calloc(len, sizeof(int));
 
     for(i=0; i<n2; i++) {
         fft->costab[i] = AFT_COS(c * i);
