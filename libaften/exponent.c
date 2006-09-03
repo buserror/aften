@@ -36,24 +36,19 @@
 
 static int expsizetab[3][256];
 
-#ifdef CONFIG_DOUBLE
-#define EXP_DIFF_THRESHOLD 0.75
-#else
-#define EXP_DIFF_THRESHOLD 0.75f
-#endif
+#define EXP_DIFF_THRESHOLD 75
 
 /* sum of absolute difference between exponents in adjacent blocks */
-static FLOAT
+static int
 calc_exp_diff(uint8_t *exp1, uint8_t *exp2, int n)
 {
     int i;
     int sum;
-    FLOAT fsum;
     sum = 0;
     for(i=0; i<n; i++) {
         sum += ABS(exp1[i]-exp2[i]);
     }
-    fsum = ((FLOAT)sum) / ((FLOAT)n);
+    sum = (sum * 100) / n;
     return sum;
 }
 
