@@ -60,7 +60,7 @@ aften_set_defaults(AftenContext *s)
     s->acmod = -1;
     s->lfe = -1;
 
-    s->private = NULL;
+    s->private_context = NULL;
     s->params.verbose = 1;
     s->params.encoding_mode = AFTEN_ENC_MODE_CBR;
     s->params.bitrate = 0;
@@ -104,7 +104,7 @@ aften_encode_init(AftenContext *s)
         return -1;
     }
     ctx = calloc(sizeof(A52Context), 1);
-    s->private = ctx;
+    s->private_context = ctx;
 
     ctx->sample_format = s->sample_format;
 
@@ -1018,7 +1018,7 @@ aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, void *samples)
         fprintf(stderr, "One or more NULL parameters passed to aften_encode_frame\n");
         return -1;
     }
-    ctx = s->private;
+    ctx = s->private_context;
     frame = &ctx->frame;
 
     frame_init(ctx);
@@ -1061,10 +1061,10 @@ aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, void *samples)
 void
 aften_encode_close(AftenContext *s)
 {
-    if(s != NULL && s->private != NULL) {
-        A52Context *ctx = s->private;
+    if(s != NULL && s->private_context != NULL) {
+        A52Context *ctx = s->private_context;
         dsp_close(ctx);
         free(ctx);
-        s->private = NULL;
+        s->private_context = NULL;
     }
 }

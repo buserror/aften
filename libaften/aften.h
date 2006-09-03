@@ -236,7 +236,7 @@ typedef struct {
      * Used internally by the encoder. The user should leave this alone.
      * It is allocated in aften_encode_init and free'd in aften_encode_close.
      */
-    void *private;
+    void *private_context;
 } AftenContext;
 
 /* main encoding functions */
