@@ -399,11 +399,11 @@ output_frame_header(A52Context *ctx, uint8_t *frame_buffer)
     bitwriter_writebits(bw, 1, 0); /* no addtional bit stream info */
 }
 
-/* symetric quantization on 'levels' levels */
+/* symmetric quantization on 'levels' levels */
 #define sym_quant(c, e, levels) \
     ((((((levels) * (c)) >> (24-(e))) + 1) >> 1) + ((levels) >> 1))
 
-/* asymetric quantization on 2^qbits levels */
+/* asymmetric quantization on 2^qbits levels */
 static inline int
 asym_quant(int c, int e, int qbits)
 {
