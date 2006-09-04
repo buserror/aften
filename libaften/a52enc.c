@@ -644,29 +644,29 @@ output_frame_end(A52Context *ctx)
     // add zero bytes to reach the frame size
     frame = ctx->bw.buffer;
     bitcount = bitwriter_bitcount(&ctx->bw);
-    n = 2 * fs - (bitcount>>3) - 2;
+    n = (fs << 1) - 2 - (bitcount >> 3);
     if(n < 0) {
-        fprintf(stderr, "fs=%d data=%d\n", 2*fs-2, bitcount>>3);
+        fprintf(stderr, "fs=%d data=%d\n", (fs << 1) - 2, bitcount >> 3);
         return -1;
     }
     if(n > 0) memset(&ctx->bw.buffer[bitcount>>3], 0, n);
 
     // compute crc1 for 1st 5/8 of frame
     fs58 = (fs >> 1) + (fs >> 3);
-    crc1 = calc_crc16(&frame[4], 2*fs58-4);
-    crc1 = crc16_zero(crc1, 2*fs58-2);
+    crc1 = calc_crc16(&frame[4], (fs58<<1)-4);
+    crc1 = crc16_zero(crc1, (fs58<<1)-2);
     frame[2] = crc1 >> 8;
     frame[3] = crc1;
     // double-check
-    crc1 = calc_crc16(&frame[2], 2*fs58-2);
+    crc1 = calc_crc16(&frame[2], (fs58<<1)-2);
     if(crc1 != 0) fprintf(stderr, "CRC ERROR\n");
 
     // compute crc2 for final 3/8 of frame
-    crc2 = calc_crc16(&frame[2*fs58], (fs - fs58) * 2 - 2);
-    frame[2*fs-2] = crc2 >> 8;
-    frame[2*fs-1] = crc2;
+    crc2 = calc_crc16(&frame[fs58<<1], ((fs - fs58) << 1) - 2);
+    frame[(fs<<1)-2] = crc2 >> 8;
+    frame[(fs<<1)-1] = crc2;
 
-    return fs * 2;
+    return (fs << 1);
 }
 
 static void
