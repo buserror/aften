@@ -400,18 +400,8 @@ output_frame_header(A52Context *ctx, uint8_t *frame_buffer)
 }
 
 /* symetric quantization on 'levels' levels */
-static inline int
-sym_quant(int c, int e, int levels)
-{
-    int v, sign;
-
-    sign = (c < 0)? -1 : 1;
-    v = (levels * ((sign * c) << e)) >> 24;
-    v = (v + 1) >> 1;
-    v = (levels >> 1) + (sign * v);
-    assert(v >= 0 && v < levels);
-    return v;
-}
+#define sym_quant(c, e, levels) \
+    ((((((levels) * (c)) >> (24-(e))) + 1) >> 1) + ((levels) >> 1))
 
 /* asymetric quantization on 2^qbits levels */
 static inline int
