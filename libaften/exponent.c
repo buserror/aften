@@ -189,7 +189,7 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
     // now we have the exponent values the decoder will see
     exp[0] = exp1[0]; // DC exponent is handled separately
     if (grpsize == 2) {
-        for(i=0,k=1; i<=ngrps; i++) {
+        for(i=1,k=1; i<=ngrps; i++) {
             v = exp1[i];
             exp[k] = v;
             exp[k+1] = v;
