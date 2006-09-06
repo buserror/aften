@@ -133,10 +133,11 @@ exponent_min(uint8_t *exp, uint8_t *exp1, int n)
 static void
 encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
 {
-    int grpsize, ngrps, i, j, k, exp_min;
+    int grpsize, ngrps, i, k, exp_min1, exp_min2;
     uint8_t exp1[256];
+    uint8_t v;
 
-    grpsize = ngrps = 0;
+    grpsize = 0;
     switch(exp_strategy) {
         case EXP_D15: grpsize = 1; break;
         case EXP_D25: grpsize = 2; break;
@@ -144,22 +145,34 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
     }
     ngrps = ((ncoefs + (grpsize * 3) - 4) / (3 * grpsize)) * 3;
 
+    // for D15 strategy, there is no need to group/ungroup exponents
+    if (grpsize == 1) {
+        // constraint for DC exponent
+        exp[0] = MIN(exp[0], 15);
+
+        // Decrease the delta between each groups to within 2
+        // so that they can be differentially encoded
+        for(i=1; i<=ngrps; i++)
+            exp[i] = MIN(exp[i], exp[i-1]+2);
+        for(i=ngrps-1; i>=0; i--)
+            exp[i] = MIN(exp[i], exp[i+1]+2);
+
+        return;
+    }
+
     // for each group, compute the minimum exponent
-    if(grpsize == 1) {
-        memcpy(exp1, exp, ngrps+1);
+    exp1[0] = exp[0]; // DC exponent is handled separately
+    if (grpsize == 2) {
+        for(i=1,k=1; i<=ngrps; i++) {
+            exp1[i] = MIN(exp[k], exp[k+1]);
+            k += 2;
+        }
     } else {
-        exp1[0] = exp[0]; // DC exponent is handled separately
-        k = 1;
-        for(i=1; i<=ngrps; i++) {
-            if(grpsize == 2) {
-                exp1[i] = MIN(exp[k], exp[k+1]);
-            } else {
-                exp_min = MIN(exp[k], exp[k+1]);
-                exp_min = MIN(exp_min, exp[k+2]);
-                exp_min = MIN(exp_min, exp[k+3]);
-                exp1[i] = exp_min;
-            }
-            k += grpsize;
+        for(i=1,k=1; i<=ngrps; i++) {
+            exp_min1 = MIN(exp[k  ], exp[k+1]);
+            exp_min2 = MIN(exp[k+2], exp[k+3]);
+            exp1[i]  = MIN(exp_min1, exp_min2);
+            k += 4;
         }
     }
 
@@ -174,20 +187,22 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
         exp1[i] = MIN(exp1[i], exp1[i+1]+2);
 
     // now we have the exponent values the decoder will see
-    if(grpsize == 1) {
-        memcpy(exp, exp1, ngrps+1);
-    } else {
-        exp[0] = exp1[0];
-        k = 1;
-        for(i=1; i<=ngrps; i++) {
-            uint8_t v = exp1[i];
+    exp[0] = exp1[0]; // DC exponent is handled separately
+    if (grpsize == 2) {
+        for(i=0,k=1; i<=ngrps; i++) {
+            v = exp1[i];
             exp[k] = v;
             exp[k+1] = v;
-            if(grpsize == 4) {
-                exp[k+2] = v;
-                exp[k+3] = v;
-            }
-            k += grpsize;
+            k += 2;
+        }
+    } else {
+        for(i=1,k=1; i<=ngrps; i++) {
+            v = exp1[i];
+            exp[k] = v;
+            exp[k+1] = v;
+            exp[k+2] = v;
+            exp[k+3] = v;
+            k += 4;
         }
     }
 }
