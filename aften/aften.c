@@ -317,7 +317,7 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
                     i++;
                     if(i >= argc) return 1;
                     opts->s->meta.adconvtyp = atoi(argv[i]);
-                    if(opts->s->meta.adconvtyp < 0 || opts->s->meta.adconvtyp > 2) {
+                    if(opts->s->meta.adconvtyp < 0 || opts->s->meta.adconvtyp > 1) {
                         fprintf(stderr, "invalid adconvtyp: %d. must be 0 or 1.\n", opts->s->meta.adconvtyp);
                         return 1;
                     }
