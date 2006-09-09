@@ -633,27 +633,27 @@ cbr_bit_allocation(A52Context *ctx, int prepare)
             leftover = avail_bits - bit_alloc(ctx, snroffst);
         }
     } else {
-    // weighted binary search
-    if(snr0 != snr1) {
-        snroffst = snr0 + ((snr1-snr0) * leftover0 / (leftover0-leftover1));
-        leftover = avail_bits - bit_alloc(ctx, snroffst);
-        while(1) {
-            if(leftover == 0) {
-                break;
-            } else if(leftover < 0) {
-                snr1 = snroffst;
-                leftover1 = leftover;
-            } else {
-                snr0 = snroffst;
-                leftover0 = leftover;
-            }
+        // weighted binary search
+        if(snr0 != snr1) {
             snroffst = snr0 + ((snr1-snr0) * leftover0 / (leftover0-leftover1));
             leftover = avail_bits - bit_alloc(ctx, snroffst);
-            if(snroffst == snr0) {
-                break;
+            while(1) {
+                if(leftover == 0) {
+                    break;
+                } else if(leftover < 0) {
+                    snr1 = snroffst;
+                    leftover1 = leftover;
+                } else {
+                    snr0 = snroffst;
+                    leftover0 = leftover;
+                }
+                snroffst = snr0 + ((snr1-snr0) * leftover0 / (leftover0-leftover1));
+                leftover = avail_bits - bit_alloc(ctx, snroffst);
+                if(snroffst == snr0) {
+                    break;
+                }
             }
         }
-    }
     }
 
     frame->mant_bits = avail_bits - leftover;
