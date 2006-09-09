@@ -161,27 +161,19 @@ butterfly(FLOAT *p_re, FLOAT *p_im, FLOAT *q_re, FLOAT *q_im,
     *q_im = (p1_im - q1_im) / TWO;
 }
 
-static inline void
-complex_mul(Complex *p, Complex *a, Complex *b)
-{
-    p->re = (a->re * b->re) - (a->im * b->im);
-    p->im = (a->re * b->im) + (b->re * a->im);
-}
-
 /* do a 2^n point complex fft on 2^ln points. */
 static void
 fft(FFTContext *fft, Complex *z)
 {
-    int j, l, np, np2;
+    int j, k, l, np, np2;
     int nblocks, nloops;
     Complex *p, *q;
-    Complex tmp, tmp1;
+    Complex tmp;
 
     np = fft->length;
 
     // reverse
     for(j=0; j<np; j++) {
-        int k;
         k = fft->revtab[j];
         if(k < j) {
             tmp = z[k];
@@ -228,9 +220,9 @@ fft(FFTContext *fft, Complex *z)
             p++;
             q++;
             for(l = nblocks; l < np2; l += nblocks) {
-                tmp1.re = fft->costab[l];
-                tmp1.im = -fft->sintab[l];
-                complex_mul(&tmp, &tmp1, q);
+                tmp.re = (fft->costab[l] * q->re) + (fft->sintab[l] * q->im);
+                tmp.im = (fft->costab[l] * q->im) - (q->re * fft->sintab[l]);
+
                 butterfly(&p->re, &p->im, &q->re, &q->im,
                           p->re, p->im, tmp.re, tmp.im);
                 p++;
@@ -248,7 +240,7 @@ static void
 dct_iv(MDCTContext *mdct, FLOAT *out, FLOAT *in)
 {
     int i;
-    Complex tmp, tmp1;
+    FLOAT tmp_re, tmp_im;
     int n, n2, n4;
     Complex *x;
 
@@ -259,22 +251,18 @@ dct_iv(MDCTContext *mdct, FLOAT *out, FLOAT *in)
 
     // pre rotation
     for(i=0; i<n4; i++) {
-        tmp.re = (in[2*i] - in[n-1-2*i]) / TWO;
-        tmp.im = -(in[n2+2*i] - in[n2-1-2*i]) / TWO;
-        tmp1.re = -mdct->xcos1[i];
-        tmp1.im = mdct->xsin1[i];
-        complex_mul(&x[i], &tmp, &tmp1);
+        tmp_re = (in[2*i] - in[n-1-2*i]) / TWO;
+        tmp_im = (in[n2+2*i] - in[n2-1-2*i]) / TWO;
+        x[i].re = (tmp_im * mdct->xsin1[i]) - (tmp_re * mdct->xcos1[i]);
+        x[i].im = (tmp_re * mdct->xsin1[i]) + (mdct->xcos1[i] * tmp_im);
     }
 
     fft(mdct->fft, x);
 
     // post rotation
     for(i=0; i<n4; i++) {
-        tmp1.re = mdct->xsin1[i];
-        tmp1.im = mdct->xcos1[i];
-        complex_mul(&tmp, &x[i], &tmp1);
-        out[2*i] = tmp.im;
-        out[n2-1-2*i] = tmp.re;
+        out[n2-1-2*i] = (x[i].re * mdct->xsin1[i]) - (x[i].im * mdct->xcos1[i]);
+        out[2*i]      = (x[i].re * mdct->xcos1[i]) + (mdct->xsin1[i] * x[i].im);
     }
 }
 
