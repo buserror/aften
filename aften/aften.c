@@ -61,6 +61,9 @@ print_help(FILE *out)
                  "                       2 = show each frame's stats\n"
                  "    [-b #]         CBR bitrate in kbps (default: about 96kbps per channel)\n"
                  "    [-q #]         VBR quality [0 - 1023] (default: 220)\n"
+                 "    [-fba #]       Fast bit allocation (default: 0)\n"
+                 "                       0 = faster encoding\n"
+                 "                       1 = more accurate encoding\n"
                  "    [-w #]         Bandwidth\n"
                  "                       0 to 60 = fixed bandwidth (28%%-99%% of full bandwidth)\n"
                  "                      -1 = fixed adaptive bandwidth (default)\n"
@@ -316,6 +319,14 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
                     opts->s->meta.adconvtyp = atoi(argv[i]);
                     if(opts->s->meta.adconvtyp < 0 || opts->s->meta.adconvtyp > 2) {
                         fprintf(stderr, "invalid adconvtyp: %d. must be 0 or 1.\n", opts->s->meta.adconvtyp);
+                        return 1;
+                    }
+                } else if(!strncmp(&argv[i][1], "fba", 4)) {
+                    i++;
+                    if(i >= argc) return 1;
+                    opts->s->params.bitalloc_fast = atoi(argv[i]);
+                    if(opts->s->params.bitalloc_fast < 0 || opts->s->params.bitalloc_fast > 1) {
+                        fprintf(stderr, "invalid fba: %d. must be 0 or 1.\n", opts->s->params.bitalloc_fast);
                         return 1;
                     }
                 }

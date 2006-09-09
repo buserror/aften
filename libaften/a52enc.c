@@ -71,6 +71,7 @@ aften_set_defaults(AftenContext *s)
     s->params.use_bw_filter = 0;
     s->params.use_dc_filter = 0;
     s->params.use_lfe_filter = 0;
+    s->params.bitalloc_fast = 0;
 
     s->meta.cmixlev = 0;
     s->meta.surmixlev = 0;

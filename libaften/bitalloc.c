@@ -627,6 +627,12 @@ cbr_bit_allocation(A52Context *ctx, int prepare)
         }
     }
 
+    if(ctx->params.bitalloc_fast) {
+        if(snr0 != snr1) {
+            snroffst = snr0;
+            leftover = avail_bits - bit_alloc(ctx, snroffst);
+        }
+    } else {
     // weighted binary search
     if(snr0 != snr1) {
         snroffst = snr0 + ((snr1-snr0) * leftover0 / (leftover0-leftover1));
@@ -648,6 +654,8 @@ cbr_bit_allocation(A52Context *ctx, int prepare)
             }
         }
     }
+    }
+
     frame->mant_bits = avail_bits - leftover;
     if(leftover < 0) {
         fprintf(stderr, "bitrate: %d kbps too small\n", frame->bit_rate);
