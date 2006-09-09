@@ -333,7 +333,7 @@ mdct256(A52Context *ctx, FLOAT *out, FLOAT *in)
     memcpy(out, xx, 256 * sizeof(FLOAT));
 }
 
-static FLOAT a52_window[256];
+static FLOAT a52_window[512];
 
 /**
  * Generate a Kaiser-Bessel Derived Window.
@@ -343,25 +343,28 @@ static FLOAT a52_window[256];
  * @param iter          Number of iterations to use in BesselI0
  */
 static void
-kbd_window_init(int alpha, FLOAT *window, int n, int iter)
+kbd_window_init(FLOAT alpha, FLOAT *window, int n, int iter)
 {
-    int j, k, n2;
-    FLOAT a, x, wlast;
+    int i, j, n2;
+    FLOAT a, x, bessel, sum;
 
     n2 = n >> 1;
-    a = alpha * AFT_PI / 256;
+    a = alpha * M_PI / n2;
     a = a*a;
-    for(k=0; k<n2; k++) {
-        x = k * (n2 - k) * a;
-        window[k] = ONE;
+    sum = 0.0;
+    for(i=0; i<n2; i++) {
+        x = i * (n2 - i) * a;
+        bessel = ONE;
         for(j=iter; j>0; j--) {
-            window[k] = (window[k] * x / (j*j)) + ONE;
+            bessel = (bessel * x / (j*j)) + ONE;
         }
-        if(k > 0) window[k] = window[k-1] + window[k];
+        sum += bessel;
+        window[i] = sum;
     }
-    wlast = AFT_SQRT(window[n2-1]+ONE);
-    for(k=0; k<n2; k++) {
-        window[k] = AFT_SQRT(window[k]) / wlast;
+    sum += ONE;
+    for(i=0; i<n2; i++) {
+        window[i] = AFT_SQRT(window[i] / sum);
+        window[n-1-i] = window[i];
     }
 }
 
@@ -369,9 +372,8 @@ void
 apply_a52_window(FLOAT *samples)
 {
     int i;
-    for(i=0; i<256; i++) {
+    for(i=0; i<512; i++) {
         samples[i] *= a52_window[i];
-        samples[511-i] *= a52_window[i];
     }
 }
 
