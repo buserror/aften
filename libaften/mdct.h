@@ -51,6 +51,7 @@ typedef struct {
     int *bitrev;
     FLOAT scale;
     FLOAT *buffer;
+    FLOAT *buffer1;
 } MDCTContext;
 
 extern void mdct_init(struct A52Context *ctx);

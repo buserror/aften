@@ -105,8 +105,9 @@ ctx_init(MDCTContext *mdct, int n)
     // MDCT scale used in AC3
     mdct->scale = (-2.0 / n);
 
-    // internal mdct buffer
+    // internal mdct buffers
     mdct->buffer = calloc(n, sizeof(FLOAT));
+    mdct->buffer1 = calloc(n, sizeof(FLOAT));
 }
 
 static void
@@ -408,22 +409,29 @@ mdct_bitreverse(MDCTContext *mdct, FLOAT *x)
     } while(w0 < w1);
 }
 
-void
-mdct_512(A52Context *ctx, FLOAT *out, FLOAT *in)
+static void
+dct_iv(MDCTContext *ctx, FLOAT *out, FLOAT *in)
 {
-    int n = ctx->mdct_ctx_512.n;
+    int n = ctx->n;
     int n2 = n>>1;
     int n4 = n>>2;
     int n8 = n>>3;
-    FLOAT *w = ctx->mdct_ctx_512.buffer;
+    FLOAT *w = ctx->buffer;
     FLOAT *w2 = w+n2;
 
     FLOAT r0;
     FLOAT r1;
     FLOAT *x0 = in+n2+n4;
     FLOAT *x1 = x0+1;
-    FLOAT *trig = ctx->mdct_ctx_512.trig + n2;
+    FLOAT *trig = ctx->trig + n2;
     int i;
+
+    memcpy(&w[n2+n4], in, n4 * sizeof(FLOAT));
+    for(i=n2+n4; i<n; i++) {
+        w[i] = -w[i];
+    }
+    memmove(in, &in[n4], (n2+n4) * sizeof(FLOAT));
+    memcpy(&in[n2+n4], &w[n2+n4], n4 * sizeof(FLOAT));
 
     for(i=0; i<n8; i+=2) {
         x0 -= 4;
@@ -457,21 +465,35 @@ mdct_512(A52Context *ctx, FLOAT *out, FLOAT *in)
         x1 += 4;
     }
 
-    mdct_butterflies(&ctx->mdct_ctx_512, w+n2, n2);
-    mdct_bitreverse(&ctx->mdct_ctx_512, w);
+    mdct_butterflies(ctx, w2, n2);
+    mdct_bitreverse(ctx, w);
 
-    trig = ctx->mdct_ctx_512.trig+n2;
+    trig = ctx->trig+n2;
     x0 = out+n2;
     for(i=0; i<n4; i++) {
         x0--;
-        out[i] = ((w[0]*trig[0]+w[1]*trig[1])*ctx->mdct_ctx_512.scale);
-        x0[0]  = ((w[0]*trig[1]-w[1]*trig[0])*ctx->mdct_ctx_512.scale);
+        out[i] = ((w[0]*trig[0]+w[1]*trig[1])*ctx->scale);
+        x0[0]  = ((w[0]*trig[1]-w[1]*trig[0])*ctx->scale);
         w += 2;
         trig += 2;
     }
 }
 
-#if 1
+void
+mdct_512(A52Context *ctx, FLOAT *out, FLOAT *in)
+{
+    int i;
+    FLOAT *xx = ctx->mdct_ctx_512.buffer1;
+
+    memcpy(xx, &in[384], 128 * sizeof(FLOAT));
+    memcpy(&xx[128], in, 384 * sizeof(FLOAT));
+    for(i=0; i<128; i++) {
+        xx[i] = -xx[i];
+    }
+    dct_iv(&ctx->mdct_ctx_512, out, xx);
+}
+
+#if 0
 void
 mdct_256(A52Context *ctx, FLOAT *out, FLOAT *in)
 {
@@ -498,11 +520,6 @@ mdct_256(A52Context *ctx, FLOAT *out, FLOAT *in)
     }
 }
 #else
-/**
- * This needs to be modified to use the new MDCT implementation. For now it is
- * disabled in favor of the really slow version.  Until this is updated, Aften
- * will be much slower when block switching is turned on.
- */
 void
 mdct_256(A52Context *ctx, FLOAT *out, FLOAT *in)
 {
@@ -511,7 +528,7 @@ mdct_256(A52Context *ctx, FLOAT *out, FLOAT *in)
 
     coef_a = out;
     coef_b = &out[128];
-    xx = ctx->mdct_ctx_256.buffer;
+    xx = ctx->mdct_ctx_256.buffer1;
 
     dct_iv(&ctx->mdct_ctx_256, coef_a, in);
 
