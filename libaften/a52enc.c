@@ -35,7 +35,8 @@
 #include "a52.h"
 #include "bitalloc.h"
 #include "crc.h"
-#include "dsp.h"
+#include "mdct.h"
+#include "window.h"
 #include "exponent.h"
 
 static const uint8_t rematbndtab[4][2] = {
@@ -207,7 +208,8 @@ aften_encode_init(AftenContext *s)
 
     bitalloc_init();
     crc_init();
-    dsp_init(ctx);
+    a52_window_init();
+    mdct_init(ctx);
     expsizetab_init();
 
     // can't do block switching with low sample rate due to the high-pass filter
@@ -890,9 +892,9 @@ generate_coefs(A52Context *ctx)
             //if(block->blksw[ch]) printf("\nshort block\n");
             apply_a52_window(block->input_samples[ch]);
             if(block->blksw[ch]) {
-                mdct256(ctx, block->mdct_coef[ch], block->input_samples[ch]);
+                mdct_256(ctx, block->mdct_coef[ch], block->input_samples[ch]);
             } else {
-                mdct512(ctx, block->mdct_coef[ch], block->input_samples[ch]);
+                mdct_512(ctx, block->mdct_coef[ch], block->input_samples[ch]);
             }
             for(i=ctx->frame.ncoefs[ch]; i<256; i++) {
                 block->mdct_coef[ch][i] = 0.0;
@@ -1054,7 +1056,7 @@ aften_encode_close(AftenContext *s)
 {
     if(s != NULL && s->private_context != NULL) {
         A52Context *ctx = s->private_context;
-        dsp_close(ctx);
+        mdct_close(ctx);
         free(ctx);
         s->private_context = NULL;
     }

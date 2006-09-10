@@ -21,12 +21,12 @@
  */
 
 /**
- * @file dsp.h
- * Signal processing header
+ * @file mdct.h
+ * MDCT header
  */
 
-#ifndef DSP_H
-#define DSP_H
+#ifndef MDCT_H
+#define MDCT_H
 
 #include "common.h"
 
@@ -48,14 +48,12 @@ typedef struct {
     void *cbuffer;
 } MDCTContext;
 
-extern void dsp_init(struct A52Context *ctx);
+extern void mdct_init(struct A52Context *ctx);
 
-extern void dsp_close(struct A52Context *ctx);
+extern void mdct_close(struct A52Context *ctx);
 
-extern void apply_a52_window(FLOAT *samples);
+extern void mdct_512(struct A52Context *ctx, FLOAT *out, FLOAT *in);
 
-extern void mdct512(struct A52Context *ctx, FLOAT *out, FLOAT *in);
+extern void mdct_256(struct A52Context *ctx, FLOAT *out, FLOAT *in);
 
-extern void mdct256(struct A52Context *ctx, FLOAT *out, FLOAT *in);
-
-#endif /* DSP_H */
+#endif /* MDCT_H */

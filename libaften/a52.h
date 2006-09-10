@@ -32,7 +32,7 @@
 #include "bitio.h"
 #include "aften.h"
 #include "filter.h"
-#include "dsp.h"
+#include "mdct.h"
 
 #define A52_MAX_CHANNELS 6
 

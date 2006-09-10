@@ -6,7 +6,8 @@ include ../config.mak
 CFLAGS=$(OPTFLAGS) -I. -I.. -I$(SRC_PATH)/libavutil \
        -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_ISOC9X_SOURCE
 
-OBJS= a52enc.o bitalloc.o bitio.o crc.o dsp.o filter.o util.o exponent.o \
+OBJS= a52enc.o bitalloc.o bitio.o crc.o mdct.o filter.o util.o exponent.o \
+	window.o \
 
 
 HEADERS = aften.h

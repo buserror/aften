@@ -33,7 +33,7 @@
 #include <assert.h>
 
 #include "a52.h"
-#include "dsp.h"
+#include "mdct.h"
 
 #ifdef CONFIG_DOUBLE
 #define ONE 1.0
@@ -96,7 +96,7 @@ fft_close(FFTContext *fft) {
 }
 
 static void
-mdct_init(MDCTContext *mdct, int len)
+ctx_init(MDCTContext *mdct, int len)
 {
     int n4;
     int i;
@@ -123,7 +123,7 @@ mdct_init(MDCTContext *mdct, int len)
 }
 
 static void
-mdct_close(MDCTContext *mdct)
+ctx_close(MDCTContext *mdct)
 {
     if(mdct) {
         mdct->length = 0;
@@ -267,7 +267,7 @@ dct_iv(MDCTContext *mdct, FLOAT *out, FLOAT *in)
 }
 
 void
-mdct512(A52Context *ctx, FLOAT *out, FLOAT *in)
+mdct_512(A52Context *ctx, FLOAT *out, FLOAT *in)
 {
     int i;
     FLOAT *xx;
@@ -283,8 +283,8 @@ mdct512(A52Context *ctx, FLOAT *out, FLOAT *in)
 }
 
 #if 0
-static void
-mdct256_slow(FLOAT *out, FLOAT *in)
+void
+mdct_256(A52Context *ctx, FLOAT *out, FLOAT *in)
 {
     int k, n;
     FLOAT s, a;
@@ -309,7 +309,7 @@ mdct256_slow(FLOAT *out, FLOAT *in)
 #endif
 
 void
-mdct256(A52Context *ctx, FLOAT *out, FLOAT *in)
+mdct_256(A52Context *ctx, FLOAT *out, FLOAT *in)
 {
     int i;
     FLOAT *coef_a, *coef_b, *xx;
@@ -333,61 +333,16 @@ mdct256(A52Context *ctx, FLOAT *out, FLOAT *in)
     memcpy(out, xx, 256 * sizeof(FLOAT));
 }
 
-static FLOAT a52_window[512];
-
-/**
- * Generate a Kaiser-Bessel Derived Window.
- * @param alpha         Determines window shape
- * @param out_window    Array to fill with window values
- * @param n             Full window size
- * @param iter          Number of iterations to use in BesselI0
- */
-static void
-kbd_window_init(FLOAT alpha, FLOAT *window, int n, int iter)
+void
+mdct_init(A52Context *ctx)
 {
-    int i, j, n2;
-    FLOAT a, x, bessel, sum;
-
-    n2 = n >> 1;
-    a = alpha * M_PI / n2;
-    a = a*a;
-    sum = 0.0;
-    for(i=0; i<n2; i++) {
-        x = i * (n2 - i) * a;
-        bessel = ONE;
-        for(j=iter; j>0; j--) {
-            bessel = (bessel * x / (j*j)) + ONE;
-        }
-        sum += bessel;
-        window[i] = sum;
-    }
-    sum += ONE;
-    for(i=0; i<n2; i++) {
-        window[i] = AFT_SQRT(window[i] / sum);
-        window[n-1-i] = window[i];
-    }
+    ctx_init(&ctx->mdct_ctx_512, 512);
+    ctx_init(&ctx->mdct_ctx_256, 256);
 }
 
 void
-apply_a52_window(FLOAT *samples)
+mdct_close(A52Context *ctx)
 {
-    int i;
-    for(i=0; i<512; i++) {
-        samples[i] *= a52_window[i];
-    }
-}
-
-void
-dsp_init(A52Context *ctx)
-{
-    kbd_window_init(5.0, a52_window, 512, 50);
-    mdct_init(&ctx->mdct_ctx_512, 512);
-    mdct_init(&ctx->mdct_ctx_256, 256);
-}
-
-void
-dsp_close(A52Context *ctx)
-{
-    mdct_close(&ctx->mdct_ctx_512);
-    mdct_close(&ctx->mdct_ctx_256);
+    ctx_close(&ctx->mdct_ctx_512);
+    ctx_close(&ctx->mdct_ctx_256);
 }
