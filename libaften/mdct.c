@@ -1,28 +1,40 @@
 /**
  * Aften: A/52 audio encoder
- * Copyright (c) 2006  Justin Ruggles <jruggle@earthlink.net>
  *
- * Based on "The simplest AC3 encoder" from FFmpeg
- * Copyright (c) 2000 Fabrice Bellard.
+ * This file is derived from libvorbis
+ * Copyright (c) 2002, Xiph.org Foundation
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ * - Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ * - Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ *
+ * - Neither the name of the Xiph.org Foundation nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION
+ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /**
- * @file dsp.c
- * Signal processing
+ * @file mdct.c
+ * Modified Discrete Cosine Transform
  */
 
 #include "common.h"
@@ -38,276 +50,459 @@
 #ifdef CONFIG_DOUBLE
 #define ONE 1.0
 #define TWO 2.0
+#define AFT_PI3_8 0.38268343236508977175
+#define AFT_PI2_8 0.70710678118654752441
+#define AFT_PI1_8 0.92387953251128675613
 #else
 #define ONE 1.0f
 #define TWO 2.0f
+#define AFT_PI3_8 0.38268343236508977175f
+#define AFT_PI2_8 0.70710678118654752441f
+#define AFT_PI1_8 0.92387953251128675613f
 #endif
 
-typedef struct Complex {
-    FLOAT re, im;
-} Complex;
-
 static void
-fft_init(FFTContext *fft, int len)
+ctx_init(MDCTContext *mdct, int n)
 {
-    int i, j, m, nbits, n2;
-    FLOAT c;
-
-    fft->length = len;
-    nbits = log2i(len);
-    n2 = len >> 1;
-    c = TWO * AFT_PI / len;
-
-    fft->costab = calloc(n2, sizeof(FLOAT));
-    fft->sintab = calloc(n2, sizeof(FLOAT));
-    fft->revtab = calloc(len, sizeof(int));
-
-    for(i=0; i<n2; i++) {
-        fft->costab[i] = AFT_COS(c * i);
-        fft->sintab[i] = AFT_SIN(c * i);
-    }
-
-    for(i=0; i<len; i++) {
-        m = 0;
-        for(j=0; j<nbits; j++) {
-            m |= ((i >> j) & 1) << (nbits-j-1);
-        }
-        fft->revtab[i] = m;
-    }
-}
-
-static void
-fft_close(FFTContext *fft) {
-    if(fft) {
-        fft->length = 0;
-        if(fft->costab) {
-            free(fft->costab);
-            fft->costab = NULL;
-        }
-        if(fft->sintab) {
-            free(fft->sintab);
-            fft->sintab = NULL;
-        }
-        if(fft->revtab) {
-            free(fft->revtab);
-            fft->revtab = NULL;
-        }
-    }
-}
-
-static void
-ctx_init(MDCTContext *mdct, int len)
-{
-    int n4;
+    int *bitrev = calloc((n/4), sizeof(int));
+    FLOAT *trig = calloc((n+n/4), sizeof(FLOAT));
     int i;
-    FLOAT alpha, c;
+    int n2 = (n >> 1);
+    int log2n = mdct->log2n = log2i(n);
+    mdct->n = n;
+    mdct->trig = trig;
+    mdct->bitrev = bitrev;
 
-    mdct->length = len;
-    c = TWO * AFT_PI / mdct->length;
-    n4 = mdct->length >> 2;
-
-    mdct->xcos1 = calloc(n4, sizeof(FLOAT));
-    mdct->xsin1 = calloc(n4, sizeof(FLOAT));
-
-    for(i=0; i<n4; i++) {
-        alpha = c * (i + 0.125);
-        mdct->xcos1[i] = -AFT_COS(alpha);
-        mdct->xsin1[i] = -AFT_SIN(alpha);
+    // trig lookups
+    for(i=0;i<n/4;i++){
+        trig[i*2]      =  AFT_COS((AFT_PI/n)*(4*i));
+        trig[i*2+1]    = -AFT_SIN((AFT_PI/n)*(4*i));
+        trig[n2+i*2]   =  AFT_COS((AFT_PI/(2*n))*(2*i+1));
+        trig[n2+i*2+1] =  AFT_SIN((AFT_PI/(2*n))*(2*i+1));
+    }
+    for(i=0;i<n/8;i++){
+        trig[n+i*2]    =  AFT_COS((AFT_PI/n)*(4*i+2))*0.5;
+        trig[n+i*2+1]  = -AFT_SIN((AFT_PI/n)*(4*i+2))*0.5;
     }
 
-    mdct->fft = calloc(1, sizeof(FFTContext));
-    fft_init(mdct->fft, n4);
+    // bitreverse lookup
+    {
+        int j, acc;
+        int mask = (1 << (log2n-1)) - 1;
+        int msb = (1 << (log2n-2));
+        for(i=0; i<n/8; i++) {
+            acc = 0;
+            for(j=0; msb>>j; j++) {
+                if((msb>>j)&i) {
+                    acc |= (1 << j);
+                }
+            }
+            bitrev[i*2]= ((~acc) & mask) - 1;
+            bitrev[i*2+1] = acc;
+        }
+    }
 
-    mdct->buffer = calloc(len, sizeof(FLOAT));
-    mdct->cbuffer = calloc(n4, sizeof(Complex));
+    // MDCT scale used in AC3
+    mdct->scale = (-2.0 / n);
+
+    // internal mdct buffer
+    mdct->buffer = calloc(n, sizeof(FLOAT));
 }
 
 static void
 ctx_close(MDCTContext *mdct)
 {
     if(mdct) {
-        mdct->length = 0;
-        if(mdct->xcos1) {
-            free(mdct->xcos1);
-            mdct->xcos1 = NULL;
-        }
-        if(mdct->xsin1) {
-            free(mdct->xsin1);
-            mdct->xsin1 = NULL;
-        }
-        if(mdct->fft) {
-            fft_close(mdct->fft);
-            free(mdct->fft);
-            mdct->fft = NULL;
-        }
-        if(mdct->buffer) {
-            free(mdct->buffer);
-            mdct->buffer = NULL;
-        }
-        if(mdct->cbuffer) {
-            free(mdct->cbuffer);
-            mdct->cbuffer = NULL;
-        }
+        if(mdct->trig)   free(mdct->trig);
+        if(mdct->bitrev) free(mdct->bitrev);
+        if(mdct->buffer) free(mdct->buffer);
+        memset(mdct, 0, sizeof(MDCTContext));
     }
+}
+
+/* 8 point butterfly (in place, 4 register) */
+static inline void
+mdct_butterfly_8(FLOAT *x) {
+    FLOAT r0   = x[6] + x[2];
+    FLOAT r1   = x[6] - x[2];
+    FLOAT r2   = x[4] + x[0];
+    FLOAT r3   = x[4] - x[0];
+
+    x[6] = r0   + r2;
+    x[4] = r0   - r2;
+
+    r0   = x[5] - x[1];
+    r2   = x[7] - x[3];
+    x[0] = r1   + r0;
+    x[2] = r1   - r0;
+
+    r0   = x[5] + x[1];
+    r1   = x[7] + x[3];
+    x[3] = r2   + r3;
+    x[1] = r2   - r3;
+    x[7] = r1   + r0;
+    x[5] = r1   - r0;
+}
+
+/* 16 point butterfly (in place, 4 register) */
+static inline void
+mdct_butterfly_16(FLOAT *x) {
+    FLOAT r0 = x[1] - x[9];
+    FLOAT r1 = x[0] - x[8];
+
+    x[8]  += x[0];
+    x[9]  += x[1];
+    x[0]   = ((r0 + r1) * AFT_PI2_8);
+    x[1]   = ((r0 - r1) * AFT_PI2_8);
+
+    r0     = x[3]  - x[11];
+    r1     = x[10] - x[2];
+    x[10] += x[2];
+    x[11] += x[3];
+    x[2]   = r0;
+    x[3]   = r1;
+
+    r0     = x[12] - x[4];
+    r1     = x[13] - x[5];
+    x[12] += x[4];
+    x[13] += x[5];
+    x[4]   = ((r0 - r1) * AFT_PI2_8);
+    x[5]   = ((r0 + r1) * AFT_PI2_8);
+
+    r0     = x[14] - x[6];
+    r1     = x[15] - x[7];
+    x[14] += x[6];
+    x[15] += x[7];
+    x[6]   = r0;
+    x[7]   = r1;
+
+    mdct_butterfly_8(x);
+    mdct_butterfly_8(x+8);
+}
+
+/* 32 point butterfly (in place, 4 register) */
+static inline void
+mdct_butterfly_32(FLOAT *x) {
+    FLOAT r0 = x[30] - x[14];
+    FLOAT r1 = x[31] - x[15];
+
+    x[30] += x[14];
+    x[31] += x[15];
+    x[14]  = r0;
+    x[15]  = r1;
+
+    r0     = x[28] - x[12];
+    r1     = x[29] - x[13];
+    x[28] +=         x[12];
+    x[29] +=         x[13];
+    x[12]  = (r0 * AFT_PI1_8 - r1 * AFT_PI3_8);
+    x[13]  = (r0 * AFT_PI3_8 + r1 * AFT_PI1_8);
+
+    r0     = x[26] - x[10];
+    r1     = x[27] - x[11];
+    x[26] +=         x[10];
+    x[27] +=         x[11];
+    x[10]  = ((r0 - r1) * AFT_PI2_8);
+    x[11]  = ((r0 + r1) * AFT_PI2_8);
+
+    r0     = x[24] - x[8];
+    r1     = x[25] - x[9];
+    x[24] += x[8];
+    x[25] += x[9];
+    x[8]   = (r0 * AFT_PI3_8 - r1 * AFT_PI1_8);
+    x[9]   = (r1 * AFT_PI3_8 + r0 * AFT_PI1_8);
+
+    r0     = x[22] - x[6];
+    r1     = x[7]  - x[23];
+    x[22] += x[6];
+    x[23] += x[7];
+    x[6]   = r1;
+    x[7]   = r0;
+
+    r0     = x[4] - x[20];
+    r1     = x[5] - x[21];
+    x[20] += x[4];
+    x[21] += x[5];
+    x[4]   = (r1 * AFT_PI1_8 + r0 * AFT_PI3_8);
+    x[5]   = (r1 * AFT_PI3_8 - r0 * AFT_PI1_8);
+
+    r0     = x[2]  - x[18];
+    r1     = x[3]  - x[19];
+    x[18] += x[2];
+    x[19] += x[3];
+    x[2]   = ((r1 + r0) * AFT_PI2_8);
+    x[3]   = ((r1 - r0) * AFT_PI2_8);
+
+    r0     = x[0] - x[16];
+    r1     = x[1] - x[17];
+    x[16] += x[0];
+    x[17] += x[1];
+    x[0]   = (r1 * AFT_PI3_8 + r0 * AFT_PI1_8);
+    x[1]   = (r1 * AFT_PI1_8 - r0 * AFT_PI3_8);
+
+    mdct_butterfly_16(x);
+    mdct_butterfly_16(x+16);
+}
+
+/* N point first stage butterfly (in place, 2 register) */
+static inline void
+mdct_butterfly_first(FLOAT *trig, FLOAT *x, int points)
+{
+    FLOAT *x1 = x + points - 8;
+    FLOAT *x2 = x + (points>>1) - 8;
+    FLOAT r0;
+    FLOAT r1;
+
+    do {
+        r0     = x1[6] - x2[6];
+        r1     = x1[7] - x2[7];
+        x1[6] += x2[6];
+        x1[7] += x2[7];
+        x2[6]  = (r1 * trig[1] + r0 * trig[0]);
+        x2[7]  = (r1 * trig[0] - r0 * trig[1]);
+
+        r0     = x1[4] - x2[4];
+        r1     = x1[5] - x2[5];
+        x1[4] += x2[4];
+        x1[5] += x2[5];
+        x2[4]  = (r1 * trig[5] + r0 * trig[4]);
+        x2[5]  = (r1 * trig[4] - r0 * trig[5]);
+
+        r0     = x1[2] - x2[2];
+        r1     = x1[3] - x2[3];
+        x1[2] += x2[2];
+        x1[3] += x2[3];
+        x2[2]  = (r1 * trig[9] + r0 * trig[8]);
+        x2[3]  = (r1 * trig[8] - r0 * trig[9]);
+
+        r0     = x1[0] - x2[0];
+        r1     = x1[1] - x2[1];
+        x1[0] += x2[0];
+        x1[1] += x2[1];
+        x2[0]  = (r1 * trig[13] + r0 * trig[12]);
+        x2[1]  = (r1 * trig[12] - r0 * trig[13]);
+
+        x1 -= 8;
+        x2 -= 8;
+        trig += 16;
+    } while(x2 >= x);
+}
+
+/* N/stage point generic N stage butterfly (in place, 2 register) */
+static inline void
+mdct_butterfly_generic(FLOAT *trig, FLOAT *x, int points, int trigint)
+{
+    FLOAT *x1 = x + points - 8;
+    FLOAT *x2 = x + (points>>1) - 8;
+    FLOAT r0;
+    FLOAT r1;
+
+    do {
+        r0     = x1[6] - x2[6];
+        r1     = x1[7] - x2[7];
+        x1[6] += x2[6];
+        x1[7] += x2[7];
+        x2[6]  = (r1 * trig[1] + r0 * trig[0]);
+        x2[7]  = (r1 * trig[0] - r0 * trig[1]);
+
+        trig += trigint;
+
+        r0     = x1[4] - x2[4];
+        r1     = x1[5] - x2[5];
+        x1[4] += x2[4];
+        x1[5] += x2[5];
+        x2[4]  = (r1 * trig[1] + r0 * trig[0]);
+        x2[5]  = (r1 * trig[0] - r0 * trig[1]);
+
+        trig += trigint;
+
+        r0     = x1[2] - x2[2];
+        r1     = x1[3] - x2[3];
+        x1[2] += x2[2];
+        x1[3] += x2[3];
+        x2[2]  = (r1 * trig[1] + r0 * trig[0]);
+        x2[3]  = (r1 * trig[0] - r0 * trig[1]);
+
+        trig += trigint;
+
+        r0     = x1[0] - x2[0];
+        r1     = x1[1] - x2[1];
+        x1[0] += x2[0];
+        x1[1] += x2[1];
+        x2[0]  = (r1 * trig[1] + r0 * trig[0]);
+        x2[1]  = (r1 * trig[0] - r0 * trig[1]);
+
+        trig += trigint;
+        x1 -= 8;
+        x2 -= 8;
+    } while(x2 >= x);
 }
 
 static inline void
-butterfly(FLOAT *p_re, FLOAT *p_im, FLOAT *q_re, FLOAT *q_im,
-          FLOAT p1_re, FLOAT p1_im, FLOAT q1_re, FLOAT q1_im)
+mdct_butterflies(MDCTContext *mdct, FLOAT *x, int points)
 {
-    *p_re = (p1_re + q1_re) / TWO;
-    *p_im = (p1_im + q1_im) / TWO;
-    *q_re = (p1_re - q1_re) / TWO;
-    *q_im = (p1_im - q1_im) / TWO;
+    FLOAT *trig = mdct->trig;
+    int stages = mdct->log2n-5;
+    int i, j;
+
+    if(--stages > 0) {
+        mdct_butterfly_first(trig, x, points);
+    }
+
+    for(i=1; --stages>0; i++) {
+        for(j=0; j<(1<<i); j++)
+            mdct_butterfly_generic(trig, x+(points>>i)*j, points>>i, 4<<i);
+    }
+
+    for(j=0; j<points; j+=32)
+        mdct_butterfly_32(x+j);
 }
 
-/* do a 2^n point complex fft on 2^ln points. */
-static void
-fft(FFTContext *fft, Complex *z)
+static inline void
+mdct_bitreverse(MDCTContext *mdct, FLOAT *x)
 {
-    int j, k, l, np, np2;
-    int nblocks, nloops;
-    Complex *p, *q;
-    Complex tmp;
+    int        n   = mdct->n;
+    int       *bit = mdct->bitrev;
+    FLOAT *w0   = x;
+    FLOAT *w1   = x = w0+(n>>1);
+    FLOAT *trig = mdct->trig+n;
+    
+    do{
+        FLOAT *x0    = x+bit[0];
+        FLOAT *x1    = x+bit[1];
 
-    np = fft->length;
+        FLOAT  r0     = x0[1]- x1[1];
+        FLOAT  r1     = x0[0]+ x1[0];
+        FLOAT  r2     = (r1 * trig[0] + r0 * trig[1]);
+        FLOAT  r3     = (r1 * trig[1] - r0 * trig[0]);
 
-    // reverse
-    for(j=0; j<np; j++) {
-        k = fft->revtab[j];
-        if(k < j) {
-            tmp = z[k];
-            z[k] = z[j];
-            z[j] = tmp;
-        }
-    }
+        w1 -= 4;
 
-    // pass 0
+        r0 = (x0[1] + x1[1]) * 0.5;
+        r1 = (x0[0] - x1[0]) * 0.5;
 
-    p=&z[0];
-    j=(np >> 1);
-    do {
-        butterfly(&p[0].re, &p[0].im, &p[1].re, &p[1].im,
-                  p[0].re, p[0].im, p[1].re, p[1].im);
-        p+=2;
-    } while (--j != 0);
+        w0[0] = r0 + r2;
+        w1[2] = r0 - r2;
+        w0[1] = r1 + r3;
+        w1[3] = r3 - r1;
 
-    // pass 1
+        x0 = x+bit[2];
+        x1 = x+bit[3];
 
-    p=&z[0];
-    j=np >> 2;
-    do {
-        butterfly(&p[0].re, &p[0].im, &p[2].re, &p[2].im,
-                  p[0].re, p[0].im, p[2].re, p[2].im);
-        butterfly(&p[1].re, &p[1].im, &p[3].re, &p[3].im,
-                  p[1].re, p[1].im, p[3].im, -p[3].re);
-        p+=4;
-    } while (--j != 0);
+        r0 = x0[1] - x1[1];
+        r1 = x0[0] + x1[0];
+        r2 = (r1 * trig[2] + r0 * trig[3]);
+        r3 = (r1 * trig[3] - r0 * trig[2]);
 
-    // pass 2 .. ln-1
+        r0 = (x0[1] + x1[1]) * 0.5;
+        r1 = (x0[0] - x1[0]) * 0.5;
 
-    nblocks = np >> 3;
-    nloops = 1 << 2;
-    np2 = np >> 1;
-    do {
-        p = z;
-        q = z + nloops;
-        for (j = 0; j < nblocks; ++j) {
+        w0[2] = r0 + r2;
+        w1[0] = r0 - r2;
+        w0[3] = r1 + r3;
+        w1[1] = r3 - r1;
 
-            butterfly(&p->re, &p->im, &q->re, &q->im,
-                      p->re, p->im, q->re, q->im);
-
-            p++;
-            q++;
-            for(l = nblocks; l < np2; l += nblocks) {
-                tmp.re = (fft->costab[l] * q->re) + (fft->sintab[l] * q->im);
-                tmp.im = (fft->costab[l] * q->im) - (q->re * fft->sintab[l]);
-
-                butterfly(&p->re, &p->im, &q->re, &q->im,
-                          p->re, p->im, tmp.re, tmp.im);
-                p++;
-                q++;
-            }
-            p += nloops;
-            q += nloops;
-        }
-        nblocks = nblocks >> 1;
-        nloops = nloops << 1;
-    } while(nblocks != 0);
-}
-
-static void
-dct_iv(MDCTContext *mdct, FLOAT *out, FLOAT *in)
-{
-    int i;
-    FLOAT tmp_re, tmp_im;
-    int n, n2, n4;
-    Complex *x;
-
-    n = mdct->length;
-    n2 = n >> 1;
-    n4 = n >> 2;
-    x = mdct->cbuffer;
-
-    // pre rotation
-    for(i=0; i<n4; i++) {
-        tmp_re = (in[2*i] - in[n-1-2*i]) / TWO;
-        tmp_im = (in[n2+2*i] - in[n2-1-2*i]) / TWO;
-        x[i].re = (tmp_im * mdct->xsin1[i]) - (tmp_re * mdct->xcos1[i]);
-        x[i].im = (tmp_re * mdct->xsin1[i]) + (mdct->xcos1[i] * tmp_im);
-    }
-
-    fft(mdct->fft, x);
-
-    // post rotation
-    for(i=0; i<n4; i++) {
-        out[n2-1-2*i] = (x[i].re * mdct->xsin1[i]) - (x[i].im * mdct->xcos1[i]);
-        out[2*i]      = (x[i].re * mdct->xcos1[i]) + (mdct->xsin1[i] * x[i].im);
-    }
+        trig += 4;
+        bit += 4;
+        w0  += 4;
+    } while(w0 < w1);
 }
 
 void
 mdct_512(A52Context *ctx, FLOAT *out, FLOAT *in)
 {
-    int i;
-    FLOAT *xx;
+    int n = ctx->mdct_ctx_512.n;
+    int n2 = n>>1;
+    int n4 = n>>2;
+    int n8 = n>>3;
+    FLOAT *w = ctx->mdct_ctx_512.buffer;
+    FLOAT *w2 = w+n2;
 
-    xx = ctx->mdct_ctx_512.buffer;
-    for(i=0; i<128; i++) {
-        xx[i] = -in[i+384];
+    FLOAT r0;
+    FLOAT r1;
+    FLOAT *x0 = in+n2+n4;
+    FLOAT *x1 = x0+1;
+    FLOAT *trig = ctx->mdct_ctx_512.trig + n2;
+    int i;
+
+    for(i=0; i<n8; i+=2) {
+        x0 -= 4;
+        trig -= 2;
+        r0 = x0[2] + x1[0];
+        r1 = x0[0] + x1[2];       
+        w2[i]   = (r1*trig[1] + r0*trig[0]);
+        w2[i+1] = (r1*trig[0] - r0*trig[1]);
+        x1 += 4;
     }
-    for(; i<512; i++) {
-        xx[i] = in[i-128];
+
+    x1 = in+1;
+    for(; i<n2-n8; i+=2) {
+        trig -= 2;
+        x0 -= 4;
+        r0 = x0[2] - x1[0];
+        r1 = x0[0] - x1[2];       
+        w2[i]   = (r1*trig[1] + r0*trig[0]);
+        w2[i+1] = (r1*trig[0] - r0*trig[1]);
+        x1 += 4;
     }
-    dct_iv(&ctx->mdct_ctx_512, out, xx);
+
+    x0 = in+n;
+    for(; i<n2; i+=2) {
+        trig -= 2;
+        x0 -= 4;
+        r0 = -x0[2] - x1[0];
+        r1 = -x0[0] - x1[2];       
+        w2[i]   = (r1*trig[1] + r0*trig[0]);
+        w2[i+1] = (r1*trig[0] - r0*trig[1]);
+        x1 += 4;
+    }
+
+    mdct_butterflies(&ctx->mdct_ctx_512, w+n2, n2);
+    mdct_bitreverse(&ctx->mdct_ctx_512, w);
+
+    trig = ctx->mdct_ctx_512.trig+n2;
+    x0 = out+n2;
+    for(i=0; i<n4; i++) {
+        x0--;
+        out[i] = ((w[0]*trig[0]+w[1]*trig[1])*ctx->mdct_ctx_512.scale);
+        x0[0]  = ((w[0]*trig[1]-w[1]*trig[0])*ctx->mdct_ctx_512.scale);
+        w += 2;
+        trig += 2;
+    }
 }
 
-#if 0
+#if 1
 void
 mdct_256(A52Context *ctx, FLOAT *out, FLOAT *in)
 {
     int k, n;
     FLOAT s, a;
+    FLOAT pi_128 = AFT_PI / 128.0;
+    FLOAT half = 0.5;
 
     for(k=0; k<128; k++) {
         s = 0;
         for(n=0; n<256; n++) {
-            a = (M_PI/512.0)*(2.0*n+1)*(2.0*k+1);
-            s += in[n] * cos(a);
+            a = pi_128 * (n+half) * (k+half);
+            s += in[n] * AFT_COS(a);
         }
-        out[k*2] = -2.0 * s / 256.0;
+        out[k*2] = s / -128.0;
     }
     for(k=0; k<128; k++) {
         s = 0;
         for(n=0; n<256; n++) {
-            a = (M_PI/512.0)*(2.0*n+1)*(2.0*k+1)+M_PI*(k+0.5);
-            s += in[n+256] * cos(a);
+            a = pi_128 * (n+half) * (k+half) + AFT_PI * (k+half);
+            s += in[n+256] * AFT_COS(a);
         }
-        out[2*k+1] = -2.0 * s / 256.0;
+        out[2*k+1] = s / -128.0;
     }
 }
-#endif
-
+#else
+/**
+ * This needs to be modified to use the new MDCT implementation. For now it is
+ * disabled in favor of the really slow version.  Until this is updated, Aften
+ * will be much slower when block switching is turned on.
+ */
 void
 mdct_256(A52Context *ctx, FLOAT *out, FLOAT *in)
 {
@@ -332,6 +527,7 @@ mdct_256(A52Context *ctx, FLOAT *out, FLOAT *in)
     }
     memcpy(out, xx, 256 * sizeof(FLOAT));
 }
+#endif
 
 void
 mdct_init(A52Context *ctx)
