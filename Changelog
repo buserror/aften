@@ -19,6 +19,8 @@ Aften TODO list
 Aften Changelog
 ---------------
 version SVN : current
+- optional faster bit allocation by reducing accuracy/quality
+- replaced MDCT code with implementation from libvorbis
 
 version 0.05 : 21 August 2006
 - bit allocation speedup by Prakash Punnoor <prakash@punnoor.de>
