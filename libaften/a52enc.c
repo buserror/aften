@@ -663,74 +663,94 @@ output_frame_end(A52Context *ctx)
 }
 
 static void
-fmt_convert_from_u8(FLOAT *dest, uint8_t *src, int n)
+fmt_convert_from_u8(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
+                    uint8_t *src, int nch, int n)
 {
-    int i;
-    for(i=0; i<n; i++) {
-        dest[i] = (src[i]-128.0) / 128.0;
+    int i, ch;
+    for(ch=0; ch<nch; ch++) {
+        for(i=0; i<n; i++) {
+            dest[ch][i] = (src[i*nch+ch]-128.0) / 128.0;
+        }
     }
 }
 
 static void
-fmt_convert_from_s16(FLOAT *dest, int16_t *src, int n)
+fmt_convert_from_s16(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
+                     int16_t *src, int nch, int n)
 {
-    int i;
-    for(i=0; i<n; i++) {
-        dest[i] = src[i] / 32768.0;
+    int i, ch;
+    for(ch=0; ch<nch; ch++) {
+        for(i=0; i<n; i++) {
+            dest[ch][i] = src[i*nch+ch] / 32768.0;
+        }
     }
 }
 
 static void
-fmt_convert_from_s20(FLOAT *dest, int32_t *src, int n)
+fmt_convert_from_s20(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
+                     int32_t *src, int nch, int n)
 {
-    int i;
-    for(i=0; i<n; i++) {
-        dest[i] = src[i] / 524288.0;
+    int i, ch;
+    for(ch=0; ch<nch; ch++) {
+        for(i=0; i<n; i++) {
+            dest[ch][i] = src[i*nch+ch] / 524288.0;
+        }
     }
 }
 
 static void
-fmt_convert_from_s24(FLOAT *dest, int32_t *src, int n)
+fmt_convert_from_s24(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
+                     int32_t *src, int nch, int n)
 {
-    int i;
-    for(i=0; i<n; i++) {
-        dest[i] = src[i] / 8388608.0;
+    int i, ch;
+    for(ch=0; ch<nch; ch++) {
+        for(i=0; i<n; i++) {
+            dest[ch][i] = src[i*nch+ch] / 8388608.0;
+        }
     }
 }
 
 static void
-fmt_convert_from_s32(FLOAT *dest, int32_t *src, int n)
+fmt_convert_from_s32(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
+                     int32_t *src, int nch, int n)
 {
-    int i;
-    for(i=0; i<n; i++) {
-        dest[i] = src[i] / 2147483648.0;
+    int i, ch;
+    for(ch=0; ch<nch; ch++) {
+        for(i=0; i<n; i++) {
+            dest[ch][i] = src[i*nch+ch] / 2147483648.0;
+        }
     }
 }
 
 static void
-fmt_convert_from_float(FLOAT *dest, float *src, int n)
+fmt_convert_from_float(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
+                       float *src, int nch, int n)
 {
-    int i;
-    for(i=0; i<n; i++) {
-        dest[i] = src[i];
+    int i, ch;
+    for(ch=0; ch<nch; ch++) {
+        for(i=0; i<n; i++) {
+            dest[ch][i] = src[i*nch+ch];
+        }
     }
 }
 
 static void
-fmt_convert_from_double(FLOAT *dest, double *src, int n)
+fmt_convert_from_double(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
+                        double *src, int nch, int n)
 {
-    int i;
-    for(i=0; i<n; i++) {
-        dest[i] = src[i];
+    int i, ch;
+    for(ch=0; ch<nch; ch++) {
+        for(i=0; i<n; i++) {
+            dest[ch][i] = src[i*nch+ch];
+        }
     }
 }
 
 static void
 copy_samples(A52Context *ctx, void *vsamples)
 {
-    int ch, blk, j;
-    int sinc, nsmp;
-    FLOAT *samples;
+    int ch, blk;
+    int sinc;
     FLOAT filtered_audio[A52_FRAME_SIZE];
     A52Frame *frame;
     A52Block *block;
@@ -738,30 +758,31 @@ copy_samples(A52Context *ctx, void *vsamples)
     sinc = ctx->n_all_channels;
     frame = &ctx->frame;
 
-    nsmp = sinc * A52_FRAME_SIZE;
-    samples = calloc(nsmp, sizeof(FLOAT));
+    // convert sample format and de-interleave channels
     switch(ctx->sample_format) {
-        case A52_SAMPLE_FMT_U8:  fmt_convert_from_u8(samples, vsamples, nsmp);
+        case A52_SAMPLE_FMT_U8:  fmt_convert_from_u8(frame->input_audio,
+                                        vsamples, sinc, A52_FRAME_SIZE);
                                  break;
-        case A52_SAMPLE_FMT_S16: fmt_convert_from_s16(samples, vsamples, nsmp);
+        case A52_SAMPLE_FMT_S16: fmt_convert_from_s16(frame->input_audio,
+                                        vsamples, sinc, A52_FRAME_SIZE);
                                  break;
-        case A52_SAMPLE_FMT_S20: fmt_convert_from_s20(samples, vsamples, nsmp);
+        case A52_SAMPLE_FMT_S20: fmt_convert_from_s20(frame->input_audio,
+                                        vsamples, sinc, A52_FRAME_SIZE);
                                  break;
-        case A52_SAMPLE_FMT_S24: fmt_convert_from_s24(samples, vsamples, nsmp);
+        case A52_SAMPLE_FMT_S24: fmt_convert_from_s24(frame->input_audio,
+                                        vsamples, sinc, A52_FRAME_SIZE);
                                  break;
-        case A52_SAMPLE_FMT_S32: fmt_convert_from_s32(samples, vsamples, nsmp);
+        case A52_SAMPLE_FMT_S32: fmt_convert_from_s32(frame->input_audio,
+                                        vsamples, sinc, A52_FRAME_SIZE);
                                  break;
-        case A52_SAMPLE_FMT_FLT: fmt_convert_from_float(samples, vsamples, nsmp);
+        case A52_SAMPLE_FMT_FLT: fmt_convert_from_float(frame->input_audio,
+                                        vsamples, sinc, A52_FRAME_SIZE);
                                  break;
-        case A52_SAMPLE_FMT_DBL: fmt_convert_from_double(samples, vsamples, nsmp);
+        case A52_SAMPLE_FMT_DBL: fmt_convert_from_double(frame->input_audio,
+                                        vsamples, sinc, A52_FRAME_SIZE);
                                  break;
+        default: break;
     }
-    for(ch=0; ch<sinc; ch++) {
-        for(j=0; j<A52_FRAME_SIZE; j++) {
-            frame->input_audio[ch][j] = samples[j*sinc+ch];
-        }
-    }
-    free(samples);
 
     // DC-removal high-pass filter
     if(ctx->params.use_dc_filter) {
