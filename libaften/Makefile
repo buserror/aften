@@ -62,7 +62,6 @@ install-lib-static: $(LIB)
 
 install-headers:
 	install -d "$(incdir)"
-	install -d "$(libdir)/pkgconfig"
 	install -m 644 $(addprefix "$(SRC_DIR)"/,$(HEADERS)) "$(incdir)"
 
 uninstall: uninstall-libs uninstall-headers
