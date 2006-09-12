@@ -3,7 +3,7 @@
 #
 include ../config.mak
 
-CFLAGS=$(OPTFLAGS) -I. -I.. -I$(SRC_PATH)/libavutil \
+CFLAGS=$(OPTFLAGS) -I. -I.. -I$(SRC_PATH)/libaften \
        -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_ISOC9X_SOURCE
 
 OBJS= a52enc.o bitalloc.o bitio.o crc.o mdct.o filter.o util.o exponent.o \
