@@ -5,10 +5,10 @@ A simple AC3-compatible audio encoder based on FFmpeg.
 
 -------------------------------------------------------------------------------
 Aften, Copyright (c) 2006 Justin Ruggles <jruggle@earthlink.net>
-http://jbr.homelinux.org/aften/
+http://aften.sourceforge.net/
 -------------------------------------------------------------------------------
 FFmpeg, Copyright (c) 2000-2004 Fabrice Bellard
-http://ffmpeg.sourceforge.net/
+http://ffmpeg.mplayerhq.hu/
 -------------------------------------------------------------------------------
 
 Legal notice: The author makes no claims that this software or any content 
