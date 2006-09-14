@@ -30,6 +30,11 @@
 #include <assert.h>
 #include <math.h>
 
+#ifdef __MINGW32__
+#include <io.h>
+#include <fcntl.h>
+#endif
+
 #include "wav.h"
 
 static int
@@ -78,6 +83,9 @@ main(int argc, char **argv)
     if(argc == 2) {
         fp = fopen(argv[1], "rb");
     } else {
+#ifdef __MINGW32__
+        setmode(fileno(stdin), O_BINARY);
+#endif
         fp = stdin;
     }
     if(!fp) {
