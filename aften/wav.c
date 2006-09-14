@@ -599,9 +599,9 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
 }
 
 int
-wavfile_seek_samples(WavFile *wf, int32_t offset, int whence)
+wavfile_seek_samples(WavFile *wf, int64_t offset, int whence)
 {
-    int byte_offset, pos, cur;
+    int64_t byte_offset, pos, cur;
 
     if(wf == NULL || wf->fp == NULL) return -1;
     if(wf->block_align <= 0) return -1;
@@ -644,15 +644,15 @@ wavfile_seek_samples(WavFile *wf, int32_t offset, int whence)
 }
 
 int
-wavfile_seek_time_ms(WavFile *wf, int32_t offset, int whence)
+wavfile_seek_time_ms(WavFile *wf, int64_t offset, int whence)
 {
-    int32_t samples;
+    int64_t samples;
     if(wf == NULL || wf->sample_rate == 0) return -1;
-    samples = (offset * wf->sample_rate) / 1000;
-    return wavfile_seek_samples(wf, samples, whence);
+    samples = ((int32_t)offset * (int64_t)wf->sample_rate) / 1000;
+    return wavfile_seek_samples(wf, (int)samples, whence);
 }
 
-int
+int64_t
 wavfile_position(WavFile *wf)
 {
     int cur;

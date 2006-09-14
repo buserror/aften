@@ -71,11 +71,11 @@ extern int wavfile_init(WavFile *wf, FILE *fp);
 
 extern int wavfile_read_samples(WavFile *wf, void *buffer, int num_samples);
 
-extern int wavfile_seek_samples(WavFile *wf, int32_t offset, int whence);
+extern int wavfile_seek_samples(WavFile *wf, int64_t offset, int whence);
 
-extern int wavfile_seek_time_ms(WavFile *wf, int32_t offset, int whence);
+extern int wavfile_seek_time_ms(WavFile *wf, int64_t offset, int whence);
 
-extern int wavfile_position(WavFile *wf);
+extern int64_t wavfile_position(WavFile *wf);
 
 extern void wavfile_print(FILE *st, WavFile *wf);
 
