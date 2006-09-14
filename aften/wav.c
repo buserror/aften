@@ -666,6 +666,12 @@ wavfile_position(WavFile *wf)
     return cur;
 }
 
+int64_t
+wavfile_position_time_ms(WavFile *wf)
+{
+    return (wavfile_position(wf) * 1000 / wf->sample_rate);
+}
+
 void
 wavfile_print(FILE *st, WavFile *wf)
 {

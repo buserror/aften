@@ -77,6 +77,8 @@ extern int wavfile_seek_time_ms(WavFile *wf, int64_t offset, int whence);
 
 extern int64_t wavfile_position(WavFile *wf);
 
+extern int64_t wavfile_position_time_ms(WavFile *wf);
+
 extern void wavfile_print(FILE *st, WavFile *wf);
 
 #endif /* WAV_H */
