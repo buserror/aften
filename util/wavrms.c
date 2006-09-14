@@ -32,7 +32,7 @@
 
 #include "wav.h"
 
-static uint8_t
+static int
 calculate_rms(FLOAT *samples, int ch, int n)
 {
     FLOAT rms_all, rms_left, rms_right;
@@ -61,55 +61,14 @@ calculate_rms(FLOAT *samples, int ch, int n)
     return -((int)(rms_all + 0.5));
 }
 
-static void
-heap_sort(uint8_t *a, int n)
-{
-    int v, w, t;
-
-    for(v=(n>>1)-1; v>=0; v--) {
-        w = (v<<1)+1;
-        while(w < n) {
-            if((w+1) < n && a[w+1] > a[w]) w++;
-            if(a[v] >= a[w]) break;
-            t = a[v];
-            a[v] = a[w];
-            a[w] = t;
-            v = w;
-            w = (v<<1)+1;
-        }
-    }
-    while(n > 1) {
-        n--;
-        t = a[0];
-        a[0] = a[n];
-        a[n] = t;
-        v = 0;
-        w = (v<<1)+1;
-        while(w < n) {
-            if((w+1) < n && a[w+1] > a[w]) w++;
-            if(a[v] >= a[w]) break;
-            t = a[v];
-            a[v] = a[w];
-            a[w] = t;
-            v = w;
-            w = (v<<1)+1;
-        }
-    } 
-}
-
 int
 main(int argc, char **argv)
 {
     FILE *fp;
     WavFile wf;
     FLOAT *buf;
-    uint8_t rms;
-    uint8_t *rms_list;
-    int list_size, frame_size;
-    uint32_t frame_count;
-    int replay_rms, max_rms, min_rms, dialnorm;
-    uint64_t avg_rms;
-    int nr, i;
+    int frame_size, nr, rms, dialnorm;
+    uint64_t avg_rms, avg_cnt;
 
     /* open file */
     if(argc > 2) {
@@ -138,49 +97,26 @@ main(int argc, char **argv)
     wf.read_format = WAV_SAMPLE_FMT_FLT;
 #endif
 
-    list_size = 8192;
-    rms_list = calloc(list_size, sizeof(uint8_t));
     buf = calloc(frame_size * wf.channels, sizeof(FLOAT));
 
-    frame_count = 0;
     avg_rms = 0;
+    avg_cnt = 1;
     nr = wavfile_read_samples(&wf, buf, frame_size);
     while(nr > 0) {
-        frame_count++;
-        if(nr < frame_size) {
-            for(i=nr*wf.channels; i<frame_size*wf.channels; i++) {
-                buf[i] = 0.0;
-            }
+        rms = calculate_rms(buf, wf.channels, nr);
+        // use a reasonable dialog range
+        if(rms < 40 && rms > 15) {
+            avg_rms += rms;
+            avg_cnt++;
         }
-        rms = calculate_rms(buf, wf.channels, frame_size);
-        avg_rms += rms;
-        if(frame_count > list_size) {
-            list_size += 8192;
-            rms_list = realloc(rms_list, list_size);
-        }
-        rms_list[frame_count-1] = rms;
 
         nr = wavfile_read_samples(&wf, buf, frame_size);
     }
-    avg_rms /= frame_count;
-
-    heap_sort(rms_list, frame_count);
-
-    max_rms = rms_list[0];
-    min_rms = rms_list[frame_count-1];
-    replay_rms = rms_list[frame_count * 5 / 100];
-    dialnorm = replay_rms + 5;
-    if(dialnorm > 31) dialnorm = 31;
-
-    printf("\n=-=-=-=-=-=-=-=-=-=-=\n");
-    printf("Max RMS:   -%d dB\n", max_rms);
-    printf("Min RMS:   -%d dB\n", min_rms);
-    printf("Avg RMS:   -%d dB\n", (int)avg_rms);
-    printf("Dialnorm:  -%d dB\n", dialnorm);
-    printf("=-=-=-=-=-=-=-=-=-=-=\n\n");
+    avg_rms /= avg_cnt;
+    dialnorm = MIN(avg_rms, 31);
+    printf("Dialnorm: -%d dB\n", dialnorm);
 
     free(buf);
-    free(rms_list);
     fclose(fp);
 
     return 0;
