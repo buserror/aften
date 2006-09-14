@@ -139,8 +139,9 @@ typedef struct {
     /**
      * Bit Allocation speed/accuracy
      * This determines how accurate the bit allocation search method is.
-     * Set to 1 for faster encoding
      * Set to 0 for better quality
+     * Set to 1 for faster encoding
+     * default is 0
      */
     int bitalloc_fast;
     
