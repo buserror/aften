@@ -72,21 +72,31 @@ main(int argc, char **argv)
     FILE *fp;
     WavFile wf;
     FLOAT *buf;
+    int start_sec, end_sec;
     int frame_size, nr, rms, dialnorm;
     uint64_t avg_rms, avg_cnt;
 
     /* open file */
-    if(argc > 2) {
-        fprintf(stderr, "\nusage: wavrms [<test.wav>]\n\n");
+    if(argc != 2 && argc != 4) {
+        fprintf(stderr, "\nusage: wavrms <test.wav> [<start> <end>]\n\n");
         exit(1);
     }
-    if(argc == 2) {
-        fp = fopen(argv[1], "rb");
-    } else {
+    start_sec = end_sec = -1;
+    if(argc == 4) {
+        start_sec = MAX(atoi(argv[2]), 0);
+        end_sec = MAX(atoi(argv[3]), 0);
+        if(end_sec <= start_sec) {
+            fprintf(stderr, "invalid time range\n");
+            exit(1);
+        }
+    }
+    if(!strncmp(argv[1], "-", 2)) {
 #ifdef __MINGW32__
         setmode(fileno(stdin), O_BINARY);
 #endif
         fp = stdin;
+    } else {
+        fp = fopen(argv[1], "rb");
     }
     if(!fp) {
         fprintf(stderr, "cannot open file\n");
@@ -98,6 +108,10 @@ main(int argc, char **argv)
         exit(1);
     }
     frame_size = wf.sample_rate * 50 / 1000;
+    // seek to start of time range
+    if(start_sec >= 0) {
+        wavfile_seek_time_ms(&wf, start_sec*1000, WAV_SEEK_SET);
+    }
 
 #ifdef CONFIG_DOUBLE
     wf.read_format = WAV_SAMPLE_FMT_DBL;
@@ -111,6 +125,11 @@ main(int argc, char **argv)
     avg_cnt = 1;
     nr = wavfile_read_samples(&wf, buf, frame_size);
     while(nr > 0) {
+        // check for end of time range
+        if(end_sec >= 0 && wavfile_position_time_ms(&wf) >= (end_sec*1000)) {
+            break;
+        }
+
         rms = calculate_rms(buf, wf.channels, nr);
         // use a reasonable dialog range
         if(rms < 40 && rms > 15) {
