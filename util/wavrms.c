@@ -30,7 +30,7 @@
 #include <assert.h>
 #include <math.h>
 
-#ifdef __MINGW32__
+#ifdef _WIN32
 #include <io.h>
 #include <fcntl.h>
 #endif
@@ -91,8 +91,8 @@ main(int argc, char **argv)
         }
     }
     if(!strncmp(argv[1], "-", 2)) {
-#ifdef __MINGW32__
-        setmode(fileno(stdin), O_BINARY);
+#ifdef _WIN32
+        _setmode(_fileno(stdin), _O_BINARY);
 #endif
         fp = stdin;
     } else {

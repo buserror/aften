@@ -7,7 +7,6 @@ VPATH=$(SRC_PATH)
 
 CFLAGS=$(OPTFLAGS) -I. -I$(SRC_PATH) -I$(SRC_PATH)/libaften \
        -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_ISOC9X_SOURCE
-LDFLAGS+= -g
 
 DEP_LIBS=libaften/$(LIBPREF)aften$(LIBSUF)
 
@@ -73,7 +72,7 @@ distclean: clean
 	$(MAKE) -C libaften distclean
 	$(MAKE) -C aften    distclean
 	$(MAKE) -C util     distclean
-	rm -f .depend config.* *.wav *.ac3
+	rm -f .depend config.*
 
 # tar release (use 'make -k tar' on a checkouted tree)
 FILE=aften-$(shell grep "\#define AFTEN_VERSION " libaften/aften.h | \

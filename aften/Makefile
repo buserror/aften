@@ -5,7 +5,7 @@ include ../config.mak
 
 VPATH=$(SRC_PATH)
 
-CFLAGS=$(OPTFLAGS) -I. -I.. -I$(SRC_PATH)/libaften \
+CFLAGS=$(OPTFLAGS) -I. -I.. -I../libaften -I$(SRC_PATH)/libaften \
 	-D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_ISOC9X_SOURCE
 LDFLAGS+= -g
 
@@ -31,7 +31,7 @@ install: install-progs
 
 install-progs: $(PROGS)
 	install -d "$(bindir)"
-	install -c $(INSTALLSTRIP) -m 755 $(PROGS) "$(bindir)"
+	install -c -m 755 $(PROGS) "$(bindir)"
 
 uninstall: uninstall-progs
 
@@ -46,8 +46,7 @@ depend: .depend
 	$(CC) -MM $(CFLAGS) $^ 1>.depend
 
 clean:
-	rm -f *.o *~ \
-	   $(PROGS) $(PROGS_G)
+	rm -f *.o *~ $(PROGS) $(PROGS_G)
 
 distclean: clean
 	rm -f .depend ../config.*

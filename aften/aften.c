@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef __MINGW32__
+#ifdef _WIN32
 #include <io.h>
 #include <fcntl.h>
 #endif
@@ -436,8 +436,8 @@ main(int argc, char **argv)
     }
 
     if(!strncmp(opts.infile, "-", 2)) {
-#ifdef __MINGW32__
-        setmode(fileno(stdin), O_BINARY);
+#ifdef _WIN32
+        _setmode(_fileno(stdin), _O_BINARY);
 #endif
         ifp = stdin;
     } else {
@@ -448,8 +448,8 @@ main(int argc, char **argv)
         }
     }
     if(!strncmp(opts.outfile, "-", 2)) {
-#ifdef __MINGW32__
-        setmode(fileno(stdout), O_BINARY);
+#ifdef _WIN32
+        _setmode(_fileno(stdout), _O_BINARY);
 #endif
         ofp = stdout;
     } else {

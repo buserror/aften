@@ -18,25 +18,16 @@ SRC_DIR = $(SRC_PATH)/lib$(NAME)
 VPATH = $(SRC_DIR)
 
 SRCS := $(OBJS:.o=.c)
-OBJS := $(OBJS)
-STATIC_OBJS := $(OBJS) $(STATIC_OBJS)
 
 all: $(EXTRADEPS) $(LIB)
 
-$(LIB): $(STATIC_OBJS)
+$(LIB): $(OBJS)
 	rm -f $@
-	$(AR) rc $@ $^ $(EXTRAOBJS)
+	$(AR) rc $@ $^
 	$(RANLIB) $@
 
 %.o: %.c
-	$(CC) $(CFLAGS) $(LIBOBJFLAGS) -c -o $@ $<
-
-%.o: %.S
-	$(CC) $(CFLAGS) $(LIBOBJFLAGS) -c -o $@ $<
-
-# BeOS: remove -Wall to get rid of all the "multibyte constant" warnings
-%.o: %.cpp
-	g++ $(subst -Wall,,$(CFLAGS)) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 depend: $(SRCS)
 	$(CC) -MM $(CFLAGS) $^ 1>.depend
@@ -44,8 +35,7 @@ depend: $(SRCS)
 dep:	depend
 
 clean::
-	rm -f *.o *.d *~ *.a *.lib *.so *.so.* *.dylib *.dll \
-	      *.lib *.def *.dll.a *.exp
+	rm -f *.o *.d *~ *.a *.lib *.def *.exp
 
 distclean: clean
 	rm -f .depend

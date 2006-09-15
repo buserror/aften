@@ -28,6 +28,11 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef _WIN32
+#include <io.h>
+#include <fcntl.h>
+#endif
+
 #include "wav.h"
 
 static char *
@@ -377,6 +382,9 @@ main(int argc, char **argv)
         fp = fopen(wi.fname, "rb");
     } else {
         wi.fname = "[stdin]";
+#ifdef _WIN32
+        _setmode(_fileno(stdin), _O_BINARY);
+#endif
         fp = stdin;
     }
     if(!fp) wavfile_error("cannot open file");
