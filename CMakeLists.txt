@@ -44,6 +44,7 @@ IF(CMAKE_WORDS_BIGENDIAN)
 ENDIF(CMAKE_WORDS_BIGENDIAN)
 
 CHECK_INCLUDE_FILE_DEFINE(inttypes.h HAVE_INTTYPES_H)
+CHECK_INCLUDE_FILE_DEFINE(byteswap.h HAVE_BYTESWAP_H)
 
 GENERATE_CONFIG_H()
 
@@ -71,7 +72,7 @@ TARGET_LINK_LIBRARIES(wavrms aften_wav ${LIBM})
 ADD_EXECUTABLE(wavfilter util/wavinfo.c libaften/filter.c)
 TARGET_LINK_LIBRARIES(wavfilter aften_wav ${LIBM})
 
-INSTALL(TARGETS aften aften_static aften_exe wavinfo wavrms wavfilter
+INSTALL(TARGETS aften_static aften_exe wavinfo wavrms wavfilter
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
