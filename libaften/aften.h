@@ -38,6 +38,22 @@
 #define AFTEN_ENC_MODE_CBR    0
 #define AFTEN_ENC_MODE_VBR    1
 
+
+#if defined(_WIN32) && !defined(_XBOX)
+ #if defined(AFTEN_BUILD_LIBRARY)
+  #define AFTEN_API __declspec(dllexport)
+ #else
+  #define AFTEN_API __declspec(dllimport)
+ #endif
+#else
+ #if defined(AFTEN_BUILD_LIBRARY) && defined(HAVE_GCC_VISIBILITY)
+  #define AFTEN_API __attribute__((visibility("default")))
+ #else
+  #define AFTEN_API extern
+ #endif
+#endif
+
+
 enum A52SampleFormat {
     A52_SAMPLE_FMT_U8 = 0,
     A52_SAMPLE_FMT_S16,
@@ -250,14 +266,14 @@ typedef struct {
 
 /* main encoding functions */
 
-extern void aften_set_defaults(AftenContext *s);
+AFTEN_API void aften_set_defaults(AftenContext *s);
 
-extern int aften_encode_init(AftenContext *s);
+AFTEN_API int aften_encode_init(AftenContext *s);
 
-extern int aften_encode_frame(AftenContext *s, unsigned char *frame_buffer,
+AFTEN_API int aften_encode_frame(AftenContext *s, unsigned char *frame_buffer,
                               void *samples);
 
-extern void aften_encode_close(AftenContext *s);
+AFTEN_API void aften_encode_close(AftenContext *s);
 
 /* utility functions */
 
@@ -266,20 +282,20 @@ extern void aften_encode_close(AftenContext *s);
  * WAVE_FORMAT_EXTENSIBLE channel mask.  This is more accurate than assuming
  * that all the proper channels are present.
  */
-extern void aften_wav_chmask_to_acmod(int ch, int chmask, int *acmod, int *lfe);
+AFTEN_API void aften_wav_chmask_to_acmod(int ch, int chmask, int *acmod, int *lfe);
 
 /**
  * Determines probable A/52 acmod and lfe parameters based on the number of
  * channels present.  You can use this if you don't have the channel mask.
  */
-extern void aften_plain_wav_to_acmod(int ch, int *acmod, int *lfe);
+AFTEN_API void aften_plain_wav_to_acmod(int ch, int *acmod, int *lfe);
 
 /**
  * Takes a channel-interleaved array of audio samples, where the channel order
  * is the default WAV order. The samples are rearranged to the proper A/52
  * channel order based on the acmod and lfe parameters.
  */
-extern void aften_remap_wav_to_a52(void *samples, int n, int ch,
+AFTEN_API void aften_remap_wav_to_a52(void *samples, int n, int ch,
                                    enum A52SampleFormat fmt, int acmod, int lfe);
 
 enum FloatType {
@@ -290,6 +306,6 @@ enum FloatType {
 /**
  * Tells whether libaften was configured to use floats or doubles
  */
-extern enum FloatType aften_get_float_type(void);
+AFTEN_API enum FloatType aften_get_float_type(void);
 
 #endif /* AFTEN_H */
