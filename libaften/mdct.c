@@ -410,20 +410,20 @@ mdct_bitreverse(MDCTContext *mdct, FLOAT *x)
 }
 
 static void
-dct_iv(MDCTContext *ctx, FLOAT *out, FLOAT *in)
+dct_iv(MDCTContext *mdct, FLOAT *out, FLOAT *in)
 {
-    int n = ctx->n;
+    int n = mdct->n;
     int n2 = n>>1;
     int n4 = n>>2;
     int n8 = n>>3;
-    FLOAT *w = ctx->buffer;
+    FLOAT *w = mdct->buffer;
     FLOAT *w2 = w+n2;
 
     FLOAT r0;
     FLOAT r1;
     FLOAT *x0 = in+n2+n4;
     FLOAT *x1 = x0+1;
-    FLOAT *trig = ctx->trig + n2;
+    FLOAT *trig = mdct->trig + n2;
     int i;
 
     memcpy(&w[n2+n4], in, n4 * sizeof(FLOAT));
@@ -465,15 +465,15 @@ dct_iv(MDCTContext *ctx, FLOAT *out, FLOAT *in)
         x1 += 4;
     }
 
-    mdct_butterflies(ctx, w2, n2);
-    mdct_bitreverse(ctx, w);
+    mdct_butterflies(mdct, w2, n2);
+    mdct_bitreverse(mdct, w);
 
-    trig = ctx->trig+n2;
+    trig = mdct->trig+n2;
     x0 = out+n2;
     for(i=0; i<n4; i++) {
         x0--;
-        out[i] = ((w[0]*trig[0]+w[1]*trig[1])*ctx->scale);
-        x0[0]  = ((w[0]*trig[1]-w[1]*trig[0])*ctx->scale);
+        out[i] = ((w[0]*trig[0]+w[1]*trig[1])*mdct->scale);
+        x0[0]  = ((w[0]*trig[1]-w[1]*trig[0])*mdct->scale);
         w += 2;
         trig += 2;
     }
