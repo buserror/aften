@@ -645,7 +645,7 @@ fi
 
 # ---
 # *inttypes.h* test
-check_header inttypes.h || inttypes=no
+check_header inttypes.h && inttypes=yes
 
 # ---
 # check availability of some header files
@@ -724,8 +724,8 @@ if test "$bigendian" = "yes" ; then
   echo "WORDS_BIGENDIAN=yes" >> config.mak
   echo "#define WORDS_BIGENDIAN 1" >> $TMPH
 fi
-if test "$inttypes" != "yes" ; then
-  echo "#define EMULATE_INTTYPES 1" >> $TMPH
+if test "$inttypes" = "yes" ; then
+  echo "#define HAVE_INTTYPES_H 1" >> $TMPH
 fi
 
 aften_version=`grep '#define AFTEN_VERSION ' "$source_path/libaften/aften.h" | sed 's/[^0-9\.]//g'`

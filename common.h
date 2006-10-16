@@ -40,7 +40,7 @@
 #define M_SQRT2 1.41421356237309504880
 #endif
 
-#ifndef EMULATE_INTTYPES
+#ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
 #else
 #if defined(_WIN32) && defined(_MSC_VER)
