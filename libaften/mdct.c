@@ -114,9 +114,10 @@ static void
 ctx_close(MDCTContext *mdct)
 {
     if(mdct) {
-        if(mdct->trig)   free(mdct->trig);
-        if(mdct->bitrev) free(mdct->bitrev);
-        if(mdct->buffer) free(mdct->buffer);
+        if(mdct->trig)    free(mdct->trig);
+        if(mdct->bitrev)  free(mdct->bitrev);
+        if(mdct->buffer)  free(mdct->buffer);
+        if(mdct->buffer1) free(mdct->buffer1);
         memset(mdct, 0, sizeof(MDCTContext));
     }
 }
@@ -367,7 +368,7 @@ mdct_bitreverse(MDCTContext *mdct, FLOAT *x)
     FLOAT *w0   = x;
     FLOAT *w1   = x = w0+(n>>1);
     FLOAT *trig = mdct->trig+n;
-    
+
     do{
         FLOAT *x0    = x+bit[0];
         FLOAT *x1    = x+bit[1];
@@ -426,13 +427,6 @@ dct_iv(MDCTContext *mdct, FLOAT *out, FLOAT *in)
     FLOAT *trig = mdct->trig + n2;
     int i;
 
-    memcpy(&w[n2+n4], in, n4 * sizeof(FLOAT));
-    for(i=n2+n4; i<n; i++) {
-        w[i] = -w[i];
-    }
-    memmove(in, &in[n4], (n2+n4) * sizeof(FLOAT));
-    memcpy(&in[n2+n4], &w[n2+n4], n4 * sizeof(FLOAT));
-
     for(i=0; i<n8; i+=2) {
         x0 -= 4;
         trig -= 2;
@@ -482,15 +476,7 @@ dct_iv(MDCTContext *mdct, FLOAT *out, FLOAT *in)
 void
 mdct_512(A52Context *ctx, FLOAT *out, FLOAT *in)
 {
-    int i;
-    FLOAT *xx = ctx->mdct_ctx_512.buffer1;
-
-    memcpy(xx, &in[384], 128 * sizeof(FLOAT));
-    memcpy(&xx[128], in, 384 * sizeof(FLOAT));
-    for(i=0; i<128; i++) {
-        xx[i] = -xx[i];
-    }
-    dct_iv(&ctx->mdct_ctx_512, out, xx);
+    dct_iv(&ctx->mdct_ctx_512, out, in);
 }
 
 #if 0
@@ -524,25 +510,30 @@ void
 mdct_256(A52Context *ctx, FLOAT *out, FLOAT *in)
 {
     int i;
-    FLOAT *coef_a, *coef_b, *xx;
 
-    coef_a = out;
-    coef_b = &out[128];
-    xx = ctx->mdct_ctx_256.buffer1;
+    FLOAT *coef_a = in;
+    FLOAT *coef_b = in+128;
+    FLOAT *xx = ctx->mdct_ctx_256.buffer1;
 
-    dct_iv(&ctx->mdct_ctx_256, coef_a, in);
+    memcpy(xx, in+64, 192 * sizeof(FLOAT));
+    for(i=0; i<64; i++)
+        xx[i+192] = -in[i];
 
-    for(i=0; i<128; i++) {
-        xx[i] = -in[i+384];
-        xx[i+128] = in[i+256];
-    }
+    dct_iv(&ctx->mdct_ctx_256, coef_a, xx);
+
+    for(i=0; i<64; i++)
+        xx[i] = -in[i+256+192];
+
+    memcpy(xx+64, in+256, 128 * sizeof(FLOAT));
+    for(i=0; i<64; i++)
+        xx[i+192] = -in[i+256+128];
+
     dct_iv(&ctx->mdct_ctx_256, coef_b, xx);
 
     for(i=0; i<128; i++) {
-        xx[2*i] = coef_a[i];
-        xx[2*i+1] = coef_b[i];
+        out[2*i  ] = coef_a[i];
+        out[2*i+1] = coef_b[i];
     }
-    memcpy(out, xx, 256 * sizeof(FLOAT));
 }
 #endif
 
