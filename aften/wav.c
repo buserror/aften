@@ -503,6 +503,8 @@ fmt_convert(enum WavSampleFormat dest_fmt, void *dest,
         case WAV_SAMPLE_FMT_DBL:
             fmt_convert_to_double(dest, src, n, src_fmt);
             break;
+        default:
+            break;
     }
 }
 
