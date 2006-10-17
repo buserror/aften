@@ -58,7 +58,11 @@ typedef unsigned __int64 uint64_t;
 #if __GNUC__ && !__INTEL_COMPILER
 #define ALIGN16(x) x __attribute__((aligned(16)))
 #else
+#if defined(_MSC_VER) || defined(__INTEL_COMPILER)
 #define ALIGN16(x) __declspec(align(16)) x
+#else
+#define ALIGN16(x) x
+#endif
 #endif
 
 #ifdef CONFIG_DOUBLE
