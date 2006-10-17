@@ -7,7 +7,7 @@ Project(Aften C)
 IF(${Aften_SOURCE_DIR} MATCHES ${Aften_BINARY_DIR})
   MESSAGE("Please do an out-of-tree build:")
   MESSAGE("rm -f CMakeCache.txt; mkdir -p default; cd default; cmake ..; make")
-  MESSAGE(FATAL_ERROR)
+  MESSAGE(FATAL_ERROR "in-tree-build detected")
 ENDIF(${Aften_SOURCE_DIR} MATCHES ${Aften_BINARY_DIR})
 
 INCLUDE(${CMAKE_ROOT}/Modules/TestBigEndian.cmake)
