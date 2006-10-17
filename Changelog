@@ -19,6 +19,7 @@ Aften TODO list
 Aften Changelog
 ---------------
 version SVN : current
+- added CMake build system
 - optional faster bit allocation by reducing accuracy/quality
 - replaced MDCT code with implementation from libvorbis
 
