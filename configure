@@ -711,6 +711,7 @@ fi
 
 test "$needmdynamicnopic" = yes && add_cflags -mdynamic-no-pic
 add_cflags -DHAVE_CONFIG_H
+add_cflags -DAFTEN_BUILD_LIBRARY
 
 echo "OPTFLAGS=$CFLAGS" >> config.mak
 echo "LDFLAGS=$LDFLAGS" >> config.mak
