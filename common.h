@@ -55,6 +55,12 @@ typedef unsigned __int64 uint64_t;
 #endif
 #endif /* EMULATE_INTTYPES */
 
+#if __GNUC__ && !__INTEL_COMPILER
+#define ALIGN16(x) x __attribute__((aligned(16)))
+#else
+#define ALIGN16(x) __declspec(align(16)) x
+#endif
+
 #ifdef CONFIG_DOUBLE
 typedef double FLOAT;
 #define AFT_COS cos
