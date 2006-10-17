@@ -4,6 +4,12 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMakeModules")
 Project(Aften C)
 
+IF(${Aften_SOURCE_DIR} MATCHES ${Aften_BINARY_DIR})
+  MESSAGE("Please do an out-of-tree build:")
+  MESSAGE("rm -f CMakeCache.txt; mkdir -p default; cd default; cmake ..; make")
+  MESSAGE(FATAL_ERROR)
+ENDIF(${Aften_SOURCE_DIR} MATCHES ${Aften_BINARY_DIR})
+
 INCLUDE(${CMAKE_ROOT}/Modules/TestBigEndian.cmake)
 INCLUDE(${CMAKE_ROOT}/Modules/CheckCSourceCompiles.cmake)
 INCLUDE(${CMAKE_MODULE_PATH}/ConfigHelper.cmake)
