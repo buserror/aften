@@ -1,4 +1,4 @@
-# cmake project file by Prakash Punnoor
+# CMake project file by Prakash Punnoor
 CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
 
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMakeModules")
@@ -38,7 +38,7 @@ SET(LIBAFTEN_SRCS libaften/a52enc.c
 SET(AFTEN_SRCS aften/aften.c)
 
 IF(CMAKE_COMPILER_IS_GNUCC)
-  SET(CMAKE_C_FLAGS_RELEASE "-funroll-loops ${CMAKE_C_FLAGS_RELEASE}")
+  SET(CMAKE_C_FLAGS_RELEASE "-funroll-loops -fomit-frame-pointer ${CMAKE_C_FLAGS_RELEASE}")
   SET(ADD_CFLAGS "-Wall ${ADD_CFLAGS}")
 ENDIF(CMAKE_COMPILER_IS_GNUCC)
 
