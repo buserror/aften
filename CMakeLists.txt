@@ -20,6 +20,7 @@ INCLUDE(${CMAKE_ROOT}/Modules/CheckCSourceCompiles.cmake)
 INCLUDE(${CMAKE_MODULE_PATH}/ConfigHelper.cmake)
 INCLUDE(${CMAKE_MODULE_PATH}/HeaderTests.cmake)
 INCLUDE(${CMAKE_MODULE_PATH}/CompilerVisibility.cmake)
+INCLUDE(${CMAKE_MODULE_PATH}/DetectCompiler.cmake)
 
 OPTION(DOUBLE "build Aften with doubles instead of floats" OFF)
 IF(DOUBLE)
@@ -41,6 +42,9 @@ SET(LIBAFTEN_SRCS libaften/a52enc.c
                   libaften/util.c)
 
 SET(AFTEN_SRCS aften/aften.c)
+
+
+DETECT_COMPILER()
 
 IF(CMAKE_COMPILER_IS_GNUCC)
   SET(CMAKE_C_FLAGS_RELEASE "-funroll-loops -fomit-frame-pointer ${CMAKE_C_FLAGS_RELEASE}")
