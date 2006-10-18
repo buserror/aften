@@ -19,6 +19,7 @@ INCLUDE(${CMAKE_ROOT}/Modules/TestBigEndian.cmake)
 INCLUDE(${CMAKE_ROOT}/Modules/CheckCSourceCompiles.cmake)
 INCLUDE(${CMAKE_MODULE_PATH}/ConfigHelper.cmake)
 INCLUDE(${CMAKE_MODULE_PATH}/HeaderTests.cmake)
+INCLUDE(${CMAKE_MODULE_PATH}/FlagsTests.cmake)
 INCLUDE(${CMAKE_MODULE_PATH}/CompilerVisibility.cmake)
 INCLUDE(${CMAKE_MODULE_PATH}/DetectCompiler.cmake)
 
