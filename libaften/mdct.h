@@ -48,6 +48,15 @@ typedef struct {
     void (*mdct)(struct A52Context *ctx, FLOAT *out, FLOAT *in);
     void (*mdct_close)(struct A52Context *ctx);
     FLOAT *trig;
+#if defined(__SSE__) && !defined(CONFIG_DOUBLE)
+    FLOAT *trig_bitreverse;
+    FLOAT *trig_forward;
+    FLOAT *trig_butterfly_first;
+    FLOAT *trig_butterfly_generic8;
+    FLOAT *trig_butterfly_generic16;
+    FLOAT *trig_butterfly_generic32;
+    FLOAT *trig_butterfly_generic64;
+#endif
     FLOAT *buffer;
     FLOAT *buffer1;
     int *bitrev;
@@ -57,5 +66,15 @@ typedef struct {
 } MDCTContext;
 
 extern void mdct_init(struct A52Context *ctx);
+
+#ifndef CONFIG_DOUBLE
+#ifdef __SSE__
+extern void sse_mdct_init(struct A52Context *ctx);
+#endif
+
+#ifdef __SSE3__
+extern void sse3_mdct_init(struct A52Context *ctx);
+#endif
+#endif /* CONFIG_DOUBLE */
 
 #endif /* MDCT_H */

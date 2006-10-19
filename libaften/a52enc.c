@@ -39,6 +39,8 @@
 #include "window.h"
 #include "exponent.h"
 
+#include "cpu_caps.h"
+
 static const uint8_t rematbndtab[4][2] = {
     {13, 24}, {25, 36}, {37, 60}, {61, 252}
 };
@@ -95,6 +97,24 @@ aften_set_defaults(AftenContext *s)
     s->status.bwcode = 0;
 }
 
+static void
+select_mdct(A52Context *ctx)
+{
+#ifdef __SSE3__
+    if (_alHaveSSE3()) {
+        sse3_mdct_init(ctx);
+        return;
+    }
+#endif
+#ifdef __SSE__
+    if (_alHaveSSE()) {
+        sse_mdct_init(ctx);
+        return;
+    }
+#endif
+    mdct_init(ctx);
+}
+
 int
 aften_encode_init(AftenContext *s)
 {
@@ -105,6 +125,8 @@ aften_encode_init(AftenContext *s)
         fprintf(stderr, "NULL parameter passed to aften_encode_init\n");
         return -1;
     }
+    _alDetectCPUCaps();
+
     ctx = calloc(sizeof(A52Context), 1);
     s->private_context = ctx;
 
@@ -209,7 +231,7 @@ aften_encode_init(AftenContext *s)
     bitalloc_init();
     crc_init();
     a52_window_init();
-    mdct_init(ctx);
+    select_mdct(ctx);
     expsizetab_init();
 
     // can't do block switching with low sample rate due to the high-pass filter
