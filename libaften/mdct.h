@@ -45,21 +45,17 @@
 struct A52Context;
 
 typedef struct {
-    int n;
-    int log2n;
+    void (*mdct)(struct A52Context *ctx, FLOAT *out, FLOAT *in);
+    void (*mdct_close)(struct A52Context *ctx);
     FLOAT *trig;
-    int *bitrev;
-    FLOAT scale;
     FLOAT *buffer;
     FLOAT *buffer1;
+    int *bitrev;
+    FLOAT scale;
+    int n;
+    int log2n;
 } MDCTContext;
 
 extern void mdct_init(struct A52Context *ctx);
-
-extern void mdct_close(struct A52Context *ctx);
-
-extern void mdct_512(struct A52Context *ctx, FLOAT *out, FLOAT *in);
-
-extern void mdct_256(struct A52Context *ctx, FLOAT *out, FLOAT *in);
 
 #endif /* MDCT_H */

@@ -902,6 +902,13 @@ generate_coefs(A52Context *ctx)
     int blk, ch, i;
     A52Block *block;
 
+    void (*mdct_256)(struct A52Context *ctx, FLOAT *out, FLOAT *in) =
+        ctx->mdct_ctx_256.mdct;
+
+    void (*mdct_512)(struct A52Context *ctx, FLOAT *out, FLOAT *in) =
+        ctx->mdct_ctx_512.mdct;
+
+
     for(ch=0; ch<ctx->n_all_channels; ch++) {
         for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
             block = &ctx->frame.blocks[blk];
@@ -910,7 +917,6 @@ generate_coefs(A52Context *ctx)
             } else {
                 block->blksw[ch] = 0;
             }
-            //if(block->blksw[ch]) printf("\nshort block\n");
             apply_a52_window(block->input_samples[ch]);
             if(block->blksw[ch]) {
                 mdct_256(ctx, block->mdct_coef[ch], block->input_samples[ch]);
@@ -1077,7 +1083,8 @@ aften_encode_close(AftenContext *s)
 {
     if(s != NULL && s->private_context != NULL) {
         A52Context *ctx = s->private_context;
-        mdct_close(ctx);
+        /* mdct_close deinits both mdcts */
+        ctx->mdct_ctx_512.mdct_close(ctx);
         free(ctx);
         s->private_context = NULL;
     }

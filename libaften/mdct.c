@@ -473,14 +473,14 @@ dct_iv(MDCTContext *mdct, FLOAT *out, FLOAT *in)
     }
 }
 
-void
+static void
 mdct_512(A52Context *ctx, FLOAT *out, FLOAT *in)
 {
     dct_iv(&ctx->mdct_ctx_512, out, in);
 }
 
 #if 0
-void
+static void
 mdct_256(A52Context *ctx, FLOAT *out, FLOAT *in)
 {
     int k, n;
@@ -506,7 +506,7 @@ mdct_256(A52Context *ctx, FLOAT *out, FLOAT *in)
     }
 }
 #else
-void
+static void
 mdct_256(A52Context *ctx, FLOAT *out, FLOAT *in)
 {
     int i;
@@ -537,16 +537,22 @@ mdct_256(A52Context *ctx, FLOAT *out, FLOAT *in)
 }
 #endif
 
+static void
+mdct_close(A52Context *ctx)
+{
+    ctx_close(&ctx->mdct_ctx_512);
+    ctx_close(&ctx->mdct_ctx_256);
+}
+
 void
 mdct_init(A52Context *ctx)
 {
     ctx_init(&ctx->mdct_ctx_512, 512);
     ctx_init(&ctx->mdct_ctx_256, 256);
-}
 
-void
-mdct_close(A52Context *ctx)
-{
-    ctx_close(&ctx->mdct_ctx_512);
-    ctx_close(&ctx->mdct_ctx_256);
+    ctx->mdct_ctx_512.mdct = mdct_512;
+    ctx->mdct_ctx_256.mdct = mdct_256;
+
+    ctx->mdct_ctx_512.mdct_close = mdct_close;
+    ctx->mdct_ctx_256.mdct_close = mdct_close;
 }
