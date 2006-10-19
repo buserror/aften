@@ -14,12 +14,13 @@ Aften TODO list
     - 2-channel surround-matrix downmix
     - 2-channel headphone downmix
     - Stereo to 5.1 upmix
-- Shared lib/DLL support
 
 Aften Changelog
 ---------------
 version SVN : current
-- added CMake build system
+- added SSE/SSE3 mdct code (based on vorbis lancer by blacksword8192@hotmail.com)
+- added runtime SIMD detection code (Prakash Punnoor)
+- added CMake build system with shared lib/dll support
 - optional faster bit allocation by reducing accuracy/quality
 - replaced MDCT code with implementation from libvorbis
 
