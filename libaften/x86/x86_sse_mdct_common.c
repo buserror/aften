@@ -47,7 +47,6 @@
 #include "a52.h"
 #include "mdct.h"
 
-#ifdef __SSE__
 #include <xmmintrin.h>
 
 #ifdef HAVE_SSE3
@@ -85,21 +84,12 @@ static const union __m128ui PCS_RRNN = {{0x00000000, 0x00000000, 0x80000000, 0x8
 static const union __m128ui PCS_RNNR = {{0x80000000, 0x00000000, 0x00000000, 0x80000000}};
 static const union __m128ui PCS_RRRR = {{0x80000000, 0x80000000, 0x80000000, 0x80000000}};
 static const union __m128f PFV_0P5 = {{0.5f, 0.5f, 0.5f, 0.5f}};
-#endif
 
-#ifdef CONFIG_DOUBLE
-#define ONE 1.0
-#define TWO 2.0
-#define AFT_PI3_8 0.38268343236508977175
-#define AFT_PI2_8 0.70710678118654752441
-#define AFT_PI1_8 0.92387953251128675613
-#else
 #define ONE 1.0f
 #define TWO 2.0f
 #define AFT_PI3_8 0.38268343236508977175f
 #define AFT_PI2_8 0.70710678118654752441f
 #define AFT_PI1_8 0.92387953251128675613f
-#endif
 
 static void
 ctx_init(MDCTContext *mdct, int n)

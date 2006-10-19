@@ -100,13 +100,13 @@ aften_set_defaults(AftenContext *s)
 static void
 select_mdct(A52Context *ctx)
 {
-#ifdef __SSE3__
+#ifdef HAVE_SSE3
     if (_alHaveSSE3()) {
         sse3_mdct_init(ctx);
         return;
     }
 #endif
-#ifdef __SSE__
+#ifdef HAVE_SSE
     if (_alHaveSSE()) {
         sse_mdct_init(ctx);
         return;

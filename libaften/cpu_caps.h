@@ -20,7 +20,7 @@
 #ifndef CPU_CAPS_H
 #define CPU_CAPS_H
 
-#if defined(__SSE__) || defined(__SSE3__)
+#if defined(HAVE_SSE) || defined(HAVE_SSE3)
 #include "x86_cpu_caps.h"
 #else
 static inline void _alDetectCPUCaps(void){}
