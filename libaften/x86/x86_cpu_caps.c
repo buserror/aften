@@ -36,7 +36,7 @@
 #define AMD_SSE_MMX_BIT     22
 #define CYRIX_MMXEXT_BIT    24
 
-int _alDetectx86CPUCaps(uint* caps1, uint* caps2, uint* caps3);
+CDECL int _alDetectx86CPUCaps(uint* caps1, uint* caps2, uint* caps3);
 
 static struct x86cpu_caps_s x86cpu_caps_compile = { 0, 0, 0, 0, 0, 0, 0, 0, 0};
 static struct x86cpu_caps_s x86cpu_caps_detect = { 0, 0, 0, 0, 0, 0, 0, 0, 0};

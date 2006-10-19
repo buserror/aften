@@ -65,6 +65,12 @@ typedef unsigned __int64 uint64_t;
 #endif
 #endif
 
+#ifdef __WIN32
+#define CDECL __cdecl
+#else
+#define CDECL
+#endif
+
 #ifdef CONFIG_DOUBLE
 typedef double FLOAT;
 #define AFT_COS cos
