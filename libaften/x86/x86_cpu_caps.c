@@ -101,7 +101,7 @@ void _alDetectCPUCaps(void)
     x86cpu_caps_use.sse          = x86cpu_caps_detect.sse          & x86cpu_caps_compile.sse;
     x86cpu_caps_use.sse2         = x86cpu_caps_detect.sse2         & x86cpu_caps_compile.sse2;
     x86cpu_caps_use.sse3         = x86cpu_caps_detect.sse3         & x86cpu_caps_compile.sse3;
-    x86cpu_caps_use.sse3         = x86cpu_caps_detect.sse3         & x86cpu_caps_compile.sse3;
+    x86cpu_caps_use.sse4         = x86cpu_caps_detect.sse4         & x86cpu_caps_compile.sse4;
     x86cpu_caps_use.amd_3dnow    = x86cpu_caps_detect.amd_3dnow    & x86cpu_caps_compile.amd_3dnow;
     x86cpu_caps_use.amd_3dnowext = x86cpu_caps_detect.amd_3dnowext & x86cpu_caps_compile.amd_3dnowext;
     x86cpu_caps_use.amd_sse_mmx  = x86cpu_caps_detect.amd_sse_mmx  & x86cpu_caps_compile.amd_sse_mmx;
