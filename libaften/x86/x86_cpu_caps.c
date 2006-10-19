@@ -39,7 +39,7 @@
 CDECL int _alDetectx86CPUCaps(uint32_t* caps1, uint32_t* caps2, uint32_t* caps3);
 
 static struct x86cpu_caps_s x86cpu_caps_compile = { 0, 0, 0, 0, 0, 0, 0, 0, 0};
-static struct x86cpu_caps_s x86cpu_caps_detect = { 0, 0, 0, 0, 0, 0, 0, 0, 0};
+static struct x86cpu_caps_s x86cpu_caps_detect = { 1, 1, 1, 1, 1, 1, 1, 1, 1};
 struct x86cpu_caps_s x86cpu_caps_use = { 0, 0, 0, 0, 0, 0, 0, 0, 0};;
 
 void _alDetectCPUCaps(void)
