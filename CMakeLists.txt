@@ -114,13 +114,13 @@ IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
    # this should get fixed into a real detection,
    # but recent windows compilers should handle at least SSE
    ADD_DEFINITIONS(-D__SSE__)
-   SET(HAVE_SSE)
+   SET(HAVE_SSE 1)
   ELSE(WIN32)
 
     SET(CMAKE_REQUIRED_FLAGS "${ADD_CFLAGS}")
     MACRO_TEST(__SSE3__ HAVE_SSE3)
     IF(HAVE_SSE3)
-      SET(HAVE_SSE)
+      SET(HAVE_SSE 1)
     ELSE(HAVE_SSE3)
 
       MACRO_TEST(__SSE__  HAVE_SSE)
