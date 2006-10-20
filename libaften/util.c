@@ -30,6 +30,10 @@
 
 #include "aften.h"
 
+static const int acmod_to_ch[8] = { 2, 1, 2, 3, 3, 4, 4, 5 };
+
+static const int ch_to_acmod[7] = { -1, 1, 2, 3, 6, 7, 7 };
+
 /**
  * Determine acmod and lfe from WAVE_FORMAT_EXTENSIBLE channel mask.
  * The acmod parameter is set to -1 if the channel layout is not supported.
@@ -77,7 +81,7 @@ aften_wav_chmask_to_acmod(int ch, int chmask, int *acmod, int *lfe)
         if(*lfe) {
             ch--;
         }
-        if(ch != (((int[]){ 2, 1, 2, 3, 3, 4, 4, 5 })[*acmod])) {
+        if(ch != acmod_to_ch[*acmod])) {
             *acmod = -1;
         }
     }
@@ -97,9 +101,9 @@ aften_plain_wav_to_acmod(int ch, int *acmod, int *lfe)
         if(*lfe) ch--;
     }
     if(*acmod < 0) {
-        *acmod = (((int[]){ -1, 1, 2, 3, 6, 7, 7 })[*acmod]);
+        *acmod = ch_to_acmod[ch]);
     } else {
-        if(ch != (((int[]){ 2, 1, 2, 3, 3, 4, 4, 5 })[*acmod])) {
+        if(ch != acmod_to_ch[*acmod])) {
             *acmod = -1;
         }
     }
