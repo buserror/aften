@@ -54,7 +54,7 @@
 #include <pmmintrin.h>
 
 #ifdef EMU_CASTSI128
-#define _mm_castsi128_ps(X) (__m128(X))
+#define _mm_castsi128_ps(X) ((__m128)X)
 #endif
 
 #define _mm_lddqu_ps(x) _mm_castsi128_ps(_mm_lddqu_si128((__m128i*)(x)))
