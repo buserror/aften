@@ -81,7 +81,7 @@ aften_wav_chmask_to_acmod(int ch, int chmask, int *acmod, int *lfe)
         if(*lfe) {
             ch--;
         }
-        if(ch != acmod_to_ch[*acmod])) {
+        if(ch != acmod_to_ch[*acmod]) {
             *acmod = -1;
         }
     }
@@ -101,9 +101,9 @@ aften_plain_wav_to_acmod(int ch, int *acmod, int *lfe)
         if(*lfe) ch--;
     }
     if(*acmod < 0) {
-        *acmod = ch_to_acmod[ch]);
+        *acmod = ch_to_acmod[ch];
     } else {
-        if(ch != acmod_to_ch[*acmod])) {
+        if(ch != acmod_to_ch[*acmod]) {
             *acmod = -1;
         }
     }
