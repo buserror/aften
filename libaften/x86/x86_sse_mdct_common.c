@@ -50,7 +50,7 @@
 
 #include <xmmintrin.h>
 
-#ifdef HAVE_SSE3
+#ifdef USE_SSE3
 #include <pmmintrin.h>
 #define _mm_lddqu_ps(x) _mm_castsi128_ps(_mm_lddqu_si128((__m128i*)(x)))
 #else
@@ -293,7 +293,7 @@ ctx_init(MDCTContext *mdct, int n)
         for(i=0;i<n;i+=32)
         {
             __m128  XMM0, XMM1, XMM2, XMM3, XMM4, XMM5;
-            
+
             XMM0     = _mm_load_ps(S+ 24);
             XMM2     = _mm_load_ps(S+ 16);
             XMM3     = _mm_load_ps(S+  8);
@@ -539,7 +539,7 @@ mdct_butterfly_32(FLOAT *x) {
     _mm_store_ps(x+24, XMM6);
     _mm_store_ps(x+28, XMM7);
 
-#if defined(HAVE_SSE3)
+#ifdef USE_SSE3
     XMM4     = _mm_moveldup_ps(XMM0);
     XMM5     = XMM1;
     XMM0     = _mm_movehdup_ps(XMM0);
@@ -600,7 +600,7 @@ mdct_butterfly_first(FLOAT *trig, FLOAT *x, int points)
         XMM1     = _mm_sub_ps(XMM1, XMM3);
         XMM4     = _mm_add_ps(XMM4, XMM2);
         XMM5     = _mm_add_ps(XMM5, XMM3);
-#if defined(HAVE_SSE3)
+#ifdef USE_SSE3
         XMM2     = _mm_moveldup_ps(XMM0);
         XMM3     = _mm_moveldup_ps(XMM1);
         _mm_store_ps(X1+4, XMM4);
@@ -663,7 +663,7 @@ mdct_butterfly_generic(MDCTContext *mdct, FLOAT *x, int points, int trigint)
             XMM3     = XMM2;
             _mm_store_ps(x1  , XMM4);
             _mm_store_ps(x1+4, XMM5);
-#if defined(HAVE_SSE3)
+#ifdef USE_SSE3
             XMM0     = _mm_movehdup_ps(XMM0);
             XMM1     = _mm_moveldup_ps(XMM1);
             XMM2     = _mm_movehdup_ps(XMM2);
@@ -728,7 +728,7 @@ mdct_butterfly_generic(MDCTContext *mdct, FLOAT *x, int points, int trigint)
         XMM2     = _mm_sub_ps(XMM2, XMM3);
         XMM4     = _mm_add_ps(XMM4, XMM1);
         XMM5     = _mm_add_ps(XMM5, XMM3);
-#if defined(HAVE_SSE3)
+#ifdef USE_SSE3
         XMM1     = _mm_moveldup_ps(XMM0);
         XMM3     = _mm_moveldup_ps(XMM2);
         _mm_store_ps(x1  , XMM4);
@@ -835,7 +835,7 @@ mdct_bitreverse(MDCTContext *mdct, FLOAT *x)
         XMM1     = XMM0;
         XMM3     = XMM2;
 
-#if defined(HAVE_SSE3)
+#ifdef USE_SSE3
         XMM1     = _mm_xor_ps(XMM1, PCS_RNRN.v);
 
         XMM0     = _mm_add_ps(XMM0, XMM2);
