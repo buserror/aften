@@ -537,11 +537,37 @@ mdct_256(A52Context *ctx, FLOAT *out, FLOAT *in)
 }
 #endif
 
+void
+alloc_block_buffers(struct A52Context *ctx)
+{
+    int i, j;
+
+    /* we alloced one continous block and
+       now interleave in and out buffers */
+    for (i=0; i<A52_NUM_BLOCKS; ++i) {
+        if (i) {
+            ctx->frame.blocks[i].input_samples[0] =
+                ctx->frame.blocks[i-1].input_samples[A52_MAX_CHANNELS-1];
+        }
+        ctx->frame.blocks[i].mdct_coef[0] =
+            ctx->frame.blocks[i].input_samples[0] + 512;
+
+        for (j=1; j<A52_MAX_CHANNELS; ++j) {
+            ctx->frame.blocks[i].input_samples[j] =
+                ctx->frame.blocks[i].input_samples[j-1] + 512 + 256;
+            ctx->frame.blocks[i].mdct_coef[j] =
+                ctx->frame.blocks[i].mdct_coef[j-1] + 512 + 256;
+        }
+    }
+}
+
 static void
 mdct_close(A52Context *ctx)
 {
     ctx_close(&ctx->mdct_ctx_512);
     ctx_close(&ctx->mdct_ctx_256);
+
+    free(ctx->frame.blocks[0].input_samples[0]);
 }
 
 void
@@ -555,4 +581,8 @@ mdct_init(A52Context *ctx)
 
     ctx->mdct_ctx_512.mdct_close = mdct_close;
     ctx->mdct_ctx_256.mdct_close = mdct_close;
+
+    ctx->frame.blocks[0].input_samples[0] =
+        malloc(A52_NUM_BLOCKS * A52_MAX_CHANNELS * (256 + 512) * sizeof(FLOAT));
+    alloc_block_buffers(ctx);
 }

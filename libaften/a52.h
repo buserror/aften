@@ -58,8 +58,8 @@ static const uint16_t a52_bitratetab[19] = {
 };
 
 typedef struct A52Block {
-    ALIGN16(FLOAT) input_samples[A52_MAX_CHANNELS][512];
-    ALIGN16(FLOAT) mdct_coef[A52_MAX_CHANNELS][256];
+    FLOAT *input_samples[A52_MAX_CHANNELS]; /* 512 per ch */
+    FLOAT *mdct_coef[A52_MAX_CHANNELS]; /* 256 per ch */
     FLOAT transient_samples[A52_MAX_CHANNELS][512];
     int block_num;
     int blksw[A52_MAX_CHANNELS];

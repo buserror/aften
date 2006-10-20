@@ -67,6 +67,8 @@ typedef struct {
 
 extern void mdct_init(struct A52Context *ctx);
 
+extern void alloc_block_buffers(struct A52Context *ctx);
+
 #ifdef HAVE_SSE
 extern void sse_mdct_init(struct A52Context *ctx);
 #endif
