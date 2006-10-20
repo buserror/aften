@@ -401,8 +401,10 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
     }
     // disallow infile & outfile with same name except with piping
     if(strncmp(opts->infile, "-", 2) && strncmp(opts->outfile, "-", 2)) {
-        if(!strcmp(opts->infile, opts->outfile))
+        if(!strcmp(opts->infile, opts->outfile)) {
+            fprintf(stderr, "output filename cannot match input filename\n");
             return 1;
+        }
     }
     return 0;
 }
