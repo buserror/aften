@@ -117,7 +117,7 @@ aften_plain_wav_to_acmod(int ch, int *acmod, int *lfe)
 static const int wav_chmap[6] = { 0, 2, 1, 4, 5, 3 };
 
 static void
-remap_wav_to_a52_u8(uint8_t *samples, int n, int ch, int acmod, int lfe)
+remap_wav_to_a52_u8(uint8_t *samples, int n, int ch, int acmod)
 {
     int i, j;
     uint8_t tmp[6];
@@ -141,7 +141,7 @@ remap_wav_to_a52_u8(uint8_t *samples, int n, int ch, int acmod, int lfe)
 }
 
 static void
-remap_wav_to_a52_s16(int16_t *samples, int n, int ch, int acmod, int lfe)
+remap_wav_to_a52_s16(int16_t *samples, int n, int ch, int acmod)
 {
     int i, j;
     int16_t tmp[6];
@@ -165,7 +165,7 @@ remap_wav_to_a52_s16(int16_t *samples, int n, int ch, int acmod, int lfe)
 }
 
 static void
-remap_wav_to_a52_s32(int32_t *samples, int n, int ch, int acmod, int lfe)
+remap_wav_to_a52_s32(int32_t *samples, int n, int ch, int acmod)
 {
     int i, j;
     int32_t tmp[6];
@@ -189,7 +189,7 @@ remap_wav_to_a52_s32(int32_t *samples, int n, int ch, int acmod, int lfe)
 }
 
 static void
-remap_wav_to_a52_float(float *samples, int n, int ch, int acmod, int lfe)
+remap_wav_to_a52_float(float *samples, int n, int ch, int acmod)
 {
     int i, j;
     float tmp[6];
@@ -213,7 +213,7 @@ remap_wav_to_a52_float(float *samples, int n, int ch, int acmod, int lfe)
 }
 
 static void
-remap_wav_to_a52_double(double *samples, int n, int ch, int acmod, int lfe)
+remap_wav_to_a52_double(double *samples, int n, int ch, int acmod)
 {
     int i, j;
     double tmp[6];
@@ -246,17 +246,17 @@ aften_remap_wav_to_a52(void *samples, int n, int ch, enum A52SampleFormat fmt,
     }
 
     switch(fmt) {
-        case A52_SAMPLE_FMT_U8:  remap_wav_to_a52_u8(samples, n, ch, acmod, lfe);
+        case A52_SAMPLE_FMT_U8:  remap_wav_to_a52_u8(samples, n, ch, acmod);
                                  break;
-        case A52_SAMPLE_FMT_S16: remap_wav_to_a52_s16(samples, n, ch, acmod, lfe);
+        case A52_SAMPLE_FMT_S16: remap_wav_to_a52_s16(samples, n, ch, acmod);
                                  break;
         case A52_SAMPLE_FMT_S20:
         case A52_SAMPLE_FMT_S24:
-        case A52_SAMPLE_FMT_S32: remap_wav_to_a52_s32(samples, n, ch, acmod, lfe);
+        case A52_SAMPLE_FMT_S32: remap_wav_to_a52_s32(samples, n, ch, acmod);
                                  break;
-        case A52_SAMPLE_FMT_FLT: remap_wav_to_a52_float(samples, n, ch, acmod, lfe);
+        case A52_SAMPLE_FMT_FLT: remap_wav_to_a52_float(samples, n, ch, acmod);
                                  break;
-        case A52_SAMPLE_FMT_DBL: remap_wav_to_a52_double(samples, n, ch, acmod, lfe);
+        case A52_SAMPLE_FMT_DBL: remap_wav_to_a52_double(samples, n, ch, acmod);
                                  break;
     }
 }

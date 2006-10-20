@@ -311,7 +311,7 @@ wavinfo_print(WavInfo *wi)
     printf("File:\n");
     printf("   Name:          %s\n", wi->fname);
     if(wf->seekable) {
-        printf("   File Size:     %d\n", wf->file_size);
+        printf("   File Size:     %u\n", wf->file_size);
     } else {
         printf("   File Size:     unknown\n");
     }
@@ -330,8 +330,8 @@ wavinfo_print(WavInfo *wi)
         printf("   Channel Mask:  0x%03X\n", wf->ch_mask);
     }
     printf("Data:\n");
-    printf("   Start:         %d\n", wf->data_start);
-    printf("   Data Size:     %d\n", wf->data_size);
+    printf("   Start:         %u\n", wf->data_start);
+    printf("   Data Size:     %u\n", wf->data_size);
     leftover = wf->file_size - wf->data_size - wf->data_start;
     if(leftover < 0) {
         if(!wf->seekable) {

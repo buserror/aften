@@ -86,7 +86,7 @@ apply_a52_window(FLOAT *samples)
 }
 
 void
-a52_window_init()
+a52_window_init(void)
 {
     kbd_window_init(5.0, a52_window, 512, 50);
 }

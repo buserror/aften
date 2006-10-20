@@ -53,7 +53,7 @@ calc_exp_diff(uint8_t *exp1, uint8_t *exp2, int n)
 }
 
 void
-expsizetab_init()
+expsizetab_init(void)
 {
     int i, j, grpsize, ngrps;
 

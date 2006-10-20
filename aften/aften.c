@@ -526,9 +526,9 @@ main(int argc, char **argv)
                             kbps = 0;
                         }
                         if(wf.samples > 0) {
-                            percent = ((samplecount * 100.5) / wf.samples);
+                            percent = (uint32_t)((samplecount * 100.5) / wf.samples);
                         }
-                        fprintf(stderr, "\rprogress: %3d%% | q: %4.1f | "
+                        fprintf(stderr, "\rprogress: %3u%% | q: %4.1f | "
                                         "bw: %2.1f | bitrate: %4.1f kbps ",
                                 percent, (qual / (s.status.frame_num+1)),
                                 (bw / (s.status.frame_num+1)), kbps);

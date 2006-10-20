@@ -45,6 +45,15 @@ static const uint8_t rematbndtab[4][2] = {
     {13, 24}, {25, 36}, {37, 60}, {61, 252}
 };
 
+/* possible frequencies */
+const uint16_t a52_freqs[3] = { 48000, 44100, 32000 };
+
+/* possible bitrates */
+const uint16_t a52_bitratetab[19] = {
+	32, 40, 48, 56, 64, 80, 96, 112, 128,
+		160, 192, 224, 256, 320, 384, 448, 512, 576, 640
+};
+
 void
 aften_set_defaults(AftenContext *s)
 {

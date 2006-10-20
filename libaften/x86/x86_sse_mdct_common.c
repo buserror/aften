@@ -164,7 +164,6 @@ ctx_init(MDCTContext *mdct, int n)
     {
         __m128  pscalem  = _mm_set_ps1(mdct->scale);
         float *T, *S;
-        int n2   = n>>1;
         int n4   = n>>2;
         int n8   = n>>3;
         int j;

@@ -30,7 +30,7 @@
 
 #include "common.h"
 
-extern void a52_window_init();
+extern void a52_window_init(void);
 
 extern void apply_a52_window(FLOAT *samples);
 

@@ -30,7 +30,7 @@
 
 #include "a52.h"
 
-extern void bitalloc_init();
+extern void bitalloc_init(void);
 
 extern int compute_bit_allocation(A52Context *ctx);
 

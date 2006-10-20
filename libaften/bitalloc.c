@@ -173,7 +173,7 @@ static uint8_t bndtab[51];
 static uint16_t frmsizetab[38][3];
 
 void
-bitalloc_init()
+bitalloc_init(void)
 {
     int i, j, k, l, v;
 
@@ -269,7 +269,7 @@ psd_combine(int16_t *psd, int bins)
  * the mdct coefficient exponents and bit allocation parameters.
  */
 static void
-a52_bit_allocation_prepare(A52BitAllocParams *s, int blk, int ch,
+a52_bit_allocation_prepare(A52BitAllocParams *s,
                    uint8_t *exp, int16_t *psd, int16_t *mask,
                    int end, int is_lfe,
                    int deltbae,int deltnseg, uint8_t *deltoffst,
@@ -386,7 +386,7 @@ a52_bit_allocation_prepare(A52BitAllocParams *s, int blk, int ch,
  */
 static void
 a52_bit_allocation(uint8_t *bap, int16_t *psd, int16_t *mask,
-                   int blk, int ch, int end, int snroffset, int floor)
+                   int end, int snroffset, int floor)
 {
     int i, j, endj;
     int v, address1, address2, offset;
@@ -475,7 +475,7 @@ bit_alloc_prepare(A52Context *ctx)
         for(ch=0; ch<ctx->n_all_channels; ch++) {
             // We don't have to run the bit allocation when reusing exponents
             if(block->exp_strategy[ch] != EXP_REUSE) {
-                a52_bit_allocation_prepare(&frame->bit_alloc, blk, ch,
+                a52_bit_allocation_prepare(&frame->bit_alloc,
                                block->exp[ch], block->psd[ch], block->mask[ch],
                                frame->ncoefs[ch],
                                (ch == ctx->lfe_channel),
@@ -519,7 +519,7 @@ bit_alloc(A52Context *ctx, int snroffst)
                 memcpy(block->bap[ch], ctx->frame.blocks[blk-1].bap[ch], 256);
             } else {
                 a52_bit_allocation(block->bap[ch], block->psd[ch], block->mask[ch],
-                                   blk, ch, frame->ncoefs[ch], snroffst,
+                                   frame->ncoefs[ch], snroffst,
                                    frame->bit_alloc.floor);
             }
             bits += compute_mantissa_size(mant_cnt, block->bap[ch], frame->ncoefs[ch]);
@@ -693,11 +693,9 @@ vbr_bit_allocation(A52Context *ctx)
     int quality, snroffst, csnroffst, fsnroffst;
     int frame_bits, current_bits;
     A52Frame *frame;
-    A52Block *blocks;
 
     frame = &ctx->frame;
     current_bits = frame->frame_bits + frame->exp_bits;
-    blocks = frame->blocks;
 
     // convert quality in range 0 to 1023 to csnroffst & fsnroffst
     // csnroffst has range 0 to 63, fsnroffst has range 0 to 15

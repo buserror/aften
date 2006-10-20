@@ -49,13 +49,10 @@
 #define QUALITY(csnr, fsnr) ((SNROFFST(csnr, fsnr)+960)/4)
 
 /* possible frequencies */
-static const uint16_t a52_freqs[3] = { 48000, 44100, 32000 };
+extern const uint16_t a52_freqs[3];
 
 /* possible bitrates */
-static const uint16_t a52_bitratetab[19] = {
-    32, 40, 48, 56, 64, 80, 96, 112, 128,
-    160, 192, 224, 256, 320, 384, 448, 512, 576, 640
-};
+extern const uint16_t a52_bitratetab[19];
 
 typedef struct A52Block {
     FLOAT *input_samples[A52_MAX_CHANNELS]; /* 512 per ch */

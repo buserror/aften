@@ -1,6 +1,6 @@
 #include "x86_sse_mdct_common.c"
 
-void
+static void
 sse_mdct_close(A52Context *ctx)
 {
     ctx_close(&ctx->mdct_ctx_512);
