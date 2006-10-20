@@ -52,10 +52,16 @@
 
 #ifdef USE_SSE3
 #include <pmmintrin.h>
+
+#ifdef EMU_CASTSI128
+#define _mm_castsi128_ps(X) (__m128(X))
+#endif
+
 #define _mm_lddqu_ps(x) _mm_castsi128_ps(_mm_lddqu_si128((__m128i*)(x)))
 #else
+
 #define _mm_lddqu_ps(x) _mm_loadu_ps(x)
-#endif
+#endif /* USE_SSE3 */
 
 #define cPI3_8 .38268343236508977175F
 #define cPI2_8 .70710678118654752441F
