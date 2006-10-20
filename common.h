@@ -65,8 +65,11 @@ typedef unsigned __int64 uint64_t;
 #endif
 #endif
 
-#ifdef __WIN32
+#ifdef _WIN32
 #define CDECL __cdecl
+#ifdef _MSC_VER
+#define inline __inline
+#endif /* _MSC_VER */
 #else
 #define CDECL
 #endif
