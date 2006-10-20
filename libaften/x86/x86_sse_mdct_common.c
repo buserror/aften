@@ -50,6 +50,22 @@
 
 #include <xmmintrin.h>
 
+#ifdef EMU_MM_MALLOC
+/* FIXME: check for posix_memalign */
+static inline void*
+_mm_malloc(size_t size, size_t alignment)
+{
+	void *mem;
+	
+	if (posix_memalign(&mem, alignment, size))
+		return NULL;
+	
+	return mem;
+}
+
+#define _mm_free(X) free(X)
+#endif /* EMU_MM_MALLOC */
+
 #ifdef USE_SSE3
 #include <pmmintrin.h>
 
