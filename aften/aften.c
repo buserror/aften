@@ -399,6 +399,11 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
     if(!found_input || !found_output) {
         return 1;
     }
+    // disallow infile & outfile with same name except with piping
+    if(strncmp(opts->infile, "-", 2) && strncmp(opts->outfile, "-", 2)) {
+        if(!strcmp(opts->infile, opts->outfile))
+            return 1;
+    }
     return 0;
 }
 
