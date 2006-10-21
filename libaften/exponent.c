@@ -78,7 +78,7 @@ static void
 compute_exponent_strategy(A52Context *ctx)
 {
     int ch, i, j;
-    FLOAT exp_diff;
+    int exp_diff;
     int is_lfe;
     A52Frame *frame;
     A52Block *blocks;
