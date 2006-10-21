@@ -405,34 +405,34 @@ fmt_convert_to_float(float *dest, void *src_v, int n, enum WavSampleFormat fmt)
     if(fmt == WAV_SAMPLE_FMT_U8) {
         uint8_t *src = src_v;
         for(i=0; i<n; i++) {
-            dest[i] = (src[i] - 128.0) / 128.0;
+            dest[i] = (src[i] - FCONST(128.0)) / FCONST(128.0);
         }
     } else if(fmt == WAV_SAMPLE_FMT_S16) {
         int16_t *src = src_v;
         for(i=0; i<n; i++) {
-            dest[i] = src[i] / 32768.0;
+            dest[i] = src[i] / FCONST(32768.0);
         }
     } else if(fmt == WAV_SAMPLE_FMT_S20) {
         int32_t *src = src_v;
         for(i=0; i<n; i++) {
-            dest[i] = src[i] / 524288.0;
+            dest[i] = src[i] / FCONST(524288.0);
         }
     } else if(fmt == WAV_SAMPLE_FMT_S24) {
         int32_t *src = src_v;
         for(i=0; i<n; i++) {
-            dest[i] = src[i] / 8388608.0;
+            dest[i] = src[i] / FCONST(8388608.0);
         }
     } else if(fmt == WAV_SAMPLE_FMT_S32) {
         int32_t *src = src_v;
         for(i=0; i<n; i++) {
-            dest[i] = src[i] / 2147483648.0;
+            dest[i] = src[i] / FCONST(2147483648.0);
         }
     } else if(fmt == WAV_SAMPLE_FMT_FLT) {
         memcpy(dest, src_v, n * sizeof(float));
     } else if(fmt == WAV_SAMPLE_FMT_DBL) {
         double *src = src_v;
         for(i=0; i<n; i++) {
-            dest[i] = src[i];
+            dest[i] = (float)src[i];
         }
     }
 }

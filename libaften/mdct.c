@@ -81,8 +81,8 @@ ctx_init(MDCTContext *mdct, int n)
         trig[n2+i*2+1] =  AFT_SIN((AFT_PI/(2*n))*(2*i+1));
     }
     for(i=0;i<n/8;i++){
-        trig[n+i*2]    =  AFT_COS((AFT_PI/n)*(4*i+2))*0.5;
-        trig[n+i*2+1]  = -AFT_SIN((AFT_PI/n)*(4*i+2))*0.5;
+        trig[n+i*2]    =  AFT_COS((AFT_PI/n)*(4*i+2))*FCONST(0.5);
+        trig[n+i*2+1]  = -AFT_SIN((AFT_PI/n)*(4*i+2))*FCONST(0.5);
     }
 
     // bitreverse lookup
@@ -103,7 +103,7 @@ ctx_init(MDCTContext *mdct, int n)
     }
 
     // MDCT scale used in AC3
-    mdct->scale = (-2.0 / n);
+    mdct->scale = FCONST(-2.0) / n;
 
     // internal mdct buffers
     mdct->buffer = calloc(n, sizeof(FLOAT));
@@ -380,8 +380,8 @@ mdct_bitreverse(MDCTContext *mdct, FLOAT *x)
 
         w1 -= 4;
 
-        r0 = (x0[1] + x1[1]) * 0.5;
-        r1 = (x0[0] - x1[0]) * 0.5;
+        r0 = (x0[1] + x1[1]) * FCONST(0.5);
+        r1 = (x0[0] - x1[0]) * FCONST(0.5);
 
         w0[0] = r0 + r2;
         w1[2] = r0 - r2;
@@ -396,8 +396,8 @@ mdct_bitreverse(MDCTContext *mdct, FLOAT *x)
         r2 = (r1 * trig[2] + r0 * trig[3]);
         r3 = (r1 * trig[3] - r0 * trig[2]);
 
-        r0 = (x0[1] + x1[1]) * 0.5;
-        r1 = (x0[0] - x1[0]) * 0.5;
+        r0 = (x0[1] + x1[1]) * FCONST(0.5);
+        r1 = (x0[0] - x1[0]) * FCONST(0.5);
 
         w0[2] = r0 + r2;
         w1[0] = r0 - r2;
@@ -431,7 +431,7 @@ dct_iv(MDCTContext *mdct, FLOAT *out, FLOAT *in)
         x0 -= 4;
         trig -= 2;
         r0 = x0[2] + x1[0];
-        r1 = x0[0] + x1[2];       
+        r1 = x0[0] + x1[2];
         w2[i]   = (r1*trig[1] + r0*trig[0]);
         w2[i+1] = (r1*trig[0] - r0*trig[1]);
         x1 += 4;
@@ -442,7 +442,7 @@ dct_iv(MDCTContext *mdct, FLOAT *out, FLOAT *in)
         trig -= 2;
         x0 -= 4;
         r0 = x0[2] - x1[0];
-        r1 = x0[0] - x1[2];       
+        r1 = x0[0] - x1[2];
         w2[i]   = (r1*trig[1] + r0*trig[0]);
         w2[i+1] = (r1*trig[0] - r0*trig[1]);
         x1 += 4;
@@ -453,7 +453,7 @@ dct_iv(MDCTContext *mdct, FLOAT *out, FLOAT *in)
         trig -= 2;
         x0 -= 4;
         r0 = -x0[2] - x1[0];
-        r1 = -x0[0] - x1[2];       
+        r1 = -x0[0] - x1[2];
         w2[i]   = (r1*trig[1] + r0*trig[0]);
         w2[i+1] = (r1*trig[0] - r0*trig[1]);
         x1 += 4;

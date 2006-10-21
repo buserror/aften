@@ -521,12 +521,13 @@ main(int argc, char **argv)
                     t1 = samplecount / wf.sample_rate;
                     if(t1 > t0 || samplecount == wf.samples) {
                         if(samplecount > 0) {
-                            kbps = (bytecount * 8.0 * wf.sample_rate) / (1000.0 * samplecount);
+                            kbps = (bytecount * FCONST(8.0) * wf.sample_rate) /
+                                (FCONST(1000.0) * samplecount);
                         } else {
                             kbps = 0;
                         }
                         if(wf.samples > 0) {
-                            percent = (uint32_t)((samplecount * 100.5) / wf.samples);
+                            percent = (uint32_t)((samplecount * FCONST(100.5)) / wf.samples);
                         }
                         fprintf(stderr, "\rprogress: %3u%% | q: %4.1f | "
                                         "bw: %2.1f | bitrate: %4.1f kbps ",
@@ -548,7 +549,7 @@ main(int argc, char **argv)
         fprintf(stderr, "\n");
     } else if(s.params.verbose == 2) {
         if(samplecount > 0) {
-            kbps = (bytecount * 8.0 * wf.sample_rate) / (1000.0 * samplecount);
+            kbps = (bytecount * FCONST(8.0) * wf.sample_rate) / (FCONST(1000.0) * samplecount);
         } else {
             kbps = 0;
         }

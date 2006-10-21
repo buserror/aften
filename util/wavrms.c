@@ -58,12 +58,12 @@ calculate_rms(FLOAT *samples, int ch, int n)
         }
         rms_left /= n;
         rms_right /= n;
-        rms_all = (rms_left + rms_right) / 2.0;
+        rms_all = (rms_left + rms_right) / FCONST(2.0);
     }
 
     // Convert to dB
-    rms_all = 10.0 * log10(rms_all + 1e-10);
-    return -((int)(rms_all + 0.5));
+    rms_all = FCONST(10.0) * AFT_LOG10(rms_all + FCONST(1e-10));
+    return -((int)(rms_all + FCONST(0.5)));
 }
 
 int

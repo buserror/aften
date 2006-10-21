@@ -134,8 +134,8 @@ ctx_init(MDCTContext *mdct, int n)
         trig[n2+i*2+1] =  AFT_SIN((AFT_PI/(2*n))*(2*i+1));
     }
     for(i=0;i<n/8;i++){
-        trig[n+i*2]    =  AFT_COS((AFT_PI/n)*(4*i+2))*0.5;
-        trig[n+i*2+1]  = -AFT_SIN((AFT_PI/n)*(4*i+2))*0.5;
+        trig[n+i*2]    =  AFT_COS((AFT_PI/n)*(4*i+2))*0.5f;
+        trig[n+i*2+1]  = -AFT_SIN((AFT_PI/n)*(4*i+2))*0.5f;
     }
 
     // bitreverse lookup
@@ -156,7 +156,7 @@ ctx_init(MDCTContext *mdct, int n)
     }
 
     // MDCT scale used in AC3
-    mdct->scale = (-2.0 / n);
+    mdct->scale = -2.0f / n;
 
     // internal mdct buffers
     mdct->buffer = aligned_malloc((n+2) * sizeof(FLOAT));/* +2 to prevent illegal read in bitreverse*/

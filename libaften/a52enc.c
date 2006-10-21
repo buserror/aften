@@ -700,7 +700,7 @@ fmt_convert_from_u8(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
     int i, ch;
     for(ch=0; ch<nch; ch++) {
         for(i=0; i<n; i++) {
-            dest[ch][i] = (src[i*nch+ch]-128.0) / 128.0;
+            dest[ch][i] = (src[i*nch+ch]-FCONST(128.0)) / FCONST(128.0);
         }
     }
 }
@@ -712,7 +712,7 @@ fmt_convert_from_s16(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
     int i, ch;
     for(ch=0; ch<nch; ch++) {
         for(i=0; i<n; i++) {
-            dest[ch][i] = src[i*nch+ch] / 32768.0;
+            dest[ch][i] = src[i*nch+ch] / FCONST(32768.0);
         }
     }
 }
@@ -724,7 +724,7 @@ fmt_convert_from_s20(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
     int i, ch;
     for(ch=0; ch<nch; ch++) {
         for(i=0; i<n; i++) {
-            dest[ch][i] = src[i*nch+ch] / 524288.0;
+            dest[ch][i] = src[i*nch+ch] / FCONST(524288.0);
         }
     }
 }
@@ -736,7 +736,7 @@ fmt_convert_from_s24(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
     int i, ch;
     for(ch=0; ch<nch; ch++) {
         for(i=0; i<n; i++) {
-            dest[ch][i] = src[i*nch+ch] / 8388608.0;
+            dest[ch][i] = src[i*nch+ch] / FCONST(8388608.0);
         }
     }
 }
@@ -748,7 +748,7 @@ fmt_convert_from_s32(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
     int i, ch;
     for(ch=0; ch<nch; ch++) {
         for(i=0; i<n; i++) {
-            dest[ch][i] = src[i*nch+ch] / 2147483648.0;
+            dest[ch][i] = src[i*nch+ch] / FCONST(2147483648.0);
         }
     }
 }
@@ -772,7 +772,7 @@ fmt_convert_from_double(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
     int i, ch;
     for(ch=0; ch<nch; ch++) {
         for(i=0; i<n; i++) {
-            dest[ch][i] = src[i*nch+ch];
+            dest[ch][i] = (FLOAT)src[i*nch+ch];
         }
     }
 }
@@ -883,10 +883,10 @@ detect_transient(FLOAT *in)
     FLOAT level2[4];
     FLOAT level3[8];
     FLOAT *xx = in;
-    FLOAT tmax = 100.0 / 32768.0;
-    FLOAT t1 = 0.100;
-    FLOAT t2 = 0.075;
-    FLOAT t3 = 0.050;
+    FLOAT tmax = FCONST(100.0) / FCONST(32768.0);
+    FLOAT t1 = FCONST(0.100);
+    FLOAT t2 = FCONST(0.075);
+    FLOAT t3 = FCONST(0.050);
 
     // level 1 (2 x 256)
     for(i=0; i<2; i++) {
@@ -1000,12 +1000,12 @@ calc_rematrixing(A52Context *ctx)
                 sum[bnd][2] += (lt + rt) * (lt + rt);
                 sum[bnd][3] += (lt - rt) * (lt - rt);
             }
-            if(sum[bnd][0]+sum[bnd][1] >= (sum[bnd][2]+sum[bnd][3])/2.0) {
+            if(sum[bnd][0]+sum[bnd][1] >= (sum[bnd][2]+sum[bnd][3])/FCONST(2.0)) {
                 block->rematflg[bnd] = 1;
                 for(i=rematbndtab[bnd][0]; i<=rematbndtab[bnd][1]; i++) {
                     if(i == ctx->frame.ncoefs[0]) break;
-                    ctmp1 = block->mdct_coef[0][i] * 0.5;
-                    ctmp2 = block->mdct_coef[1][i] * 0.5;
+                    ctmp1 = block->mdct_coef[0][i] * FCONST(0.5);
+                    ctmp2 = block->mdct_coef[1][i] * FCONST(0.5);
                     block->mdct_coef[0][i] = ctmp1 + ctmp2;
                     block->mdct_coef[1][i] = ctmp1 - ctmp2;
                 }

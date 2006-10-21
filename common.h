@@ -76,18 +76,22 @@ typedef unsigned __int64 uint64_t;
 
 #ifdef CONFIG_DOUBLE
 typedef double FLOAT;
+#define FCONST(X) (X)
 #define AFT_COS cos
 #define AFT_SIN sin
 #define AFT_TAN tan
+#define AFT_LOG10 log10
 #define AFT_FABS fabs
 #define AFT_SQRT sqrt
 #define AFT_PI M_PI
 #define AFT_SQRT2 M_SQRT2
 #else
 typedef float FLOAT;
+#define FCONST(X) (X##f)
 #define AFT_COS cosf
 #define AFT_SIN sinf
 #define AFT_TAN tanf
+#define AFT_LOG10 log10f
 #define AFT_FABS fabsf
 #define AFT_SQRT sqrtf
 #define AFT_PI 3.14159265358979323846f
