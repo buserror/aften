@@ -506,7 +506,7 @@ main(int argc, char **argv)
     nr = wavfile_read_samples(&wf, fwav, A52_FRAME_SIZE);
     while(nr > 0) {
         aften_remap_wav_to_a52(fwav, nr, wf.channels, s.sample_format,
-                               s.acmod, s.lfe);
+                               s.acmod);
 
         fs = aften_encode_frame(&s, frame, fwav);
         if(fs <= 0) {

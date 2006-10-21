@@ -238,7 +238,7 @@ remap_wav_to_a52_double(double *samples, int n, int ch, int acmod)
 
 void
 aften_remap_wav_to_a52(void *samples, int n, int ch, enum A52SampleFormat fmt,
-                       int acmod, int lfe)
+                       int acmod)
 {
     if(samples == NULL) {
         fprintf(stderr, "NULL parameter passed to aften_remap_wav_to_a52\n");
