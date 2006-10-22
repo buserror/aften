@@ -70,21 +70,19 @@ DETECT_COMPILER()
 CHECK_64BITS()
 
 IF(CMAKE_COMPILER_IS_GNUCC)
-  CHECK_CFLAGS_APPEND(CMAKE_C_FLAGS_RELEASE "-funroll-loops")
-  CHECK_CFLAGS_APPEND(CMAKE_C_FLAGS_RELEASE "-fomit-frame-pointer")
+  SET(CMAKE_C_FLAGS_RELEASE "-funroll-loops -fomit-frame-pointer ${CMAKE_C_FLAGS_RELEASE}")
+  SET(ADD_CFLAGS "-pedantic -Wall -Wpointer-arith -Wredundant-decls -Wformat -Wunused ${ADD_CFLAGS}")
+
+  # gcc 2.9.5 doesn't know following
   CHECK_CFLAGS_APPEND(ADD_CFLAGS "-std=c99")
-  CHECK_CFLAGS_APPEND(ADD_CFLAGS "-pedantic")
-  CHECK_CFLAGS_APPEND(ADD_CFLAGS "-Wdeclaration-after-statement")
-  CHECK_CFLAGS_APPEND(ADD_CFLAGS "-Wall")
-  CHECK_CFLAGS_APPEND(ADD_CFLAGS "-Wextra")
-  CHECK_CFLAGS_APPEND(ADD_CFLAGS "-Wno-switch")
   CHECK_CFLAGS_APPEND(ADD_CFLAGS "-Wdisabled-optimization")
-  CHECK_CFLAGS_APPEND(ADD_CFLAGS "-Wpointer-arith")
-  CHECK_CFLAGS_APPEND(ADD_CFLAGS "-Wredundant-decls")
-  CHECK_CFLAGS_APPEND(ADD_CFLAGS "-Wformat")
-  CHECK_CFLAGS_APPEND(ADD_CFLAGS "-Wunused")
   CHECK_CFLAGS_APPEND(ADD_CFLAGS "-Wfloat-equal")
   CHECK_CFLAGS_APPEND(ADD_CFLAGS "-Wbad-function-cast")
+
+  # gcc 3.0 doesn't know following
+  CHECK_CFLAGS_APPEND(ADD_CFLAGS "-Wdeclaration-after-statement")
+  CHECK_CFLAGS_APPEND(ADD_CFLAGS "-Wextra")
+  CHECK_CFLAGS_APPEND(ADD_CFLAGS "-Wno-switch")
 ENDIF(CMAKE_COMPILER_IS_GNUCC)
 
 IF(CMAKE_COMPILER_IS_ICC)
