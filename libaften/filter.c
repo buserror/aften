@@ -29,14 +29,6 @@
 
 #include "filter.h"
 
-#ifdef CONFIG_DOUBLE
-#define ONE 1.0
-#define TWO 2.0
-#else
-#define ONE 1.0f
-#define TWO 2.0f
-#endif
-
 typedef struct Filter {
     const char *name;
     enum FilterID id;
@@ -57,16 +49,16 @@ biquad_generate_lowpass(BiquadContext *f, FLOAT fc)
     FLOAT omega, alpha, cs;
     FLOAT a[3], b[3];
 
-    omega = TWO * AFT_PI * fc;
-    alpha = AFT_SIN(omega) / TWO;
+    omega = FCONST(2.0) * AFT_PI * fc;
+    alpha = AFT_SIN(omega) / FCONST(2.0);
     cs = AFT_COS(omega);
 
-    a[0] = ONE + alpha;
-    a[1] = -TWO * cs;
-    a[2] = ONE - alpha;
-    b[0] = (ONE - cs) / TWO;
-    b[1] = (ONE - cs);
-    b[2] = (ONE - cs) / TWO;
+    a[0] =  FCONST(1.0) + alpha;
+    a[1] = -FCONST(2.0) * cs;
+    a[2] =  FCONST(1.0) - alpha;
+    b[0] = (FCONST(1.0) - cs) / FCONST(2.0);
+    b[1] = (FCONST(1.0) - cs);
+    b[2] = (FCONST(1.0) - cs) / FCONST(2.0);
 
     f->coefs[0] = b[0] / a[0];
     f->coefs[1] = b[1] / a[0];
@@ -81,16 +73,16 @@ biquad_generate_highpass(BiquadContext *f, FLOAT fc)
     FLOAT omega, alpha, cs;
     FLOAT a[3], b[3];
 
-    omega = TWO * AFT_PI * fc;
-    alpha = AFT_SIN(omega) / TWO;
+    omega = FCONST(2.0) * AFT_PI * fc;
+    alpha = AFT_SIN(omega) / FCONST(2.0);
     cs = AFT_COS(omega);
 
-    a[0] = ONE + alpha;
-    a[1] = -TWO * cs;
-    a[2] = ONE - alpha;
-    b[0] = (ONE + cs) / TWO;
-    b[1] = -(ONE + cs);
-    b[2] = (ONE + cs) / TWO;
+    a[0] =   FCONST(1.0) + alpha;
+    a[1] =  -FCONST(2.0) * cs;
+    a[2] =   FCONST(1.0) - alpha;
+    b[0] =  (FCONST(1.0) + cs) / FCONST(2.0);
+    b[1] = -(FCONST(1.0) + cs);
+    b[2] =  (FCONST(1.0) + cs) / FCONST(2.0);
 
     f->coefs[0] = b[0] / a[0];
     f->coefs[1] = b[1] / a[0];
@@ -109,7 +101,7 @@ biquad_init(FilterContext *f)
     if(f->samplerate <= 0) {
         return -1;
     }
-    if(f->cutoff < 0 || f->cutoff > (f->samplerate/TWO)) {
+    if(f->cutoff < 0 || f->cutoff > (f->samplerate/FCONST(2.0))) {
         return -1;
     }
     fc = f->cutoff / f->samplerate;
@@ -165,7 +157,7 @@ biquad_i_run_filter(FilterContext *f, FLOAT *out, FLOAT *in, int n)
             b->state[j][4] = b->state[j][3];
             b->state[j][3] = v;
 
-            out[i] = CLIP(v, -ONE, ONE);
+            out[i] = CLIP(v, -FCONST(1.0), FCONST(1.0));
         }
         if(f->cascaded && j != loops-1) {
             memcpy(tmp, out, datasize);
@@ -201,7 +193,7 @@ biquad_ii_run_filter(FilterContext *f, FLOAT *out, FLOAT *in, int n)
             b->state[j][1] = b->coefs[1] * b->state[j][0] - b->coefs[3] * v + b->state[j][2];
             b->state[j][2] = b->coefs[2] * b->state[j][0] - b->coefs[4] * v;
 
-            out[i] = CLIP(v, -ONE, ONE);
+            out[i] = CLIP(v, -FCONST(1.0), FCONST(1.0));
         }
         if(f->cascaded && j != loops-1) {
             memcpy(tmp, out, datasize);
@@ -230,14 +222,14 @@ Filter biquad_ii_filter = {
 static void
 butterworth_generate_lowpass(BiquadContext *f, FLOAT fc)
 {
-    FLOAT c = ONE / AFT_TAN(AFT_PI * fc);
+    FLOAT c = FCONST(1.0) / AFT_TAN(AFT_PI * fc);
     FLOAT c2 = (c * c);
 
-    f->coefs[0] = ONE / (c2 + AFT_SQRT2 * c + ONE);
-    f->coefs[1] = TWO * f->coefs[0];
+    f->coefs[0] = FCONST(1.0) / (c2 + AFT_SQRT2 * c + FCONST(1.0));
+    f->coefs[1] = FCONST(2.0) * f->coefs[0];
     f->coefs[2] = f->coefs[0];
-    f->coefs[3] = TWO * (ONE - c2) * f->coefs[0];
-    f->coefs[4] = (c2 - AFT_SQRT2 * c + ONE) * f->coefs[0];
+    f->coefs[3] = FCONST(2.0) * (FCONST(1.0) - c2) * f->coefs[0];
+    f->coefs[4] = (c2 - AFT_SQRT2 * c + FCONST(1.0)) * f->coefs[0];
 }
 
 static void
@@ -246,11 +238,11 @@ butterworth_generate_highpass(BiquadContext *f, FLOAT fc)
     FLOAT c = AFT_TAN(AFT_PI * fc);
     FLOAT c2 = (c * c);
 
-    f->coefs[0] = ONE / (c2 + AFT_SQRT2 * c + ONE);
-    f->coefs[1] = -TWO * f->coefs[0];
+    f->coefs[0] = FCONST(1.0) / (c2 + AFT_SQRT2 * c + FCONST(1.0));
+    f->coefs[1] = -FCONST(2.0) * f->coefs[0];
     f->coefs[2] = f->coefs[0];
-    f->coefs[3] = TWO * (c2 - ONE) * f->coefs[0];
-    f->coefs[4] = (c2 - AFT_SQRT2 * c + ONE) * f->coefs[0];
+    f->coefs[3] = FCONST(2.0) * (c2 - FCONST(1.0)) * f->coefs[0];
+    f->coefs[4] = (c2 - AFT_SQRT2 * c + FCONST(1.0)) * f->coefs[0];
 }
 
 static int
@@ -263,7 +255,7 @@ butterworth_init(FilterContext *f)
     if(f->samplerate <= 0) {
         return -1;
     }
-    if(f->cutoff < 0 || f->cutoff > (f->samplerate/TWO)) {
+    if(f->cutoff < 0 || f->cutoff > (f->samplerate/FCONST(2.0))) {
         return -1;
     }
     fc = f->cutoff / f->samplerate;
@@ -314,9 +306,9 @@ onepole_generate_lowpass(OnePoleContext *o, FLOAT fc)
 {
     FLOAT omega, cs;
 
-    omega = TWO * AFT_PI * fc;
-    cs = TWO - AFT_COS(omega);
-    o->p = cs - AFT_SQRT((cs*cs)-ONE);
+    omega = FCONST(2.0) * AFT_PI * fc;
+    cs = FCONST(2.0) - AFT_COS(omega);
+    o->p = cs - AFT_SQRT((cs*cs)-FCONST(1.0));
     o->last = 0.0;
 }
 
@@ -325,9 +317,9 @@ onepole_generate_highpass(OnePoleContext *o, FLOAT fc)
 {
     FLOAT omega, cs;
 
-    omega = TWO * AFT_PI * fc;
-    cs = TWO + AFT_COS(omega);
-    o->p = cs - AFT_SQRT((cs*cs)-ONE);
+    omega = FCONST(2.0) * AFT_PI * fc;
+    cs = FCONST(2.0) + AFT_COS(omega);
+    o->p = cs - AFT_SQRT((cs*cs)-FCONST(1.0));
     o->last = 0.0;
 }
 
@@ -344,7 +336,7 @@ onepole_init(FilterContext *f)
     if(f->samplerate <= 0) {
         return -1;
     }
-    if(f->cutoff < 0 || f->cutoff > (f->samplerate/TWO)) {
+    if(f->cutoff < 0 || f->cutoff > (f->samplerate/FCONST(2.0))) {
         return -1;
     }
     fc = f->cutoff / f->samplerate;
@@ -369,14 +361,14 @@ onepole_run_filter(FilterContext *f, FLOAT *out, FLOAT *in, int n)
     OnePoleContext *o = f->private_context;
 
     if(f->type == FILTER_TYPE_LOWPASS) {
-        p1 = ONE - o->p;
+        p1 = FCONST(1.0) - o->p;
     } else if(f->type == FILTER_TYPE_HIGHPASS) {
-        p1 = o->p - ONE;
+        p1 = o->p - FCONST(1.0);
     }
 
     for(i=0; i<n; i++) {
         v = (p1 * in[i]) + (o->p * o->last);
-        o->last = out[i] = CLIP(v, -ONE, ONE);
+        o->last = out[i] = CLIP(v, -FCONST(1.0), FCONST(1.0));
     }
 }
 
