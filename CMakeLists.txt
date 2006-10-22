@@ -75,7 +75,7 @@ IF(CMAKE_COMPILER_IS_GNUCC)
   SET(ADD_CFLAGS "-pedantic -Wall -Wpointer-arith -Wredundant-decls -Wformat -Wunused ${ADD_CFLAGS}")
 
   # gcc 2.9.5 doesn't know following
-  CHECK_CFLAGS_APPEND(ADD_CFLAGS "-std=c99")
+  CHECK_CFLAGS_APPEND(ADD_CFLAGS "-std=gnu99")
   CHECK_CFLAGS_APPEND(ADD_CFLAGS "-Wdisabled-optimization")
   CHECK_CFLAGS_APPEND(ADD_CFLAGS "-Wfloat-equal")
   CHECK_CFLAGS_APPEND(ADD_CFLAGS "-Wbad-function-cast")
