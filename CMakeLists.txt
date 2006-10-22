@@ -21,6 +21,7 @@ INCLUDE(${CMAKE_MODULE_PATH}/ConfigHelper.cmake)
 INCLUDE(${CMAKE_MODULE_PATH}/HeaderTests.cmake)
 INCLUDE(${CMAKE_MODULE_PATH}/FlagsTests.cmake)
 INCLUDE(${CMAKE_MODULE_PATH}/CompilerVisibility.cmake)
+INCLUDE(${CMAKE_MODULE_PATH}/CompilerSIMD.cmake)
 INCLUDE(${CMAKE_MODULE_PATH}/DetectCompiler.cmake)
 
 OPTION(DOUBLE "build Aften with doubles instead of floats" OFF)
@@ -148,14 +149,7 @@ IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
       SET(LIBAFTEN_SRCS ${LIBAFTEN_SRCS} ${LIBAFTEN_X86_SSE_SRCS})
       ADD_DEFINE(HAVE_SSE)
 
-      CHECK_C_SOURCE_COMPILES(
-"#include <xmmintrin.h>
-int main(){_mm_malloc(1024,16);}
-" HAVE_MM_MALLOC)
-
-      IF(NOT HAVE_MM_MALLOC)
-        ADD_DEFINE(EMU_MM_MALLOC)
-      ENDIF(NOT HAVE_MM_MALLOC)
+      CHECK_MM_MALLOC()
     ENDIF(HAVE_SSE)
 
     IF(HAVE_SSE3)
@@ -165,14 +159,7 @@ int main(){_mm_malloc(1024,16);}
       ENDFOREACH(SRC)
       ADD_DEFINE(HAVE_SSE3)
 
-      CHECK_C_SOURCE_COMPILES(
-"#include <pmmintrin.h>
-int main(){__m128i X; _mm_castsi128_ps(X);}
-" HAVE_CASTSI128)
-
-      IF(NOT HAVE_CASTSI128)
-        ADD_DEFINE(EMU_CASTSI128)
-      ENDIF(NOT HAVE_CASTSI128)
+      CHECK_CASTSI128()
     ENDIF(HAVE_SSE3)
 
     IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR UNIX)
