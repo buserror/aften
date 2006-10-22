@@ -90,7 +90,7 @@ ENDIF(CMAKE_COMPILER_IS_GNUCC)
 IF(CMAKE_COMPILER_IS_ICC)
   # icc ignores bogus options, so detetction makes no sense
   SET(CMAKE_C_FLAGS_RELEASE "-O3 -funroll-loops -fomit-frame-pointer ${CMAKE_C_FLAGS_RELEASE}")
-  SET(ADD_CFLAGS "-Wall ${ADD_CFLAGS}")
+  SET(ADD_CFLAGS "-std=c99 -Wall ${ADD_CFLAGS}")
 ENDIF(CMAKE_COMPILER_IS_ICC)
 
 IF(CMAKE_BUILD_TYPE MATCHES "")
