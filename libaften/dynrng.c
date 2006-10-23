@@ -71,7 +71,9 @@ static const DRCProfile drc_profiles[5] = {
  * 192-223 :  128 -  252 step   4 (0.2500 -  0.492187500 step 0.007812500)
  * 224-255 :  256 -  504 step   8 (0.5000 -  0.984375000 step 0.015625000)
  */
+#if 0
 static FLOAT dynrngscaletab[256];
+#endif
 
 #define DB_TO_SCALE(db) (AFT_EXP10(db * FCONST(0.05)))
 
@@ -80,12 +82,14 @@ static FLOAT dynrngscaletab[256];
 void
 dynrng_init()
 {
+#if 0
     int i, logscale;
 
     for(i=0; i<256; i++) {
         logscale = ((i >> 5) + 4) & 7;
         dynrngscaletab[i] = (1 << (logscale+5)) + ((i & 31) << logscale);
     }
+#endif
 }
 
 static int
