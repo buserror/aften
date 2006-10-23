@@ -120,7 +120,7 @@ static FLOAT
 calculate_gain_from_profile(FLOAT rms, int dialnorm, int profile)
 {
     DRCProfile ps;
-    FLOAT max_ecut, gain;
+    FLOAT max_ecut, gain, target;
 
     ps = drc_profiles[profile];
     ps.boost_start     += dialnorm;
@@ -129,7 +129,7 @@ calculate_gain_from_profile(FLOAT rms, int dialnorm, int profile)
     ps.cut_start       += dialnorm;
     ps.cut_end         += dialnorm;
 
-    max_ecut = (ps.early_cut_start - ps.cut_start) * ps.early_cut_ratio;
+    max_ecut = ps.early_cut_start + ((ps.cut_start - ps.early_cut_start) * ps.early_cut_ratio);
     gain = 0;
     if(rms <= ps.boost_start) {
         gain = (ps.null_start - ps.boost_start) * ps.boost_ratio;
@@ -138,11 +138,14 @@ calculate_gain_from_profile(FLOAT rms, int dialnorm, int profile)
     } else if(rms <= ps.early_cut_start) {
         gain = 0;
     } else if(rms <= ps.cut_start) {
-        gain = (ps.early_cut_start - rms) * ps.early_cut_ratio;
+        target = ps.early_cut_start + ((rms - ps.early_cut_start) * ps.early_cut_ratio);
+        gain = target - rms;
     } else if(rms <= ps.cut_end) {
-        gain = max_ecut + ((ps.cut_start - rms) * ps.cut_ratio);
+        target = max_ecut + ((rms - ps.cut_start) * ps.cut_ratio);
+        gain = target - rms;
     } else {
-        gain = max_ecut + ((ps.cut_start - ps.cut_end) * ps.cut_ratio);
+        target = max_ecut + ((ps.cut_end - ps.cut_start) * ps.cut_ratio);
+        gain = target - rms;
     }
 
     return gain;
