@@ -33,15 +33,6 @@
 #endif
 
 #include <math.h>
-#ifndef M_PI
-#define M_PI  3.14159265358979323846
-#endif
-#ifndef M_SQRT2
-#define M_SQRT2 1.41421356237309504880
-#endif
-#ifndef M_LN10
-#define M_LN10 2.30258509299404568402
-#endif
 
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
@@ -87,14 +78,8 @@ typedef double FLOAT;
 #define AFT_EXP exp
 #define AFT_FABS fabs
 #define AFT_SQRT sqrt
-#define AFT_PI M_PI
-#define AFT_SQRT2 M_SQRT2
-#define AFT_LN10 M_LN10
-#ifdef HAVE_EXP10
+#define AFT_EXP exp
 #define AFT_EXP10 exp10
-#else
-#define AFT_EXP10(x) exp((x) * AFT_LN10)
-#endif
 #else
 typedef float FLOAT;
 #define FCONST(X) (X##f)
@@ -104,14 +89,17 @@ typedef float FLOAT;
 #define AFT_LOG10 log10f
 #define AFT_FABS fabsf
 #define AFT_SQRT sqrtf
-#define AFT_PI 3.14159265358979323846f
-#define AFT_SQRT2 1.41421356237309504880f
-#define AFT_LN10 2.30258509299404568402f
-#ifdef HAVE_EXP10
+#define AFT_EXP expf
 #define AFT_EXP10 exp10f
-#else
-#define AFT_EXP10(x) expf((x) * AFT_LN10)
 #endif
+
+#define AFT_PI  FCONST(3.14159265358979323846)
+#define AFT_SQRT2 FCONST(1.41421356237309504880)
+#define AFT_LN10 FCONST(2.30258509299404568402)
+
+#ifndef HAVE_EXP10
+#undef AFT_EXP10
+#define AFT_EXP10(x) AFT_EXP((x) * AFT_LN10)
 #endif
 
 #define ABS(a) ((a) >= 0 ? (a) : (-(a)))
