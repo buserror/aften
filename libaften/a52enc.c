@@ -1030,8 +1030,8 @@ static void
 adjust_frame_size(A52Context *ctx)
 {
     A52Frame *f = &ctx->frame;
-    int kbps = f->bit_rate * 1000;
-    int srate = ctx->sample_rate;
+    uint32_t kbps = f->bit_rate * 1000;
+    uint32_t srate = ctx->sample_rate;
     int add;
 
     if(ctx->params.encoding_mode != AFTEN_ENC_MODE_CBR)
