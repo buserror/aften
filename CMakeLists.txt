@@ -50,7 +50,8 @@ SET(LIBAFTEN_X86_32_SRCS libaften/x86/x86_cpu_caps_detect.nasm)
 
 SET(LIBAFTEN_X86_64_SRCS libaften/x86/x86_64_linux_cpu_caps_detect.yasm)
 
-SET(LIBAFTEN_X86_SSE_SRCS libaften/x86/x86_sse_mdct_dummy.c)
+SET(LIBAFTEN_X86_SSE_SRCS libaften/x86/x86_sse_mdct_dummy.c
+                          libaften/x86/x86_sse_mdct_common_init.c)
 
 SET(LIBAFTEN_X86_SSE3_SRCS libaften/x86/x86_sse3_mdct_dummy.c)
 
