@@ -27,12 +27,12 @@
 static inline void*
 _mm_malloc(size_t size, size_t alignment)
 {
-	void *mem;
-	
-	if (posix_memalign(&mem, alignment, size))
-		return NULL;
-	
-	return mem;
+    void *mem;
+
+    if (posix_memalign(&mem, alignment, size))
+        return NULL;
+
+    return mem;
 }
 
 #define _mm_free(X) free(X)
