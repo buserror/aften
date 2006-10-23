@@ -10,14 +10,13 @@ CFLAGS=$(OPTFLAGS) -I. -I.. -I../libaften -I$(SRC_PATH)/libaften \
 LDFLAGS+= -g
 
 PROGS_G=aften_g$(EXESUF)
-PROGS=aften$(EXESUF)
 
 OBJS = aften.o wav.o
 SRCS = $(OBJS:.o=.c)
 AFTLIBDIRS = -L../libaften
 AFTLIBS = -laften$(BUILDSUF)
 
-all: $(PROGS_G) $(PROGS)
+all: $(PROGS_G)
 
 aften_g$(EXESUF): aften.o wav.o libaften/libaften.a
 	$(CC) $(AFTLIBDIRS) $(LDFLAGS) -o $@ aften.o wav.o $(AFTLIBS) $(EXTRALIBS)
