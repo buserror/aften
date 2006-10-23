@@ -32,7 +32,7 @@
 
 #include "aften.h"
 
-void dynrng_init();
+void dynrng_init(void);
 
 int calculate_block_dynrng(FLOAT *samples[A52_MAX_CHANNELS], int num_ch,
                            int dialnorm, enum DynRngProfile profile);
