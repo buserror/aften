@@ -33,6 +33,7 @@
 
 #include "aften.h"
 #include "a52.h"
+#include "dynrng.h"
 
 typedef struct {
     int boost_start;
