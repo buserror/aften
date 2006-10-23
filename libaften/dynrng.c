@@ -28,9 +28,6 @@
 #define _GNU_SOURCE
 #include "common.h"
 
-#include <stdio.h>
-#include <math.h>
-
 #include "aften.h"
 #include "a52.h"
 #include "dynrng.h"
