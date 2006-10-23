@@ -93,7 +93,7 @@ scale_to_dynrng(FLOAT scale)
 {
     int scale512, logscale, code;
 
-    scale512 = (int)((AFT_FABS(scale) * FCONST(512.0)) + FCONST(0.5));
+    scale512 = (int)(AFT_FABS(scale) * FCONST(512.0));
     scale512 = CLIP(scale512, 32, 8064);
     logscale = log2i(scale512)-5;
     code = (((logscale + 4) & 7) << 5) + ((scale512 - (1 << (logscale+5))) >> logscale);
