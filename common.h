@@ -79,7 +79,6 @@ typedef double FLOAT;
 #define AFT_FABS fabs
 #define AFT_SQRT sqrt
 #define AFT_EXP exp
-#define AFT_EXP10 exp10
 #else
 typedef float FLOAT;
 #define FCONST(X) (X##f)
@@ -90,17 +89,13 @@ typedef float FLOAT;
 #define AFT_FABS fabsf
 #define AFT_SQRT sqrtf
 #define AFT_EXP expf
-#define AFT_EXP10 exp10f
 #endif
 
 #define AFT_PI  FCONST(3.14159265358979323846)
 #define AFT_SQRT2 FCONST(1.41421356237309504880)
 #define AFT_LN10 FCONST(2.30258509299404568402)
 
-#ifndef HAVE_EXP10
-#undef AFT_EXP10
 #define AFT_EXP10(x) AFT_EXP((x) * AFT_LN10)
-#endif
 
 #define ABS(a) ((a) >= 0 ? (a) : (-(a)))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))

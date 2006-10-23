@@ -24,8 +24,7 @@
  * @file dynrng.c
  * A/52 Dynamic Range Compression
  */
-/* _GNU_SOURCE needed for exp10 */
-#define _GNU_SOURCE
+
 #include "common.h"
 
 #include "aften.h"
