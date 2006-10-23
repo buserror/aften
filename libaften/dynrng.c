@@ -80,7 +80,7 @@ static FLOAT dynrngscaletab[256];
 #define SCALE_TO_DB(scale) (FCONST(20.0) * AFT_LOG10(scale))
 
 void
-dynrng_init()
+dynrng_init(void)
 {
 #if 0
     int i, logscale;
