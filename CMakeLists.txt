@@ -88,13 +88,13 @@ IF(CMAKE_COMPILER_IS_GNUCC)
 ENDIF(CMAKE_COMPILER_IS_GNUCC)
 
 IF(CMAKE_COMPILER_IS_ICC)
-  # icc ignores bogus options, so detetction makes no sense
+  # icc ignores bogus options, so detection makes no sense
   SET(CMAKE_C_FLAGS_RELEASE "-O3 -funroll-loops -fomit-frame-pointer ${CMAKE_C_FLAGS_RELEASE}")
   SET(ADD_CFLAGS "-std=c99 -Wall ${ADD_CFLAGS}")
 ENDIF(CMAKE_COMPILER_IS_ICC)
 
 IF(MSVC)
-  # msvc ignores bogus options, so detetction makes no sense
+  # msvc ignores bogus options, so detection makes no sense
   SET(CMAKE_C_FLAGS_RELEASE "/Ot /Oy /Oi /Ox ${CMAKE_C_FLAGS_RELEASE}")
   ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE)
 ENDIF(MSVC)
@@ -125,6 +125,7 @@ int main() {volatile double f=1.0;exp10(f);}
 " HAVE_EXP10)
 SET(CMAKE_REQUIRED_LIBRARIES "")
 
+# do SIMD stuff
 IF(NOT DOUBLE)
 IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
   CHECK_SSE()
@@ -209,7 +210,7 @@ ADD_LIBRARY(aften_static STATIC ${LIBAFTEN_SRCS})
 SET_TARGET_PROPERTIES(aften_static PROPERTIES LINKER_LANGUAGE C)
 TARGET_LINK_LIBRARIES(aften_static ${LIBM})
 
-#building a static lib to prevent recompilation of wav.c
+# building a static lib to prevent recompilation of wav.c
 ADD_LIBRARY(aften_wav STATIC aften/wav.c)
 
 ADD_EXECUTABLE(aften_exe ${AFTEN_SRCS})
