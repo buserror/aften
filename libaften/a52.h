@@ -61,6 +61,7 @@ typedef struct A52Block {
     int block_num;
     int blksw[A52_MAX_CHANNELS];
     int dithflag[A52_MAX_CHANNELS];
+    int dynrng;
     uint8_t exp[A52_MAX_CHANNELS][256];
     int16_t psd[A52_MAX_CHANNELS][256];
     int16_t mask[A52_MAX_CHANNELS][50];

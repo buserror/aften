@@ -64,6 +64,15 @@ enum A52SampleFormat {
     A52_SAMPLE_FMT_DBL,
 };
 
+enum DynRngProfile {
+    DYNRNG_PROFILE_FILM_LIGHT=0,
+    DYNRNG_PROFILE_FILM_STANDARD,
+    DYNRNG_PROFILE_MUSIC_LIGHT,
+    DYNRNG_PROFILE_MUSIC_STANDARD,
+    DYNRNG_PROFILE_SPEECH,
+    DYNRNG_PROFILE_NONE
+};
+
 typedef struct {
 
     /**
@@ -160,7 +169,20 @@ typedef struct {
      * default is 0
      */
     int bitalloc_fast;
-    
+
+    /**
+     * Dynamic Range Compression profile
+     * This determines which DRC profile to use.
+     * Film Light:     DYNRNG_PROFILE_FILM_LIGHT
+     * Film Standard:  DYNRNG_PROFILE_FILM_STANDARD
+     * Music Light:    DYNRNG_PROFILE_MUSIC_LIGHT
+     * Music Standard: DYNRNG_PROFILE_MUSIC_STANDARD
+     * Speech:         DYNRNG_PROFILE_SPEECH,
+     * None:           DYNRNG_PROFILE_NONE
+     * default is None
+     */
+    enum DynRngProfile dynrng_profile;
+
 } AftenEncParams;
 
 /**

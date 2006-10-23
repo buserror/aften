@@ -38,7 +38,7 @@
 #include "mdct.h"
 #include "window.h"
 #include "exponent.h"
-
+#include "dynrng.h"
 #include "cpu_caps.h"
 
 static const uint8_t rematbndtab[4][2] = {
@@ -84,6 +84,7 @@ aften_set_defaults(AftenContext *s)
     s->params.use_dc_filter = 0;
     s->params.use_lfe_filter = 0;
     s->params.bitalloc_fast = 0;
+    s->params.dynrng_profile = DYNRNG_PROFILE_NONE;
 
     s->meta.cmixlev = 0;
     s->meta.surmixlev = 0;
@@ -242,6 +243,7 @@ aften_encode_init(AftenContext *s)
     a52_window_init();
     select_mdct(ctx);
     expsizetab_init();
+    dynrng_init();
 
     // can't do block switching with low sample rate due to the high-pass filter
     if(ctx->sample_rate <= 16000) {
@@ -555,7 +557,12 @@ output_audio_blocks(A52Context *ctx)
         for(ch=0; ch<ctx->n_channels; ch++) {
             bitwriter_writebits(bw, 1, block->dithflag[ch]);
         }
-        bitwriter_writebits(bw, 1, 0); // no dynamic range
+        if(ctx->params.dynrng_profile == DYNRNG_PROFILE_NONE) {
+            bitwriter_writebits(bw, 1, 0); // no dynamic range
+        } else {
+            bitwriter_writebits(bw, 1, 1);
+            bitwriter_writebits(bw, 8, block->dynrng);
+        }
         if(block->block_num == 0) {
             // must define coupling strategy in block 0
             bitwriter_writebits(bw, 1, 1); // new coupling strategy
@@ -1059,6 +1066,24 @@ compute_dither_strategy(A52Context *ctx)
     }
 }
 
+static void
+calculate_dynrng(A52Context *ctx)
+{
+    int blk;
+    A52Block *block;
+
+    if(ctx->params.dynrng_profile == DYNRNG_PROFILE_NONE)
+        return;
+
+    for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+        block = &ctx->frame.blocks[blk];
+        block->dynrng = calculate_block_dynrng(block->input_samples,
+                                               ctx->n_all_channels,
+                                               -ctx->meta.dialnorm,
+                                               ctx->params.dynrng_profile);
+    }
+}
+
 int
 aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, void *samples)
 {
@@ -1075,6 +1100,8 @@ aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, void *samples)
     frame_init(ctx);
 
     copy_samples(ctx, samples);
+
+    calculate_dynrng(ctx);
 
     generate_coefs(ctx);
 

@@ -87,6 +87,13 @@ print_help(FILE *out)
                  "                       1 = not Dolby surround encoded\n"
                  "                       2 = Dolby surround encoded\n"
                  "    [-dnorm #]     Dialog normalization [0 - 31] (default: 31)\n"
+                 "    [-dynrng #]    Dynamic Range Compression profile\n"
+                 "                       0 = Film Standard\n"
+                 "                       1 = Film Light\n"
+                 "                       2 = Music Standard\n"
+                 "                       3 = Music Light\n"
+                 "                       4 = Speech\n"
+                 "                       5 = None (default)\n"
                  "    [-acmod #]     Audio coding mode (overrides wav header)\n"
                  "                       0 = 1+1 (Ch1,Ch2)\n"
                  "                       1 = 1/0 (C)\n"
@@ -200,6 +207,16 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
                         fprintf(stderr, "invalid dnorm: %d. must be 0 to 31.\n", opts->s->meta.dialnorm);
                         return 1;
                     }
+                } else if(!strncmp(&argv[i][1], "dynrng", 7)) {
+                    int profile;
+                    i++;
+                    if(i >= argc) return 1;
+                    profile = atoi(argv[i]);
+                    if(profile < 0 || profile > 5) {
+                        fprintf(stderr, "invalid dynrng: %d. must be 0 to 5.\n", profile);
+                        return 1;
+                    }
+                    opts->s->params.dynrng_profile = profile;
                 } else if(!strncmp(&argv[i][1], "acmod", 6)) {
                     i++;
                     if(i >= argc) return 1;

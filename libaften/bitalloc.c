@@ -34,6 +34,7 @@
 
 #include "bitalloc.h"
 #include "a52.h"
+#include "aften.h"
 
 /* log addition table */
 static const uint8_t latab[260]= {
@@ -554,7 +555,11 @@ count_frame_bits(A52Context *ctx)
     for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
         block = &frame->blocks[blk];
         frame_bits += ctx->n_channels * 2; // nch * (blksw[1] + dithflg[1])
-        frame_bits += 2; // dynrnge, cplstre
+        frame_bits++; // dynrnge
+        if(ctx->params.dynrng_profile != DYNRNG_PROFILE_NONE) {
+            frame_bits += 8; // dynrng
+        }
+        frame_bits++; // cplstre
         if(ctx->acmod == 2) {
             frame_bits++; // rematstr
             if(block->rematstr) frame_bits += 4; // rematflg

@@ -37,6 +37,7 @@ SET(LIBAFTEN_SRCS libaften/a52enc.c
                   libaften/bitalloc.c
                   libaften/bitio.c
                   libaften/crc.c
+                  libaften/dynrng.c
                   libaften/window.c
                   libaften/mdct.c
                   libaften/exponent.c
@@ -117,6 +118,7 @@ ADD_DEFINITIONS(-DAFTEN_BUILD_LIBRARY)
 
 CHECK_INCLUDE_FILE_DEFINE(inttypes.h HAVE_INTTYPES_H)
 CHECK_INCLUDE_FILE_DEFINE(byteswap.h HAVE_BYTESWAP_H)
+CHECK_FUNCTION_DEFINE("#include <math.h>" "exp10" "(1.0)" HAVE_EXP10)
 
 
 IF(NOT DOUBLE)

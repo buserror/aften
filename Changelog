@@ -1,7 +1,6 @@
 Aften TODO list
 ---------------
 - Channel coupling (this will be a large undertaking)
-- Dynamic Range Compression
 - Configuration system improvement
 - E/AC-3 bitstream format and encoding (need a good decoder & samples first)
 - ABR encoding mode
@@ -23,6 +22,7 @@ version SVN : current
 - added CMake build system with shared lib/dll support
 - optional faster bit allocation by reducing accuracy/quality
 - replaced MDCT code with implementation from libvorbis
+- added Dynamic Range Compression encoding w/ profile selection
 
 version 0.05 : 21 August 2006
 - bit allocation speedup by Prakash Punnoor <prakash@punnoor.de>
