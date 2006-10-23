@@ -18,10 +18,10 @@ all: lib progs utils
 lib:
 	$(MAKE) -C libaften all
 
-progs:
+progs: lib
 	$(MAKE) -C aften all
 
-utils:
+utils: lib
 	$(MAKE) -C util all
 
 .PHONY: install
