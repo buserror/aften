@@ -47,32 +47,32 @@ struct x86cpu_caps_s x86cpu_caps_use = { 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 void _alDetectCPUCaps(void)
 {
-    /* compile time detection */
-#ifdef __MMX__
+    /* compiled in SIMD routines */
+#ifdef HAVE_MMX
     x86cpu_caps_compile.mmx = 1;
 #endif
-#ifdef __SSE__
+#ifdef HAVE_SSE
     x86cpu_caps_compile.sse = 1;
 #endif
-#ifdef __SSE2__
+#ifdef HAVE_SSE2
     x86cpu_caps_compile.sse2 = 1;
 #endif
-#ifdef __SSE3__
+#ifdef HAVE_SSE3
     x86cpu_caps_compile.sse3 = 1;
 #endif
-#ifdef __SSE4__
+#ifdef HAVE_SSE4
     x86cpu_caps_compile.sse4 = 1;
 #endif
-#ifdef __3dNOW__
+#ifdef HAVE_3DNOW_
     x86cpu_caps_compile.amd_3dnow = 1;
-#ifdef __athlon__
+#endif
+#ifdef HAVE_SSE_MMX
     x86cpu_caps_compile.amd_sse_mmx = 1;
 #endif
-#endif
-#ifdef __3dNOW_A__
+#ifdef HAVE_3DNOWEXT
     x86cpu_caps_compile.amd_3dnowext = 1;
 #endif
-    /* end compile time detection */
+    /* end compiled in SIMD routines */
 
     /* runtime detection */
 #ifdef HAVE_CPU_CAPS_DETECTION
