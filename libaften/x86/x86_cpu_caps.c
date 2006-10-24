@@ -63,7 +63,7 @@ void _alDetectCPUCaps(void)
 #ifdef HAVE_SSE4
     x86cpu_caps_compile.sse4 = 1;
 #endif
-#ifdef HAVE_3DNOW_
+#ifdef HAVE_3DNOW
     x86cpu_caps_compile.amd_3dnow = 1;
 #endif
 #ifdef HAVE_SSE_MMX
