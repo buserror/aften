@@ -295,7 +295,7 @@ static void
 extract_exponents(A52Context *ctx)
 {
     int blk, ch, j;
-    int v;
+    uint32_t v1, v2;
     FLOAT mul;
     A52Block *block;
 
@@ -303,9 +303,11 @@ extract_exponents(A52Context *ctx)
     for(ch=0; ch<ctx->n_all_channels; ch++) {
         for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
             block = &ctx->frame.blocks[blk];
-            for(j=0; j<256; j++) {
-                v = (int)AFT_FABS(block->mdct_coef[ch][j] * mul);
-                block->exp[ch][j] = (v == 0)? 24 : 23 - log2i(v);
+            for(j=0; j<256; j+=2) {
+                v1 = (uint32_t)AFT_FABS(block->mdct_coef[ch][j  ] * mul);
+                v2 = (uint32_t)AFT_FABS(block->mdct_coef[ch][j+1] * mul);
+                block->exp[ch][j  ] = (v1 == 0)? 24 : 23 - log2i(v1);
+                block->exp[ch][j+1] = (v2 == 0)? 24 : 23 - log2i(v2);
             }
         }
     }
@@ -322,3 +324,4 @@ process_exponents(A52Context *ctx)
 
     group_exponents(ctx);
 }
+
