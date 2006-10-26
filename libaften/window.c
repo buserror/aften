@@ -57,14 +57,14 @@ kbd_window_init(FLOAT alpha, FLOAT *window, int n, int iter)
     sum = 0.0;
     for(i=0; i<n2; i++) {
         x = i * (n2 - i) * a;
-	    bessel = FCONST(1.0);
+        bessel = FCONST(1.0);
         for(j=iter; j>0; j--) {
-	        bessel = (bessel * x / (j*j)) + FCONST(1.0);
+            bessel = (bessel * x / (j*j)) + FCONST(1.0);
         }
         sum += bessel;
         window[i] = sum;
     }
-	sum += FCONST(1.0);
+    sum += FCONST(1.0);
     for(i=0; i<n2; i++) {
         window[i] = AFT_SQRT(window[i] / sum);
         window[n-1-i] = window[i];
