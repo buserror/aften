@@ -80,8 +80,9 @@ void
 apply_a52_window(FLOAT *samples)
 {
     int i;
-    for(i=0; i<512; i++) {
-        samples[i] *= a52_window[i];
+    for(i=0; i<512; i+=2) {
+        samples[i  ] *= a52_window[i  ];
+        samples[i+1] *= a52_window[i+1];
     }
 }
 
