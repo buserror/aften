@@ -547,7 +547,7 @@ alloc_block_buffers(struct A52Context *ctx)
     for (i=0; i<A52_NUM_BLOCKS; ++i) {
         if (i) {
             ctx->frame.blocks[i].input_samples[0] =
-                ctx->frame.blocks[i-1].input_samples[A52_MAX_CHANNELS-1];
+                ctx->frame.blocks[i-1].input_samples[A52_MAX_CHANNELS-1] + 512 + 256;
         }
         ctx->frame.blocks[i].mdct_coef[0] =
             ctx->frame.blocks[i].input_samples[0] + 512;
