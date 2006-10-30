@@ -20,6 +20,8 @@
 #ifndef X86_SIMD_SUPPORT_H
 #define X86_SIMD_SUPPORT_H
 
+#include "common.h"
+
 #include <xmmintrin.h>
 
 #ifdef EMU_MM_MALLOC
