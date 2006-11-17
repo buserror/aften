@@ -110,6 +110,8 @@ typedef struct A52Context {
     BitWriter bw;
     AftenEncParams params;
     AftenMetadata meta;
+    void (*fmt_convert_from_src)(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
+         void *vsrc, int nch, int n);
 
     int n_channels;
     int n_all_channels;
@@ -117,7 +119,6 @@ typedef struct A52Context {
     int lfe;
     int lfe_channel;
     int sample_rate;
-    enum A52SampleFormat sample_format;
     int halfratecod;
     int bsid;
     int fscod;

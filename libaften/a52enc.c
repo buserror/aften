@@ -50,8 +50,8 @@ const uint16_t a52_freqs[3] = { 48000, 44100, 32000 };
 
 /* possible bitrates */
 const uint16_t a52_bitratetab[19] = {
-	32, 40, 48, 56, 64, 80, 96, 112, 128,
-		160, 192, 224, 256, 320, 384, 448, 512, 576, 640
+    32, 40, 48, 56, 64, 80, 96, 112, 128,
+    160, 192, 224, 256, 320, 384, 448, 512, 576, 640
 };
 
 void
@@ -108,6 +108,104 @@ aften_set_defaults(AftenContext *s)
 }
 
 static void
+fmt_convert_from_u8(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
+                    void *vsrc, int nch, int n)
+{
+    int i, ch;
+    uint8_t *src = vsrc;
+
+    for(ch=0; ch<nch; ch++) {
+        for(i=0; i<n; i++) {
+            dest[ch][i] = (src[i*nch+ch]-FCONST(128.0)) / FCONST(128.0);
+        }
+    }
+}
+
+static void
+fmt_convert_from_s16(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
+                     void *vsrc, int nch, int n)
+{
+    int i, ch;
+    int16_t *src = vsrc;
+
+    for(ch=0; ch<nch; ch++) {
+        for(i=0; i<n; i++) {
+            dest[ch][i] = src[i*nch+ch] / FCONST(32768.0);
+        }
+    }
+}
+
+static void
+fmt_convert_from_s20(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
+                     void *vsrc, int nch, int n)
+{
+    int i, ch;
+    int32_t *src = vsrc;
+
+    for(ch=0; ch<nch; ch++) {
+        for(i=0; i<n; i++) {
+            dest[ch][i] = src[i*nch+ch] / FCONST(524288.0);
+        }
+    }
+}
+
+static void
+fmt_convert_from_s24(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
+                     void *vsrc, int nch, int n)
+{
+    int i, ch;
+    int32_t *src = vsrc;
+
+    for(ch=0; ch<nch; ch++) {
+        for(i=0; i<n; i++) {
+            dest[ch][i] = src[i*nch+ch] / FCONST(8388608.0);
+        }
+    }
+}
+
+static void
+fmt_convert_from_s32(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
+                     void *vsrc, int nch, int n)
+{
+    int i, ch;
+    int32_t *src = vsrc;
+
+    for(ch=0; ch<nch; ch++) {
+        for(i=0; i<n; i++) {
+            dest[ch][i] = src[i*nch+ch] / FCONST(2147483648.0);
+        }
+    }
+}
+
+static void
+fmt_convert_from_float(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
+                       void *vsrc, int nch, int n)
+{
+    int i, ch;
+    float *src = vsrc;
+
+    for(ch=0; ch<nch; ch++) {
+        for(i=0; i<n; i++) {
+            dest[ch][i] = src[i*nch+ch];
+        }
+    }
+}
+
+static void
+fmt_convert_from_double(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
+                        void *vsrc, int nch, int n)
+{
+    int i, ch;
+    double *src = vsrc;
+
+    for(ch=0; ch<nch; ch++) {
+        for(i=0; i<n; i++) {
+            dest[ch][i] = (FLOAT)src[i*nch+ch];
+        }
+    }
+}
+
+static void
 select_mdct(A52Context *ctx)
 {
 #ifdef HAVE_SSE3
@@ -140,7 +238,23 @@ aften_encode_init(AftenContext *s)
     ctx = calloc(sizeof(A52Context), 1);
     s->private_context = ctx;
 
-    ctx->sample_format = s->sample_format;
+    switch(s->sample_format) {
+        case A52_SAMPLE_FMT_U8:  ctx->fmt_convert_from_src = fmt_convert_from_u8;
+                                 break;
+        case A52_SAMPLE_FMT_S16: ctx->fmt_convert_from_src = fmt_convert_from_s16;
+                                 break;
+        case A52_SAMPLE_FMT_S20: ctx->fmt_convert_from_src = fmt_convert_from_s20;
+                                 break;
+        case A52_SAMPLE_FMT_S24: ctx->fmt_convert_from_src = fmt_convert_from_s24;
+                                 break;
+        case A52_SAMPLE_FMT_S32: ctx->fmt_convert_from_src = fmt_convert_from_s32;
+                                 break;
+        case A52_SAMPLE_FMT_FLT: ctx->fmt_convert_from_src = fmt_convert_from_float;
+                                 break;
+        case A52_SAMPLE_FMT_DBL: ctx->fmt_convert_from_src = fmt_convert_from_double;
+                                 break;
+        default: break;
+    }
 
     // channel configuration
     if(s->channels < 1 || s->channels > 6) {
@@ -701,90 +815,6 @@ output_frame_end(A52Context *ctx)
 }
 
 static void
-fmt_convert_from_u8(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
-                    uint8_t *src, int nch, int n)
-{
-    int i, ch;
-    for(ch=0; ch<nch; ch++) {
-        for(i=0; i<n; i++) {
-            dest[ch][i] = (src[i*nch+ch]-FCONST(128.0)) / FCONST(128.0);
-        }
-    }
-}
-
-static void
-fmt_convert_from_s16(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
-                     int16_t *src, int nch, int n)
-{
-    int i, ch;
-    for(ch=0; ch<nch; ch++) {
-        for(i=0; i<n; i++) {
-            dest[ch][i] = src[i*nch+ch] / FCONST(32768.0);
-        }
-    }
-}
-
-static void
-fmt_convert_from_s20(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
-                     int32_t *src, int nch, int n)
-{
-    int i, ch;
-    for(ch=0; ch<nch; ch++) {
-        for(i=0; i<n; i++) {
-            dest[ch][i] = src[i*nch+ch] / FCONST(524288.0);
-        }
-    }
-}
-
-static void
-fmt_convert_from_s24(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
-                     int32_t *src, int nch, int n)
-{
-    int i, ch;
-    for(ch=0; ch<nch; ch++) {
-        for(i=0; i<n; i++) {
-            dest[ch][i] = src[i*nch+ch] / FCONST(8388608.0);
-        }
-    }
-}
-
-static void
-fmt_convert_from_s32(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
-                     int32_t *src, int nch, int n)
-{
-    int i, ch;
-    for(ch=0; ch<nch; ch++) {
-        for(i=0; i<n; i++) {
-            dest[ch][i] = src[i*nch+ch] / FCONST(2147483648.0);
-        }
-    }
-}
-
-static void
-fmt_convert_from_float(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
-                       float *src, int nch, int n)
-{
-    int i, ch;
-    for(ch=0; ch<nch; ch++) {
-        for(i=0; i<n; i++) {
-            dest[ch][i] = src[i*nch+ch];
-        }
-    }
-}
-
-static void
-fmt_convert_from_double(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
-                        double *src, int nch, int n)
-{
-    int i, ch;
-    for(ch=0; ch<nch; ch++) {
-        for(i=0; i<n; i++) {
-            dest[ch][i] = (FLOAT)src[i*nch+ch];
-        }
-    }
-}
-
-static void
 copy_samples(A52Context *ctx, void *vsamples)
 {
     int ch, blk;
@@ -797,30 +827,7 @@ copy_samples(A52Context *ctx, void *vsamples)
     frame = &ctx->frame;
 
     // convert sample format and de-interleave channels
-    switch(ctx->sample_format) {
-        case A52_SAMPLE_FMT_U8:  fmt_convert_from_u8(frame->input_audio,
-                                        vsamples, sinc, A52_FRAME_SIZE);
-                                 break;
-        case A52_SAMPLE_FMT_S16: fmt_convert_from_s16(frame->input_audio,
-                                        vsamples, sinc, A52_FRAME_SIZE);
-                                 break;
-        case A52_SAMPLE_FMT_S20: fmt_convert_from_s20(frame->input_audio,
-                                        vsamples, sinc, A52_FRAME_SIZE);
-                                 break;
-        case A52_SAMPLE_FMT_S24: fmt_convert_from_s24(frame->input_audio,
-                                        vsamples, sinc, A52_FRAME_SIZE);
-                                 break;
-        case A52_SAMPLE_FMT_S32: fmt_convert_from_s32(frame->input_audio,
-                                        vsamples, sinc, A52_FRAME_SIZE);
-                                 break;
-        case A52_SAMPLE_FMT_FLT: fmt_convert_from_float(frame->input_audio,
-                                        vsamples, sinc, A52_FRAME_SIZE);
-                                 break;
-        case A52_SAMPLE_FMT_DBL: fmt_convert_from_double(frame->input_audio,
-                                        vsamples, sinc, A52_FRAME_SIZE);
-                                 break;
-        default: break;
-    }
+    ctx->fmt_convert_from_src(frame->input_audio, vsamples, sinc, A52_FRAME_SIZE);
 
     // DC-removal high-pass filter
     if(ctx->params.use_dc_filter) {
