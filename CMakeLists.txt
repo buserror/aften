@@ -218,7 +218,7 @@ TARGET_LINK_LIBRARIES(wavinfo aften_wav)
 ADD_EXECUTABLE(wavrms util/wavrms.c)
 TARGET_LINK_LIBRARIES(wavrms aften_wav ${LIBM})
 
-ADD_EXECUTABLE(wavfilter util/wavinfo.c libaften/filter.c)
+ADD_EXECUTABLE(wavfilter util/wavfilter.c libaften/filter.c)
 TARGET_LINK_LIBRARIES(wavfilter aften_wav ${LIBM})
 
 INSTALL(TARGETS ${AFTEN_SHARED} aften_exe wavinfo wavrms wavfilter
