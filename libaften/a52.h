@@ -75,7 +75,8 @@ typedef struct A52Block {
 typedef struct A52BitAllocParams {
     int fscod;
     int halfratecod;
-    int fgain, sgain, sdecay, fdecay, dbknee, floor;
+    int fgain[A52_MAX_CHANNELS];
+    int sgain, sdecay, fdecay, dbknee, floor;
     int cplfleak, cplsleak;
 } A52BitAllocParams;
 
@@ -98,7 +99,7 @@ typedef struct A52Frame {
     int sgaincod, sdecaycod, fdecaycod, dbkneecod, floorcod;
     A52BitAllocParams bit_alloc;
     int csnroffst;
-    int fgaincod;
+    int fgaincod[A52_MAX_CHANNELS];
     int fsnroffst;
     int ncoefs[A52_MAX_CHANNELS];
 } A52Frame;

@@ -498,7 +498,9 @@ frame_init(A52Context *ctx)
     frame->sgaincod = 1;
     frame->dbkneecod = 2;
     frame->floorcod = 7;
-    frame->fgaincod = 4;
+    for(ch=0; ch<ctx->n_all_channels; ch++) {
+        frame->fgaincod[ch] = 3;
+    }
 }
 
 /* output the A52 frame header */
@@ -743,7 +745,7 @@ output_audio_blocks(A52Context *ctx)
             bitwriter_writebits(bw, 6, frame->csnroffst);
             for(ch=0; ch<ctx->n_all_channels; ch++) {
                 bitwriter_writebits(bw, 4, frame->fsnroffst);
-                bitwriter_writebits(bw, 3, frame->fgaincod);
+                bitwriter_writebits(bw, 3, frame->fgaincod[ch]);
             }
         }
 

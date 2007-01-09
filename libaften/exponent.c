@@ -116,6 +116,7 @@ compute_exponent_strategy(A52Context *ctx)
             }
             i = j;
         }
+        frame->fgaincod[ch] = 4 - blocks[0].exp_strategy[ch];
     }
 }
 
