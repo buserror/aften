@@ -137,13 +137,8 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
     uint8_t exp1[256];
     uint8_t v;
 
-    grpsize = 0;
-    switch(exp_strategy) {
-        case EXP_D15: grpsize = 1; break;
-        case EXP_D25: grpsize = 2; break;
-        case EXP_D45: grpsize = 4; break;
-    }
-    ngrps = ((ncoefs + (grpsize * 3) - 4) / (3 * grpsize)) * 3;
+    ngrps = expsizetab[exp_strategy-1][ncoefs] * 3;
+    grpsize = exp_strategy + (exp_strategy / 3);
 
     // for D15 strategy, there is no need to group/ungroup exponents
     if (grpsize == 1) {
@@ -211,6 +206,7 @@ static void
 group_exponents(A52Context *ctx)
 {
     int blk, ch, i, gsize, bits;
+    int expstr;
     int delta[3];
     uint8_t exp0, exp1;
     uint8_t *p;
@@ -222,14 +218,14 @@ group_exponents(A52Context *ctx)
     for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
         block = &frame->blocks[blk];
         for(ch=0; ch<ctx->n_all_channels; ch++) {
-            gsize = block->exp_strategy[ch];
-            if(gsize == EXP_REUSE) {
+            expstr = block->exp_strategy[ch];
+            if(expstr == EXP_REUSE) {
                 block->nexpgrps[ch] = 0;
                 continue;
             }
-            block->nexpgrps[ch] = expsizetab[gsize-1][frame->ncoefs[ch]];
+            block->nexpgrps[ch] = expsizetab[expstr-1][frame->ncoefs[ch]];
             bits += (4 + (block->nexpgrps[ch] * 7));
-            if(gsize == EXP_D45) gsize = 4;
+            gsize = expstr + (expstr / 3);
             p = block->exp[ch];
 
             exp1 = *p++;
