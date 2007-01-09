@@ -519,8 +519,8 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
 
     bytes_needed = wf->block_align * num_samples;
     if((wf->filepos + read_size) >= (wf->data_start + wf->data_size)) {
-        read_size = (wf->data_start + wf->data_size) - wf->filepos;
-        num_samples = read_size / wf->block_align;
+       bytes_needed = (wf->data_start + wf->data_size) - wf->filepos;
+        num_samples = bytes_needed / wf->block_align;
     }
     if(num_samples < 0) return -1;
     if(num_samples == 0) return 0;
