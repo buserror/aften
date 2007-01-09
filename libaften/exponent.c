@@ -92,7 +92,7 @@ compute_exponent_strategy(A52Context *ctx)
         blocks[0].exp_strategy[ch] = EXP_NEW;
         for(i=1;i<A52_NUM_BLOCKS;i++) {
             exp_diff = calc_exp_diff(blocks[i].exp[ch], blocks[i-1].exp[ch],
-                                     A52_MAX_COEFS);
+                                     frame->ncoefs[ch]);
             if(exp_diff > EXP_DIFF_THRESHOLD)
                 blocks[i].exp_strategy[ch] = EXP_NEW;
             else
@@ -277,14 +277,14 @@ encode_exponents(A52Context *ctx)
             j = i + 1;
             while(j < A52_NUM_BLOCKS && blocks[j].exp_strategy[ch]==EXP_REUSE) {
                 exponent_min(blocks[i].exp[ch], blocks[j].exp[ch],
-                             A52_MAX_COEFS);
+                             frame->ncoefs[ch]);
                 j++;
             }
             encode_exp_blk_ch(blocks[i].exp[ch], frame->ncoefs[ch],
                               blocks[i].exp_strategy[ch]);
             // copy encoded exponents for reuse case
             for(k=i+1; k<j; k++) {
-                memcpy(blocks[k].exp[ch], blocks[i].exp[ch], A52_MAX_COEFS);
+                memcpy(blocks[k].exp[ch], blocks[i].exp[ch], frame->ncoefs[ch]);
             }
             i = j;
         }

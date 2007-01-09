@@ -36,8 +36,6 @@
 
 #define A52_MAX_CHANNELS 6
 
-#define A52_MAX_COEFS 253
-
 /* exponent encoding strategy */
 #define EXP_REUSE 0
 #define EXP_NEW   1
