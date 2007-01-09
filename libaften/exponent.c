@@ -36,21 +36,14 @@
 
 static int expsizetab[3][256];
 
-#define EXP_DIFF_THRESHOLD 75
-
-/* sum of absolute difference between exponents in adjacent blocks */
-static int
-calc_exp_diff(uint8_t *exp1, uint8_t *exp2, int n)
-{
-    int i;
-    int sum;
-    sum = 0;
-    for(i=0; i<n; i++) {
-        sum += ABS(exp1[i]-exp2[i]);
-    }
-    sum = (sum * 100) / n;
-    return sum;
-}
+static uint8_t str_predef[6][6] = {
+    { EXP_D15,   EXP_D15,   EXP_D15,   EXP_D15,   EXP_D15,   EXP_D15 },
+    { EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE, EXP_REUSE, EXP_REUSE },
+    { EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D25, EXP_REUSE, EXP_REUSE },
+    { EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D45, EXP_REUSE,   EXP_D45 },
+    { EXP_D25, EXP_REUSE,   EXP_D45, EXP_REUSE,   EXP_D45, EXP_REUSE },
+    { EXP_D45,   EXP_D45, EXP_REUSE,   EXP_D45, EXP_REUSE,   EXP_D45 }
+};
 
 void
 expsizetab_init(void)
@@ -71,52 +64,6 @@ expsizetab_init(void)
             }
             expsizetab[i-1][j] = ngrps;
         }
-    }
-}
-
-static void
-compute_exponent_strategy(A52Context *ctx)
-{
-    int ch, i, j;
-    int exp_diff;
-    int is_lfe;
-    A52Frame *frame;
-    A52Block *blocks;
-
-    frame = &ctx->frame;
-    blocks = frame->blocks;
-    for(ch=0; ch<ctx->n_all_channels; ch++) {
-        is_lfe = (ch == ctx->lfe_channel);
-        // estimate if the exponent variation & decide if they should be
-        // reused in the next frame
-        blocks[0].exp_strategy[ch] = EXP_NEW;
-        for(i=1;i<A52_NUM_BLOCKS;i++) {
-            exp_diff = calc_exp_diff(blocks[i].exp[ch], blocks[i-1].exp[ch],
-                                     frame->ncoefs[ch]);
-            if(exp_diff > EXP_DIFF_THRESHOLD)
-                blocks[i].exp_strategy[ch] = EXP_NEW;
-            else
-                blocks[i].exp_strategy[ch] = EXP_REUSE;
-        }
-        // lfe channel exp strategy can only be EXP_REUSE or EXP_D15
-        if(is_lfe) continue;
-
-        // now select the encoding strategy type : if exponents are often
-        // recoded, we use a coarse encoding
-        i = 0;
-        while (i < A52_NUM_BLOCKS) {
-            j = i + 1;
-            while(j < A52_NUM_BLOCKS && blocks[j].exp_strategy[ch] == EXP_REUSE)
-                j++;
-            switch(j-i) {
-                case 1:  blocks[i].exp_strategy[ch] = EXP_D45; break;
-                case 2:
-                case 3:  blocks[i].exp_strategy[ch] = EXP_D25; break;
-                default: blocks[i].exp_strategy[ch] = EXP_D15;
-            }
-            i = j;
-        }
-        frame->fgaincod[ch] = 4 - blocks[0].exp_strategy[ch];
     }
 }
 
@@ -200,6 +147,82 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
             exp[k+3] = v;
             k += 4;
         }
+    }
+}
+
+static int
+compute_expstr_ch(uint8_t exp[A52_NUM_BLOCKS][256], int ncoefs)
+{
+    int blk, str, i, j, k;
+    int min_error, exp_error[6];
+    uint8_t exponents[A52_NUM_BLOCKS][256];
+
+    min_error = 1;
+    for(str=1; str<6; str++) {
+        // collect exponents
+        for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+            memcpy(exponents[blk], exp[blk], ncoefs);
+        }
+
+        // encode exponents
+        i = 0;
+        while(i < A52_NUM_BLOCKS) {
+            j = i + 1;
+            while(j < A52_NUM_BLOCKS && str_predef[str][j]==EXP_REUSE) {
+                exponent_min(exponents[i], exponents[j], ncoefs);
+                j++;
+            }
+            encode_exp_blk_ch(exponents[i], ncoefs, str_predef[str][i]);
+            for(k=i+1; k<j; k++) {
+                memcpy(exponents[k], exponents[i], ncoefs);
+            }
+            i = j;
+        }
+
+        // select strategy based on minimum error from unencoded exponents
+        exp_error[str] = 0;
+        for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+            for(i=0; i<ncoefs; i++) {
+                exp_error[str] += ABS(exp[blk][i] - exponents[blk][i]);
+            }
+        }
+        if(exp_error[str] < exp_error[min_error]) {
+            min_error = str;
+        }
+    }
+    return min_error;
+}
+
+static void
+compute_exponent_strategy(A52Context *ctx)
+{
+    int ch, blk, str;
+    A52Frame *frame;
+    A52Block *blocks;
+    uint8_t exp[A52_MAX_CHANNELS][A52_NUM_BLOCKS][256];
+
+    frame = &ctx->frame;
+    blocks = frame->blocks;
+
+    for(ch=0; ch<ctx->n_channels; ch++) {
+        for(str=1; str<6; str++) {
+            for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+                memcpy(exp[ch][blk], blocks[blk].exp[ch], frame->ncoefs[ch]);
+            }
+        }
+        str = compute_expstr_ch(exp[ch], frame->ncoefs[ch]);
+        for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+            blocks[blk].exp_strategy[ch] = str_predef[str][blk];
+        }
+        frame->fgaincod[ch] = 4 - blocks[0].exp_strategy[ch];
+    }
+
+    // lfe channel
+    if(ctx->lfe) {
+        for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+            blocks[blk].exp_strategy[ctx->lfe_channel] = str_predef[1][blk];
+        }
+        frame->fgaincod[ctx->lfe_channel] = 3;
     }
 }
 
