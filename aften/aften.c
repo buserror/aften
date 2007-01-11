@@ -114,8 +114,8 @@ print_help(FILE *out)
                  "                       1 = apply filter\n"
                  "    [-lfefilter #] Specify use of the LFE low-pass filter\n"
                  "                       0 = do not apply filter (default)\n"
-                 "                       1 = apply filter\n"
-                 "    [-xbsi1 #]     Specify use of extended bitstream info 1\n"
+                 "                       1 = apply filter\n");
+    fprintf(out, "    [-xbsi1 #]     Specify use of extended bitstream info 1\n"
                  "                       0 = do not write xbsi1\n"
                  "                       1 = write xbsi1\n"
                  "    [-dmixmod #]   Preferred stereo downmix mode\n"
