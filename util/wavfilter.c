@@ -158,9 +158,11 @@ main(int argc, char **argv)
 #endif
 
     for(i=0; i<wf.channels; i++) {
+        int cutoff;
         f[i].type = ftype;
         f[i].cascaded = 1;
-        f[i].cutoff = (FLOAT)atoi(argv[2]);
+        cutoff = atoi(argv[2]);
+        f[i].cutoff = (FLOAT)cutoff;
         f[i].samplerate = (FLOAT)wf.sample_rate;
         if(filter_init(&f[i], FILTER_ID_BUTTERWORTH_II)) {
             fprintf(stderr, "error initializing filter\n");
