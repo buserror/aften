@@ -19,6 +19,12 @@ if test "$?" != 0; then
     exit 1
 fi
 
+show_obsolete_warning(){
+  echo
+  echo "This build system is obsolete. Please use the CMake based one."
+  echo "Esp x86(_64) users won't get all (performance) options with this one."
+}
+
 show_help(){
   echo "Usage: configure [options]"
   echo "Options: [defaults in brackets after descriptions]"
@@ -51,6 +57,7 @@ show_help(){
   echo "  --enable-double          enable use of doubles instead of floats"
   echo ""
   echo "NOTE: Object files are built at the place where configure is launched."
+  show_obsolete_warning
   exit 1
 }
 
@@ -773,3 +780,5 @@ else
 fi
 
 rm -f $TMPO $TMPC $TMPE $TMPS $TMPH
+
+show_obsolete_warning
