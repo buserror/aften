@@ -393,8 +393,8 @@ aften_encode_init(AftenContext *s)
         }
     }
 
-    // initialize DC filters (one for each channel)
-    // one-pole high-pass w/ cutoff of 3 Hz
+    // initialize bandwidth filters (one for each channel)
+    // butterworth 2nd order cascaded direct form II low-pass
     if(ctx->params.use_bw_filter) {
         int cutoff;
         if(ctx->params.bwcode == -2) {
