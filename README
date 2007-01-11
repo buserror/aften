@@ -48,6 +48,13 @@ I really would like to get CMake building Aften on every supported
 platform. So please contact me if it doesn't build on yours. I'll try to
 fix this with your help.
 
+Following Options might be of interest for you:
+
+SHARED: Builds aften as a shared lib, as well. The API hasn't been set
+        in stone, so you have been warned. ;-)
+DOUBLE: Builds aften using double precission. Beware that you won't get
+        SIMD code, as the SSE code hasn't been ported to SSE2, yet.
+
 Some tips:
 
    - You can use a console GUI named ccmake for configuring cmake. This
