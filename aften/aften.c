@@ -60,7 +60,7 @@ print_help(FILE *out)
                  "                       1 = show average stats (default)\n"
                  "                       2 = show each frame's stats\n"
                  "    [-b #]         CBR bitrate in kbps (default: about 96kbps per channel)\n"
-                 "    [-q #]         VBR quality [0 - 1023] (default: 220)\n"
+                 "    [-q #]         VBR quality [0 - 1023] (default: 240)\n"
                  "    [-fba #]       Fast bit allocation (default: 0)\n"
                  "                       0 = more accurate encoding\n"
                  "                       1 = faster encoding\n"

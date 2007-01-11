@@ -76,7 +76,7 @@ aften_set_defaults(AftenContext *s)
     s->params.verbose = 1;
     s->params.encoding_mode = AFTEN_ENC_MODE_CBR;
     s->params.bitrate = 0;
-    s->params.quality = 220;
+    s->params.quality = 240;
     s->params.bwcode = -1;
     s->params.use_rematrixing = 1;
     s->params.use_block_switching = 0;
@@ -336,7 +336,7 @@ aften_encode_init(AftenContext *s)
     if(s->params.bwcode < -2 || s->params.bwcode > 60) {
         return -1;
     }
-    ctx->last_quality = 220;
+    ctx->last_quality = 240;
     if(ctx->params.encoding_mode == AFTEN_ENC_MODE_VBR) {
         ctx->last_quality = ctx->params.quality;
     } else if(ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
