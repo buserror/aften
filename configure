@@ -81,7 +81,7 @@ die(){
     cat <<EOF
 If you think configure made a mistake, make sure you are using the latest
 devopment version.  If the latest version fails, report the problem to
-jruggle@earthlink.net
+justinruggles@bellsouth.net
 EOF
     if enabled logging; then
         cat <<EOF

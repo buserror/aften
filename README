@@ -4,7 +4,7 @@ Aften: A/52 audio encoder
 A simple AC3-compatible audio encoder based on FFmpeg.
 
 -------------------------------------------------------------------------------
-Aften, Copyright (c) 2006-2007 Justin Ruggles <jruggle@earthlink.net>
+Aften, Copyright (c) 2006-2007 Justin Ruggles <justinruggles@bellsouth.net>
                      2006-2007 Prakash Punnoor <prakash@punnoor.de>
 http://aften.sourceforge.net/
 -------------------------------------------------------------------------------
