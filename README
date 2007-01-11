@@ -4,7 +4,8 @@ Aften: A/52 audio encoder
 A simple AC3-compatible audio encoder based on FFmpeg.
 
 -------------------------------------------------------------------------------
-Aften, Copyright (c) 2006 Justin Ruggles <jruggle@earthlink.net>
+Aften, Copyright (c) 2006-2007 Justin Ruggles <jruggle@earthlink.net>
+                     2006-2007 Prakash Punnoor <prakash@punnoor.de>
 http://aften.sourceforge.net/
 -------------------------------------------------------------------------------
 FFmpeg, Copyright (c) 2000-2004 Fabrice Bellard
@@ -17,3 +18,69 @@ content which is created with this software should not be labeled as
 containing Dolby(R) Digital technology, nor should it bear any registered 
 trademarks of Dolby Laboratories or any other trademark holder unless 
 otherwise authorized.
+
+
+Building Aften with CMake
+==========================
+
+The aim of using CMake is making portable development easier, as CMake
+contains generators for various build systems. On e.g. *nix Makefiles
+will be built, and on Windows MS VC++ project files, if you wish. You
+can get CMake at http://cmake.org/.
+
+This document explains briefly how to build with CMake on Linux via an
+out-of-tree build:
+
+   - Change to the toplevel directory containing the Aften sources.
+   - Create a directory, e.g. "default", and change into it.
+   - Now run something like:
+
+        cmake .. -DCMAKE_INSTALL_PREFIX:STRING="/usr"
+        make
+        make install
+
+     If you exported your CFLAGS, there is no need to specify them
+     explicitly, as CMake will pick them up.
+
+   - Aften should get installed as you got used to it.
+
+I really would like to get CMake building Aften on every supported
+platform. So please contact me if it doesn't build on yours. I'll try to
+fix this with your help.
+
+Some tips:
+
+   - You can use a console GUI named ccmake for configuring cmake. This
+     also comes in handy, to find out about available options. You can
+     also set options via command-line:
+
+        ccmake .. -DCMAKE_INSTALL_PREFIX:STRING="/usr"
+
+     sets the two variables defined on command line and then starts the
+     GUI. Press 'c' the first time and every time you want to commit
+     changes in the config. Finally press 'g' to run the generator. Btw,
+     to set boolean vars from the command line, use -DVAR:BOOL=X, where
+     X is eg. ON or OFF.
+
+   - If you want more output at compile time, use
+
+        make VERBOSE=1
+
+   - If you want to install to a different directory (using same
+     prefix), use
+
+        make install DESTDIR=/foo/bar
+
+   - CMake doesn't has a distclean target by default, so you better
+     really do an out-of-tree build, then you can simply delete its
+     content when you want a distclean... Furthermore it is easier to
+     have different builds using different parameters via out-of-tree
+     builds.
+
+   - If you are interested in variables to set, take a look into
+     CMakeCache.txt after having run the configuring stage.
+
+   - If you update your source tree via cvs and want to rebuild an
+     previously built lib without cleaning, you better at least clear
+     the CMake cache (remove CMakeCache.txt) otherwise a modified CMake
+     project file could result to unwanted behaviour.
