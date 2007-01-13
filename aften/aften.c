@@ -831,7 +831,7 @@ main(int argc, char **argv)
                     }
                     t0 = t1;
                 } else if(s.params.verbose == 2) {
-                    fprintf(stderr, "\rframe: %7d | q: %4d | bw: %2d | bitrate: %3d kbps",
+                    fprintf(stderr, "frame: %7d | q: %4d | bw: %2d | bitrate: %3d kbps\n",
                             s.status.frame_num, s.status.quality, s.status.bwcode,
                             s.status.bit_rate);
                 }
