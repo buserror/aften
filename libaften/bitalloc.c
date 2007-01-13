@@ -611,9 +611,17 @@ cbr_bit_allocation(A52Context *ctx, int prepare)
     if(prepare)
         bit_alloc_prepare(ctx);
 
+    // starting point
+    if(ctx->params.encoding_mode == AFTEN_ENC_MODE_VBR) {
+        snroffst = ctx->params.quality;
+    } else if(ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
+        snroffst = ctx->last_quality;
+    }
+    leftover = avail_bits - bit_alloc(ctx, snroffst);
+
     // narrow search range
-    snroffst = snr0 = snr1 = ctx->last_quality;
-    leftover = leftover0 = leftover1 = avail_bits - bit_alloc(ctx, snr0);
+    snr0 = snr1 = snroffst;
+    leftover0 = leftover1 = leftover;
     if(leftover != 0) {
         if(leftover > 0) {
             while(leftover1 > 0 && snr1+16 <= 1023) {
@@ -638,25 +646,22 @@ cbr_bit_allocation(A52Context *ctx, int prepare)
             leftover = avail_bits - bit_alloc(ctx, snroffst);
         }
     } else {
-        // weighted binary search
+        // weighted guess and fine search
         if(snr0 != snr1) {
             snroffst = snr0 + ((snr1-snr0) * leftover0 / (leftover0-leftover1));
             leftover = avail_bits - bit_alloc(ctx, snroffst);
-            while(1) {
-                if(leftover == 0) {
-                    break;
-                } else if(leftover < 0) {
-                    snr1 = snroffst;
-                    leftover1 = leftover;
+            if(leftover != 0) {
+                if(leftover > 0) {
+                    while(avail_bits - bit_alloc(ctx, snroffst+1) >= 0) {
+                        snroffst++;
+                    }
                 } else {
-                    snr0 = snroffst;
-                    leftover0 = leftover;
+                    snroffst--;
+                    while(avail_bits - bit_alloc(ctx, snroffst) < 0) {
+                        snroffst--;
+                    }
                 }
-                snroffst = snr0 + ((snr1-snr0) * leftover0 / (leftover0-leftover1));
                 leftover = avail_bits - bit_alloc(ctx, snroffst);
-                if(snroffst == snr0) {
-                    break;
-                }
             }
         }
     }
