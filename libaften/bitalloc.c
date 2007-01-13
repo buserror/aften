@@ -600,7 +600,7 @@ cbr_bit_allocation(A52Context *ctx, int prepare)
 {
     int csnroffst, fsnroffst;
     int current_bits, avail_bits, leftover;
-    int leftover0, leftover1, snroffst;
+    int leftover0, leftover1, snroffst=0;
     int snr0, snr1;
     A52Frame *frame;
 
