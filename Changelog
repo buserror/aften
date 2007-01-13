@@ -8,11 +8,12 @@ Aften TODO list
 - Frame parser / analyzer
 - AIFF file support for the MAC people
 - CAFF file support
-- Improve exponent strategy decision
 - Option to downmix/upmix/resample prior to encoding
     - 2-channel surround-matrix downmix
     - 2-channel headphone downmix
     - Stereo to 5.1 upmix
+- Improve DRC implementation
+- Psychoacoustic model & delta bit allocation
 
 Aften Changelog
 ---------------
@@ -23,6 +24,9 @@ version SVN : current
 - optional faster bit allocation by reducing accuracy/quality
 - replaced MDCT code with implementation from libvorbis
 - added Dynamic Range Compression encoding w/ profile selection
+- improved exponent strategy decision
+- accuracy increase in bit allocation
+- new longhelp option for detailed commandline info
 
 version 0.05 : 21 August 2006
 - bit allocation speedup by Prakash Punnoor <prakash@punnoor.de>
