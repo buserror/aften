@@ -810,6 +810,14 @@ main(int argc, char **argv)
         aften_remap_wav_to_a52(fwav, nr, wf.channels, s.sample_format,
                                s.acmod);
 
+        // zero leftover samples at end of last frame
+        if(nr < A52_FRAME_SIZE) {
+            int i;
+            for(i=nr*wf.channels; i<A52_FRAME_SIZE*wf.channels; i++) {
+                fwav[i] = 0.0;
+            }
+        }
+
         fs = aften_encode_frame(&s, frame, fwav);
         if(fs <= 0) {
             fprintf(stderr, "Error encoding frame %d\n", s.status.frame_num);
