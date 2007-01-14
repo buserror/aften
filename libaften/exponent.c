@@ -216,7 +216,6 @@ compute_exponent_strategy(A52Context *ctx)
         for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
             blocks[blk].exp_strategy[ch] = str_predef[str][blk];
         }
-        frame->fgaincod[ch] = 4 - blocks[0].exp_strategy[ch];
     }
 
     // lfe channel
@@ -224,7 +223,6 @@ compute_exponent_strategy(A52Context *ctx)
         for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
             blocks[blk].exp_strategy[ctx->lfe_channel] = str_predef[1][blk];
         }
-        frame->fgaincod[ctx->lfe_channel] = 3;
     }
 }
 
