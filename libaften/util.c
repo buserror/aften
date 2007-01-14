@@ -111,10 +111,8 @@ aften_plain_wav_to_acmod(int ch, int *acmod, int *lfe)
     }
     if(*lfe < 0) {
         *lfe = !!(ch == 6);
-        ch--;
-    } else {
-        if(*lfe) ch--;
     }
+    if(*lfe) ch--;
     if(*acmod < 0) {
         *acmod = ch_to_acmod[ch];
     } else {
