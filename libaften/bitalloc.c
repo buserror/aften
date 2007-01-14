@@ -648,16 +648,20 @@ cbr_bit_allocation(A52Context *ctx, int prepare)
     } else {
         // weighted guess and fine search
         if(snr0 != snr1) {
-            snroffst = snr0 + ((snr1-snr0) * leftover0 / (leftover0-leftover1));
+            if(leftover0 == leftover1) {
+                snroffst = snr1;
+            } else {
+                snroffst = snr0 + ((snr1-snr0) * leftover0 / (leftover0-leftover1));
+            }
             leftover = avail_bits - bit_alloc(ctx, snroffst);
             if(leftover != 0) {
                 if(leftover > 0) {
-                    while(avail_bits - bit_alloc(ctx, snroffst+1) >= 0) {
+                    while(snroffst < 1023 && avail_bits - bit_alloc(ctx, snroffst+1) >= 0) {
                         snroffst++;
                     }
                 } else {
                     snroffst--;
-                    while(avail_bits - bit_alloc(ctx, snroffst) < 0) {
+                    while(snroffst > 0 && avail_bits - bit_alloc(ctx, snroffst) < 0) {
                         snroffst--;
                     }
                 }
