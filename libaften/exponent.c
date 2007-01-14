@@ -155,6 +155,7 @@ compute_expstr_ch(uint8_t exp[A52_NUM_BLOCKS][256], int ncoefs)
 {
     int blk, str, i, j, k;
     int min_error, exp_error[6];
+    int err;
     uint8_t exponents[A52_NUM_BLOCKS][256];
 
     min_error = 1;
@@ -183,7 +184,8 @@ compute_expstr_ch(uint8_t exp[A52_NUM_BLOCKS][256], int ncoefs)
         exp_error[str] = 0;
         for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
             for(i=0; i<ncoefs; i++) {
-                exp_error[str] += ABS(exp[blk][i] - exponents[blk][i]);
+                err = exp[blk][i] - exponents[blk][i];
+                exp_error[str] += (err * err);
             }
         }
         if(exp_error[str] < exp_error[min_error]) {
