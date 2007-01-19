@@ -28,6 +28,10 @@
 #ifndef AFTEN_H
 #define AFTEN_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define AFTEN_VERSION SVN
 
 #define A52_MAX_CODED_FRAME_SIZE 3840
@@ -329,5 +333,9 @@ enum FloatType {
  * Tells whether libaften was configured to use floats or doubles
  */
 AFTEN_API enum FloatType aften_get_float_type(void);
+
+#if defined(__cplusplus)
+}
+#endif
 
 #endif /* AFTEN_H */
