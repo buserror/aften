@@ -262,13 +262,15 @@ typedef struct {
 
     /**
      * Audio coding mode (channel configuration).
-     * There are utility functions to set this if you don't know the proper value.
+     * There are utility functions to set this if you don't know the proper
+     * value.
      */
     int acmod;
 
     /**
      * Indicates that there is an LFE channel present.
-     * There are utility functions to set this if you don't know the proper value.
+     * There are utility functions to set this if you don't know the proper
+     * value.
      */
     int lfe;
 
@@ -297,7 +299,7 @@ AFTEN_API void aften_set_defaults(AftenContext *s);
 AFTEN_API int aften_encode_init(AftenContext *s);
 
 AFTEN_API int aften_encode_frame(AftenContext *s, unsigned char *frame_buffer,
-                              void *samples);
+                                 void *samples);
 
 AFTEN_API void aften_encode_close(AftenContext *s);
 
@@ -308,7 +310,8 @@ AFTEN_API void aften_encode_close(AftenContext *s);
  * WAVE_FORMAT_EXTENSIBLE channel mask.  This is more accurate than assuming
  * that all the proper channels are present.
  */
-AFTEN_API void aften_wav_chmask_to_acmod(int ch, int chmask, int *acmod, int *lfe);
+AFTEN_API void aften_wav_chmask_to_acmod(int ch, int chmask, int *acmod,
+                                         int *lfe);
 
 /**
  * Determines probable A/52 acmod and lfe parameters based on the number of
@@ -322,7 +325,7 @@ AFTEN_API void aften_plain_wav_to_acmod(int ch, int *acmod, int *lfe);
  * channel order based on the acmod and lfe parameters.
  */
 AFTEN_API void aften_remap_wav_to_a52(void *samples, int n, int ch,
-                                   enum A52SampleFormat fmt, int acmod);
+                                      enum A52SampleFormat fmt, int acmod);
 
 enum FloatType {
     FLOAT_TYPE_DOUBLE,
