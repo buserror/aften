@@ -720,6 +720,7 @@ main(int argc, char **argv)
     AftenContext s;
     uint32_t samplecount, bytecount, t0, t1, percent;
     FLOAT kbps, qual, bw;
+    int last_frame;
 
     opts.s = &s;
     aften_set_defaults(&s);
@@ -804,11 +805,19 @@ main(int argc, char **argv)
 
     samplecount = bytecount = t0 = t1 = percent = 0;
     qual = bw = 0.0;
+    last_frame = 0;
 
     nr = wavfile_read_samples(&wf, fwav, A52_FRAME_SIZE);
-    while(nr > 0) {
+    while(nr >= 0) {
         aften_remap_wav_to_a52(fwav, nr, wf.channels, s.sample_format,
                                s.acmod);
+
+        // append extra silent frame if final frame is > 1280 samples
+        if(nr == 0) {
+            if(last_frame <= 1280) {
+                break;
+            }
+        }
 
         // zero leftover samples at end of last frame
         if(nr < A52_FRAME_SIZE) {
@@ -853,6 +862,7 @@ main(int argc, char **argv)
             }
             fwrite(frame, 1, fs, ofp);
         }
+        last_frame = nr;
         nr = wavfile_read_samples(&wf, fwav, A52_FRAME_SIZE);
     }
     if(s.params.verbose == 1) {
