@@ -475,8 +475,16 @@ frame_init(A52Context *ctx)
     }
 
     if(ctx->params.bwcode == -2) {
-        cutoff = ((ctx->last_quality-120) * 120) + 4000;
-        frame->bwcode = ((cutoff * 512 / ctx->sample_rate) - 73) / 3;
+        if(ctx->params.encoding_mode == AFTEN_ENC_MODE_VBR) {
+            cutoff = ((ctx->last_quality-120) * 120) + 4000;
+            frame->bwcode = ((cutoff * 512 / ctx->sample_rate) - 73) / 3;
+        } else if(ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
+            if(ctx->last_quality < 240) {
+                frame->bwcode--;
+            } else if(ctx->last_quality > 250) {
+                frame->bwcode++;
+            }
+        }
         frame->bwcode = CLIP(frame->bwcode, 0, 60);
     } else {
         frame->bwcode = ctx->fixed_bwcode;
