@@ -30,7 +30,7 @@
 
 #include "a52.h"
 
-extern void expsizetab_init(void);
+extern void exponent_init(void);
 
 extern void process_exponents(A52Context *ctx);
 

@@ -356,7 +356,7 @@ aften_encode_init(AftenContext *s)
     crc_init();
     a52_window_init();
     select_mdct(ctx);
-    expsizetab_init();
+    exponent_init();
     dynrng_init();
 
     // can't do block switching with low sample rate due to the high-pass filter

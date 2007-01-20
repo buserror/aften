@@ -38,7 +38,7 @@
  * LUT for number of exponent groups present.
  * expsizetab[exponent strategy][number of coefficients]
  */
-static int expsizetab[3][256];
+static int nexpgrptab[3][256];
 
 /**
  * Pre-defined sets of exponent strategies. A strategy set is selected for
@@ -59,7 +59,7 @@ static uint8_t str_predef[6][6] = {
  * Initialize exponent group size table
  */
 void
-expsizetab_init(void)
+exponent_init(void)
 {
     int i, j, grpsize, ngrps;
 
@@ -75,7 +75,7 @@ expsizetab_init(void)
             } else {
                 ngrps = (j + (grpsize * 3) - 4) / (3 * grpsize);
             }
-            expsizetab[i-1][j] = ngrps;
+            nexpgrptab[i-1][j] = ngrps;
         }
     }
 }
@@ -102,7 +102,7 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
     uint8_t exp1[256];
     uint8_t v;
 
-    ngrps = expsizetab[exp_strategy-1][ncoefs] * 3;
+    ngrps = nexpgrptab[exp_strategy-1][ncoefs] * 3;
     grpsize = exp_strategy + (exp_strategy / 3);
 
     // for D15 strategy, there is no need to group/ungroup exponents
@@ -276,7 +276,7 @@ group_exponents(A52Context *ctx)
                 block->nexpgrps[ch] = 0;
                 continue;
             }
-            block->nexpgrps[ch] = expsizetab[expstr-1][frame->ncoefs[ch]];
+            block->nexpgrps[ch] = nexpgrptab[expstr-1][frame->ncoefs[ch]];
             bits += (4 + (block->nexpgrps[ch] * 7));
             gsize = expstr + (expstr / 3);
             p = block->exp[ch];
