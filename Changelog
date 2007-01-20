@@ -14,6 +14,9 @@ Aften TODO list
     - Stereo to 5.1 upmix
 - Improve DRC implementation
 - Psychoacoustic model & delta bit allocation
+- Gapless info using auxdata field
+- Streaming interface to libaften / internal sample buffer
+- Multiple-file commandline input with channel designation
 
 Aften Changelog
 ---------------
