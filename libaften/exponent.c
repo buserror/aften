@@ -34,8 +34,18 @@
 #include "exponent.h"
 #include "a52.h"
 
+/**
+ * LUT for number of exponent groups present.
+ * expsizetab[exponent strategy][number of coefficients]
+ */
 static int expsizetab[3][256];
 
+/**
+ * Pre-defined sets of exponent strategies. A strategy set is selected for
+ * each channel in a frame.  All sets 1 to 5 use the same number of exponent
+ * bits.  Set 0 is only used as the reference of optimal accuracy.
+ * TODO: more options and other sets which use greater or fewer bits
+ */
 static uint8_t str_predef[6][6] = {
     { EXP_D15,   EXP_D15,   EXP_D15,   EXP_D15,   EXP_D15,   EXP_D15 },
     { EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE, EXP_REUSE, EXP_REUSE },
@@ -45,6 +55,9 @@ static uint8_t str_predef[6][6] = {
     { EXP_D45,   EXP_D45, EXP_REUSE,   EXP_D45, EXP_REUSE,   EXP_D45 }
 };
 
+/**
+ * Initialize exponent group size table
+ */
 void
 expsizetab_init(void)
 {
@@ -77,7 +90,11 @@ exponent_min(uint8_t *exp, uint8_t *exp1, int n)
     }
 }
 
-/* update the exponents so that they are the ones the decoder will decode.*/
+/**
+ * Update the exponents so that they are the ones the decoder will decode.
+ * Constrain DC exponent, group exponents based on strategy, constrain delta
+ * between adjacent exponents to +2/-2.
+ */
 static void
 encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
 {
@@ -150,6 +167,11 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
     }
 }
 
+/**
+ * Determine a good exponent strategy for all blocks of a single channel.
+ * A pre-defined set of strategies is chosen based on the SSE between each set
+ * and the most accurate strategy set (all blocks EXP_D15).
+ */
 static int
 compute_expstr_ch(uint8_t exp[A52_NUM_BLOCKS][256], int ncoefs)
 {
@@ -195,6 +217,9 @@ compute_expstr_ch(uint8_t exp[A52_NUM_BLOCKS][256], int ncoefs)
     return min_error;
 }
 
+/**
+ * Runs the per-channel exponent strategy decision function for all channels
+ */
 static void
 compute_exponent_strategy(A52Context *ctx)
 {
@@ -226,6 +251,10 @@ compute_exponent_strategy(A52Context *ctx)
     }
 }
 
+/**
+ * Encode exponent groups.  3 exponents are in per 7-bit group.  The number of
+ * groups varies depending on exponent strategy and bandwidth
+ */
 static void
 group_exponents(A52Context *ctx)
 {
@@ -279,6 +308,11 @@ group_exponents(A52Context *ctx)
     frame->exp_bits = bits;
 }
 
+/**
+ * Creates final exponents for the entire frame based on exponent strategies.
+ * If the strategy for a block & channel is EXP_REUSE, exponents are copied,
+ * otherwise they are encoded according to the specific exponent strategy.
+ */
 static void
 encode_exponents(A52Context *ctx)
 {
@@ -311,6 +345,9 @@ encode_exponents(A52Context *ctx)
     }
 }
 
+/**
+ * Extracts the optimal exponent portion of each MDCT coefficient.
+ */
 static void
 extract_exponents(A52Context *ctx)
 {
@@ -333,6 +370,9 @@ extract_exponents(A52Context *ctx)
     }
 }
 
+/**
+ * Runs all the processes in extracting, analyzing, and encoding exponents
+ */
 void
 process_exponents(A52Context *ctx)
 {
@@ -344,4 +384,3 @@ process_exponents(A52Context *ctx)
 
     group_exponents(ctx);
 }
-
