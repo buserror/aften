@@ -35,10 +35,14 @@
 static void
 wav_filter(FLOAT *samples, int ch, int n, FilterContext *f)
 {
-    FLOAT samples2[ch][n];
-    FLOAT tmp[n];
+    FLOAT *samples2_buffer = malloc(ch * n * sizeof(FLOAT));
+    FLOAT **samples2 = malloc(ch * sizeof(FLOAT*));
+    FLOAT *tmp = malloc(n * sizeof(FLOAT));
     int j, i, c;
 
+    for (i=0; i<ch*n; i+=n)
+      samples2[i] = samples2_buffer + i;
+    
     for(i=0,j=0; i<n; i++) {
         for(c=0; c<ch; c++,j++) {
             samples2[c][i] = samples[j];
@@ -57,6 +61,8 @@ wav_filter(FLOAT *samples, int ch, int n, FilterContext *f)
             if(samples[j] < -1.0) samples[j] = -1.0;
         }
     }
+    free(tmp);
+    free(samples2_buffer);
 }
 
 static void
