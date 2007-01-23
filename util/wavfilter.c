@@ -40,8 +40,8 @@ wav_filter(FLOAT *samples, int ch, int n, FilterContext *f)
     FLOAT *tmp = malloc(n * sizeof(FLOAT));
     int j, i, c;
 
-    for (i=0; i<ch*n; i+=n)
-      samples2[i] = samples2_buffer + i;
+    for (i=0, j=0; i<ch; i++,j+=n)
+      samples2[i] = samples2_buffer + j;
     
     for(i=0,j=0; i<n; i++) {
         for(c=0; c<ch; c++,j++) {
