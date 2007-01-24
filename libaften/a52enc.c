@@ -1019,8 +1019,8 @@ calc_rematrixing(A52Context *ctx)
                 rt = block->mdct_coef[1][i];
                 sum[bnd][0] += lt * lt;
                 sum[bnd][1] += rt * rt;
-                sum[bnd][2] += (lt + rt) * (lt + rt);
-                sum[bnd][3] += (lt - rt) * (lt - rt);
+                sum[bnd][2] += (lt + rt) * (lt + rt) / FCONST(4.0);
+                sum[bnd][3] += (lt - rt) * (lt - rt) / FCONST(4.0);
             }
             if(sum[bnd][0]+sum[bnd][1] >= (sum[bnd][2]+sum[bnd][3])/FCONST(2.0)) {
                 block->rematflg[bnd] = 1;
