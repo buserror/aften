@@ -342,9 +342,7 @@ aften_encode_init(AftenContext *s)
     } else if(ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
         ctx->last_quality = ((((ctx->target_bitrate/ctx->n_channels)*35)/24)+95)+(25*ctx->halfratecod);
     }
-    if(ctx->params.bwcode == -2) {
-        ctx->fixed_bwcode = -2;
-    } else if(ctx->params.bwcode == -1) {
+    if(ctx->params.bwcode < 0) {
         int cutoff = ((ctx->last_quality-120) * 120) + 4000;
         ctx->fixed_bwcode = ((cutoff * 512 / ctx->sample_rate) - 73) / 3;
         ctx->fixed_bwcode = CLIP(ctx->fixed_bwcode, 0, 60);
@@ -478,14 +476,17 @@ frame_init(A52Context *ctx)
         if(ctx->params.encoding_mode == AFTEN_ENC_MODE_VBR) {
             cutoff = ((ctx->last_quality-120) * 120) + 4000;
             frame->bwcode = ((cutoff * 512 / ctx->sample_rate) - 73) / 3;
+            frame->bwcode = CLIP(frame->bwcode, 0, 60);
         } else if(ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
+            frame->bwcode = ctx->fixed_bwcode;
             if(ctx->last_quality < 240) {
-                frame->bwcode--;
-            } else if(ctx->last_quality > 250) {
-                frame->bwcode++;
+                frame->bwcode -= ((240-ctx->last_quality)/2);
+            } else if(ctx->last_quality > 245) {
+                frame->bwcode += ((ctx->last_quality-240)/5);
             }
+            frame->bwcode = CLIP(frame->bwcode, 0, 60);
+            ctx->fixed_bwcode = frame->bwcode;
         }
-        frame->bwcode = CLIP(frame->bwcode, 0, 60);
     } else {
         frame->bwcode = ctx->fixed_bwcode;
     }
