@@ -791,15 +791,16 @@ main(int argc, char **argv)
         }
     }
 
+    // initialize wavfile using input
     if(wavfile_init(&wf, ifp)) {
         fprintf(stderr, "invalid wav file: %s\n", argv[1]);
         return 1;
     }
-
+    // print wav info to console
     if(s.params.verbose > 0) {
         wavfile_print(stderr, &wf);
     }
-
+    // set some encoding parameters using wav info
     s.channels = wf.channels;
     aften_wav_chmask_to_acmod(wf.channels, wf.ch_mask, &s.acmod, &s.lfe);
     s.samplerate = wf.sample_rate;
@@ -811,12 +812,14 @@ main(int argc, char **argv)
     s.sample_format = A52_SAMPLE_FMT_FLT;
 #endif
 
+    // initialize encoder
     if(aften_encode_init(&s)) {
         fprintf(stderr, "error initializing encoder\n");
         aften_encode_close(&s);
         return 1;
     }
 
+    // allocate memory for coded frame and sample buffer
     frame = calloc(A52_MAX_CODED_FRAME_SIZE, 1);
     fwav = calloc(A52_FRAME_SIZE * wf.channels, sizeof(FLOAT));
     if(frame == NULL || fwav == NULL) {
