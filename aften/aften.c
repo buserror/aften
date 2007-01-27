@@ -778,18 +778,6 @@ main(int argc, char **argv)
             return 1;
         }
     }
-    if(!strncmp(opts.outfile, "-", 2)) {
-#ifdef _WIN32
-        _setmode(_fileno(stdout), _O_BINARY);
-#endif
-        ofp = stdout;
-    } else {
-        ofp = fopen(opts.outfile, "wb");
-        if(!ofp) {
-            fprintf(stderr, "error opening output file: %s\n", opts.outfile);
-            return 1;
-        }
-    }
 
     // initialize wavfile using input
     if(wavfile_init(&wf, ifp)) {
@@ -817,6 +805,20 @@ main(int argc, char **argv)
         fprintf(stderr, "error initializing encoder\n");
         aften_encode_close(&s);
         return 1;
+    }
+
+    // open output file
+    if(!strncmp(opts.outfile, "-", 2)) {
+#ifdef _WIN32
+        _setmode(_fileno(stdout), _O_BINARY);
+#endif
+        ofp = stdout;
+    } else {
+        ofp = fopen(opts.outfile, "wb");
+        if(!ofp) {
+            fprintf(stderr, "error opening output file: %s\n", opts.outfile);
+            return 1;
+        }
     }
 
     // allocate memory for coded frame and sample buffer
