@@ -217,13 +217,13 @@ fmt_convert_to_u8(uint8_t *dest, void *src_v, int n, enum WavSampleFormat fmt)
     } else if(fmt == WAV_SAMPLE_FMT_FLT) {
         float *src = src_v;
         for(i=0; i<n; i++) {
-            v = CLIP(((src[i] * 128) + 128), 0, 255);
+            v = (int)CLIP(((src[i] * 128) + 128), 0, 255);
             dest[i] = v;
         }
     } else if(fmt == WAV_SAMPLE_FMT_DBL) {
         double *src = src_v;
         for(i=0; i<n; i++) {
-            v = CLIP(((src[i] * 128) + 128), 0, 255);
+            v = (int)CLIP(((src[i] * 128) + 128), 0, 255);
             dest[i] = v;
         }
     }
@@ -259,13 +259,13 @@ fmt_convert_to_s16(int16_t *dest, void *src_v, int n, enum WavSampleFormat fmt)
     } else if(fmt == WAV_SAMPLE_FMT_FLT) {
         float *src = src_v;
         for(i=0; i<n; i++) {
-            v = CLIP((src[i] * 32768), -32768, 32767);
+            v = (int)CLIP((src[i] * 32768), -32768, 32767);
             dest[i] = v;
         }
     } else if(fmt == WAV_SAMPLE_FMT_DBL) {
         double *src = src_v;
         for(i=0; i<n; i++) {
-            v = CLIP((src[i] * 32768), -32768, 32767);
+            v = (int)CLIP((src[i] * 32768), -32768, 32767);
             dest[i] = v;
         }
     }
@@ -301,13 +301,13 @@ fmt_convert_to_s20(int32_t *dest, void *src_v, int n, enum WavSampleFormat fmt)
     } else if(fmt == WAV_SAMPLE_FMT_FLT) {
         float *src = src_v;
         for(i=0; i<n; i++) {
-            v = CLIP((src[i] * 524288), -524288, 524287);
+            v = (int)CLIP((src[i] * 524288), -524288, 524287);
             dest[i] = v;
         }
     } else if(fmt == WAV_SAMPLE_FMT_DBL) {
         double *src = src_v;
         for(i=0; i<n; i++) {
-            v = CLIP((src[i] * 524288), -524288, 524287);
+            v = (int)CLIP((src[i] * 524288), -524288, 524287);
             dest[i] = v;
         }
     }
@@ -343,13 +343,13 @@ fmt_convert_to_s24(int32_t *dest, void *src_v, int n, enum WavSampleFormat fmt)
     } else if(fmt == WAV_SAMPLE_FMT_FLT) {
         float *src = src_v;
         for(i=0; i<n; i++) {
-            v = CLIP((src[i] * 8388608), -8388608, 8388607);
+            v = (int)CLIP((src[i] * 8388608), -8388608, 8388607);
             dest[i] = v;
         }
     } else if(fmt == WAV_SAMPLE_FMT_DBL) {
         double *src = src_v;
         for(i=0; i<n; i++) {
-            v = CLIP((src[i] * 8388608), -8388608, 8388607);
+            v = (int)CLIP((src[i] * 8388608), -8388608, 8388607);
             dest[i] = v;
         }
     }
@@ -385,13 +385,13 @@ fmt_convert_to_s32(int32_t *dest, void *src_v, int n, enum WavSampleFormat fmt)
     } else if(fmt == WAV_SAMPLE_FMT_FLT) {
         float *src = src_v;
         for(i=0; i<n; i++) {
-            v = (src[i] * 2147483648LL);
+            v = (int)(src[i] * 2147483648LL);
             dest[i] = v;
         }
     } else if(fmt == WAV_SAMPLE_FMT_DBL) {
         double *src = src_v;
         for(i=0; i<n; i++) {
-            v = (src[i] * 2147483648LL);
+            v = (int)(src[i] * 2147483648LL);
             dest[i] = v;
         }
     }
@@ -583,7 +583,7 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
                 v64 = buffer[i] + (buffer[i+1] << 8) + (buffer[i+2] << 16) +
                       (((uint32_t)buffer[i+3]) << 24);
                 if(v64 >= (1LL<<31)) v64 -= (1LL<<32);
-                input[j] = v64;
+                input[j] = (int32_t)v64;
             }
             if(wf->source_format != WAV_SAMPLE_FMT_S32) return -1;
             fmt_convert(wf->read_format, output, wf->source_format, input, nsmp);
