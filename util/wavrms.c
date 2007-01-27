@@ -73,7 +73,7 @@ main(int argc, char **argv)
     WavFile wf;
     FLOAT *buf;
     int start_sec, end_sec;
-    int frame_size, nr, rms, dialnorm;
+    int frame_size, nr, rms;
     uint64_t avg_rms, avg_cnt;
 
     /* open file */
@@ -140,8 +140,7 @@ main(int argc, char **argv)
         nr = wavfile_read_samples(&wf, buf, frame_size);
     }
     avg_rms /= avg_cnt;
-    dialnorm = MIN(avg_rms, 31);
-    printf("Dialnorm: -%d dB\n", dialnorm);
+    printf("Dialnorm: -%ul dB\n", MIN(avg_rms, 31));
 
     free(buf);
     fclose(fp);
