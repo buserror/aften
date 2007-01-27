@@ -107,7 +107,7 @@ output_wav_data(FILE *ofp, FLOAT *samples, int ch, int n)
     int i;
 
     for(i=0; i<n*ch; i++) {
-        s16[0] = (samples[i] * 32767.0);
+        s16[0] = (int16_t)(samples[i] * 32767.0);
         write2le(*u16, ofp);
     }
 }
