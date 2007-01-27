@@ -22,14 +22,14 @@ MACRO(TEST_NASM_COMPILER_VISIBILITY)
 IF(NOT DEFINED HAVE_NASM_VISIBILITY)
   MESSAGE(STATUS "Performing Test HAVE_NASM_VISIBILITY")
   SET(SOURCE "global _foo:function hidden\n_foo:")
-  FILE(WRITE "${CMAKE_BINARY_DIR}/CMakeTmp/src.nasm" "${SOURCE}")
+  FILE(WRITE "${CMAKE_BINARY_DIR}/CMakeFiles/CMakeTmp/src.nasm" "${SOURCE}")
 
   TRY_COMPILE(HAVE_NASM_VISIBILITY
         ${CMAKE_BINARY_DIR}
-        ${CMAKE_BINARY_DIR}/CMakeTmp/src.nasm
+        ${CMAKE_BINARY_DIR}/CMakeFiles/CMakeTmp/src.nasm
         OUTPUT_VARIABLE OUTPUT)
 
-  WRITE_FILE(${CMAKE_BINARY_DIR}/CMakeOutput.log
+  WRITE_FILE(${CMAKE_BINARY_DIR}/CMakeFiles/CMakeOutput.log
     "Performing nasm visibility test with the following output:\n"
     "${OUTPUT}\n"
     "Source file was:\n${SOURCE}\n" APPEND)
