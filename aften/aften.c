@@ -217,6 +217,14 @@ fprintf(out,
 "                       0 = LFE channel is not present\n"
 "                       1 = LFE channel is present\n"
 "\n"
+"    [-chmap #]     Channel mapping order of input audio\n"
+"                       Some programs create wav files which use AC-3 channel\n"
+"                       mapping rather than standard wav mapping.  This option\n"
+"                       allows the user to specify if the input file uses AC-3\n"
+"                       or wav channel mapping.\n"
+"                       0 = wav mapping (default)\n"
+"                       1 = AC-3 mapping\n"
+"\n"
 "INPUT FILTERS\n"
 "\n"
 "    [-bwfilter #]  Specify use of the bandwidth low-pass filter\n"
@@ -385,6 +393,9 @@ print_help(FILE *out)
                  "    [-lfe #]       Specify use of LFE channel (overrides wav header)\n"
                  "                       0 = LFE channel is not present\n"
                  "                       1 = LFE channel is present\n"
+                 "    [-chmap #]     Channel mapping order of input audio\n"
+                 "                       0 = wav mapping (default)\n"
+                 "                       1 = AC-3 mapping\n"
                  "    [-bwfilter #]  Specify use of the bandwidth low-pass filter\n"
                  "                       0 = do not apply filter (default)\n"
                  "                       1 = apply filter\n"
@@ -431,6 +442,7 @@ print_help(FILE *out)
 }
 
 typedef struct CommandOptions {
+    int chmap;
     char *infile;
     char *outfile;
     AftenContext *s;
@@ -447,6 +459,7 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
         return 1;
     }
 
+    opts->chmap = 0;
     opts->infile = argv[1];
     opts->outfile = argv[2];
 
@@ -627,6 +640,14 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
                     }
                 } else if(!strncmp(&argv[i][1], "longhelp", 9)) {
                     return 3;
+                } else if(!strncmp(&argv[i][1], "chmap", 6)) {
+                    i++;
+                    if(i >= argc) return 1;
+                    opts->chmap = atoi(argv[i]);
+                    if(opts->chmap < 0 || opts->chmap > 1) {
+                        fprintf(stderr, "invalid chmap: %d. must be 0 or 1.\n", opts->chmap);
+                        return 1;
+                    }
                 }
             } else {
                 // single-character arguments
@@ -809,8 +830,10 @@ main(int argc, char **argv)
 
     nr = wavfile_read_samples(&wf, fwav, A52_FRAME_SIZE);
     while(nr >= 0) {
-        aften_remap_wav_to_a52(fwav, nr, wf.channels, s.sample_format,
-                               s.acmod);
+        if(opts.chmap == 0) {
+            aften_remap_wav_to_a52(fwav, nr, wf.channels, s.sample_format,
+                                   s.acmod);
+        }
 
         // append extra silent frame if final frame is > 1280 samples
         if(nr == 0) {
