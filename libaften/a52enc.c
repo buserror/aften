@@ -407,7 +407,7 @@ aften_encode_init(AftenContext *s)
             for(i=0; i<ctx->n_channels; i++) {
                 ctx->bw_filter[i].type = FILTER_TYPE_LOWPASS;
                 ctx->bw_filter[i].cascaded = 1;
-                ctx->bw_filter[i].cutoff = cutoff;
+                ctx->bw_filter[i].cutoff = (FLOAT)cutoff;
                 ctx->bw_filter[i].samplerate = (FLOAT)ctx->sample_rate;
                 if(filter_init(&ctx->bw_filter[i], FILTER_ID_BUTTERWORTH_II)) {
                     fprintf(stderr, "error initializing bandwidth filter\n");
@@ -594,7 +594,7 @@ quantize_mantissas(A52Context *ctx)
         qmant1_ptr = qmant2_ptr = qmant4_ptr = NULL;
         for(ch=0; ch<ctx->n_all_channels; ch++) {
             for(i=0; i<frame->ncoefs[ch]; i++) {
-                c = block->mdct_coef[ch][i] * (1 << 24);
+                c = (int)(block->mdct_coef[ch][i] * (1 << 24));
                 e = block->exp[ch][i];
                 b = block->bap[ch][i];
                 switch(b) {
