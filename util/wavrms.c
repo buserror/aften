@@ -140,7 +140,7 @@ main(int argc, char **argv)
         nr = wavfile_read_samples(&wf, buf, frame_size);
     }
     avg_rms /= avg_cnt;
-    printf("Dialnorm: -%lu dB\n", MIN(avg_rms, 31));
+    printf("Dialnorm: -%d dB\n", (int)MIN(avg_rms, 31));
 
     free(buf);
     fclose(fp);
