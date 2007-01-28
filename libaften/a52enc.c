@@ -236,6 +236,7 @@ aften_encode_init(AftenContext *s)
     _alDetectCPUCaps();
 
     ctx = calloc(sizeof(A52Context), 1);
+    select_mdct(ctx);
     s->private_context = ctx;
 
     switch(s->sample_format) {
@@ -353,7 +354,6 @@ aften_encode_init(AftenContext *s)
     bitalloc_init();
     crc_init();
     a52_window_init();
-    select_mdct(ctx);
     exponent_init();
     dynrng_init();
 
