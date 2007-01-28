@@ -803,9 +803,7 @@ main(int argc, char **argv)
     // initialize encoder
     if(aften_encode_init(&s)) {
         fprintf(stderr, "error initializing encoder\n");
-        if(s.private_context != NULL) {
-            aften_encode_close(&s);
-        }
+        aften_encode_close(&s);
         return 1;
     }
 
