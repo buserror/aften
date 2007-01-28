@@ -37,6 +37,9 @@
 #define WAV_SEEK_CUR 1
 #define WAV_SEEK_END 2
 
+/* maximum single read size: 5 sec at 48kHz */
+#define WAV_MAX_READ 240000
+
 enum WavSampleFormat {
     WAV_SAMPLE_FMT_UNKNOWN = -1,
     WAV_SAMPLE_FMT_U8 = 0,
@@ -50,9 +53,9 @@ enum WavSampleFormat {
 
 typedef struct WavFile {
     FILE *fp;
-    uint32_t filepos;
+    int64_t filepos;
     int seekable;
-    uint32_t file_size;
+    int64_t file_size;
     uint32_t data_start;
     uint32_t data_size;
     uint32_t samples;
@@ -71,9 +74,9 @@ extern int wavfile_init(WavFile *wf, FILE *fp);
 
 extern int wavfile_read_samples(WavFile *wf, void *buffer, int num_samples);
 
-extern int wavfile_seek_samples(WavFile *wf, int64_t offset, int whence);
+extern int wavfile_seek_samples(WavFile *wf, int offset, int whence);
 
-extern int wavfile_seek_time_ms(WavFile *wf, int64_t offset, int whence);
+extern int wavfile_seek_time_ms(WavFile *wf, int offset, int whence);
 
 extern int64_t wavfile_position(WavFile *wf);
 

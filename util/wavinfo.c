@@ -311,7 +311,7 @@ wavinfo_print(WavInfo *wi)
     printf("File:\n");
     printf("   Name:          %s\n", wi->fname);
     if(wf->seekable) {
-        printf("   File Size:     %u\n", wf->file_size);
+        printf("   File Size:     %ld\n", wf->file_size);
     } else {
         printf("   File Size:     unknown\n");
     }
