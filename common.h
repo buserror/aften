@@ -38,6 +38,8 @@
 #include <inttypes.h>
 #else
 #if defined(_WIN32) && defined(_MSC_VER)
+
+// integer types
 typedef __int8 int8_t;
 typedef unsigned __int8 uint8_t;
 typedef __int16 int16_t;
@@ -46,6 +48,47 @@ typedef __int32 int32_t;
 typedef unsigned __int32 uint32_t;
 typedef __int64 int64_t;
 typedef unsigned __int64 uint64_t;
+
+// limits
+#define INT8_MIN    _I8_MIN
+#define INT8_MAX    _I8_MAX
+#define UINT8_MAX   _UI8_MAX
+#define INT16_MIN   _I16_MIN
+#define INT16_MAX   _I16_MAX
+#define UINT16_MAX  _UI16_MAX
+#define INT32_MIN   _I32_MIN
+#define INT32_MAX   _I32_MAX
+#define UINT32_MAX  _UI32_MAX
+#define INT64_MIN   _I64_MIN
+#define INT64_MAX   _I64_MAX
+#define UINT64_MAX  _UI64_MAX
+
+// fprintf macros
+#define PRId8       "d"
+#define PRIi8       "i"
+#define PRIo8       "o"
+#define PRIu8       "u"
+#define PRIx8       "x"
+#define PRIX8       "X"
+#define PRId16      "hd"
+#define PRIi16      "hi"
+#define PRIo16      "ho"
+#define PRIu16      "hu"
+#define PRIx16      "hx"
+#define PRIX16      "hX"
+#define PRId32      "I32d"
+#define PRIi32      "I32i"
+#define PRIo32      "I32o"
+#define PRIu32      "I32u"
+#define PRIx32      "I32x"
+#define PRIX32      "I32X"
+#define PRId64      "I64d"
+#define PRIi64      "I64i"
+#define PRIo64      "I64o"
+#define PRIu64      "I64u"
+#define PRIx64      "I64x"
+#define PRIX64      "I64X"
+
 #endif
 #endif /* EMULATE_INTTYPES */
 
