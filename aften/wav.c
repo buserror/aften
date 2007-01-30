@@ -51,6 +51,37 @@ read2le(FILE *fp)
     return le2me_16(x);
 }
 
+static inline int
+aft_seek(FILE *fp, uint64_t cur, uint64_t dest)
+{
+    if(dest <= INT32_MAX) {
+        // destination is within first 2GB
+        if(fseek(fp, (long)dest, SEEK_SET)) return -1;
+    } else {
+        int64_t offset = (int64_t)dest - (int64_t)cur;
+        if(offset >= INT32_MIN && offset <= INT32_MAX) {
+            // offset is within +/- 2GB of file start
+            if(fseek(fp, (long)offset, SEEK_CUR)) return -1;
+        } else {
+            // absolute offset is more than 2GB
+            if(offset < INT32_MIN) {
+                // only takes 2 backward seeks
+                if(fseek(fp, INT32_MIN, SEEK_CUR)) return -1;
+                offset += INT32_MIN;
+                if(fseek(fp, (long)offset, SEEK_CUR)) return -1;
+            } else if(offset > INT32_MAX) {
+                // could take 3 forward seeks (if  offset is 4294967295)
+                while(offset > INT32_MAX) {
+                    if(fseek(fp, INT32_MAX, SEEK_CUR)) return -1;
+                    offset -= INT32_MAX;
+                }
+                if(fseek(fp, (long)offset, SEEK_CUR)) return -1;
+            }
+        }
+    }
+    return 0;
+}
+
 int
 wavfile_init(WavFile *wf, FILE *fp)
 {
@@ -67,11 +98,12 @@ wavfile_init(WavFile *wf, FILE *fp)
     wf->seekable = !fseek(fp, 0, SEEK_END);
     if(wf->seekable) {
         long fs = ftell(fp);
+        // ftell should return an error if value cannot fit in return type
         if(fs < 0) {
             fprintf(stderr, "Warning, unsupported file size.\n");
             wf->file_size = 0;
         } else {
-            wf->file_size = (int64_t)fs;
+            wf->file_size = (uint64_t)fs;
         }
         fseek(fp, 0, SEEK_SET);
     }
@@ -161,9 +193,16 @@ wavfile_init(WavFile *wf, FILE *fp)
                 found_data = 1;
                 break;
             default:
-                if(wf->seekable && chunksize <= INT32_MAX) {
-                    fseek(fp, chunksize, SEEK_CUR);
+                if(wf->seekable) {
+                    uint64_t dest = wf->filepos + chunksize;
+                    if(aft_seek(wf->fp, wf->filepos, dest)) return -1;
                 } else {
+                    if(chunksize > 1024) {
+                        uint8_t buf[1024];
+                        while(chunksize > 1024) {
+                            fread(buf, 1, 1024, wf->fp);
+                        }
+                    }
                     while(chunksize-- > 0) {
                         fgetc(fp);
                     }
@@ -620,45 +659,45 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
 int
 wavfile_seek_samples(WavFile *wf, int offset, int whence)
 {
-    int64_t byte_offset, pos, cur;
+    int64_t byte_offset;
+    uint64_t newpos, fpos, dst, dsz;
 
     if(wf == NULL || wf->fp == NULL) return -1;
     if(wf->block_align <= 0) return -1;
-    if(wf->data_start == 0 || wf->data_size == 0) return -1;
-    byte_offset = offset * wf->block_align;
-    pos = wf->data_start;
+    if(wf->filepos < wf->data_start) return -1;
+    if(wf->data_size == 0) return 0;
+
+    fpos = wf->filepos;
+    dst = (uint64_t)wf->data_start;
+    dsz = (uint64_t)wf->data_size;
+    byte_offset = (int64_t)offset;
+    byte_offset *= wf->block_align;
+
     switch(whence) {
         case WAV_SEEK_SET:
-            pos += byte_offset;
+            newpos = dst + CLIP(byte_offset, 0, (int64_t)dsz);
             break;
         case WAV_SEEK_CUR:
-            cur = wf->filepos;
-            while(cur < wf->data_start) {
-                fgetc(wf->fp);
-                cur++;
-                wf->filepos++;
-            }
-            pos = cur + byte_offset;
+            newpos = fpos - MIN(-byte_offset, (int64_t)(fpos - dst));
+            newpos = MIN(newpos, dst + dsz);
+            break;
         case WAV_SEEK_END:
-            pos += wf->data_size;
-            pos -= byte_offset;
+            newpos = dst + dsz - CLIP(byte_offset, 0, (int64_t)dsz);
             break;
         default: return -1;
     }
-    pos = MAX(pos, wf->data_start);
-    cur = wf->data_start;
-    cur += wf->data_size;
-    pos = MIN(pos, cur);
-    if(!wf->seekable || pos > INT32_MAX) {
-        int c=0;
-        if(pos < wf->filepos) return -1;
-        while(wf->filepos < pos && c != EOF) {
-            c = fgetc(wf->fp);
-            wf->filepos++;
-        }
+    if(wf->seekable) {
+        if(aft_seek(wf->fp, fpos, newpos)) return -1;
+        fpos = newpos;
     } else {
-        if(fseek(wf->fp, pos, SEEK_SET)) return -1;
+        int c=0;
+        if(newpos < fpos) return -1;
+        while(fpos < newpos && c != EOF) {
+            c = fgetc(wf->fp);
+            fpos++;
+        }
     }
+    wf->filepos = fpos;
     return 0;
 }
 
@@ -673,19 +712,19 @@ wavfile_seek_time_ms(WavFile *wf, int offset, int whence)
     return wavfile_seek_samples(wf, (int)CLIP(samples, 0, INT32_MAX), whence);
 }
 
-int64_t
+uint64_t
 wavfile_position(WavFile *wf)
 {
-    int64_t cur;
+    uint64_t cur;
 
     if(wf == NULL) return 0;
     if(wf->data_start == 0 || wf->data_size == 0) return 0;
 
-    cur = MAX(0, (wf->filepos - wf->data_start) / wf->block_align);
+    cur = (wf->filepos - wf->data_start) / wf->block_align;
     return cur;
 }
 
-int64_t
+uint64_t
 wavfile_position_time_ms(WavFile *wf)
 {
     return (wavfile_position(wf) * 1000 / wf->sample_rate);

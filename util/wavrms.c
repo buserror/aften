@@ -72,7 +72,7 @@ main(int argc, char **argv)
     FILE *fp;
     WavFile wf;
     FLOAT *buf;
-    int start_sec, end_sec;
+    uint32_t start_sec, end_sec;
     int frame_size, nr, rms;
     uint64_t avg_rms, avg_cnt;
 
@@ -109,9 +109,7 @@ main(int argc, char **argv)
     }
     frame_size = wf.sample_rate * 50 / 1000;
     // seek to start of time range
-    if(start_sec >= 0) {
-        wavfile_seek_time_ms(&wf, start_sec*1000, WAV_SEEK_SET);
-    }
+    wavfile_seek_time_ms(&wf, start_sec*1000, WAV_SEEK_SET);
 
 #ifdef CONFIG_DOUBLE
     wf.read_format = WAV_SAMPLE_FMT_DBL;
@@ -126,7 +124,7 @@ main(int argc, char **argv)
     nr = wavfile_read_samples(&wf, buf, frame_size);
     while(nr > 0) {
         // check for end of time range
-        if(end_sec >= 0 && wavfile_position_time_ms(&wf) >= (end_sec*1000)) {
+        if(wavfile_position_time_ms(&wf) >= (end_sec*1000)) {
             break;
         }
 

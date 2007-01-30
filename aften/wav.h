@@ -53,9 +53,9 @@ enum WavSampleFormat {
 
 typedef struct WavFile {
     FILE *fp;
-    int64_t filepos;
+    uint64_t filepos;
     int seekable;
-    int64_t file_size;
+    uint64_t file_size;
     uint32_t data_start;
     uint32_t data_size;
     uint32_t samples;
@@ -78,9 +78,9 @@ extern int wavfile_seek_samples(WavFile *wf, int offset, int whence);
 
 extern int wavfile_seek_time_ms(WavFile *wf, int offset, int whence);
 
-extern int64_t wavfile_position(WavFile *wf);
+extern uint64_t wavfile_position(WavFile *wf);
 
-extern int64_t wavfile_position_time_ms(WavFile *wf);
+extern uint64_t wavfile_position_time_ms(WavFile *wf);
 
 extern void wavfile_print(FILE *st, WavFile *wf);
 
