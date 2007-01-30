@@ -301,7 +301,7 @@ static void
 wavinfo_print(WavInfo *wi)
 {
     char *type;
-    int samples, leftover;
+    int leftover;
     float playtime;
     WavFile *wf = &wi->wf;
 
@@ -311,7 +311,7 @@ wavinfo_print(WavInfo *wi)
     printf("File:\n");
     printf("   Name:          %s\n", wi->fname);
     if(wf->seekable) {
-        printf("   File Size:     %ld\n", wf->file_size);
+        printf("   File Size:     %"PRIu64"\n", wf->file_size);
     } else {
         printf("   File Size:     unknown\n");
     }
@@ -327,11 +327,11 @@ wavinfo_print(WavInfo *wi)
     printf("   Block Align:   %d bytes\n", wf->block_align);
     printf("   Bit Width:     %d\n", wf->bit_width);
     if(wf->ch_mask > 0) {
-        printf("   Channel Mask:  0x%03X\n", wf->ch_mask);
+        printf("   Channel Mask:  0x%03"PRIX32"\n", wf->ch_mask);
     }
     printf("Data:\n");
-    printf("   Start:         %u\n", wf->data_start);
-    printf("   Data Size:     %u\n", wf->data_size);
+    printf("   Start:         %"PRIu32"\n", wf->data_start);
+    printf("   Data Size:     %"PRIu32"\n", wf->data_size);
     leftover = wf->file_size - wf->data_size - wf->data_start;
     if(leftover < 0) {
         if(!wf->seekable) {
@@ -343,9 +343,8 @@ wavinfo_print(WavInfo *wi)
         printf("   Leftover:  %d bytes\n", leftover);
     }
     if(wf->format == 0x0001 || wf->format == 0x0003 || wf->format == 0xFFFE) {
-        samples = wf->data_size / wf->block_align;
-        playtime = (float)samples / (float)wf->sample_rate;
-        printf("   Samples:       %d\n", samples);
+        playtime = (float)wf->samples / (float)wf->sample_rate;
+        printf("   Samples:       %"PRIu32"\n", wf->samples);
         printf("   Playing Time:  %0.2f sec\n", playtime);
     } else {
         printf("   Samples:       unknown\n");
