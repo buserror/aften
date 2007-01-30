@@ -236,6 +236,10 @@ aften_encode_init(AftenContext *s)
     _alDetectCPUCaps();
 
     ctx = calloc(sizeof(A52Context), 1);
+    if(!ctx) {
+        fprintf(stderr, "error allocating memory for A52Context\n");
+        return -1;
+    }
     select_mdct(ctx);
     s->private_context = ctx;
 
@@ -259,15 +263,19 @@ aften_encode_init(AftenContext *s)
 
     // channel configuration
     if(s->channels < 1 || s->channels > 6) {
+        fprintf(stderr, "invalid number of channels\n");
         return -1;
     }
-    if(s->acmod < 0) {
+    if(s->acmod < 0 || acmod > 7) {
+        fprintf(stderr, "invalid acmod\n");
         return -1;
     }
     if(s->channels == 6 && !s->lfe) {
+        fprintf(stderr, "6-channel audio must have LFE channel\n");
         return -1;
     }
     if(s->channels == 1 && s->lfe) {
+        fprintf(stderr, "cannot encode stand-alone LFE channel\n");
         return -1;
     }
     ctx->acmod = s->acmod;
@@ -285,7 +293,7 @@ aften_encode_init(AftenContext *s)
             if((a52_freqs[j] >> i) == s->samplerate)
                 goto found;
     }
-    fprintf(stderr, "invalid sample rate: %d\n", s->samplerate);
+    fprintf(stderr, "invalid sample rate\n");
     return -1;
  found:
     ctx->sample_rate = s->samplerate;
@@ -308,6 +316,7 @@ aften_encode_init(AftenContext *s)
         }
     } else if(ctx->params.encoding_mode == AFTEN_ENC_MODE_VBR) {
         if(s->params.quality < 0 || s->params.quality > 1023) {
+            fprintf(stderr, "invalid quality setting\n");
             return -1;
         }
     } else {
@@ -320,6 +329,7 @@ aften_encode_init(AftenContext *s)
     }
     if(i == 19) {
         if(ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
+            fprintf(stderr, "invalid bitrate\n");
             return -1;
         }
         i = 18;
@@ -335,6 +345,7 @@ aften_encode_init(AftenContext *s)
     ctx->last_csnroffst = 15;
 
     if(s->params.bwcode < -2 || s->params.bwcode > 60) {
+        fprintf(stderr, "invalid bandwidth code\n");
         return -1;
     }
     ctx->last_quality = 240;
@@ -800,7 +811,7 @@ output_frame_end(A52Context *ctx)
     bitcount = bitwriter_bitcount(&ctx->bw);
     n = (fs << 1) - 2 - (bitcount >> 3);
     if(n < 0) {
-        fprintf(stderr, "fs=%d data=%d\n", (fs << 1) - 2, bitcount >> 3);
+        fprintf(stderr, "data size exceeds frame size (frame=%d data=%d)\n", (fs << 1) - 2, bitcount >> 3);
         return -1;
     }
     if(n > 0) memset(&ctx->bw.buffer[bitcount>>3], 0, n);
