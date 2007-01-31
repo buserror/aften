@@ -834,7 +834,7 @@ output_frame_end(A52Context *ctx)
     return (fs << 1);
 }
 
-static void
+static int
 copy_samples(A52Context *ctx, void *vsamples)
 {
     int ch, blk;
@@ -898,6 +898,9 @@ copy_samples(A52Context *ctx, void *vsamples)
     for(ch=0; ch<sinc; ch++) {
         for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
             block = &frame->blocks[blk];
+            if(!block->input_samples[ch]) {
+                return -1;
+            }
             memcpy(block->input_samples[ch], ctx->last_samples[ch],
                    256 * sizeof(FLOAT));
             memcpy(&block->input_samples[ch][256],
@@ -906,6 +909,8 @@ copy_samples(A52Context *ctx, void *vsamples)
                    &frame->input_audio[ch][256*blk], 256 * sizeof(FLOAT));
         }
     }
+
+    return 0;
 }
 
 /* determines block length by detecting transients */
@@ -1126,7 +1131,10 @@ aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, void *samples)
 
     frame_init(ctx);
 
-    copy_samples(ctx, samples);
+    if(copy_samples(ctx, samples)) {
+        fprintf(stderr, "Encoding has not properly initialized\n");
+        return -1;
+    }
 
     calculate_dynrng(ctx);
 
