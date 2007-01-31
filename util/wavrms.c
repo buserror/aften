@@ -67,6 +67,12 @@ calculate_rms(FLOAT *samples, int ch, int n)
 }
 
 static void
+print_intro(FILE *stream)
+{
+    fprintf(stream, "\nWavRMS: utility program to calculate AC-3 dialnorm.\n(c) 2006-2007 Justin Ruggles, et al.\n\n");
+}
+
+static void
 print_usage(FILE *stream)
 {
     fprintf(stream, "\n"
@@ -85,12 +91,15 @@ main(int argc, char **argv)
     uint32_t start_sec, end_sec;
     int frame_size, nr, rms;
     uint64_t avg_rms, avg_cnt;
+    uint64_t time_ms;
 
     /* open file */
     if(argc < 2 || argc > 4) {
+        print_intro(stderr);
         print_usage(stderr);
         exit(1);
     }
+    print_intro(stdout);
     if(argc == 2 && !strncmp(argv[1], "-h", 3)) {
         print_usage(stdout);
         return 0;
@@ -138,10 +147,11 @@ main(int argc, char **argv)
 
     avg_rms = 31;
     avg_cnt = 1;
+    time_ms = wavfile_position_time_ms(&wf);
     nr = wavfile_read_samples(&wf, buf, frame_size);
     while(nr > 0) {
         // check for end of time range
-        if(wavfile_position_time_ms(&wf) >= (end_sec*1000)) {
+        if(time_ms > (end_sec*1000)) {
             break;
         }
 
@@ -152,10 +162,13 @@ main(int argc, char **argv)
             avg_cnt++;
         }
 
+        time_ms = wavfile_position_time_ms(&wf);
         nr = wavfile_read_samples(&wf, buf, frame_size);
     }
     avg_rms /= avg_cnt;
-    printf("Dialnorm: -%d dB\n", (int)MIN(avg_rms, 31));
+
+    fprintf(stdout, "Time Range: %u to %"PRIu64"\n", start_sec, time_ms/1000);
+    fprintf(stdout, "Dialnorm: -%d dB\n\n", (int)MIN(avg_rms, 31));
 
     free(buf);
     fclose(fp);
