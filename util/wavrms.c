@@ -66,6 +66,16 @@ calculate_rms(FLOAT *samples, int ch, int n)
     return -((int)(rms_all + FCONST(0.5)));
 }
 
+static void
+print_usage(FILE *stream)
+{
+    fprintf(stream, "\n"
+                    "usage: wavrms <test.wav> [<start> [<end>]]\n"
+                    "    use '-' to input from stdin.\n"
+                    "    unit for start and end is seconds.\n"
+                    "\n");
+}
+
 int
 main(int argc, char **argv)
 {
@@ -77,15 +87,21 @@ main(int argc, char **argv)
     uint64_t avg_rms, avg_cnt;
 
     /* open file */
-    if(argc != 2 && argc != 4) {
-        fprintf(stderr, "\nusage: wavrms <test.wav> [<start> <end>]\n\n");
+    if(argc < 2 || argc > 4) {
+        print_usage(stderr);
         exit(1);
+    }
+    if(argc == 2 && !strncmp(argv[1], "-h", 3)) {
+        print_usage(stdout);
+        return 0;
     }
     start_sec = 0;
     end_sec = UINT32_MAX;
-    if(argc == 4) {
+    if(argc == 3 || argc == 4) {
         start_sec = MAX(atoi(argv[2]), 0);
-        end_sec = MAX(atoi(argv[3]), 0);
+        if(argc == 4) {
+            end_sec = MAX(atoi(argv[3]), 0);
+        }
         if(end_sec <= start_sec) {
             fprintf(stderr, "invalid time range\n");
             exit(1);
