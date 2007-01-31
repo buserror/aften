@@ -166,7 +166,8 @@ main(int argc, char **argv)
     }
     avg_rms /= avg_cnt;
 
-    fprintf(stdout, "Time Range: %u to %"PRIu64"\n", start_sec, time_ms/1000);
+    time_ms /= 1000;
+    fprintf(stdout, "Time Range: %"PRIu64" to %"PRIu64" sec\n", MIN(start_sec, time_ms), time_ms);
     fprintf(stdout, "Dialnorm: -%d dB\n\n", (int)MIN(avg_rms, 31));
 
     free(buf);
