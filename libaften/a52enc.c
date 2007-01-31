@@ -266,7 +266,7 @@ aften_encode_init(AftenContext *s)
         fprintf(stderr, "invalid number of channels\n");
         return -1;
     }
-    if(s->acmod < 0 || acmod > 7) {
+    if(s->acmod < 0 || s->acmod > 7) {
         fprintf(stderr, "invalid acmod\n");
         return -1;
     }
