@@ -81,7 +81,8 @@ main(int argc, char **argv)
         fprintf(stderr, "\nusage: wavrms <test.wav> [<start> <end>]\n\n");
         exit(1);
     }
-    start_sec = end_sec = -1;
+    start_sec = 0;
+    end_sec = UINT32_MAX;
     if(argc == 4) {
         start_sec = MAX(atoi(argv[2]), 0);
         end_sec = MAX(atoi(argv[3]), 0);
@@ -119,7 +120,7 @@ main(int argc, char **argv)
 
     buf = calloc(frame_size * wf.channels, sizeof(FLOAT));
 
-    avg_rms = 0;
+    avg_rms = 31;
     avg_cnt = 1;
     nr = wavfile_read_samples(&wf, buf, frame_size);
     while(nr > 0) {
