@@ -4,6 +4,8 @@
 #
 # based on ffmpeg configure script (c) 2000, 2001, 2002 Fabrice Bellard
 #
+# DEPRECATED - use CMake build system
+#
 
 # make sure we are running under a compatible shell
 (: ${foo%%bar}) 2>/dev/null

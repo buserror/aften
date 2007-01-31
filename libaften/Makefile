@@ -1,6 +1,8 @@
 #
 # Aften Library Makefile
 #
+# DEPRECATED - use CMake build system
+#
 include ../config.mak
 
 CFLAGS=$(OPTFLAGS) -I. -I.. -I$(SRC_PATH)/libaften \

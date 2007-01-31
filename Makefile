@@ -1,6 +1,8 @@
 #
 # Aften Main Makefile
 #
+# DEPRECATED - use CMake build system
+#
 include config.mak
 
 VPATH=$(SRC_PATH)
