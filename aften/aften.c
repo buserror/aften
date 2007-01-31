@@ -39,7 +39,7 @@
 static void
 print_intro(FILE *out)
 {
-    fprintf(out, "\nAften: A/52 audio encoder\n(c) 2006-2007 Justin Ruggles, et al.\n\n");
+    fprintf(out, "\nAften: A/52 audio encoder\nVersion "AFTEN_VERSION"\n(c) 2006-2007 Justin Ruggles, et al.\n\n");
 }
 
 static void

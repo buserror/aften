@@ -32,7 +32,7 @@
 extern "C" {
 #endif
 
-#define AFTEN_VERSION SVN
+#define AFTEN_VERSION "SVN"
 
 #define A52_MAX_CODED_FRAME_SIZE 3840
 
