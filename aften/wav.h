@@ -56,14 +56,14 @@ typedef struct WavFile {
     uint64_t filepos;
     int seekable;
     uint64_t file_size;
-    uint32_t data_start;
-    uint32_t data_size;
-    uint32_t samples;
-    int format;
+    uint64_t data_start;
+    uint64_t data_size;
+    uint64_t samples;
+    uint16_t format;
     int channels;
     uint32_t ch_mask;
     int sample_rate;
-    int bytes_per_sec;
+    uint64_t bytes_per_sec;
     int block_align;
     int bit_width;
     enum WavSampleFormat source_format; // set by wavfile_init
@@ -74,9 +74,9 @@ extern int wavfile_init(WavFile *wf, FILE *fp);
 
 extern int wavfile_read_samples(WavFile *wf, void *buffer, int num_samples);
 
-extern int wavfile_seek_samples(WavFile *wf, int offset, int whence);
+extern int wavfile_seek_samples(WavFile *wf, int64_t offset, int whence);
 
-extern int wavfile_seek_time_ms(WavFile *wf, int offset, int whence);
+extern int wavfile_seek_time_ms(WavFile *wf, int64_t offset, int whence);
 
 extern uint64_t wavfile_position(WavFile *wf);
 

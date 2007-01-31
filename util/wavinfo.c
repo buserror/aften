@@ -301,7 +301,7 @@ static void
 wavinfo_print(WavInfo *wi)
 {
     char *type;
-    int leftover;
+    int64_t leftover;
     float playtime;
     WavFile *wf = &wi->wf;
 
@@ -323,16 +323,16 @@ wavinfo_print(WavInfo *wi)
     }
     printf("   Channels:      %d\n", wf->channels);
     printf("   Sample Rate:   %d Hz\n", wf->sample_rate);
-    printf("   Avg bytes/sec: %d\n", wf->bytes_per_sec);
+    printf("   Avg bytes/sec: %"PRIu64"\n", wf->bytes_per_sec);
     printf("   Block Align:   %d bytes\n", wf->block_align);
     printf("   Bit Width:     %d\n", wf->bit_width);
     if(wf->ch_mask > 0) {
         printf("   Channel Mask:  0x%03"PRIX32"\n", wf->ch_mask);
     }
     printf("Data:\n");
-    printf("   Start:         %"PRIu32"\n", wf->data_start);
-    printf("   Data Size:     %"PRIu32"\n", wf->data_size);
-    leftover = wf->file_size - wf->data_size - wf->data_start;
+    printf("   Start:         %"PRIu64"\n", wf->data_start);
+    printf("   Data Size:     %"PRIu64"\n", wf->data_size);
+    leftover = ((int64_t)(wf->file_size)) - wf->data_size - wf->data_start;
     if(leftover < 0) {
         if(!wf->seekable) {
             printf("   [ warning! unable to verify true data size ]\n");
@@ -340,11 +340,11 @@ wavinfo_print(WavInfo *wi)
             printf("   [ warning! reported data size is larger than file size ]\n");
         }
     } else if(leftover > 0) {
-        printf("   Leftover:  %d bytes\n", leftover);
+        printf("   Leftover:  %"PRId64" bytes\n", leftover);
     }
     if(wf->format == 0x0001 || wf->format == 0x0003 || wf->format == 0xFFFE) {
         playtime = (float)wf->samples / (float)wf->sample_rate;
-        printf("   Samples:       %"PRIu32"\n", wf->samples);
+        printf("   Samples:       %"PRIu64"\n", wf->samples);
         printf("   Playing Time:  %0.2f sec\n", playtime);
     } else {
         printf("   Samples:       unknown\n");
