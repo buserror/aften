@@ -85,7 +85,7 @@ static void
 output_wav_header(FILE *ofp, WavFile *wf)
 {
     fwrite("RIFF", 1, 4, ofp);
-    write4le((wf->data_size + 40), ofp);
+    write4le(((uint32_t)wf->data_size + 40), ofp);
     fwrite("WAVE", 1, 4, ofp);
     fwrite("fmt ", 1, 4, ofp);
     write4le(16, ofp);
@@ -96,7 +96,7 @@ output_wav_header(FILE *ofp, WavFile *wf)
     write2le(wf->channels * 2, ofp);
     write2le(16, ofp);
     fwrite("data", 1, 4, ofp);
-    write4le(wf->data_size, ofp);
+    write4le((uint32_t)wf->data_size, ofp);
 }
 
 static void
