@@ -75,8 +75,7 @@ print_intro(FILE *stream)
 static void
 print_usage(FILE *stream)
 {
-    fprintf(stream, "\n"
-                    "usage: wavrms <test.wav> [<start> [<end>]]\n"
+    fprintf(stream, "usage: wavrms <test.wav> [<start> [<end>]]\n"
                     "    use '-' to input from stdin.\n"
                     "    unit for start and end is seconds.\n"
                     "\n");
