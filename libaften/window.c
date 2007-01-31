@@ -2,9 +2,6 @@
  * Aften: A/52 audio encoder
  * Copyright (c) 2006  Justin Ruggles <justinruggles@bellsouth.net>
  *
- * Based on "The simplest AC3 encoder" from FFmpeg
- * Copyright (c) 2000 Fabrice Bellard.
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
