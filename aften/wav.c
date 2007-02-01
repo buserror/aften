@@ -102,7 +102,10 @@ wavfile_init(WavFile *wf, FILE *fp)
     int id, found_fmt, found_data;
     uint32_t chunksize;
 
-    if(wf == NULL || fp == NULL) return -1;
+    if(wf == NULL || fp == NULL) {
+        fprintf(stderr, "null input to wav reader\n");
+        return -1;
+    }
 
     memset(wf, 0, sizeof(WavFile));
     wf->fp = fp;
@@ -126,38 +129,58 @@ wavfile_init(WavFile *wf, FILE *fp)
     wf->filepos = 0;
     id = read4le(fp);
     wf->filepos += 4;
-    if(id != RIFF_ID) return -1;
+    if(id != RIFF_ID) {
+        fprintf(stderr, "invalid RIFF id in wav header\n");
+        return -1;
+    }
     read4le(fp);
     wf->filepos += 4;
     id = read4le(fp);
     wf->filepos += 4;
-    if(id != WAVE_ID) return -1;
+    if(id != WAVE_ID) {
+        fprintf(stderr, "invalid WAVE id in wav header\n");
+        return -1;
+    }
     found_data = found_fmt = 0;
     while(!found_data) {
         id = read4le(fp);
         wf->filepos += 4;
         chunksize = read4le(fp);
         wf->filepos += 4;
-        if(id == 0 || chunksize == 0) return -1;
+        if(id == 0 || chunksize == 0) {
+            fprintf(stderr, "invalid or empty chunk in wav header\n");
+            return -1;
+        }
         switch(id) {
             case FMT__ID:
-                if(chunksize < 16) return -1;
+                if(chunksize < 16) {
+                    fprintf(stderr, "invalid fmt chunk in wav header\n");
+                    return -1;
+                }
                 wf->format = read2le(fp);
                 wf->filepos += 2;
                 wf->channels = read2le(fp);
                 wf->filepos += 2;
-                if(wf->channels == 0) return -1;
+                if(wf->channels == 0) {
+                    fprintf(stderr, "invalid number of channels in wav header\n");
+                    return -1;
+                }
                 wf->sample_rate = read4le(fp);
                 wf->filepos += 4;
-                if(wf->sample_rate == 0) return -1;
+                if(wf->sample_rate == 0) {
+                    fprintf(stderr, "invalid sample rate in wav header\n");
+                    return -1;
+                }
                 read4le(fp);
                 wf->filepos += 4;
                 wf->block_align = read2le(fp);
                 wf->filepos += 2;
-                if(wf->block_align == 0) return -1;
                 wf->bit_width = read2le(fp);
                 wf->filepos += 2;
-                if(wf->bit_width == 0) return -1;
+                if(wf->bit_width == 0) {
+                    fprintf(stderr, "invalid sample bit width in wav header\n");
+                    return -1;
+                }
                 chunksize -= 16;
 
                 // WAVE_FORMAT_EXTENSIBLE data
@@ -193,7 +216,10 @@ wavfile_init(WavFile *wf, FILE *fp)
                 }
 
                 // skip any leftover bytes in fmt chunk
-                if(aft_seek_set(wf, wf->filepos + chunksize)) return -1;
+                if(aft_seek_set(wf, wf->filepos + chunksize)) {
+                    fprintf(stderr, "error seeking in wav file\n");
+                    return -1;
+                }
                 found_fmt = 1;
                 break;
             case DATA_ID:
@@ -209,7 +235,10 @@ wavfile_init(WavFile *wf, FILE *fp)
                 break;
             default:
                 // skip unknown chunk
-                if(aft_seek_set(wf, wf->filepos + chunksize)) return -1;
+                if(aft_seek_set(wf, wf->filepos + chunksize)) {
+                    fprintf(stderr, "error seeking in wav file\n");
+                    return -1;
+                }
         }
     }
 
