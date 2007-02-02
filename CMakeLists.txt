@@ -29,6 +29,10 @@ OPTION(DOUBLE "build Aften with doubles instead of floats" OFF)
 IF(DOUBLE)
   ADD_DEFINE(CONFIG_DOUBLE)
 ENDIF(DOUBLE)
+OPTION(BINDINGS_CXX "build C++ bindings" OFF)
+IF(BINDINGS_CXX)
+  SET(SHARED ON)
+ENDIF(BINDINGS_CXX)
 
 INCLUDE_DIRECTORIES(${Aften_BINARY_DIR}/)
 INCLUDE_DIRECTORIES(${Aften_SOURCE_DIR}/)
@@ -202,7 +206,7 @@ IF(SHARED)
   SET_TARGET_PROPERTIES(aften PROPERTIES VERSION ${SO_VERSION} SOVERSION ${SO_MAJOR_VERSION})
   SET_TARGET_PROPERTIES(aften PROPERTIES LINKER_LANGUAGE C)
   TARGET_LINK_LIBRARIES(aften ${LIBM})
-  SET(AFTEN_SHARED aften)
+  SET(INSTALL_TARGETS ${INSTALL_TARGETS} aften)
 ENDIF(SHARED)
 
 ADD_LIBRARY(aften_static STATIC ${LIBAFTEN_SRCS})
@@ -227,8 +231,20 @@ TARGET_LINK_LIBRARIES(wavrms aften_wav ${LIBM})
 ADD_EXECUTABLE(wavfilter util/wavfilter.c libaften/filter.c)
 TARGET_LINK_LIBRARIES(wavfilter aften_wav ${LIBM})
 
-INSTALL(TARGETS ${AFTEN_SHARED} aften_exe wavinfo wavrms wavfilter
+IF(BINDINGS_CXX)
+  MESSAGE("## WARNING: The C++ bindings are work-in-progress and currently fake. ##")
+  Project(aften CXX)
+  INCLUDE_DIRECTORIES(${Aften_SOURCE_DIR}/bindings)
+  ADD_LIBRARY(aftenxx SHARED bindings/aftenxx.cxx)
+  SET_TARGET_PROPERTIES(aftenxx PROPERTIES VERSION ${SO_VERSION} SOVERSION ${SO_MAJOR_VERSION})
+  SET_TARGET_PROPERTIES(aftenxx PROPERTIES LINKER_LANGUAGE CXX)
+  TARGET_LINK_LIBRARIES(aftenxx aften)
+  SET(INSTALL_TARGETS ${INSTALL_TARGETS} aftenxx)
+  SET(INSTALL_HEADERS ${INSTALL_HEADERS} bindings/aftenxx.h)
+ENDIF(BINDINGS_CXX)
+
+INSTALL(TARGETS ${INSTALL_TARGETS} aften_exe wavinfo wavrms wavfilter
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
-INSTALL(FILES libaften/aften.h libaften/aften-types.h DESTINATION include/aften)
+INSTALL(FILES ${INSTALL_HEADERS} libaften/aften.h libaften/aften-types.h DESTINATION include/aften)
