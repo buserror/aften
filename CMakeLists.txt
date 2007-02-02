@@ -231,4 +231,4 @@ INSTALL(TARGETS ${AFTEN_SHARED} aften_exe wavinfo wavrms wavfilter
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
-INSTALL(FILES libaften/aften.h DESTINATION include)
+INSTALL(FILES libaften/aften.h libaften/aften-types.h DESTINATION include/aften)
