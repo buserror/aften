@@ -35,6 +35,9 @@
 #define FMT__ID     0x20746D66
 #define DATA_ID     0x61746164
 
+/**
+ * Reads a 4-byte little-endian word from the input stream
+ */
 static inline uint32_t
 read4le(FILE *fp)
 {
@@ -44,6 +47,9 @@ read4le(FILE *fp)
     return le2me_32(x);
 }
 
+/**
+ * Reads a 2-byte little-endian word from the input stream
+ */
 static uint16_t
 read2le(FILE *fp)
 {
@@ -53,6 +59,11 @@ read2le(FILE *fp)
     return le2me_16(x);
 }
 
+/**
+ * Seeks to byte offset within file.
+ * Limits the seek position or offset to signed 32-bit.
+ * It also does slower forward seeking for streaming input.
+ */
 static inline int
 aft_seek_set(WavFile *wf, uint64_t dest)
 {
@@ -81,6 +92,7 @@ aft_seek_set(WavFile *wf, uint64_t dest)
         }
     }
     if(slow_seek) {
+        // do forward-only seek by reading data to temp buffer
         uint64_t offset;
         uint8_t buf[1024];
         int c=0;
@@ -98,6 +110,12 @@ aft_seek_set(WavFile *wf, uint64_t dest)
     return 0;
 }
 
+/**
+ * Initializes WavFile structure using the given input file pointer.
+ * Examines the wave header to get audio information and has the file
+ * pointer aligned at start of data when it exits.
+ * Returns non-zero value if an error occurs.
+ */
 int
 wavfile_init(WavFile *wf, FILE *fp)
 {
@@ -134,8 +152,9 @@ wavfile_init(WavFile *wf, FILE *fp)
         }
         fseek(fp, 0, SEEK_SET);
     }
-
     wf->filepos = 0;
+
+    // read RIFF id. ignore size.
     id = read4le(fp);
     wf->filepos += 4;
     if(id != RIFF_ID) {
@@ -144,12 +163,16 @@ wavfile_init(WavFile *wf, FILE *fp)
     }
     read4le(fp);
     wf->filepos += 4;
+
+    // read WAVE id. ignore size.
     id = read4le(fp);
     wf->filepos += 4;
     if(id != WAVE_ID) {
         fprintf(stderr, "invalid WAVE id in wav header\n");
         return -1;
     }
+
+    // read all header chunks. skip unknown chunks.
     found_data = found_fmt = 0;
     while(!found_data) {
         id = read4le(fp);
@@ -251,6 +274,7 @@ wavfile_init(WavFile *wf, FILE *fp)
         }
     }
 
+    // set audio data format based on bit depth and twocc format code
     wf->source_format = WAV_SAMPLE_FMT_UNKNOWN;
     wf->read_format = wf->source_format;
     if(wf->format == WAVE_FORMAT_PCM || wf->format == WAVE_FORMAT_IEEEFLOAT) {
@@ -598,6 +622,13 @@ fmt_convert(enum WavSampleFormat dest_fmt, void *dest,
     }
 }
 
+/**
+ * Reads audio samples to the output buffer.
+ * Output is channel-interleaved, native byte order.
+ * Only up to WAVE_MAX_READ samples can be read in one call.
+ * The output sample format depends on the value of wf->read_format.
+ * Returns number of samples read or -1 on error.
+ */
 int
 wavfile_read_samples(WavFile *wf, void *output, int num_samples)
 {
@@ -605,6 +636,7 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
     uint32_t bytes_needed;
     uint8_t *buffer;
 
+    // check input and limit number of samples
     if(wf == NULL || wf->fp == NULL || output == NULL) {
         fprintf(stderr, "null input to wavfile_read_samples\n");
         return -1;
@@ -615,6 +647,8 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
     }
     num_samples = MIN(num_samples, WAV_MAX_READ);
 
+    // calculate number of bytes to read, being careful not to read past
+    // the end of the data chunk
     bytes_needed = wf->block_align * num_samples;
     if((wf->filepos + bytes_needed) >= (wf->data_start + wf->data_size)) {
         bytes_needed = (uint32_t)((wf->data_start + wf->data_size) - wf->filepos);
@@ -622,13 +656,19 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
     }
     if(num_samples <= 0) return 0;
 
+    // allocate temporary buffer for raw input data
     buffer = calloc(bytes_needed, 1);
 
+    // read raw audio samples from input stream into temporary buffer
     nr = fread(buffer, wf->block_align, num_samples, wf->fp);
     br = nr * wf->block_align;
     wf->filepos += nr * wf->block_align;
     nsmp = nr * wf->channels;
     bps = wf->block_align / wf->channels;
+
+    // do any necessary conversion based on source_format and read_format
+    // also do byte swapping on big-endian systems since wave data is always
+    // in little-endian order.
     if(bps == 1) {
         if(wf->source_format != WAV_SAMPLE_FMT_U8) return -1;
         fmt_convert(wf->read_format, output, wf->source_format, buffer, nsmp);
@@ -674,6 +714,7 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
             if(wf->source_format != WAV_SAMPLE_FMT_FLT) return -1;
             fmt_convert(wf->read_format, output, wf->source_format, input, nsmp);
         } else {
+            // TODO: I'm sure this can be optimized...
             int64_t v64;
             int32_t *input = calloc(nsmp, sizeof(int32_t));
             for(i=0,j=0; i<nsmp*bps; i+=bps,j++) {
@@ -697,11 +738,18 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
         if(wf->source_format != WAV_SAMPLE_FMT_DBL) return -1;
         fmt_convert(wf->read_format, output, wf->source_format, input, nsmp);
     }
+
+    // free temporary buffer
     free(buffer);
 
     return nr;
 }
 
+/**
+ * Seeks to sample offset.
+ * Syntax works like fseek. use WAV_SEEK_SET, WAV_SEEK_CUR, or WAV_SEEK_END
+ * for the whence value.  Returns -1 on error, 0 otherwise.
+ */
 int
 wavfile_seek_samples(WavFile *wf, int64_t offset, int whence)
 {
@@ -740,6 +788,11 @@ wavfile_seek_samples(WavFile *wf, int64_t offset, int whence)
     return 0;
 }
 
+/**
+ * Seeks to time offset, in milliseconds, based on the audio sample rate.
+ * Syntax works like fseek. use WAV_SEEK_SET, WAV_SEEK_CUR, or WAV_SEEK_END
+ * for the whence value.  Returns -1 on error, 0 otherwise.
+ */
 int
 wavfile_seek_time_ms(WavFile *wf, int64_t offset, int whence)
 {
@@ -749,6 +802,10 @@ wavfile_seek_time_ms(WavFile *wf, int64_t offset, int whence)
     return wavfile_seek_samples(wf, samples, whence);
 }
 
+/**
+ * Returns the current stream position, in samples.
+ * Returns -1 on error.
+ */
 uint64_t
 wavfile_position(WavFile *wf)
 {
@@ -762,12 +819,20 @@ wavfile_position(WavFile *wf)
     return cur;
 }
 
+/**
+ * Returns the current stream position, in milliseconds.
+ * Returns -1 on error.
+ */
 uint64_t
 wavfile_position_time_ms(WavFile *wf)
 {
     return (wavfile_position(wf) * 1000 / wf->sample_rate);
 }
 
+/**
+ * Prints out a description of the wav format to the specified
+ * output stream.
+ */
 void
 wavfile_print(FILE *st, WavFile *wf)
 {
