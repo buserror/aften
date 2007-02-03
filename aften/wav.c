@@ -112,7 +112,14 @@ wavfile_init(WavFile *wf, FILE *fp)
 
     /* attempt to get file size */
     wf->file_size = 0;
+#ifdef _WIN32
+    // in Windows, don't try to detect seeking support for stdin
+    if(fp != stdin) {
+        wf->seekable = !fseek(fp, 0, SEEK_END);
+    }
+#else
     wf->seekable = !fseek(fp, 0, SEEK_END);
+#endif
     if(wf->seekable) {
         // TODO: portable 64-bit ftell
         long fs = ftell(fp);
