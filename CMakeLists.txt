@@ -232,7 +232,7 @@ ADD_EXECUTABLE(wavfilter util/wavfilter.c libaften/filter.c)
 TARGET_LINK_LIBRARIES(wavfilter aften_wav ${LIBM})
 
 IF(BINDINGS_CXX)
-  MESSAGE("## WARNING: The C++ bindings are work-in-progress and currently fake. ##")
+  MESSAGE("## WARNING: The C++ bindings are work-in-progress and currently untested. ##")
   Project(aften CXX)
   INCLUDE_DIRECTORIES(${Aften_SOURCE_DIR}/bindings)
   ADD_LIBRARY(aftenxx SHARED bindings/aftenxx.cxx)
