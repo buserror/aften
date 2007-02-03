@@ -40,6 +40,7 @@ read4le(FILE *fp)
 {
     uint32_t x;
     fread(&x, 4, 1, fp);
+    if(feof(fp)) return 0;
     return le2me_32(x);
 }
 
@@ -48,6 +49,7 @@ read2le(FILE *fp)
 {
     uint16_t x;
     fread(&x, 2, 1, fp);
+    if(feof(fp)) return 0;
     return le2me_16(x);
 }
 
