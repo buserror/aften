@@ -956,7 +956,7 @@ main(int argc, char **argv)
         nr = wavfile_read_samples(&wf, fwav, A52_FRAME_SIZE);
     }
     if(s.params.verbose == 1) {
-        fprintf(stderr, "\n");
+        fprintf(stderr, "\n\n");
     } else if(s.params.verbose == 2) {
         if(samplecount > 0) {
             kbps = (bytecount * FCONST(8.0) * wf.sample_rate) / (FCONST(1000.0) * samplecount);
