@@ -828,7 +828,9 @@ main(int argc, char **argv)
                 fprintf(stderr, "cannot encode LFE channel only\n");
                 return 1;
             }
-            if(s.lfe) ch--;
+            if(s.lfe) {
+                wf.ch_mask |= 0x08;
+            }
         }
         if(aften_wav_channels_to_acmod(ch, wf.ch_mask, &s.acmod, &s.lfe)) {
             fprintf(stderr, "mismatch in channels, acmod, and lfe params\n");

@@ -115,8 +115,11 @@ aften_wav_channels_to_acmod(int ch, unsigned int chmask, int *acmod, int *lfe)
             // supports either back-left/back-right or side-left/side-right
             tmp_acmod = 7;
         } else {
-            // unsupported channel layout
-            return -1;
+            // use default
+            tmp_acmod = ch_to_acmod[ch];
+            if(tmp_acmod < 0) {
+                return -1;
+            }
         }
     }
 
