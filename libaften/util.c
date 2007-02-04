@@ -80,7 +80,7 @@ aften_wav_channels_to_acmod(int ch, unsigned int chmask, int *acmod, int *lfe)
 
     if(chmask & 0x80000000) {
         // set values for plain WAVE format or unknown configuration
-        tmp_lfe = !!(ch == 6);
+        tmp_lfe = (ch == 6);
         if(tmp_lfe) ch--;
         tmp_acmod = ch_to_acmod[ch];
     } else {
