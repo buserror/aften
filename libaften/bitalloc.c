@@ -602,8 +602,7 @@ cbr_bit_allocation(A52Context *ctx, int prepare)
 {
     int csnroffst, fsnroffst;
     int current_bits, avail_bits, leftover;
-    int leftover0, leftover1, snroffst=0;
-    int snr0, snr1;
+    int snroffst=0;
     A52Frame *frame;
 
     frame = &ctx->frame;
@@ -621,55 +620,61 @@ cbr_bit_allocation(A52Context *ctx, int prepare)
     }
     leftover = avail_bits - bit_alloc(ctx, snroffst);
 
-    // narrow search range
-    snr0 = snr1 = snroffst;
-    leftover0 = leftover1 = leftover;
-    if(leftover != 0) {
-        if(leftover > 0) {
-            while(leftover1 > 0 && snr1+16 <= 1023) {
-                snr0 = snr1;
-                leftover0 = leftover1;
-                snr1 += 16;
-                leftover1 = avail_bits - bit_alloc(ctx, snr1);
-            }
-        } else {
-            while(leftover0 < 0 && snr0-16 >= 0) {
-                snr1 = snr0;
-                leftover1 = leftover0;
-                snr0 -= 16;
-                leftover0 = avail_bits - bit_alloc(ctx, snr0);
+    if(ctx->params.bitalloc_fast) {
+        // fast bit allocation
+        int leftover0, leftover1, snr0, snr1;
+        snr0 = snr1 = snroffst;
+        leftover0 = leftover1 = leftover;
+        if(leftover != 0) {
+            if(leftover > 0) {
+                while(leftover1 > 0 && snr1+16 <= 1023) {
+                    snr0 = snr1;
+                    leftover0 = leftover1;
+                    snr1 += 16;
+                    leftover1 = avail_bits - bit_alloc(ctx, snr1);
+                }
+            } else {
+                while(leftover0 < 0 && snr0-16 >= 0) {
+                    snr1 = snr0;
+                    leftover1 = leftover0;
+                    snr0 -= 16;
+                    leftover0 = avail_bits - bit_alloc(ctx, snr0);
+                }
             }
         }
-    }
-
-    if(ctx->params.bitalloc_fast) {
         if(snr0 != snr1) {
             snroffst = snr0;
             leftover = avail_bits - bit_alloc(ctx, snroffst);
         }
     } else {
-        // weighted guess and fine search
-        if(snr0 != snr1) {
-            if(leftover0 == leftover1) {
-                snroffst = snr1;
-            } else {
-                snroffst = snr0 + ((snr1-snr0) * leftover0 / (leftover0-leftover1));
-            }
+        // take up to 3 jumps based on estimated distance from optimal
+        if(leftover < -400) {
+            snroffst += (leftover / (16 * ctx->n_channels));
             leftover = avail_bits - bit_alloc(ctx, snroffst);
-            if(leftover != 0) {
-                if(leftover > 0) {
-                    while(snroffst < 1023 && avail_bits - bit_alloc(ctx, snroffst+1) >= 0) {
-                        snroffst++;
-                    }
-                } else {
-                    snroffst--;
-                    while(snroffst > 0 && avail_bits - bit_alloc(ctx, snroffst) < 0) {
-                        snroffst--;
-                    }
-                }
-                leftover = avail_bits - bit_alloc(ctx, snroffst);
-            }
         }
+        if(leftover > 400) {
+            snroffst += (leftover / (24 * ctx->n_channels));
+            leftover = avail_bits - bit_alloc(ctx, snroffst);
+        }
+        if(leftover < -200) {
+            snroffst += (leftover / (40 * ctx->n_channels));
+            leftover = avail_bits - bit_alloc(ctx, snroffst);
+        }
+        // adjust snroffst until leftover <= -100
+    	while(leftover > -100) {
+            snroffst += (10 / ctx->n_channels);
+            if(snroffst > 1023) {
+                snroffst = 1023;
+                leftover = avail_bits - bit_alloc(ctx, snroffst);
+                break;
+            }
+    		leftover = avail_bits - bit_alloc(ctx, snroffst);
+    	}
+        // adjust snroffst until leftover is positive
+    	while(leftover < 0 && snroffst > 0) {
+    		snroffst--;
+    		leftover = avail_bits - bit_alloc(ctx, snroffst);
+    	}
     }
 
     frame->mant_bits = avail_bits - leftover;
