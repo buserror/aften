@@ -837,79 +837,69 @@ output_frame_end(A52Context *ctx)
 static int
 copy_samples(A52Context *ctx, void *vsamples)
 {
-    int ch, blk;
-    int sinc;
-    FLOAT filtered_audio[A52_FRAME_SIZE];
+    FLOAT deint_audio[A52_MAX_CHANNELS+1][A52_FRAME_SIZE];
+    FLOAT *in_audio;
+    FLOAT *out_audio;
+    FLOAT *temp;
     A52Frame *frame;
     A52Block *block;
+    int ch, blk;
+    int sinc;
+#define SWAP_BUFFERS temp=in_audio;in_audio=out_audio;out_audio=temp;
 
     sinc = ctx->n_all_channels;
     frame = &ctx->frame;
-
     // convert sample format and de-interleave channels
-    ctx->fmt_convert_from_src(frame->input_audio, vsamples, sinc, A52_FRAME_SIZE);
-
-    // DC-removal high-pass filter
-    if(ctx->params.use_dc_filter) {
-        for(ch=0; ch<sinc; ch++) {
-            filter_run(&ctx->dc_filter[ch], filtered_audio,
-                       frame->input_audio[ch], A52_FRAME_SIZE);
-            memcpy(frame->input_audio[ch], filtered_audio,
-                   A52_FRAME_SIZE * sizeof(FLOAT));
+    ctx->fmt_convert_from_src(deint_audio, vsamples, sinc, A52_FRAME_SIZE);
+    out_audio = deint_audio[A52_MAX_CHANNELS];
+    for(ch=0; ch<sinc; ch++) {
+        in_audio = deint_audio[ch];
+        // DC-removal high-pass filter
+        if(ctx->params.use_dc_filter) {
+            filter_run(&ctx->dc_filter[ch], out_audio, in_audio, A52_FRAME_SIZE);
+            SWAP_BUFFERS
         }
-    }
-
-    // channel bandwidth filter will go here
-    if(ctx->params.use_bw_filter) {
-        for(ch=0; ch<ctx->n_channels; ch++) {
-            filter_run(&ctx->bw_filter[ch], filtered_audio,
-                       frame->input_audio[ch], A52_FRAME_SIZE);
-            memcpy(frame->input_audio[ch], filtered_audio,
-                   A52_FRAME_SIZE * sizeof(FLOAT));
-        }
-    }
-
-    // block-switching high-pass filter
-    if(ctx->params.use_block_switching) {
-        for(ch=0; ch<ctx->n_channels; ch++) {
-            filter_run(&ctx->bs_filter[ch], filtered_audio,
-                       frame->input_audio[ch], A52_FRAME_SIZE);
-            for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
-                block = &frame->blocks[blk];
-                memcpy(block->transient_samples[ch],
-                       ctx->last_transient_samples[ch], 256 * sizeof(FLOAT));
-                memcpy(&block->transient_samples[ch][256],
-                       &filtered_audio[256*blk], 256 * sizeof(FLOAT));
-                memcpy(ctx->last_transient_samples[ch],
-                       &filtered_audio[256*blk], 256 * sizeof(FLOAT));
+        if (ch < ctx->n_channels)
+        {
+            // channel bandwidth filter will go here
+            if(ctx->params.use_bw_filter) {
+                filter_run(&ctx->bw_filter[ch], out_audio, in_audio, A52_FRAME_SIZE);
+                SWAP_BUFFERS
+            }
+            // block-switching high-pass filter
+            if(ctx->params.use_block_switching) {
+                filter_run(&ctx->bs_filter[ch], out_audio,
+                           in_audio, A52_FRAME_SIZE);
+                for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+                    block = &frame->blocks[blk];
+                    memcpy(block->transient_samples[ch],
+                           ctx->last_transient_samples[ch], 256 * sizeof(FLOAT));
+                    memcpy(&block->transient_samples[ch][256],
+                           &out_audio[256*blk], 256 * sizeof(FLOAT));
+                    memcpy(ctx->last_transient_samples[ch],
+                           &out_audio[256*blk], 256 * sizeof(FLOAT));
+                }
+            }
+        } else {
+            // LFE bandwidth low-pass filter
+            if(ctx->params.use_lfe_filter) {
+                assert(ch == ctx->lfe_channel);
+                filter_run(&ctx->lfe_filter, out_audio,
+                           in_audio, A52_FRAME_SIZE);
+                SWAP_BUFFERS
             }
         }
-    }
-
-    // LFE bandwidth low-pass filter
-    if(ctx->params.use_lfe_filter) {
-        ch = ctx->lfe_channel;
-        filter_run(&ctx->lfe_filter, filtered_audio,
-                   frame->input_audio[ch], A52_FRAME_SIZE);
-        memcpy(frame->input_audio[ch], filtered_audio,
-               A52_FRAME_SIZE * sizeof(FLOAT));
-    }
-
-    for(ch=0; ch<sinc; ch++) {
         for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
             block = &frame->blocks[blk];
-            if(!block->input_samples[ch]) {
-                return -1;
-            }
             memcpy(block->input_samples[ch], ctx->last_samples[ch],
                    256 * sizeof(FLOAT));
             memcpy(&block->input_samples[ch][256],
-                   &frame->input_audio[ch][256*blk], 256 * sizeof(FLOAT));
+                   &in_audio[256*blk], 256 * sizeof(FLOAT));
             memcpy(ctx->last_samples[ch],
-                   &frame->input_audio[ch][256*blk], 256 * sizeof(FLOAT));
+                   &in_audio[256*blk], 256 * sizeof(FLOAT));
         }
     }
-
+#undef SWAP_BUFFERS
     return 0;
 }
 
