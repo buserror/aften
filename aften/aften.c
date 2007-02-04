@@ -36,6 +36,8 @@
 #include "aften.h"
 #include "wav.h"
 
+static const int acmod_to_ch[8] = { 2, 1, 2, 3, 3, 4, 4, 5 };
+
 static void
 print_intro(FILE *out)
 {
@@ -788,9 +790,50 @@ main(int argc, char **argv)
     if(s.params.verbose > 0) {
         wavfile_print(stderr, &wf);
     }
-    // if not given on commandline, automatically determine acmod and lfe
-    if(s.acmod < 0 && s.lfe < 0) {
-        aften_wav_channels_to_acmod(wf.channels, wf.ch_mask, &s.acmod, &s.lfe);
+
+    // if acmod is given on commandline, determine lfe from number of channels
+    if(s.acmod >= 0) {
+        int ch = acmod_to_ch[s.acmod];
+        if(ch == wf.channels) {
+            if(s.lfe < 0) {
+                s.lfe = 0;
+            } else {
+                if(s.lfe != 0) {
+                    fprintf(stderr, "acmod and lfe do not match number of channels\n");
+                    return 1;
+                }
+            }
+        } else if(ch == (wf.channels - 1)) {
+            if(s.lfe < 0) {
+                s.lfe = 1;
+            } else {
+                if(s.lfe != 1) {
+                    fprintf(stderr, "acmod and lfe do not match number of channels\n");
+                    return 1;
+                }
+            }
+        } else {
+            fprintf(stderr, "acmod does not match number of channels\n");
+            return 1;
+        }
+    }
+    // if neither acmod is not given on commandline, determine from WAVE file
+    if(s.acmod < 0) {
+        int ch = wf.channels;
+        if(s.lfe >= 0) {
+            if(s.lfe == 0 && ch == 6) {
+                fprintf(stderr, "cannot encode 6 channels w/o LFE\n");
+                return 1;
+            } else if(s.lfe == 1 && ch == 1) {
+                fprintf(stderr, "cannot encode LFE channel only\n");
+                return 1;
+            }
+            if(s.lfe) ch--;
+        }
+        if(aften_wav_channels_to_acmod(ch, wf.ch_mask, &s.acmod, &s.lfe)) {
+            fprintf(stderr, "mismatch in channels, acmod, and lfe params\n");
+            return 1;
+        }
     }
     // set some encoding parameters using wav info
     s.channels = wf.channels;
