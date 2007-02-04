@@ -38,6 +38,11 @@
 
 static const int acmod_to_ch[8] = { 2, 1, 2, 3, 3, 4, 4, 5 };
 
+static const char *acmod_str[8] = {
+    "dual mono (1+1)", "mono (1/0)", "stereo (2/0)",
+    "3/0", "2/1", "3/1", "2/2", "3/2"
+};
+
 static void
 print_intro(FILE *out)
 {
@@ -788,6 +793,7 @@ main(int argc, char **argv)
     }
     // print wav info to console
     if(s.params.verbose > 0) {
+        fprintf(stderr, "input format: ");
         wavfile_print(stderr, &wf);
     }
 
@@ -867,6 +873,15 @@ main(int argc, char **argv)
             fprintf(stderr, "error opening output file: %s\n", opts.outfile);
             return 1;
         }
+    }
+
+    // print ac3 info to console
+    if(s.params.verbose > 0) {
+        fprintf(stderr, "output format: %d Hz %s", s.samplerate, acmod_str[s.acmod]);
+        if(s.lfe) {
+            fprintf(stderr, " + LFE");
+        }
+        fprintf(stderr, "\n\n");
     }
 
     // allocate memory for coded frame and sample buffer

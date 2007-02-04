@@ -838,6 +838,8 @@ wavfile_print(FILE *st, WavFile *wf)
 {
     char *type, *chan;
     if(st == NULL || wf == NULL) return;
+    type = "?";
+    chan = "?-channel";
     if(wf->format == WAVE_FORMAT_PCM) {
         if(wf->bit_width > 8) type = "Signed";
         else type = "Unsigned";
@@ -846,14 +848,25 @@ wavfile_print(FILE *st, WavFile *wf)
     } else {
         type = "[unsupported type]";
     }
-    switch(wf->channels) {
-        case 1: chan = "mono"; break;
-        case 2: chan = "stereo"; break;
-        case 3: chan = "3-channel"; break;
-        case 4: chan = "4-channel"; break;
-        case 5: chan = "5-channel"; break;
-        case 6: chan = "6-channel"; break;
-        default: chan = "multi-channel"; break;
+    if(wf->ch_mask & 0x08) {
+        switch(wf->channels-1) {
+            case 1: chan = "1.1-channel"; break;
+            case 2: chan = "2.1-channel"; break;
+            case 3: chan = "3.1-channel"; break;
+            case 4: chan = "4.1-channel"; break;
+            case 5: chan = "5.1-channel"; break;
+            default: chan = "multi-channel with LFE"; break;
+        }
+    } else {
+        switch(wf->channels) {
+            case 1: chan = "mono"; break;
+            case 2: chan = "stereo"; break;
+            case 3: chan = "3-channel"; break;
+            case 4: chan = "4-channel"; break;
+            case 5: chan = "5-channel"; break;
+            case 6: chan = "6-channel"; break;
+            default: chan = "multi-channel"; break;
+        }
     }
     fprintf(st, "%s %d-bit %d Hz %s\n", type, wf->bit_width, wf->sample_rate,
             chan);
