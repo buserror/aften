@@ -817,7 +817,7 @@ main(int argc, char **argv)
             return 1;
         }
     }
-    // if neither acmod is not given on commandline, determine from WAVE file
+    // if acmod is not given on commandline, determine from WAVE file
     if(s.acmod < 0) {
         int ch = wf.channels;
         if(s.lfe >= 0) {
