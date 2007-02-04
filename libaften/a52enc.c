@@ -549,6 +549,12 @@ output_frame_header(A52Context *ctx, uint8_t *frame_buffer)
     bitwriter_writebits(bw, 1, 0); /* no compression control word */
     bitwriter_writebits(bw, 1, 0); /* no lang code */
     bitwriter_writebits(bw, 1, 0); /* no audio production info */
+    if(ctx->acmod == 0) {
+        bitwriter_writebits(bw, 5, ctx->meta.dialnorm);
+        bitwriter_writebits(bw, 1, 0); /* no compression control word 2 */
+        bitwriter_writebits(bw, 1, 0); /* no lang code 2 */
+        bitwriter_writebits(bw, 1, 0); /* no audio production info 2 */
+    }
     bitwriter_writebits(bw, 1, 0); /* no copyright */
     bitwriter_writebits(bw, 1, 1); /* original bitstream */
     bitwriter_writebits(bw, 1, ctx->meta.xbsi1e);
@@ -693,9 +699,16 @@ output_audio_blocks(A52Context *ctx)
         }
         if(ctx->params.dynrng_profile == DYNRNG_PROFILE_NONE) {
             bitwriter_writebits(bw, 1, 0); // no dynamic range
+            if(ctx->acmod == 0) {
+                bitwriter_writebits(bw, 1, 0); // no dynamic range 2
+            }
         } else {
             bitwriter_writebits(bw, 1, 1);
             bitwriter_writebits(bw, 8, block->dynrng);
+            if(ctx->acmod == 0) {
+                bitwriter_writebits(bw, 1, 1);
+                bitwriter_writebits(bw, 8, block->dynrng);
+            }
         }
         if(block->block_num == 0) {
             // must define coupling strategy in block 0

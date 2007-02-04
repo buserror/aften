@@ -538,7 +538,7 @@ count_frame_bits(A52Context *ctx)
 {
     int blk, ch;
     int frame_bits;
-    static int frame_bits_inc[8] = { 0, 0, 2, 2, 2, 4, 2, 4 };
+    static int frame_bits_inc[8] = { 8, 0, 2, 2, 2, 4, 2, 4 };
     A52Frame *frame;
     A52Block *block;
 
@@ -556,8 +556,10 @@ count_frame_bits(A52Context *ctx)
         block = &frame->blocks[blk];
         frame_bits += ctx->n_channels * 2; // nch * (blksw[1] + dithflg[1])
         frame_bits++; // dynrnge
+        if(ctx->acmod == 0) frame_bits++; // dynrng2e
         if(ctx->params.dynrng_profile != DYNRNG_PROFILE_NONE) {
             frame_bits += 8; // dynrng
+            if(ctx->acmod == 0) frame_bits += 8; // dynrng2
         }
         frame_bits++; // cplstre
         if(ctx->acmod == 2) {
