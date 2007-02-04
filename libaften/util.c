@@ -50,76 +50,78 @@ const uint8_t log2tab[256] = {
 
 
 /**
- * Determine acmod and lfe from WAVE_FORMAT_EXTENSIBLE channel mask.
- * The acmod parameter is set to -1 if the channel layout is not supported.
+ * Determines the proper A/52 acmod and lfe parameters based on the
+ * number of channels and the WAVE_FORMAT_EXTENSIBLE channel mask.  If the
+ * chmask value has the high bit set to 1 (e.g. 0xFFFFFFFF), then the default
+ * plain WAVE channel selection is assumed.
+ * On error, the acmod and lfe output params are set to -1 and the function
+ * returns -1.  On success, the acmod and lfe params are set to appropriate
+ * values and the function returns 0.
  */
-void
-aften_wav_chmask_to_acmod(int ch, int chmask, int *acmod, int *lfe)
+int
+aften_wav_channels_to_acmod(int ch, unsigned int chmask, int *acmod, int *lfe)
 {
+    int tmp_lfe, tmp_acmod;
+
+    // check for null output pointers
     if(acmod == NULL || lfe == NULL) {
         fprintf(stderr, "One or more NULL parameters passed to aften_wav_chmask_to_acmod\n");
-        return;
+        return -1;
     }
-    if(*lfe < 0) {
-        *lfe = !!(chmask & 0x08);
+    *acmod = tmp_acmod = -1;
+    *lfe = tmp_lfe = -1;
+
+    // check for valid number of channels
+    if(ch < 1 || ch > A52_MAX_CHANNELS) {
+        fprintf(stderr, "Unsupported # of channels passed to aften_wav_chmask_to_acmod\n");
+        return -1;
     }
-    if(*acmod < 0) {
-        if(*lfe) {
+
+    if(chmask & 0x80000000) {
+        // set values for plain WAVE format or unknown configuration
+        tmp_lfe = !!(ch == 6);
+        if(tmp_lfe) ch--;
+        tmp_acmod = ch_to_acmod[ch];
+    } else {
+        // read chmask value for LFE channel
+        tmp_lfe = !!(chmask & 0x08);
+        if(tmp_lfe) {
             ch--;
             chmask -= 0x08;
         }
-        *acmod = -1;
+
+        // check for fbw channel layouts which are compatible with A/52
         if(chmask == 0x04 && ch == 1) {
             // 1/0 mode (C)
-            *acmod = 1;
+            tmp_acmod = 1;
         } else if(chmask == 0x03 && ch == 2) {
             // 2/0 mode (L,R)
-            *acmod = 2;
+            tmp_acmod = 2;
         } else if(chmask == 0x07 && ch == 3) {
             // 3/0 mode (L,C,R)
-            *acmod = 3;
+            tmp_acmod = 3;
         } else if(chmask == 0x103 && ch == 3) {
             // 2/1 mode (L,R,S)
-            *acmod = 4;
+            tmp_acmod = 4;
         } else if(chmask == 0x107 && ch == 4) {
             // 3/1 mode (L,C,R,S)
-            *acmod = 5;
+            tmp_acmod = 5;
         } else if(chmask == 0x33 && ch == 4) {
             // 2/2 mode (L,R,SL,SR)
-            *acmod = 6;
+            tmp_acmod = 6;
         } else if((chmask == 0x37 || chmask == 0x607) && ch == 5) {
             // 3/2 mode (L,C,R,SL,SR)
             // supports either back-left/back-right or side-left/side-right
-            *acmod = 7;
-        }
-    } else {
-        if(*lfe) {
-            ch--;
-        }
-        if(ch != acmod_to_ch[*acmod]) {
-            *acmod = -1;
+            tmp_acmod = 7;
+        } else {
+            // unsupported channel layout
+            return -1;
         }
     }
-}
 
-void
-aften_plain_wav_to_acmod(int ch, int *acmod, int *lfe)
-{
-    if(acmod == NULL || lfe == NULL) {
-        fprintf(stderr, "One or more NULL parameters passed to aften_plain_wav_to_acmod\n");
-        return;
-    }
-    if(*lfe < 0) {
-        *lfe = !!(ch == 6);
-    }
-    if(*lfe) ch--;
-    if(*acmod < 0) {
-        *acmod = ch_to_acmod[ch];
-    } else {
-        if(ch != acmod_to_ch[*acmod]) {
-            *acmod = -1;
-        }
-    }
+    *acmod = tmp_acmod;
+    *lfe = tmp_lfe;
+    return 0;
 }
 
 /**

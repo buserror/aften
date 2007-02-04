@@ -788,9 +788,12 @@ main(int argc, char **argv)
     if(s.params.verbose > 0) {
         wavfile_print(stderr, &wf);
     }
+    // if not given on commandline, automatically determine acmod and lfe
+    if(s.acmod < 0 && s.lfe < 0) {
+        aften_wav_channels_to_acmod(wf.channels, wf.ch_mask, &s.acmod, &s.lfe);
+    }
     // set some encoding parameters using wav info
     s.channels = wf.channels;
-    aften_wav_chmask_to_acmod(wf.channels, wf.ch_mask, &s.acmod, &s.lfe);
     s.samplerate = wf.sample_rate;
 #ifdef CONFIG_DOUBLE
     wf.read_format = WAV_SAMPLE_FMT_DBL;

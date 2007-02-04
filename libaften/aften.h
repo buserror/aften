@@ -66,17 +66,15 @@ AFTEN_API void aften_encode_close(AftenContext *s);
 
 /**
  * Determines the proper A/52 acmod and lfe parameters based on the
- * WAVE_FORMAT_EXTENSIBLE channel mask.  This is more accurate than assuming
- * that all the proper channels are present.
+ * number of channels and the WAVE_FORMAT_EXTENSIBLE channel mask.  If the
+ * chmask value has the high bit set to 1 (e.g. 0xFFFFFFFF), then the default
+ * plain WAVE channel selection is assumed.
+ * On error, the acmod and lfe output params are set to -1 and the function
+ * returns -1.  On success, the acmod and lfe params are set to appropriate
+ * values and the function returns 0.
  */
-AFTEN_API void aften_wav_chmask_to_acmod(int ch, int chmask, int *acmod,
-                                         int *lfe);
-
-/**
- * Determines probable A/52 acmod and lfe parameters based on the number of
- * channels present.  You can use this if you don't have the channel mask.
- */
-AFTEN_API void aften_plain_wav_to_acmod(int ch, int *acmod, int *lfe);
+AFTEN_API int aften_wav_channels_to_acmod(int ch, unsigned int chmask,
+                                          int *acmod, int *lfe);
 
 /**
  * Takes a channel-interleaved array of audio samples, where the channel order
