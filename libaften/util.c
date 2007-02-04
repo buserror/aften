@@ -29,6 +29,7 @@
 #include <string.h>
 
 #include "aften.h"
+#include "a52.h"
 
 static const int acmod_to_ch[8] = { 2, 1, 2, 3, 3, 4, 4, 5 };
 
