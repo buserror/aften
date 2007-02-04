@@ -884,8 +884,7 @@ copy_samples(A52Context *ctx, void *vsamples)
             // LFE bandwidth low-pass filter
             if(ctx->params.use_lfe_filter) {
                 assert(ch == ctx->lfe_channel);
-                filter_run(&ctx->lfe_filter, out_audio,
-                           in_audio, A52_FRAME_SIZE);
+                filter_run(&ctx->lfe_filter, out_audio, in_audio, A52_FRAME_SIZE);
                 SWAP_BUFFERS
             }
         }
