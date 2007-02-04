@@ -52,35 +52,37 @@ AftenContext FrameEncoder::GetDefaultsContext()
 }
 
 /// Determines the proper A/52 acmod and lfe parameters based on the
-/// WAVE_FORMAT_EXTENSIBLE channel mask.  This is more accurate than assuming
-/// that all the proper channels are present.
-void FrameEncoder::WaveChannelMaskToAcmod(int channels, int channelMask, int &acmod, bool &hasLfe)
+/// number of channels and the WAVE_FORMAT_EXTENSIBLE channel mask.  If the
+/// channelMask value has the high bit set to 1 (e.g. 0xFFFFFFFF), then the default
+/// plain WAVE channel selection is assumed.
+/// On error, an execption is thrown. On success, the acmod and lfe params are set
+/// to appropriate values.
+void Utility::WaveChannelsToAcmod(int channels, unsigned int channelMask, int &acmod, bool &hasLfe)
 {
     int nLfe;
-    aften_wav_chmask_to_acmod(channels, channelMask, &acmod, &nLfe);
+    if (aften_wav_channels_to_acmod(channels, channelMask, &acmod, &nLfe) != 0)
+        throw -1;
     hasLfe = nLfe != 0;
 }
 
-/// Determines probable A/52 acmod and lfe parameters based on the number of
-/// channels present.  You can use this if you don't have the channel mask.
-void FrameEncoder::PlainWaveToAcmod(int channels, int &acmod, bool &hasLfe)
+/// overload for convenience
+void Utility::WaveChannelsToAcmod(int channels, unsigned int channelMask, int &acmod, int &hasLfe)
 {
-    int nLfe;
-    aften_plain_wav_to_acmod(channels, &acmod, &nLfe);
-    hasLfe = nLfe != 0;
+    if (aften_wav_channels_to_acmod(channels, channelMask, &acmod, &hasLfe) != 0)
+        throw -1;
 }
 
 /// Takes a channel-interleaved array of audio samples, where the channel order
 /// is the default Wave order. The samples are rearranged to the proper A/52
 /// channel order based on the acmod and lfe parameters.
-void FrameEncoder::RemapWaveToA52(void *samples, int samplesCount, int channels,
+void Utility::RemapWaveToA52(void *samples, int samplesCount, int channels,
                            enum A52SampleFormat format, int acmod)
 {
     aften_remap_wav_to_a52(samples, samplesCount, channels, format, acmod);
 }
 
 /// Tells whether libaften was configured to use floats or doubles
-enum FloatType FrameEncoder::GetFloatType()
+enum FloatType Utility::GetFloatType()
 {
     return aften_get_float_type();
 }

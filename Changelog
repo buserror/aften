@@ -22,6 +22,8 @@ Aften TODO list
 Aften Changelog
 ---------------
 version SVN : current
+- added C++ bindings (pass -DBINDINGS_CXX=1 to cmake to build them)
+- API change of helper functions
 
 version 0.06 : 31 January 2007
 - added SSE/SSE3 mdct code (based on vorbis lancer by blacksword8192@hotmail.com)

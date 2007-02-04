@@ -20,7 +20,21 @@ namespace Aften
 {
 #include "aften-types.h"
 
-class FrameEncoder
+#if defined(_WIN32) && !defined(_XBOX)
+ #if defined(AFTENXX_BUILD_LIBRARY)
+  #define AFTENXX_API __declspec(dllexport)
+ #else
+  #define AFTENXX_API __declspec(dllimport)
+ #endif
+#else
+ #if defined(AFTENXX_BUILD_LIBRARY) && defined(HAVE_GCC_VISIBILITY)
+  #define AFTENXX_API __attribute__((visibility("default")))
+ #else
+  #define AFTENXX_API
+ #endif
+#endif
+
+class AFTENXX_API FrameEncoder
 {
 private:
     AftenContext m_context;
@@ -32,20 +46,26 @@ public:
     /// Destructor: Deinitalizes the encoder
     ~FrameEncoder();
 
-    /// Encodes PCM samples to an A/52 frame
+    /// Encodes PCM samples to an A/52 frame; returns encoded frame size
     int Encode(unsigned char *frameBuffer, void *samples);
 
     /// Gets a context with default values
     static AftenContext GetDefaultsContext();
+};
 
+class AFTENXX_API Utility
+{
+public:
     /// Determines the proper A/52 acmod and lfe parameters based on the
-    /// WAVE_FORMAT_EXTENSIBLE channel mask.  This is more accurate than assuming
-    /// that all the proper channels are present.
-    static void WaveChannelMaskToAcmod(int channels, int channelMask, int &acmod, bool &hasLfe);
+    /// number of channels and the WAVE_FORMAT_EXTENSIBLE channel mask.  If the
+    /// channelMask value has the high bit set to 1 (e.g. 0xFFFFFFFF), then the default
+    /// plain WAVE channel selection is assumed.
+    /// On error, an execption is thrown. On success, the acmod and lfe params are set
+    /// to appropriate values.
+    static void WaveChannelsToAcmod(int channels, unsigned int channelMask, int &acmod, bool &hasLfe);
 
-    /// Determines probable A/52 acmod and lfe parameters based on the number of
-    /// channels present.  You can use this if you don't have the channel mask.
-    static void PlainWaveToAcmod(int channels, int &acmod, bool &hasLfe);
+    /// overload for convenience
+    static void WaveChannelsToAcmod(int channels, unsigned int channelMask, int &acmod, int &hasLfe);
 
     /// Takes a channel-interleaved array of audio samples, where the channel order
     /// is the default Wave order. The samples are rearranged to the proper A/52
@@ -56,4 +76,6 @@ public:
     /// Tells whether libaften was configured to use floats or doubles
     static enum FloatType GetFloatType();
 };
+
+#undef AFTENXX_API
 }
