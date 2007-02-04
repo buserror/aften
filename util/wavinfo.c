@@ -178,7 +178,7 @@ get_format_name(int id)
         case 0x0160: return "Microsoft Audio 1";
         case 0x0161: return "Windows Media 7/8/9";
         case 0x0162: return "Windows Media 9 Professional";
-        case 0x0163: return "Windows Media 9 Lossess";
+        case 0x0163: return "Windows Media 9 Lossless";
         case 0x0164: return "Windows Media Professional over S/PDIF";
 
         case 0x0180: return "MPEG-2 AAC";
