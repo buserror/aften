@@ -34,6 +34,8 @@
 #include "filter.h"
 #include "mdct.h"
 
+#define AFTEN_VERSION "SVN"
+
 #define A52_MAX_CHANNELS 6
 
 /* exponent encoding strategy */

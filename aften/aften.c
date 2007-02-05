@@ -46,7 +46,10 @@ static const char *acmod_str[8] = {
 static void
 print_intro(FILE *out)
 {
-    fprintf(out, "\nAften: A/52 audio encoder\nVersion "AFTEN_VERSION"\n(c) 2006-2007 Justin Ruggles, et al.\n\n");
+    const char *vers = aften_get_version();
+    fprintf(out, "\nAften: A/52 audio encoder\n"
+                 "Version %s\n"
+                 "(c) 2006-2007 Justin Ruggles, et al.\n\n", vers);
 }
 
 static void

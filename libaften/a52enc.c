@@ -54,6 +54,18 @@ const uint16_t a52_bitratetab[19] = {
     160, 192, 224, 256, 320, 384, 448, 512, 576, 640
 };
 
+const char *
+aften_get_version(void)
+{
+#ifdef SVN_VERSION
+    static const char *const str = AFTEN_VERSION "-r" SVN_VERSION;
+#else
+    static const char *const str = AFTEN_VERSION;
+#endif
+
+    return str;
+}
+
 void
 aften_set_defaults(AftenContext *s)
 {

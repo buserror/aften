@@ -35,8 +35,6 @@ extern "C" {
 
 #include "aften-types.h"
 
-#define AFTEN_VERSION "SVN"
-
 #if defined(_WIN32) && !defined(_XBOX)
  #if defined(AFTEN_BUILD_LIBRARY)
   #define AFTEN_API __declspec(dllexport)
@@ -52,6 +50,8 @@ extern "C" {
 #endif
 
 /* main encoding functions */
+
+AFTEN_API const char *aften_get_version(void);
 
 AFTEN_API void aften_set_defaults(AftenContext *s);
 
