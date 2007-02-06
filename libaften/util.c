@@ -256,7 +256,7 @@ remap_wav_to_a52_double(double *samples, int n, int ch, int acmod)
 }
 
 void
-aften_remap_wav_to_a52(void *samples, int n, int ch, enum A52SampleFormat fmt,
+aften_remap_wav_to_a52(void *samples, int n, int ch, A52SampleFormat fmt,
                        int acmod)
 {
     if(samples == NULL) {
@@ -280,7 +280,7 @@ aften_remap_wav_to_a52(void *samples, int n, int ch, enum A52SampleFormat fmt,
     }
 }
 
-enum FloatType
+FloatType
 aften_get_float_type(void)
 {
 #ifdef CONFIG_DOUBLE

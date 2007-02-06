@@ -76,13 +76,13 @@ void Utility::WaveChannelsToAcmod(int channels, unsigned int channelMask, int &a
 /// is the default Wave order. The samples are rearranged to the proper A/52
 /// channel order based on the acmod and lfe parameters.
 void Utility::RemapWaveToA52(void *samples, int samplesCount, int channels,
-                           enum A52SampleFormat format, int acmod)
+                             A52SampleFormat format, int acmod)
 {
     aften_remap_wav_to_a52(samples, samplesCount, channels, format, acmod);
 }
 
 /// Tells whether libaften was configured to use floats or doubles
-enum FloatType Utility::GetFloatType()
+FloatType Utility::GetFloatType()
 {
     return aften_get_float_type();
 }

@@ -38,15 +38,17 @@ extern "C" {
 #define A52_NUM_BLOCKS 6
 #define A52_FRAME_SIZE (A52_NUM_BLOCKS * 256)
 
-#define AFTEN_ENC_MODE_CBR    0
-#define AFTEN_ENC_MODE_VBR    1
+typedef enum {
+    AFTEN_ENC_MODE_CBR = 0,
+    AFTEN_ENC_MODE_VBR
+} AftenEncMode;
 
-enum FloatType {
+typedef enum {
     FLOAT_TYPE_DOUBLE,
     FLOAT_TYPE_FLOAT
-};
+} FloatType;
 
-enum A52SampleFormat {
+typedef enum {
     A52_SAMPLE_FMT_U8 = 0,
     A52_SAMPLE_FMT_S16,
     A52_SAMPLE_FMT_S20,
@@ -54,16 +56,16 @@ enum A52SampleFormat {
     A52_SAMPLE_FMT_S32,
     A52_SAMPLE_FMT_FLT,
     A52_SAMPLE_FMT_DBL
-};
+} A52SampleFormat;
 
-enum DynRngProfile {
+typedef enum {
     DYNRNG_PROFILE_FILM_LIGHT=0,
     DYNRNG_PROFILE_FILM_STANDARD,
     DYNRNG_PROFILE_MUSIC_LIGHT,
     DYNRNG_PROFILE_MUSIC_STANDARD,
     DYNRNG_PROFILE_SPEECH,
     DYNRNG_PROFILE_NONE
-};
+} DynRngProfile;
 
 typedef struct {
 
@@ -80,7 +82,7 @@ typedef struct {
      * AFTEN_ENC_MODE_VBR : variable bitrate
      * default is CBR
      */
-    int encoding_mode;
+    AftenEncMode encoding_mode;
 
     /**
      * Stereo rematrixing option.
@@ -173,7 +175,7 @@ typedef struct {
      * None:           DYNRNG_PROFILE_NONE
      * default is None
      */
-    enum DynRngProfile dynrng_profile;
+    DynRngProfile dynrng_profile;
 
 } AftenEncParams;
 
@@ -271,7 +273,7 @@ typedef struct {
      * Audio sample format
      * default: A52_SAMPLE_FMT_S16
      */
-    enum A52SampleFormat sample_format;
+    A52SampleFormat sample_format;
 
     /**
      * Used internally by the encoder. The user should leave this alone.

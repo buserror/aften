@@ -82,12 +82,12 @@ AFTEN_API int aften_wav_channels_to_acmod(int ch, unsigned int chmask,
  * channel order based on the acmod and lfe parameters.
  */
 AFTEN_API void aften_remap_wav_to_a52(void *samples, int n, int ch,
-                                      enum A52SampleFormat fmt, int acmod);
+                                      A52SampleFormat fmt, int acmod);
 
 /**
  * Tells whether libaften was configured to use floats or doubles
  */
-AFTEN_API enum FloatType aften_get_float_type(void);
+AFTEN_API FloatType aften_get_float_type(void);
 
 #undef AFTEN_API
 

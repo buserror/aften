@@ -177,7 +177,7 @@ calculate_rms(FLOAT *samples[A52_MAX_CHANNELS], int ch, int n)
 
 int
 calculate_block_dynrng(FLOAT *samples[A52_MAX_CHANNELS], int num_ch,
-                       int dialnorm, enum DynRngProfile profile)
+                       int dialnorm, DynRngProfile profile)
 {
     int ch, i;
     FLOAT max_gain, rms, gain;

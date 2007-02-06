@@ -71,10 +71,10 @@ public:
     /// is the default Wave order. The samples are rearranged to the proper A/52
     /// channel order based on the acmod and lfe parameters.
     static void RemapWaveToA52(void *samples, int samplesCount, int channels,
-                               enum A52SampleFormat format, int acmod);
+                               A52SampleFormat format, int acmod);
 
     /// Tells whether libaften was configured to use floats or doubles
-    static enum FloatType GetFloatType();
+    static FloatType GetFloatType();
 };
 
 #undef AFTENXX_API
