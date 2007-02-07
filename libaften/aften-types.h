@@ -33,10 +33,10 @@
 extern "C" {
 #endif
 
-#define A52_MAX_CODED_FRAME_SIZE 3840
-
-#define A52_NUM_BLOCKS 6
-#define A52_SAMPLES_PER_FRAME (A52_NUM_BLOCKS * 256)
+enum {
+    A52_MAX_CODED_FRAME_SIZE = 3840,
+    A52_SAMPLES_PER_FRAME = 1536,
+};
 
 typedef enum {
     AFTEN_ENC_MODE_CBR = 0,
