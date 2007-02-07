@@ -35,7 +35,7 @@ extern "C" {
 
 enum {
     A52_MAX_CODED_FRAME_SIZE = 3840,
-    A52_SAMPLES_PER_FRAME = 1536,
+    A52_SAMPLES_PER_FRAME = 1536
 };
 
 typedef enum {
