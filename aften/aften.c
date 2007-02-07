@@ -889,7 +889,7 @@ main(int argc, char **argv)
 
     // allocate memory for coded frame and sample buffer
     frame = calloc(A52_MAX_CODED_FRAME_SIZE, 1);
-    fwav = calloc(A52_FRAME_SIZE * wf.channels, sizeof(FLOAT));
+    fwav = calloc(A52_SAMPLES_PER_FRAME * wf.channels, sizeof(FLOAT));
     if(frame == NULL || fwav == NULL) {
         aften_encode_close(&s);
         exit(1);
@@ -899,7 +899,7 @@ main(int argc, char **argv)
     qual = bw = 0.0;
     last_frame = 0;
 
-    nr = wavfile_read_samples(&wf, fwav, A52_FRAME_SIZE);
+    nr = wavfile_read_samples(&wf, fwav, A52_SAMPLES_PER_FRAME);
     while(nr >= 0) {
         if(opts.chmap == 0) {
             aften_remap_wav_to_a52(fwav, nr, wf.channels, s.sample_format,
@@ -914,9 +914,9 @@ main(int argc, char **argv)
         }
 
         // zero leftover samples at end of last frame
-        if(nr < A52_FRAME_SIZE) {
+        if(nr < A52_SAMPLES_PER_FRAME) {
             int i;
-            for(i=nr*wf.channels; i<A52_FRAME_SIZE*wf.channels; i++) {
+            for(i=nr*wf.channels; i<A52_SAMPLES_PER_FRAME*wf.channels; i++) {
                 fwav[i] = 0.0;
             }
         }
@@ -926,7 +926,7 @@ main(int argc, char **argv)
             fprintf(stderr, "Error encoding frame %d\n", s.status.frame_num);
         } else {
             if(s.params.verbose > 0) {
-                samplecount += A52_FRAME_SIZE;
+                samplecount += A52_SAMPLES_PER_FRAME;
                 bytecount += fs;
                 qual += s.status.quality;
                 bw += s.status.bwcode;
@@ -956,7 +956,7 @@ main(int argc, char **argv)
             fwrite(frame, 1, fs, ofp);
         }
         last_frame = nr;
-        nr = wavfile_read_samples(&wf, fwav, A52_FRAME_SIZE);
+        nr = wavfile_read_samples(&wf, fwav, A52_SAMPLES_PER_FRAME);
     }
     if(s.params.verbose == 1) {
         fprintf(stderr, "\n\n");

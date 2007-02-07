@@ -120,7 +120,7 @@ aften_set_defaults(AftenContext *s)
 }
 
 static void
-fmt_convert_from_u8(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
+fmt_convert_from_u8(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
                     void *vsrc, int nch, int n)
 {
     int i, ch;
@@ -134,7 +134,7 @@ fmt_convert_from_u8(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
 }
 
 static void
-fmt_convert_from_s16(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
+fmt_convert_from_s16(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
                      void *vsrc, int nch, int n)
 {
     int i, ch;
@@ -148,7 +148,7 @@ fmt_convert_from_s16(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
 }
 
 static void
-fmt_convert_from_s20(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
+fmt_convert_from_s20(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
                      void *vsrc, int nch, int n)
 {
     int i, ch;
@@ -162,7 +162,7 @@ fmt_convert_from_s20(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
 }
 
 static void
-fmt_convert_from_s24(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
+fmt_convert_from_s24(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
                      void *vsrc, int nch, int n)
 {
     int i, ch;
@@ -176,7 +176,7 @@ fmt_convert_from_s24(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
 }
 
 static void
-fmt_convert_from_s32(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
+fmt_convert_from_s32(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
                      void *vsrc, int nch, int n)
 {
     int i, ch;
@@ -190,7 +190,7 @@ fmt_convert_from_s32(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
 }
 
 static void
-fmt_convert_from_float(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
+fmt_convert_from_float(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
                        void *vsrc, int nch, int n)
 {
     int i, ch;
@@ -204,7 +204,7 @@ fmt_convert_from_float(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
 }
 
 static void
-fmt_convert_from_double(FLOAT dest[A52_MAX_CHANNELS][A52_FRAME_SIZE],
+fmt_convert_from_double(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
                         void *vsrc, int nch, int n)
 {
     int i, ch;
@@ -862,7 +862,7 @@ output_frame_end(A52Context *ctx)
 static int
 copy_samples(A52Context *ctx, void *vsamples)
 {
-    FLOAT deint_audio[A52_MAX_CHANNELS+1][A52_FRAME_SIZE];
+    FLOAT deint_audio[A52_MAX_CHANNELS+1][A52_SAMPLES_PER_FRAME];
     FLOAT *in_audio;
     FLOAT *out_audio;
     FLOAT *temp;
@@ -875,26 +875,26 @@ copy_samples(A52Context *ctx, void *vsamples)
     sinc = ctx->n_all_channels;
     frame = &ctx->frame;
     // convert sample format and de-interleave channels
-    ctx->fmt_convert_from_src(deint_audio, vsamples, sinc, A52_FRAME_SIZE);
+    ctx->fmt_convert_from_src(deint_audio, vsamples, sinc, A52_SAMPLES_PER_FRAME);
     out_audio = deint_audio[A52_MAX_CHANNELS];
     for(ch=0; ch<sinc; ch++) {
         in_audio = deint_audio[ch];
         // DC-removal high-pass filter
         if(ctx->params.use_dc_filter) {
-            filter_run(&ctx->dc_filter[ch], out_audio, in_audio, A52_FRAME_SIZE);
+            filter_run(&ctx->dc_filter[ch], out_audio, in_audio, A52_SAMPLES_PER_FRAME);
             SWAP_BUFFERS
         }
         if (ch < ctx->n_channels)
         {
             // channel bandwidth filter will go here
             if(ctx->params.use_bw_filter) {
-                filter_run(&ctx->bw_filter[ch], out_audio, in_audio, A52_FRAME_SIZE);
+                filter_run(&ctx->bw_filter[ch], out_audio, in_audio, A52_SAMPLES_PER_FRAME);
                 SWAP_BUFFERS
             }
             // block-switching high-pass filter
             if(ctx->params.use_block_switching) {
                 filter_run(&ctx->bs_filter[ch], out_audio,
-                           in_audio, A52_FRAME_SIZE);
+                           in_audio, A52_SAMPLES_PER_FRAME);
                 for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
                     block = &frame->blocks[blk];
                     memcpy(block->transient_samples[ch],
@@ -909,7 +909,7 @@ copy_samples(A52Context *ctx, void *vsamples)
             // LFE bandwidth low-pass filter
             if(ctx->params.use_lfe_filter) {
                 assert(ch == ctx->lfe_channel);
-                filter_run(&ctx->lfe_filter, out_audio, in_audio, A52_FRAME_SIZE);
+                filter_run(&ctx->lfe_filter, out_audio, in_audio, A52_SAMPLES_PER_FRAME);
                 SWAP_BUFFERS
             }
         }
@@ -1171,7 +1171,7 @@ aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, void *samples)
 
     // increment counters
     ctx->bit_cnt += frame->frame_size * 16;
-    ctx->sample_cnt += A52_FRAME_SIZE;
+    ctx->sample_cnt += A52_SAMPLES_PER_FRAME;
     ctx->frame_cnt++;
 
     // update encoding status
