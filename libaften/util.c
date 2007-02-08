@@ -94,26 +94,26 @@ aften_wav_channels_to_acmod(int ch, unsigned int chmask, int *acmod, int *lfe)
         // check for fbw channel layouts which are compatible with A/52
         if(chmask == 0x04 && ch == 1) {
             // 1/0 mode (C)
-            tmp_acmod = 1;
+            tmp_acmod = A52_ACMOD_MONO;
         } else if(chmask == 0x03 && ch == 2) {
             // 2/0 mode (L,R)
-            tmp_acmod = 2;
+            tmp_acmod = A52_ACMOD_STEREO;
         } else if(chmask == 0x07 && ch == 3) {
             // 3/0 mode (L,C,R)
-            tmp_acmod = 3;
+            tmp_acmod = A52_ACMOD_3_0;
         } else if(chmask == 0x103 && ch == 3) {
             // 2/1 mode (L,R,S)
-            tmp_acmod = 4;
+            tmp_acmod = A52_ACMOD_2_1;
         } else if(chmask == 0x107 && ch == 4) {
             // 3/1 mode (L,C,R,S)
-            tmp_acmod = 5;
+            tmp_acmod = A52_ACMOD_3_1;
         } else if(chmask == 0x33 && ch == 4) {
             // 2/2 mode (L,R,SL,SR)
-            tmp_acmod = 6;
+            tmp_acmod = A52_ACMOD_2_2;
         } else if((chmask == 0x37 || chmask == 0x607) && ch == 5) {
             // 3/2 mode (L,C,R,SL,SR)
             // supports either back-left/back-right or side-left/side-right
-            tmp_acmod = 7;
+            tmp_acmod = A52_ACMOD_3_2;
         } else {
             // use default
             tmp_acmod = ch_to_acmod[ch];

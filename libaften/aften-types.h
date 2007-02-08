@@ -67,6 +67,20 @@ typedef enum {
     DYNRNG_PROFILE_NONE
 } DynRngProfile;
 
+/**
+ * Audio Coding Mode (acmod) options
+ */
+enum {
+    A52_ACMOD_DUAL_MONO = 0,
+    A52_ACMOD_MONO,
+    A52_ACMOD_STEREO,
+    A52_ACMOD_3_0,
+    A52_ACMOD_2_1,
+    A52_ACMOD_3_1,
+    A52_ACMOD_2_2,
+    A52_ACMOD_3_2
+};
+
 typedef struct {
 
     /**

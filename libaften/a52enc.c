@@ -550,18 +550,18 @@ output_frame_header(A52Context *ctx, uint8_t *frame_buffer)
     bitwriter_writebits(bw, 5, ctx->bsid);
     bitwriter_writebits(bw, 3, ctx->bsmod);
     bitwriter_writebits(bw, 3, ctx->acmod);
-    if((ctx->acmod & 0x01) && ctx->acmod != 0x01)
+    if((ctx->acmod & 0x01) && (ctx->acmod != A52_ACMOD_MONO))
         bitwriter_writebits(bw, 2, ctx->meta.cmixlev);
     if(ctx->acmod & 0x04)
         bitwriter_writebits(bw, 2, ctx->meta.surmixlev);
-    if(ctx->acmod == 0x02)
+    if(ctx->acmod == A52_ACMOD_STEREO)
         bitwriter_writebits(bw, 2, ctx->meta.dsurmod);
     bitwriter_writebits(bw, 1, ctx->lfe);
     bitwriter_writebits(bw, 5, ctx->meta.dialnorm);
     bitwriter_writebits(bw, 1, 0); /* no compression control word */
     bitwriter_writebits(bw, 1, 0); /* no lang code */
     bitwriter_writebits(bw, 1, 0); /* no audio production info */
-    if(ctx->acmod == 0) {
+    if(ctx->acmod == A52_ACMOD_DUAL_MONO) {
         bitwriter_writebits(bw, 5, ctx->meta.dialnorm);
         bitwriter_writebits(bw, 1, 0); /* no compression control word 2 */
         bitwriter_writebits(bw, 1, 0); /* no lang code 2 */
@@ -711,13 +711,13 @@ output_audio_blocks(A52Context *ctx)
         }
         if(ctx->params.dynrng_profile == DYNRNG_PROFILE_NONE) {
             bitwriter_writebits(bw, 1, 0); // no dynamic range
-            if(ctx->acmod == 0) {
+            if(ctx->acmod == A52_ACMOD_DUAL_MONO) {
                 bitwriter_writebits(bw, 1, 0); // no dynamic range 2
             }
         } else {
             bitwriter_writebits(bw, 1, 1);
             bitwriter_writebits(bw, 8, block->dynrng);
-            if(ctx->acmod == 0) {
+            if(ctx->acmod == A52_ACMOD_DUAL_MONO) {
                 bitwriter_writebits(bw, 1, 1);
                 bitwriter_writebits(bw, 8, block->dynrng);
             }
@@ -730,7 +730,7 @@ output_audio_blocks(A52Context *ctx)
             bitwriter_writebits(bw, 1, 0); // no new coupling strategy
         }
 
-        if(ctx->acmod == 2) {
+        if(ctx->acmod == A52_ACMOD_STEREO) {
             bitwriter_writebits(bw, 1, block->rematstr);
             if(block->rematstr) {
                 for(rbnd=0; rbnd<4; rbnd++) {
@@ -1022,7 +1022,7 @@ calc_rematrixing(A52Context *ctx)
     int blk, bnd, i;
     A52Block *block;
 
-    if(ctx->acmod != 2) return;
+    if(ctx->acmod == A52_ACMOD_STEREO) return;
 
     if(!ctx->params.use_rematrixing) {
         ctx->frame.blocks[0].rematstr = 1;
