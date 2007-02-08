@@ -1022,8 +1022,6 @@ calc_rematrixing(A52Context *ctx)
     int blk, bnd, i;
     A52Block *block;
 
-    if(ctx->acmod == A52_ACMOD_STEREO) return;
-
     if(!ctx->params.use_rematrixing) {
         ctx->frame.blocks[0].rematstr = 1;
         for(bnd=0; bnd<4; bnd++) {
@@ -1156,7 +1154,9 @@ aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, void *samples)
 
     compute_dither_strategy(ctx);
 
-    calc_rematrixing(ctx);
+    if(ctx->acmod == A52_ACMOD_STEREO) {
+        calc_rematrixing(ctx);
+    }
 
     process_exponents(ctx);
 
