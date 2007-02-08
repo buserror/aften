@@ -460,7 +460,7 @@ aften_encode_init(AftenContext *s)
     return 0;
 }
 
-static void
+static int
 frame_init(A52Context *ctx)
 {
     int blk, bnd, ch;
@@ -485,6 +485,11 @@ frame_init(A52Context *ctx)
         for(ch=0; ch<ctx->n_channels; ch++) {
             block->blksw[ch] = 0;
             block->dithflag[ch] = 1;
+
+            // input_samples will be null if context is not initialized
+            if(block->input_samples[ch] == NULL) {
+                return -1;
+            }
         }
     }
 
@@ -531,6 +536,8 @@ frame_init(A52Context *ctx)
     frame->dbkneecod = 2;
     frame->floorcod = 7;
     frame->fgaincod = 3;
+
+    return 0;
 }
 
 /* output the A52 frame header */
@@ -859,7 +866,7 @@ output_frame_end(A52Context *ctx)
     return (fs << 1);
 }
 
-static int
+static void
 copy_samples(A52Context *ctx, void *vsamples)
 {
     FLOAT deint_audio[A52_MAX_CHANNELS+1][A52_SAMPLES_PER_FRAME];
@@ -924,7 +931,6 @@ copy_samples(A52Context *ctx, void *vsamples)
         }
     }
 #undef SWAP_BUFFERS
-    return 0;
 }
 
 /* determines block length by detecting transients */
@@ -1138,12 +1144,12 @@ aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, void *samples)
     ctx = s->private_context;
     frame = &ctx->frame;
 
-    frame_init(ctx);
-
-    if(copy_samples(ctx, samples)) {
+    if(frame_init(ctx)) {
         fprintf(stderr, "Encoding has not properly initialized\n");
         return -1;
     }
+
+    copy_samples(ctx, samples);
 
     calculate_dynrng(ctx);
 
