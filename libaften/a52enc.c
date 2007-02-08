@@ -1078,9 +1078,6 @@ adjust_frame_size(A52Context *ctx)
     uint32_t srate = ctx->sample_rate;
     int add;
 
-    if(ctx->params.encoding_mode != AFTEN_ENC_MODE_CBR)
-        return;
-
     while(ctx->bit_cnt >= kbps && ctx->sample_cnt >= srate) {
         ctx->bit_cnt -= kbps;
         ctx->sample_cnt -= srate;
@@ -1160,7 +1157,9 @@ aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, void *samples)
 
     process_exponents(ctx);
 
-    adjust_frame_size(ctx);
+    if(ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
+        adjust_frame_size(ctx);
+    }
 
     if(compute_bit_allocation(ctx)) {
         fprintf(stderr, "Error in bit allocation\n");
