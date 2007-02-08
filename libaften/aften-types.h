@@ -33,21 +33,33 @@
 extern "C" {
 #endif
 
+/**
+ * Some helpful size constants
+ */
 enum {
     A52_MAX_CODED_FRAME_SIZE = 3840,
     A52_SAMPLES_PER_FRAME = 1536
 };
 
+/**
+ * Aften Encoding Mode
+ */
 typedef enum {
     AFTEN_ENC_MODE_CBR = 0,
     AFTEN_ENC_MODE_VBR
 } AftenEncMode;
 
+/**
+ * Floating-Point Data Types
+ */
 typedef enum {
     FLOAT_TYPE_DOUBLE,
     FLOAT_TYPE_FLOAT
 } FloatType;
 
+/**
+ * Audio Sample Formats
+ */
 typedef enum {
     A52_SAMPLE_FMT_U8 = 0,
     A52_SAMPLE_FMT_S16,
@@ -58,6 +70,9 @@ typedef enum {
     A52_SAMPLE_FMT_DBL
 } A52SampleFormat;
 
+/**
+ * Dynamic Range Profiles
+ */
 typedef enum {
     DYNRNG_PROFILE_FILM_LIGHT=0,
     DYNRNG_PROFILE_FILM_STANDARD,
@@ -81,6 +96,9 @@ enum {
     A52_ACMOD_3_2
 };
 
+/**
+ * Parameters which affect encoded audio output
+ */
 typedef struct {
 
     /**
@@ -194,6 +212,7 @@ typedef struct {
 } AftenEncParams;
 
 /**
+ * Metadata parameters
  * See the A/52 specification for details regarding the metadata.
  */
 typedef struct {
