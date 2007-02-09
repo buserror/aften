@@ -48,7 +48,7 @@ typedef struct {
     void (*mdct)(struct A52Context *ctx, FLOAT *out, FLOAT *in);
     void (*mdct_close)(struct A52Context *ctx);
     FLOAT *trig;
-#if defined(HAVE_SSE) || !defined(HAVE_SSE3)
+#if defined(HAVE_SSE) || defined(HAVE_SSE3)
     FLOAT *trig_bitreverse;
     FLOAT *trig_forward;
     FLOAT *trig_butterfly_first;
