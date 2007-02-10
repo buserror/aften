@@ -203,7 +203,7 @@ biquad_ii_run_filter(FilterContext *f, FLOAT *out, FLOAT *in, int n)
     if(f->cascaded) free(tmp);
 }
 
-Filter biquad_i_filter = {
+static const Filter biquad_i_filter = {
     "Biquad Direct Form I",
     FILTER_ID_BIQUAD_I,
     sizeof(BiquadContext),
@@ -211,7 +211,7 @@ Filter biquad_i_filter = {
     biquad_i_run_filter,
 };
 
-Filter biquad_ii_filter = {
+static const Filter biquad_ii_filter = {
     "Biquad Direct Form II",
     FILTER_ID_BIQUAD_II,
     sizeof(BiquadContext),
@@ -277,7 +277,7 @@ butterworth_init(FilterContext *f)
     return 0;
 }
 
-Filter butterworth_i_filter = {
+static const Filter butterworth_i_filter = {
     "Butterworth Direct Form I",
     FILTER_ID_BUTTERWORTH_I,
     sizeof(BiquadContext),
@@ -285,7 +285,7 @@ Filter butterworth_i_filter = {
     biquad_i_run_filter,
 };
 
-Filter butterworth_ii_filter = {
+static const Filter butterworth_ii_filter = {
     "Butterworth Direct Form II",
     FILTER_ID_BUTTERWORTH_II,
     sizeof(BiquadContext),
@@ -372,7 +372,7 @@ onepole_run_filter(FilterContext *f, FLOAT *out, FLOAT *in, int n)
     }
 }
 
-Filter onepole_filter = {
+static const Filter onepole_filter = {
     "One-Pole Filter",
     FILTER_ID_ONEPOLE,
     sizeof(OnePoleContext),
