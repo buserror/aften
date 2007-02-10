@@ -46,7 +46,7 @@ enum FilterID {
 struct Filter;
 
 typedef struct {
-    struct Filter *filter;
+    const struct Filter *filter;
     void *private_context;
     enum FilterType type;
     int cascaded;
