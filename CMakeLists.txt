@@ -230,6 +230,10 @@ ADD_LIBRARY(aften_wav STATIC aften/wav.c)
 ADD_EXECUTABLE(aften_exe ${AFTEN_SRCS})
 SET_TARGET_PROPERTIES(aften_exe PROPERTIES OUTPUT_NAME aften)
 SET_TARGET_PROPERTIES(aften_exe PROPERTIES LINKER_LANGUAGE C)
+IF(WIN32)
+  # When linking to static aften, dllimport mustn't be used
+  SET_PROPERTIES(TARGET aften_exe PROPERTIES COMPILE_FLAGS -DAFTEN_BUILD_LIBRARY)
+ENDIF(WIN32)
 TARGET_LINK_LIBRARIES(aften_exe aften_wav aften_static)
 
 ADD_EXECUTABLE(wavinfo util/wavinfo.c)
