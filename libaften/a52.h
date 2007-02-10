@@ -99,7 +99,6 @@ typedef struct A52BitAllocParams {
 } A52BitAllocParams;
 
 typedef struct A52Frame {
-    int frame_num;
     int quality;
     int bit_rate;
     int bwcode;
