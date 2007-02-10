@@ -266,7 +266,6 @@ typedef struct {
  * They give information about the previously encoded frame.
  */
 typedef struct {
-    int frame_num;
     int quality;
     int bit_rate;
     int bwcode;

@@ -113,7 +113,6 @@ aften_set_defaults(AftenContext *s)
     s->meta.dheadphonmod = 0;
     s->meta.adconvtyp = 0;
 
-    s->status.frame_num = 0;
     s->status.quality = 0;
     s->status.bit_rate = 0;
     s->status.bwcode = 0;
@@ -349,7 +348,6 @@ aften_encode_init(AftenContext *s)
     ctx->frmsizecod = i*2;
     ctx->target_bitrate = a52_bitratetab[i] >> ctx->halfratecod;
 
-    ctx->frame_cnt = 0;
     ctx->bit_cnt = 0;
     ctx->sample_cnt = 0;
 
@@ -466,8 +464,6 @@ frame_init(A52Context *ctx)
     A52Frame *frame;
 
     frame = &ctx->frame;
-
-    frame->frame_num = ctx->frame_cnt;
 
     for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
         block = &frame->blocks[blk];
@@ -1174,10 +1170,8 @@ aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, void *samples)
     // increment counters
     ctx->bit_cnt += frame->frame_size * 16;
     ctx->sample_cnt += A52_SAMPLES_PER_FRAME;
-    ctx->frame_cnt++;
 
     // update encoding status
-    s->status.frame_num = frame->frame_num;
     s->status.quality = frame->quality;
     s->status.bit_rate = frame->bit_rate;
     s->status.bwcode = frame->bwcode;

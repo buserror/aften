@@ -145,7 +145,6 @@ typedef struct A52Context {
 
     uint32_t bit_cnt;
     uint32_t sample_cnt;
-    uint32_t frame_cnt;
 
     FilterContext bs_filter[A52_MAX_CHANNELS];
     FilterContext dc_filter[A52_MAX_CHANNELS];

@@ -752,6 +752,7 @@ main(int argc, char **argv)
     uint32_t samplecount, bytecount, t0, t1, percent;
     FLOAT kbps, qual, bw;
     int last_frame;
+    int frame_cnt;
 
     opts.s = &s;
     aften_set_defaults(&s);
@@ -898,6 +899,7 @@ main(int argc, char **argv)
     samplecount = bytecount = t0 = t1 = percent = 0;
     qual = bw = 0.0;
     last_frame = 0;
+    frame_cnt = 0;
 
     nr = wavfile_read_samples(&wf, fwav, A52_SAMPLES_PER_FRAME);
     while(nr >= 0) {
@@ -923,7 +925,7 @@ main(int argc, char **argv)
 
         fs = aften_encode_frame(&s, frame, fwav);
         if(fs <= 0) {
-            fprintf(stderr, "Error encoding frame %d\n", s.status.frame_num);
+            fprintf(stderr, "Error encoding frame %d\n", frame_cnt);
         } else {
             if(s.params.verbose > 0) {
                 samplecount += A52_SAMPLES_PER_FRAME;
@@ -932,7 +934,7 @@ main(int argc, char **argv)
                 bw += s.status.bwcode;
                 if(s.params.verbose == 1) {
                     t1 = samplecount / wf.sample_rate;
-                    if(t1 > t0 || samplecount >= wf.samples) {
+                    if(frame_cnt > 0 && (t1 > t0 || samplecount >= wf.samples)) {
                         kbps = (bytecount * FCONST(8.0) * wf.sample_rate) /
                                (FCONST(1000.0) * samplecount);
                         percent = 0;
@@ -943,18 +945,19 @@ main(int argc, char **argv)
                         }
                         fprintf(stderr, "\rprogress: %3u%% | q: %4.1f | "
                                         "bw: %2.1f | bitrate: %4.1f kbps ",
-                                percent, (qual / (s.status.frame_num+1)),
-                                (bw / (s.status.frame_num+1)), kbps);
+                                percent, (qual / (frame_cnt+1)),
+                                (bw / (frame_cnt+1)), kbps);
                     }
                     t0 = t1;
                 } else if(s.params.verbose == 2) {
                     fprintf(stderr, "frame: %7d | q: %4d | bw: %2d | bitrate: %3d kbps\n",
-                            s.status.frame_num, s.status.quality, s.status.bwcode,
+                            frame_cnt, s.status.quality, s.status.bwcode,
                             s.status.bit_rate);
                 }
             }
             fwrite(frame, 1, fs, ofp);
         }
+        frame_cnt++;
         last_frame = nr;
         nr = wavfile_read_samples(&wf, fwav, A52_SAMPLES_PER_FRAME);
     }
@@ -966,9 +969,10 @@ main(int argc, char **argv)
         } else {
             kbps = 0;
         }
+        frame_cnt = MAX(frame_cnt, 1);
         fprintf(stderr, "\n");
-        fprintf(stderr, "average quality:   %4.1f\n", (qual / (s.status.frame_num+1)));
-        fprintf(stderr, "average bandwidth: %2.1f\n", (bw / (s.status.frame_num+1)));
+        fprintf(stderr, "average quality:   %4.1f\n", (qual / frame_cnt));
+        fprintf(stderr, "average bandwidth: %2.1f\n", (bw / frame_cnt));
         fprintf(stderr, "average bitrate:   %4.1f kbps\n\n", kbps);
     }
 
