@@ -693,7 +693,6 @@ cbr_bit_allocation(A52Context *ctx, int prepare)
     }
 
     // set encoding parameters
-    ctx->last_csnroffst = csnroffst;
     frame->csnroffst = csnroffst;
     frame->fsnroffst = fsnroffst;
     frame->quality = QUALITY(csnroffst, fsnroffst);
@@ -743,7 +742,6 @@ vbr_bit_allocation(A52Context *ctx)
     frame->frmsizecod = i;
     frame->frame_size = frame_size / 16;
     frame->frame_size_min = frame->frame_size;
-    ctx->last_csnroffst = csnroffst;
 
     // run CBR bit allocation.
     // this will increase snroffst to make optimal use of the frame bits.

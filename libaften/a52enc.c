@@ -353,9 +353,6 @@ aften_encode_init(AftenContext *s)
     ctx->bit_cnt = 0;
     ctx->sample_cnt = 0;
 
-    // initial snr offset
-    ctx->last_csnroffst = 15;
-
     if(s->params.bwcode < -2 || s->params.bwcode > 60) {
         fprintf(stderr, "invalid bandwidth code\n");
         return -1;

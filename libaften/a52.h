@@ -154,7 +154,6 @@ typedef struct A52Context {
 
     FLOAT last_samples[A52_MAX_CHANNELS][256];
     FLOAT last_transient_samples[A52_MAX_CHANNELS][256];
-    int last_csnroffst;
     int last_quality;
 
     MDCTContext mdct_ctx_512;
