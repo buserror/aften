@@ -103,6 +103,7 @@ typedef struct A52Frame {
     int bit_rate;
     int bwcode;
 
+    FLOAT input_audio[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME];
     A52Block blocks[A52_NUM_BLOCKS];
     int frame_bits;
     int exp_bits;

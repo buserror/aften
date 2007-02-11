@@ -887,26 +887,21 @@ output_frame_end(A52ThreadContext *tctx)
 }
 
 static void
-copy_samples(A52ThreadContext *tctx, void *vsamples)
+copy_samples(A52ThreadContext *tctx)
 {
     A52Context *ctx = tctx->ctx;
-    FLOAT deint_audio[A52_MAX_CHANNELS+1][A52_SAMPLES_PER_FRAME];
+    A52Frame *frame = &tctx->frame;
+    A52Block *block;
+    FLOAT buffer[A52_SAMPLES_PER_FRAME];
     FLOAT *in_audio;
     FLOAT *out_audio;
     FLOAT *temp;
-    A52Frame *frame;
-    A52Block *block;
     int ch, blk;
-    int sinc;
 #define SWAP_BUFFERS temp=in_audio;in_audio=out_audio;out_audio=temp;
 
-    sinc = ctx->n_all_channels;
-    frame = &tctx->frame;
-    // convert sample format and de-interleave channels
-    ctx->fmt_convert_from_src(deint_audio, vsamples, sinc, A52_SAMPLES_PER_FRAME);
-    out_audio = deint_audio[A52_MAX_CHANNELS];
-    for(ch=0; ch<sinc; ch++) {
-        in_audio = deint_audio[ch];
+    for(ch=0; ch<ctx->n_all_channels; ch++) {
+        out_audio = buffer;
+        in_audio = frame->input_audio[ch];
         // DC-removal high-pass filter
         if(ctx->params.use_dc_filter) {
             filter_run(&ctx->dc_filter[ch], out_audio, in_audio, A52_SAMPLES_PER_FRAME);
@@ -1170,12 +1165,15 @@ aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, void *samples)
     tctx = ctx->tctx;
     frame = &tctx->frame;
 
+    // convert sample format and de-interleave channels
+    ctx->fmt_convert_from_src(frame->input_audio, samples, ctx->n_all_channels, A52_SAMPLES_PER_FRAME);
+
     if(frame_init(tctx)) {
         fprintf(stderr, "Encoding has not properly initialized\n");
         return -1;
     }
 
-    copy_samples(tctx, samples);
+    copy_samples(tctx);
 
     calculate_dynrng(tctx);
 
