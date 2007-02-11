@@ -458,12 +458,10 @@ aften_encode_init(AftenContext *s)
 static int
 frame_init(A52Context *ctx)
 {
+    A52Frame *frame = &ctx->frame;
+    A52Block *block;
     int blk, bnd, ch;
     int cutoff;
-    A52Block *block;
-    A52Frame *frame;
-
-    frame = &ctx->frame;
 
     for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
         block = &frame->blocks[blk];
@@ -610,13 +608,12 @@ asym_quant(int c, int e, int qbits)
 static void
 quantize_mantissas(A52Context *ctx)
 {
+    A52Frame *frame = &ctx->frame;
+    A52Block *block;
+    uint16_t *qmant1_ptr, *qmant2_ptr, *qmant4_ptr;
     int blk, ch, i, b, c, e, v;
     int mant1_cnt, mant2_cnt, mant4_cnt;
-    uint16_t *qmant1_ptr, *qmant2_ptr, *qmant4_ptr;
-    A52Frame *frame;
-    A52Block *block;
 
-    frame = &ctx->frame;
     for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
         block = &frame->blocks[blk];
         mant1_cnt = mant2_cnt = mant4_cnt = 0;
@@ -694,13 +691,11 @@ quantize_mantissas(A52Context *ctx)
 static void
 output_audio_blocks(A52Context *ctx)
 {
-    int blk, ch, i, baie, rbnd;
-    A52Frame *frame;
+    A52Frame *frame = &ctx->frame;
+    BitWriter *bw = &ctx->bw;
     A52Block *block;
-    BitWriter *bw;
+    int blk, ch, i, baie, rbnd;
 
-    frame = &ctx->frame;
-    bw = &ctx->bw;
     for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
         block = &frame->blocks[blk];
         for(ch=0; ch<ctx->n_channels; ch++) {
@@ -825,8 +820,8 @@ output_audio_blocks(A52Context *ctx)
 static int
 output_frame_end(A52Context *ctx)
 {
-    int fs, fs58, n, crc1, crc2, bitcount;
     uint8_t *frame;
+    int fs, fs58, n, crc1, crc2, bitcount;
 
     fs = ctx->frame.frame_size;
     // align to 8 bits
@@ -930,15 +925,15 @@ copy_samples(A52Context *ctx, void *vsamples)
 static int
 detect_transient(FLOAT *in)
 {
-    int i, j;
+    FLOAT *xx = in;
     FLOAT level1[2];
     FLOAT level2[4];
     FLOAT level3[8];
-    FLOAT *xx = in;
     FLOAT tmax = FCONST(100.0) / FCONST(32768.0);
     FLOAT t1 = FCONST(0.100);
     FLOAT t2 = FCONST(0.075);
     FLOAT t3 = FCONST(0.050);
+    int i, j;
 
     // level 1 (2 x 256)
     for(i=0; i<2; i++) {
@@ -982,8 +977,8 @@ detect_transient(FLOAT *in)
 static void
 generate_coefs(A52Context *ctx)
 {
-    int blk, ch, i;
     A52Block *block;
+    int blk, ch, i;
 
     void (*mdct_256)(struct A52Context *ctx, FLOAT *out, FLOAT *in) =
         ctx->mdct_ctx_256.mdct;
@@ -1016,10 +1011,10 @@ generate_coefs(A52Context *ctx)
 static void
 calc_rematrixing(A52Context *ctx)
 {
+    A52Block *block;
     FLOAT sum[4][4];
     FLOAT lt, rt, ctmp1, ctmp2;
     int blk, bnd, i;
-    A52Block *block;
 
     if(!ctx->params.use_rematrixing) {
         ctx->frame.blocks[0].rematstr = 1;
@@ -1109,8 +1104,8 @@ compute_dither_strategy(A52Context *ctx)
 static void
 calculate_dynrng(A52Context *ctx)
 {
-    int blk;
     A52Block *block;
+    int blk;
 
     if(ctx->params.dynrng_profile == DYNRNG_PROFILE_NONE)
         return;
