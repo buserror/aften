@@ -419,12 +419,11 @@ dct_iv(MDCTContext *mdct, FLOAT *out, FLOAT *in)
     int n8 = n>>3;
     FLOAT *w = mdct->buffer;
     FLOAT *w2 = w+n2;
-
-    FLOAT r0;
-    FLOAT r1;
     FLOAT *x0 = in+n2+n4;
     FLOAT *x1 = x0+1;
     FLOAT *trig = mdct->trig + n2;
+    FLOAT r0;
+    FLOAT r1;
     int i;
 
     for(i=0; i<n8; i+=2) {
@@ -509,11 +508,10 @@ mdct_256(A52Context *ctx, FLOAT *out, FLOAT *in)
 static void
 mdct_256(A52Context *ctx, FLOAT *out, FLOAT *in)
 {
-    int i;
-
     FLOAT *coef_a = in;
     FLOAT *coef_b = in+128;
     FLOAT *xx = ctx->mdct_ctx_256.buffer1;
+    int i;
 
     memcpy(xx, in+64, 192 * sizeof(FLOAT));
     for(i=0; i<64; i++)
