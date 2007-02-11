@@ -102,10 +102,6 @@ sse_mdct_ctx_init(MDCTContext *mdct, int n)
 
     // MDCT scale used in AC3
     mdct->scale = -2.0f / n;
-
-    // internal mdct buffers
-    mdct->buffer = aligned_malloc((n+2) * sizeof(FLOAT));/* +2 to prevent illegal read in bitreverse*/
-    mdct->buffer1 = aligned_malloc(n * sizeof(FLOAT));
     {
         __m128  pscalem  = _mm_set_ps1(mdct->scale);
         float *T, *S;
@@ -385,8 +381,6 @@ sse_mdct_ctx_close(MDCTContext *mdct)
     if(mdct) {
         if(mdct->trig)   _mm_free(mdct->trig);
         if(mdct->bitrev) _mm_free(mdct->bitrev);
-        if(mdct->buffer) _mm_free(mdct->buffer);
-        if(mdct->buffer1) _mm_free(mdct->buffer1);
         if(mdct->trig_bitreverse) _mm_free(mdct->trig_bitreverse);
         if(mdct->trig_forward) _mm_free(mdct->trig_forward);
         if(mdct->trig_butterfly_first) _mm_free(mdct->trig_butterfly_first);
@@ -395,5 +389,22 @@ sse_mdct_ctx_close(MDCTContext *mdct)
         if(mdct->trig_butterfly_generic32) _mm_free(mdct->trig_butterfly_generic32);
         if(mdct->trig_butterfly_generic64) _mm_free(mdct->trig_butterfly_generic64);
         memset(mdct, 0, sizeof(MDCTContext));
+    }
+}
+
+void
+sse_mdct_tctx_init(MDCTThreadContext *tmdct, int n)
+{
+    // internal mdct buffers
+    tmdct->buffer = aligned_malloc((n+2) * sizeof(FLOAT));/* +2 to prevent illegal read in bitreverse*/
+    tmdct->buffer1 = aligned_malloc(n * sizeof(FLOAT));
+}
+
+void
+sse_mdct_tctx_close(MDCTThreadContext *tmdct)
+{
+    if(tmdct) {
+        if(tmdct->buffer) _mm_free(tmdct->buffer);
+        if(tmdct->buffer1) _mm_free(tmdct->buffer1);
     }
 }

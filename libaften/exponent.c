@@ -221,9 +221,10 @@ compute_expstr_ch(uint8_t exp[A52_NUM_BLOCKS][256], int ncoefs)
  * Runs the per-channel exponent strategy decision function for all channels
  */
 static void
-compute_exponent_strategy(A52Context *ctx)
+compute_exponent_strategy(A52ThreadContext *tctx)
 {
-    A52Frame *frame = &ctx->frame;
+    A52Context *ctx = tctx->ctx;
+    A52Frame *frame = &tctx->frame;
     A52Block *blocks = frame->blocks;
     int *ncoefs = frame->ncoefs;
     uint8_t exp[A52_MAX_CHANNELS][A52_NUM_BLOCKS][256];
@@ -254,9 +255,10 @@ compute_exponent_strategy(A52Context *ctx)
  * groups varies depending on exponent strategy and bandwidth
  */
 static void
-group_exponents(A52Context *ctx)
+group_exponents(A52ThreadContext *tctx)
 {
-    A52Frame *frame = &ctx->frame;
+    A52Context *ctx = tctx->ctx;
+    A52Frame *frame = &tctx->frame;
     A52Block *block;
     uint8_t *p;
     int delta[3];
@@ -311,9 +313,10 @@ group_exponents(A52Context *ctx)
  * otherwise they are encoded according to the specific exponent strategy.
  */
 static void
-encode_exponents(A52Context *ctx)
+encode_exponents(A52ThreadContext *tctx)
 {
-    A52Frame *frame = &ctx->frame;
+    A52Context *ctx = tctx->ctx;
+    A52Frame *frame = &tctx->frame;
     A52Block *blocks = frame->blocks;
     int *ncoefs = frame->ncoefs;
     int ch, i, j, k;
@@ -344,18 +347,19 @@ encode_exponents(A52Context *ctx)
  * Extracts the optimal exponent portion of each MDCT coefficient.
  */
 static void
-extract_exponents(A52Context *ctx)
+extract_exponents(A52ThreadContext *tctx)
 {
-    A52Block *blocks = ctx->frame.blocks;
+    A52Frame *frame = &tctx->frame;
     A52Block *block;
+    int all_channels = tctx->ctx->n_all_channels;
     int blk, ch, j;
     uint32_t v1, v2;
     FLOAT mul;
 
     mul = (FLOAT)(1 << 24);
-    for(ch=0; ch<ctx->n_all_channels; ch++) {
+    for(ch=0; ch<all_channels; ch++) {
         for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
-            block = &blocks[blk];
+            block = &frame->blocks[blk];
             for(j=0; j<256; j+=2) {
                 v1 = (uint32_t)AFT_FABS(block->mdct_coef[ch][j  ] * mul);
                 v2 = (uint32_t)AFT_FABS(block->mdct_coef[ch][j+1] * mul);
@@ -370,13 +374,13 @@ extract_exponents(A52Context *ctx)
  * Runs all the processes in extracting, analyzing, and encoding exponents
  */
 void
-process_exponents(A52Context *ctx)
+process_exponents(A52ThreadContext *tctx)
 {
-    extract_exponents(ctx);
+    extract_exponents(tctx);
 
-    compute_exponent_strategy(ctx);
+    compute_exponent_strategy(tctx);
 
-    encode_exponents(ctx);
+    encode_exponents(tctx);
 
-    group_exponents(ctx);
+    group_exponents(tctx);
 }

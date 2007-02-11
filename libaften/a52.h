@@ -120,9 +120,28 @@ typedef struct A52Frame {
     int ncoefs[A52_MAX_CHANNELS];
 } A52Frame;
 
-typedef struct A52Context {
+typedef struct A52ThreadContext {
+    struct A52Context *ctx;
+    int thread_num;
+    int state;
+    int fs;
+
+    AftenStatus status;
     A52Frame frame;
     BitWriter bw;
+    uint8_t frame_buffer[A52_MAX_CODED_FRAME_SIZE];
+
+    uint32_t bit_cnt;
+    uint32_t sample_cnt;
+
+    int last_quality;
+
+    MDCTThreadContext mdct_tctx_512;
+    MDCTThreadContext mdct_tctx_256;
+} A52ThreadContext;
+
+typedef struct A52Context {
+    A52ThreadContext *tctx;
     AftenEncParams params;
     AftenMetadata meta;
     void (*fmt_convert_from_src)(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
@@ -142,9 +161,6 @@ typedef struct A52Context {
     int frmsizecod;
     int fixed_bwcode;
 
-    uint32_t bit_cnt;
-    uint32_t sample_cnt;
-
     FilterContext bs_filter[A52_MAX_CHANNELS];
     FilterContext dc_filter[A52_MAX_CHANNELS];
     FilterContext bw_filter[A52_MAX_CHANNELS];
@@ -152,7 +168,6 @@ typedef struct A52Context {
 
     FLOAT last_samples[A52_MAX_CHANNELS][256];
     FLOAT last_transient_samples[A52_MAX_CHANNELS][256];
-    int last_quality;
 
     MDCTContext mdct_ctx_512;
     MDCTContext mdct_ctx_256;

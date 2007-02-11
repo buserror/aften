@@ -484,13 +484,14 @@ mdct_bitreverse(MDCTContext *mdct, FLOAT *x)
 }
 
 static void
-dct_iv(MDCTContext *mdct, FLOAT *out, FLOAT *in)
+dct_iv(MDCTThreadContext *tmdct, FLOAT *out, FLOAT *in)
 {
+    MDCTContext *mdct = tmdct->mdct;
     int n = mdct->n;
     int n2 = n>>1;
     int n4 = n>>2;
     int n8 = n>>3;
-    FLOAT *w = mdct->buffer;
+    FLOAT *w = tmdct->buffer;
     FLOAT *w2 = w+n2;
     float *x0    = in+n2+n4-8;
     float *x1    = in+n2+n4;
@@ -617,26 +618,26 @@ dct_iv(MDCTContext *mdct, FLOAT *out, FLOAT *in)
 }
 
 static void
-mdct_512(A52Context *ctx, FLOAT *out, FLOAT *in)
+mdct_512(A52ThreadContext *tctx, FLOAT *out, FLOAT *in)
 {
-    dct_iv(&ctx->mdct_ctx_512, out, in);
+    dct_iv(&tctx->mdct_tctx_512, out, in);
 }
 
 static void
-mdct_256(A52Context *ctx, FLOAT *out, FLOAT *in)
+mdct_256(A52ThreadContext *tctx, FLOAT *out, FLOAT *in)
 {
-    int i;
     FLOAT *coef_a, *coef_b, *xx;
+    int i;
 
     coef_a = in;
     coef_b = &in[128];
-    xx = ctx->mdct_ctx_256.buffer1;
+    xx = tctx->mdct_tctx_256.buffer1;
 
     memcpy(xx, in+64, 192 * sizeof(FLOAT));
     for(i=0; i<64; ++i)
         xx[i+192] = -in[i];
 
-    dct_iv(&ctx->mdct_ctx_256, coef_a, xx);
+    dct_iv(&tctx->mdct_tctx_256, coef_a, xx);
 
     for(i=0; i<64; ++i)
         xx[i] = -in[i+256+192];
@@ -645,7 +646,7 @@ mdct_256(A52Context *ctx, FLOAT *out, FLOAT *in)
     for(i=0; i<64; ++i)
         xx[i+192] = -in[i+256+128];
 
-    dct_iv(&ctx->mdct_ctx_256, coef_b, xx);
+    dct_iv(&tctx->mdct_tctx_256, coef_b, xx);
 
     for(i=0; i<128; i++) {
         out[2*i] = coef_a[i];

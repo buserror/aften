@@ -24,8 +24,15 @@ sse3_mdct_close(A52Context *ctx)
 {
     sse_mdct_ctx_close(&ctx->mdct_ctx_512);
     sse_mdct_ctx_close(&ctx->mdct_ctx_256);
+}
 
-    _mm_free(ctx->frame.blocks[0].input_samples[0]);
+static void
+sse3_mdct_thread_close(A52ThreadContext *tctx)
+{
+    sse_mdct_tctx_close(&tctx->mdct_tctx_512);
+    sse_mdct_tctx_close(&tctx->mdct_tctx_256);
+
+    _mm_free(tctx->frame.blocks[0].input_samples[0]);
 }
 
 void
@@ -39,8 +46,21 @@ sse3_mdct_init(A52Context *ctx)
 
     ctx->mdct_ctx_512.mdct_close = sse3_mdct_close;
     ctx->mdct_ctx_256.mdct_close = sse3_mdct_close;
+}
 
-    ctx->frame.blocks[0].input_samples[0] =
+void
+sse3_mdct_thread_init(A52ThreadContext *tctx)
+{
+    sse_mdct_tctx_init(&tctx->mdct_tctx_512, 512);
+    sse_mdct_tctx_init(&tctx->mdct_tctx_256, 256);
+
+    tctx->mdct_tctx_512.mdct_thread_close = sse3_mdct_thread_close;
+    tctx->mdct_tctx_256.mdct_thread_close = sse3_mdct_thread_close;
+
+    tctx->mdct_tctx_512.mdct = &tctx->ctx->mdct_ctx_512;
+    tctx->mdct_tctx_256.mdct = &tctx->ctx->mdct_ctx_256;
+
+    tctx->frame.blocks[0].input_samples[0] =
         aligned_malloc(A52_NUM_BLOCKS * A52_MAX_CHANNELS * (256 + 512) * sizeof(FLOAT));
-    alloc_block_buffers(ctx);
+    alloc_block_buffers(tctx);
 }

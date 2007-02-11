@@ -43,9 +43,10 @@
 #include "common.h"
 
 struct A52Context;
+struct A52ThreadContext;
 
 typedef struct {
-    void (*mdct)(struct A52Context *ctx, FLOAT *out, FLOAT *in);
+    void (*mdct)(struct A52ThreadContext *ctx, FLOAT *out, FLOAT *in);
     void (*mdct_close)(struct A52Context *ctx);
     FLOAT *trig;
 #if defined(HAVE_SSE) || defined(HAVE_SSE3)
@@ -57,24 +58,32 @@ typedef struct {
     FLOAT *trig_butterfly_generic32;
     FLOAT *trig_butterfly_generic64;
 #endif
-    FLOAT *buffer;
-    FLOAT *buffer1;
     int *bitrev;
     FLOAT scale;
     int n;
     int log2n;
 } MDCTContext;
 
-extern void mdct_init(struct A52Context *ctx);
+typedef struct {
+    MDCTContext *mdct;
+    void (*mdct_thread_close)(struct A52ThreadContext *ctx);
+    FLOAT *buffer;
+    FLOAT *buffer1;
+} MDCTThreadContext;
 
-extern void alloc_block_buffers(struct A52Context *ctx);
+extern void mdct_init(struct A52Context *ctx);
+extern void mdct_thread_init(struct A52ThreadContext *tctx);
+
+extern void alloc_block_buffers(struct A52ThreadContext *tctx);
 
 #ifdef HAVE_SSE
 extern void sse_mdct_init(struct A52Context *ctx);
+extern void sse_mdct_thread_init(struct A52ThreadContext *tctx);
 #endif
 
 #ifdef HAVE_SSE3
 extern void sse3_mdct_init(struct A52Context *ctx);
+extern void sse3_mdct_thread_init(struct A52ThreadContext *tctx);
 #endif
 
 #endif /* MDCT_H */

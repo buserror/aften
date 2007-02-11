@@ -32,6 +32,6 @@
 
 extern void exponent_init(void);
 
-extern void process_exponents(A52Context *ctx);
+extern void process_exponents(A52ThreadContext *tctx);
 
 #endif /* EXPONENT_H */

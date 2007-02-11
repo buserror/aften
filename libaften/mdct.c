@@ -104,10 +104,6 @@ ctx_init(MDCTContext *mdct, int n)
 
     // MDCT scale used in AC3
     mdct->scale = FCONST(-2.0) / n;
-
-    // internal mdct buffers
-    mdct->buffer = calloc(n, sizeof(FLOAT));
-    mdct->buffer1 = calloc(n, sizeof(FLOAT));
 }
 
 static void
@@ -116,9 +112,24 @@ ctx_close(MDCTContext *mdct)
     if(mdct) {
         if(mdct->trig)    free(mdct->trig);
         if(mdct->bitrev)  free(mdct->bitrev);
-        if(mdct->buffer)  free(mdct->buffer);
-        if(mdct->buffer1) free(mdct->buffer1);
         memset(mdct, 0, sizeof(MDCTContext));
+    }
+}
+
+static void
+tctx_init(MDCTThreadContext *tmdct, int n)
+{
+     // internal mdct buffers
+    tmdct->buffer = calloc(n, sizeof(FLOAT));
+    tmdct->buffer1 = calloc(n, sizeof(FLOAT));
+}
+
+static void
+tctx_close(MDCTThreadContext *tmdct)
+{
+    if(tmdct) {
+        if(tmdct->buffer)  free(tmdct->buffer);
+        if(tmdct->buffer1) free(tmdct->buffer1);
     }
 }
 
@@ -411,13 +422,14 @@ mdct_bitreverse(MDCTContext *mdct, FLOAT *x)
 }
 
 static void
-dct_iv(MDCTContext *mdct, FLOAT *out, FLOAT *in)
+dct_iv(MDCTThreadContext *tmdct, FLOAT *out, FLOAT *in)
 {
+    MDCTContext *mdct = tmdct->mdct;
     int n = mdct->n;
     int n2 = n>>1;
     int n4 = n>>2;
     int n8 = n>>3;
-    FLOAT *w = mdct->buffer;
+    FLOAT *w = tmdct->buffer;
     FLOAT *w2 = w+n2;
     FLOAT *x0 = in+n2+n4;
     FLOAT *x1 = x0+1;
@@ -473,9 +485,9 @@ dct_iv(MDCTContext *mdct, FLOAT *out, FLOAT *in)
 }
 
 static void
-mdct_512(A52Context *ctx, FLOAT *out, FLOAT *in)
+mdct_512(A52ThreadContext *tctx, FLOAT *out, FLOAT *in)
 {
-    dct_iv(&ctx->mdct_ctx_512, out, in);
+    dct_iv(&tctx->mdct_tctx_512, out, in);
 }
 
 #if 0
@@ -506,18 +518,18 @@ mdct_256(A52Context *ctx, FLOAT *out, FLOAT *in)
 }
 #else
 static void
-mdct_256(A52Context *ctx, FLOAT *out, FLOAT *in)
+mdct_256(A52ThreadContext *tctx, FLOAT *out, FLOAT *in)
 {
     FLOAT *coef_a = in;
     FLOAT *coef_b = in+128;
-    FLOAT *xx = ctx->mdct_ctx_256.buffer1;
+    FLOAT *xx = tctx->mdct_tctx_256.buffer1;
     int i;
 
     memcpy(xx, in+64, 192 * sizeof(FLOAT));
     for(i=0; i<64; i++)
         xx[i+192] = -in[i];
 
-    dct_iv(&ctx->mdct_ctx_256, coef_a, xx);
+    dct_iv(&tctx->mdct_tctx_256, coef_a, xx);
 
     for(i=0; i<64; i++)
         xx[i] = -in[i+256+192];
@@ -526,7 +538,7 @@ mdct_256(A52Context *ctx, FLOAT *out, FLOAT *in)
     for(i=0; i<64; i++)
         xx[i+192] = -in[i+256+128];
 
-    dct_iv(&ctx->mdct_ctx_256, coef_b, xx);
+    dct_iv(&tctx->mdct_tctx_256, coef_b, xx);
 
     for(i=0; i<128; i++) {
         out[2*i  ] = coef_a[i];
@@ -536,7 +548,7 @@ mdct_256(A52Context *ctx, FLOAT *out, FLOAT *in)
 #endif
 
 void
-alloc_block_buffers(struct A52Context *ctx)
+alloc_block_buffers(A52ThreadContext *tctx)
 {
     int i, j;
 
@@ -544,17 +556,17 @@ alloc_block_buffers(struct A52Context *ctx)
        now interleave in and out buffers */
     for (i=0; i<A52_NUM_BLOCKS; ++i) {
         if (i) {
-            ctx->frame.blocks[i].input_samples[0] =
-                ctx->frame.blocks[i-1].input_samples[A52_MAX_CHANNELS-1] + 512 + 256;
+            tctx->frame.blocks[i].input_samples[0] =
+                tctx->frame.blocks[i-1].input_samples[A52_MAX_CHANNELS-1] + 512 + 256;
         }
-        ctx->frame.blocks[i].mdct_coef[0] =
-            ctx->frame.blocks[i].input_samples[0] + 512;
+        tctx->frame.blocks[i].mdct_coef[0] =
+            tctx->frame.blocks[i].input_samples[0] + 512;
 
         for (j=1; j<A52_MAX_CHANNELS; ++j) {
-            ctx->frame.blocks[i].input_samples[j] =
-                ctx->frame.blocks[i].input_samples[j-1] + 512 + 256;
-            ctx->frame.blocks[i].mdct_coef[j] =
-                ctx->frame.blocks[i].mdct_coef[j-1] + 512 + 256;
+            tctx->frame.blocks[i].input_samples[j] =
+                tctx->frame.blocks[i].input_samples[j-1] + 512 + 256;
+            tctx->frame.blocks[i].mdct_coef[j] =
+                tctx->frame.blocks[i].mdct_coef[j-1] + 512 + 256;
         }
     }
 }
@@ -564,8 +576,15 @@ mdct_close(A52Context *ctx)
 {
     ctx_close(&ctx->mdct_ctx_512);
     ctx_close(&ctx->mdct_ctx_256);
+}
 
-    free(ctx->frame.blocks[0].input_samples[0]);
+static void
+mdct_thread_close(A52ThreadContext *tctx)
+{
+    tctx_close(&tctx->mdct_tctx_512);
+    tctx_close(&tctx->mdct_tctx_256);
+
+    free(tctx->frame.blocks[0].input_samples[0]);
 }
 
 void
@@ -579,8 +598,22 @@ mdct_init(A52Context *ctx)
 
     ctx->mdct_ctx_512.mdct_close = mdct_close;
     ctx->mdct_ctx_256.mdct_close = mdct_close;
-
-    ctx->frame.blocks[0].input_samples[0] =
-        malloc(A52_NUM_BLOCKS * A52_MAX_CHANNELS * (256 + 512) * sizeof(FLOAT));
-    alloc_block_buffers(ctx);
 }
+
+void
+mdct_thread_init(A52ThreadContext *tctx)
+{
+    tctx_init(&tctx->mdct_tctx_512, 512);
+    tctx_init(&tctx->mdct_tctx_256, 256);
+
+    tctx->mdct_tctx_512.mdct_thread_close = mdct_thread_close;
+    tctx->mdct_tctx_256.mdct_thread_close = mdct_thread_close;
+
+    tctx->mdct_tctx_512.mdct = &tctx->ctx->mdct_ctx_512;
+    tctx->mdct_tctx_256.mdct = &tctx->ctx->mdct_ctx_256;
+
+    tctx->frame.blocks[0].input_samples[0] =
+        malloc(A52_NUM_BLOCKS * A52_MAX_CHANNELS * (256 + 512) * sizeof(FLOAT));
+    alloc_block_buffers(tctx);
+}
+

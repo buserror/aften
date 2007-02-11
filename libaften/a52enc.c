@@ -234,11 +234,30 @@ select_mdct(A52Context *ctx)
     mdct_init(ctx);
 }
 
+static void
+select_mdct_thread(A52ThreadContext *tctx)
+{
+#ifdef HAVE_SSE3
+    if (_alHaveSSE3()) {
+        sse3_mdct_thread_init(tctx);
+        return;
+    }
+#endif
+#ifdef HAVE_SSE
+    if (_alHaveSSE()) {
+        sse_mdct_thread_init(tctx);
+        return;
+    }
+#endif
+    mdct_thread_init(tctx);
+}
+
 int
 aften_encode_init(AftenContext *s)
 {
-    int i, j, brate;
     A52Context *ctx;
+    A52ThreadContext *tctx;
+    int i, j, brate;
 
     if(s == NULL) {
         fprintf(stderr, "NULL parameter passed to aften_encode_init\n");
@@ -348,27 +367,6 @@ aften_encode_init(AftenContext *s)
     ctx->frmsizecod = i*2;
     ctx->target_bitrate = a52_bitratetab[i] >> ctx->halfratecod;
 
-    ctx->bit_cnt = 0;
-    ctx->sample_cnt = 0;
-
-    if(s->params.bwcode < -2 || s->params.bwcode > 60) {
-        fprintf(stderr, "invalid bandwidth code\n");
-        return -1;
-    }
-    ctx->last_quality = 240;
-    if(ctx->params.encoding_mode == AFTEN_ENC_MODE_VBR) {
-        ctx->last_quality = ctx->params.quality;
-    } else if(ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
-        ctx->last_quality = ((((ctx->target_bitrate/ctx->n_channels)*35)/24)+95)+(25*ctx->halfratecod);
-    }
-    if(ctx->params.bwcode < 0) {
-        int cutoff = ((ctx->last_quality-120) * 120) + 4000;
-        ctx->fixed_bwcode = ((cutoff * 512 / ctx->sample_rate) - 73) / 3;
-        ctx->fixed_bwcode = CLIP(ctx->fixed_bwcode, 0, 60);
-    } else {
-        ctx->fixed_bwcode = ctx->params.bwcode;
-    }
-
     bitalloc_init();
     crc_init();
     a52_window_init();
@@ -379,6 +377,35 @@ aften_encode_init(AftenContext *s)
     if(ctx->sample_rate <= 16000) {
         ctx->params.use_block_switching = 0;
     }
+
+    // Initialize thread specific contexts
+    tctx = calloc(sizeof(A52ThreadContext), 1);
+    tctx->ctx = ctx;
+    ctx->tctx = tctx;
+
+    select_mdct_thread(tctx);
+
+    tctx->bit_cnt = 0;
+    tctx->sample_cnt = 0;
+
+    if(s->params.bwcode < -2 || s->params.bwcode > 60) {
+        fprintf(stderr, "invalid bandwidth code\n");
+        return -1;
+    }
+    tctx->last_quality = 240;
+    if(ctx->params.encoding_mode == AFTEN_ENC_MODE_VBR) {
+        tctx->last_quality = ctx->params.quality;
+    } else if(ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
+        tctx->last_quality = ((((ctx->target_bitrate/ctx->n_channels)*35)/24)+95)+(25*ctx->halfratecod);
+    }
+    if(ctx->params.bwcode < 0) {
+        int cutoff = ((tctx->last_quality-120) * 120) + 4000;
+        ctx->fixed_bwcode = ((cutoff * 512 / ctx->sample_rate) - 73) / 3;
+        ctx->fixed_bwcode = CLIP(ctx->fixed_bwcode, 0, 60);
+    } else {
+        ctx->fixed_bwcode = ctx->params.bwcode;
+    }
+
     // initialize transient-detect filters (one for each channel)
     // cascaded biquad direct form I high-pass w/ cutoff of 8 kHz
     if(ctx->params.use_block_switching) {
@@ -456,9 +483,10 @@ aften_encode_init(AftenContext *s)
 }
 
 static int
-frame_init(A52Context *ctx)
+frame_init(A52ThreadContext *tctx)
 {
-    A52Frame *frame = &ctx->frame;
+    A52Context *ctx = tctx->ctx;
+    A52Frame *frame = &tctx->frame;
     A52Block *block;
     int blk, bnd, ch;
     int cutoff;
@@ -493,15 +521,15 @@ frame_init(A52Context *ctx)
 
     if(ctx->params.bwcode == -2) {
         if(ctx->params.encoding_mode == AFTEN_ENC_MODE_VBR) {
-            cutoff = ((ctx->last_quality-120) * 120) + 4000;
+            cutoff = ((tctx->last_quality-120) * 120) + 4000;
             frame->bwcode = ((cutoff * 512 / ctx->sample_rate) - 73) / 3;
             frame->bwcode = CLIP(frame->bwcode, 0, 60);
         } else if(ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
             frame->bwcode = ctx->fixed_bwcode;
-            if(ctx->last_quality < 240) {
-                frame->bwcode -= ((240-ctx->last_quality)/2);
-            } else if(ctx->last_quality > 245) {
-                frame->bwcode += ((ctx->last_quality-240)/5);
+            if(tctx->last_quality < 240) {
+                frame->bwcode -= ((240-tctx->last_quality)/2);
+            } else if(tctx->last_quality > 245) {
+                frame->bwcode += ((tctx->last_quality-240)/5);
             }
             frame->bwcode = CLIP(frame->bwcode, 0, 60);
             ctx->fixed_bwcode = frame->bwcode;
@@ -533,10 +561,11 @@ frame_init(A52Context *ctx)
 
 /* output the A52 frame header */
 static void
-output_frame_header(A52Context *ctx, uint8_t *frame_buffer)
+output_frame_header(A52ThreadContext *tctx, uint8_t *frame_buffer)
 {
-    A52Frame *f = &ctx->frame;
-    BitWriter *bw = &ctx->bw;
+    A52Context *ctx = tctx->ctx;
+    A52Frame *f = &tctx->frame;
+    BitWriter *bw = &tctx->bw;
     int frmsizecod = f->frmsizecod+(f->frame_size-f->frame_size_min);
 
     bitwriter_init(bw, frame_buffer, A52_MAX_CODED_FRAME_SIZE);
@@ -606,9 +635,10 @@ asym_quant(int c, int e, int qbits)
 }
 
 static void
-quantize_mantissas(A52Context *ctx)
+quantize_mantissas(A52ThreadContext *tctx)
 {
-    A52Frame *frame = &ctx->frame;
+    A52Context *ctx = tctx->ctx;
+    A52Frame *frame = &tctx->frame;
     A52Block *block;
     uint16_t *qmant1_ptr, *qmant2_ptr, *qmant4_ptr;
     int blk, ch, i, b, c, e, v;
@@ -689,13 +719,15 @@ quantize_mantissas(A52Context *ctx)
 
 /* Output each audio block. */
 static void
-output_audio_blocks(A52Context *ctx)
+output_audio_blocks(A52ThreadContext *tctx)
 {
-    A52Frame *frame = &ctx->frame;
-    BitWriter *bw = &ctx->bw;
+    A52Context *ctx = tctx->ctx;
+    A52Frame *frame = &tctx->frame;
     A52Block *block;
+    BitWriter *bw;
     int blk, ch, i, baie, rbnd;
 
+    bw = &tctx->bw;
     for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
         block = &frame->blocks[blk];
         for(ch=0; ch<ctx->n_channels; ch++) {
@@ -818,23 +850,23 @@ output_audio_blocks(A52Context *ctx)
 }
 
 static int
-output_frame_end(A52Context *ctx)
+output_frame_end(A52ThreadContext *tctx)
 {
     uint8_t *frame;
     int fs, fs58, n, crc1, crc2, bitcount;
 
-    fs = ctx->frame.frame_size;
+    fs = tctx->frame.frame_size;
     // align to 8 bits
-    bitwriter_flushbits(&ctx->bw);
+    bitwriter_flushbits(&tctx->bw);
     // add zero bytes to reach the frame size
-    frame = ctx->bw.buffer;
-    bitcount = bitwriter_bitcount(&ctx->bw);
+    frame = tctx->bw.buffer;
+    bitcount = bitwriter_bitcount(&tctx->bw);
     n = (fs << 1) - 2 - (bitcount >> 3);
     if(n < 0) {
         fprintf(stderr, "data size exceeds frame size (frame=%d data=%d)\n", (fs << 1) - 2, bitcount >> 3);
         return -1;
     }
-    if(n > 0) memset(&ctx->bw.buffer[bitcount>>3], 0, n);
+    if(n > 0) memset(&tctx->bw.buffer[bitcount>>3], 0, n);
 
     // compute crc1 for 1st 5/8 of frame
     fs58 = (fs >> 1) + (fs >> 3);
@@ -855,8 +887,9 @@ output_frame_end(A52Context *ctx)
 }
 
 static void
-copy_samples(A52Context *ctx, void *vsamples)
+copy_samples(A52ThreadContext *tctx, void *vsamples)
 {
+    A52Context *ctx = tctx->ctx;
     FLOAT deint_audio[A52_MAX_CHANNELS+1][A52_SAMPLES_PER_FRAME];
     FLOAT *in_audio;
     FLOAT *out_audio;
@@ -868,7 +901,7 @@ copy_samples(A52Context *ctx, void *vsamples)
 #define SWAP_BUFFERS temp=in_audio;in_audio=out_audio;out_audio=temp;
 
     sinc = ctx->n_all_channels;
-    frame = &ctx->frame;
+    frame = &tctx->frame;
     // convert sample format and de-interleave channels
     ctx->fmt_convert_from_src(deint_audio, vsamples, sinc, A52_SAMPLES_PER_FRAME);
     out_audio = deint_audio[A52_MAX_CHANNELS];
@@ -926,6 +959,7 @@ static int
 detect_transient(FLOAT *in)
 {
     FLOAT *xx = in;
+    int i, j;
     FLOAT level1[2];
     FLOAT level2[4];
     FLOAT level3[8];
@@ -933,7 +967,6 @@ detect_transient(FLOAT *in)
     FLOAT t1 = FCONST(0.100);
     FLOAT t2 = FCONST(0.075);
     FLOAT t3 = FCONST(0.050);
-    int i, j;
 
     // level 1 (2 x 256)
     for(i=0; i<2; i++) {
@@ -975,21 +1008,19 @@ detect_transient(FLOAT *in)
 }
 
 static void
-generate_coefs(A52Context *ctx)
+generate_coefs(A52ThreadContext *tctx)
 {
+    A52Context *ctx = tctx->ctx;
     A52Block *block;
-    int blk, ch, i;
-
-    void (*mdct_256)(struct A52Context *ctx, FLOAT *out, FLOAT *in) =
+    void (*mdct_256)(struct A52ThreadContext *tctx, FLOAT *out, FLOAT *in) =
         ctx->mdct_ctx_256.mdct;
-
-    void (*mdct_512)(struct A52Context *ctx, FLOAT *out, FLOAT *in) =
+    void (*mdct_512)(struct A52ThreadContext *tctx, FLOAT *out, FLOAT *in) =
         ctx->mdct_ctx_512.mdct;
-
+    int blk, ch, i;
 
     for(ch=0; ch<ctx->n_all_channels; ch++) {
         for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
-            block = &ctx->frame.blocks[blk];
+            block = &tctx->frame.blocks[blk];
             if(ctx->params.use_block_switching) {
                 block->blksw[ch] = detect_transient(block->transient_samples[ch]);
             } else {
@@ -997,11 +1028,11 @@ generate_coefs(A52Context *ctx)
             }
             apply_a52_window(block->input_samples[ch]);
             if(block->blksw[ch]) {
-                mdct_256(ctx, block->mdct_coef[ch], block->input_samples[ch]);
+                mdct_256(tctx, block->mdct_coef[ch], block->input_samples[ch]);
             } else {
-                mdct_512(ctx, block->mdct_coef[ch], block->input_samples[ch]);
+                mdct_512(tctx, block->mdct_coef[ch], block->input_samples[ch]);
             }
-            for(i=ctx->frame.ncoefs[ch]; i<256; i++) {
+            for(i=tctx->frame.ncoefs[ch]; i<256; i++) {
                 block->mdct_coef[ch][i] = 0.0;
             }
         }
@@ -1009,26 +1040,28 @@ generate_coefs(A52Context *ctx)
 }
 
 static void
-calc_rematrixing(A52Context *ctx)
+calc_rematrixing(A52ThreadContext *tctx)
 {
+    A52Context *ctx = tctx->ctx;
     A52Block *block;
     FLOAT sum[4][4];
     FLOAT lt, rt, ctmp1, ctmp2;
     int blk, bnd, i;
 
+
     if(!ctx->params.use_rematrixing) {
-        ctx->frame.blocks[0].rematstr = 1;
+        tctx->frame.blocks[0].rematstr = 1;
         for(bnd=0; bnd<4; bnd++) {
-            ctx->frame.blocks[0].rematflg[bnd] = 0;
+            tctx->frame.blocks[0].rematflg[bnd] = 0;
         }
         for(blk=1; blk<A52_NUM_BLOCKS; blk++) {
-            ctx->frame.blocks[blk].rematstr = 0;
+            tctx->frame.blocks[blk].rematstr = 0;
         }
         return;
     }
 
     for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
-        block = &ctx->frame.blocks[blk];
+        block = &tctx->frame.blocks[blk];
 
         block->rematstr = 0;
         if(blk == 0) block->rematstr = 1;
@@ -1037,7 +1070,7 @@ calc_rematrixing(A52Context *ctx)
             block->rematflg[bnd] = 0;
             sum[bnd][0] = sum[bnd][1] = sum[bnd][2] = sum[bnd][3] = 0;
             for(i=rematbndtab[bnd][0]; i<=rematbndtab[bnd][1]; i++) {
-                if(i == ctx->frame.ncoefs[0]) break;
+                if(i == tctx->frame.ncoefs[0]) break;
                 lt = block->mdct_coef[0][i];
                 rt = block->mdct_coef[1][i];
                 sum[bnd][0] += lt * lt;
@@ -1048,7 +1081,7 @@ calc_rematrixing(A52Context *ctx)
             if(sum[bnd][0]+sum[bnd][1] >= (sum[bnd][2]+sum[bnd][3])/FCONST(2.0)) {
                 block->rematflg[bnd] = 1;
                 for(i=rematbndtab[bnd][0]; i<=rematbndtab[bnd][1]; i++) {
-                    if(i == ctx->frame.ncoefs[0]) break;
+                    if(i == tctx->frame.ncoefs[0]) break;
                     ctmp1 = block->mdct_coef[0][i] * FCONST(0.5);
                     ctmp2 = block->mdct_coef[1][i] * FCONST(0.5);
                     block->mdct_coef[0][i] = ctmp1 + ctmp2;
@@ -1056,7 +1089,7 @@ calc_rematrixing(A52Context *ctx)
                 }
             }
             if(blk != 0 && block->rematstr == 0 &&
-               block->rematflg[bnd] != ctx->frame.blocks[blk-1].rematflg[bnd]) {
+               block->rematflg[bnd] != tctx->frame.blocks[blk-1].rematflg[bnd]) {
                 block->rematstr = 1;
             }
         }
@@ -1065,32 +1098,34 @@ calc_rematrixing(A52Context *ctx)
 
 /** Adjust for fractional frame sizes in CBR mode */
 static void
-adjust_frame_size(A52Context *ctx)
+adjust_frame_size(A52ThreadContext *tctx)
 {
-    A52Frame *f = &ctx->frame;
+    A52Context *ctx = tctx->ctx;
+    A52Frame *f = &tctx->frame;
     uint32_t kbps = f->bit_rate * 1000;
     uint32_t srate = ctx->sample_rate;
     int add;
 
-    while(ctx->bit_cnt >= kbps && ctx->sample_cnt >= srate) {
-        ctx->bit_cnt -= kbps;
-        ctx->sample_cnt -= srate;
+    while(tctx->bit_cnt >= kbps && tctx->sample_cnt >= srate) {
+        tctx->bit_cnt -= kbps;
+        tctx->sample_cnt -= srate;
     }
-    add = !!(ctx->bit_cnt * srate < ctx->sample_cnt * kbps);
+    add = !!(tctx->bit_cnt * srate < tctx->sample_cnt * kbps);
     f->frame_size = f->frame_size_min + add;
 }
 
 static void
-compute_dither_strategy(A52Context *ctx)
+compute_dither_strategy(A52ThreadContext *tctx)
 {
-    int blk, ch;
     A52Block *block0;
     A52Block *block1;
+    int channels = tctx->ctx->n_channels;
+    int blk, ch;
 
     block0 = NULL;
     for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
-        block1 = &ctx->frame.blocks[blk];
-        for(ch=0; ch<ctx->n_channels; ch++) {
+        block1 = &tctx->frame.blocks[blk];
+        for(ch=0; ch<channels; ch++) {
             if(block1->blksw[ch] || ((blk>0) && block0->blksw[ch])) {
                 block1->dithflag[ch] = 0;
             } else {
@@ -1102,8 +1137,9 @@ compute_dither_strategy(A52Context *ctx)
 }
 
 static void
-calculate_dynrng(A52Context *ctx)
+calculate_dynrng(A52ThreadContext *tctx)
 {
+    A52Context *ctx = tctx->ctx;
     A52Block *block;
     int blk;
 
@@ -1111,7 +1147,7 @@ calculate_dynrng(A52Context *ctx)
         return;
 
     for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
-        block = &ctx->frame.blocks[blk];
+        block = &tctx->frame.blocks[blk];
         block->dynrng = calculate_block_dynrng(block->input_samples,
                                                ctx->n_all_channels,
                                                -ctx->meta.dialnorm,
@@ -1123,6 +1159,7 @@ int
 aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, void *samples)
 {
     A52Context *ctx;
+    A52ThreadContext *tctx;
     A52Frame *frame;
 
     if(s == NULL || frame_buffer == NULL || samples == NULL) {
@@ -1130,50 +1167,51 @@ aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, void *samples)
         return -1;
     }
     ctx = s->private_context;
-    frame = &ctx->frame;
+    tctx = ctx->tctx;
+    frame = &tctx->frame;
 
-    if(frame_init(ctx)) {
+    if(frame_init(tctx)) {
         fprintf(stderr, "Encoding has not properly initialized\n");
         return -1;
     }
 
-    copy_samples(ctx, samples);
+    copy_samples(tctx, samples);
 
-    calculate_dynrng(ctx);
+    calculate_dynrng(tctx);
 
-    generate_coefs(ctx);
+    generate_coefs(tctx);
 
-    compute_dither_strategy(ctx);
+    compute_dither_strategy(tctx);
 
     if(ctx->acmod == A52_ACMOD_STEREO) {
-        calc_rematrixing(ctx);
+        calc_rematrixing(tctx);
     }
 
-    process_exponents(ctx);
+    process_exponents(tctx);
 
     if(ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
-        adjust_frame_size(ctx);
+        adjust_frame_size(tctx);
     }
 
-    if(compute_bit_allocation(ctx)) {
+    if(compute_bit_allocation(tctx)) {
         fprintf(stderr, "Error in bit allocation\n");
         return 0;
     }
 
-    quantize_mantissas(ctx);
+    quantize_mantissas(tctx);
 
     // increment counters
-    ctx->bit_cnt += frame->frame_size * 16;
-    ctx->sample_cnt += A52_SAMPLES_PER_FRAME;
+    tctx->bit_cnt += frame->frame_size * 16;
+    tctx->sample_cnt += A52_SAMPLES_PER_FRAME;
 
     // update encoding status
     s->status.quality = frame->quality;
     s->status.bit_rate = frame->bit_rate;
     s->status.bwcode = frame->bwcode;
 
-    output_frame_header(ctx, frame_buffer);
-    output_audio_blocks(ctx);
-    return output_frame_end(ctx);
+    output_frame_header(tctx, frame_buffer);
+    output_audio_blocks(tctx);
+    return output_frame_end(tctx);
 }
 
 void
@@ -1182,6 +1220,7 @@ aften_encode_close(AftenContext *s)
     if(s != NULL && s->private_context != NULL) {
         A52Context *ctx = s->private_context;
         /* mdct_close deinits both mdcts */
+       ctx->tctx->mdct_tctx_512.mdct_thread_close(ctx->tctx);
         ctx->mdct_ctx_512.mdct_close(ctx);
         free(ctx);
         s->private_context = NULL;

@@ -32,6 +32,6 @@
 
 extern void bitalloc_init(void);
 
-extern int compute_bit_allocation(A52Context *ctx);
+extern int compute_bit_allocation(A52ThreadContext *tctx);
 
 #endif /* BITALLOC_H */

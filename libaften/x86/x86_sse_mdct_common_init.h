@@ -24,5 +24,7 @@
 
 void sse_mdct_ctx_init(MDCTContext *mdct, int n);
 void sse_mdct_ctx_close(MDCTContext *mdct);
+void sse_mdct_tctx_init(MDCTThreadContext *mdct, int n);
+void sse_mdct_tctx_close(MDCTThreadContext *tmdct);
 
 #endif /* X86_SSE_MDCT_COMMON_INIT_H */

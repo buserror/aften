@@ -463,22 +463,22 @@ compute_mantissa_size_final(int mant_cnt[5])
 
 /* call to prepare bit allocation */
 static void
-bit_alloc_prepare(A52Context *ctx)
+bit_alloc_prepare(A52ThreadContext *tctx)
 {
-    A52Frame *frame = &ctx->frame;
-    int *ncoefs = frame->ncoefs;
+    A52Context *ctx = tctx->ctx;
+    A52Frame *frame = &tctx->frame;
     A52Block *block;
     int blk, ch;
 
-
     for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
-        block = &frame->blocks[blk];
+        block = &tctx->frame.blocks[blk];
         for(ch=0; ch<ctx->n_all_channels; ch++) {
             // We don't have to run the bit allocation when reusing exponents
             if(block->exp_strategy[ch] != EXP_REUSE) {
                 a52_bit_allocation_prepare(&frame->bit_alloc,
                                block->exp[ch], block->psd[ch], block->mask[ch],
-                               ncoefs[ch], (ch == ctx->lfe_channel),
+                               frame->ncoefs[ch],
+                               (ch == ctx->lfe_channel),
                                2, 0, NULL, NULL, NULL);
             }
         }
@@ -490,19 +490,20 @@ bit_alloc_prepare(A52Context *ctx)
  * Returns number of mantissa bits used.
  */
 static int
-bit_alloc(A52Context *ctx, int snroffst)
+bit_alloc(A52ThreadContext *tctx, int snroffst)
 {
-    A52Frame *frame = &ctx->frame;
+    A52Context *ctx = tctx->ctx;
+    A52Frame *frame = &tctx->frame;
     A52Block *block;
+    int mant_cnt[5];
     int blk, ch;
     int bits;
-    int mant_cnt[5];
 
     bits = 0;
     snroffst = (snroffst << 2) - 960;
 
     for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
-        block = &ctx->frame.blocks[blk];
+        block = &tctx->frame.blocks[blk];
         // initialize grouped mantissa counts. these are set so that they are
         // padded to the next whole group size when bits are counted in
         // compute_mantissa_size_final
@@ -515,7 +516,7 @@ bit_alloc(A52Context *ctx, int snroffst)
             // exponent values.  We can take advantage of that by reusing the
             // bit allocation pointers whenever we reuse exponents.
             if(block->exp_strategy[ch] == EXP_REUSE) {
-                memcpy(block->bap[ch], ctx->frame.blocks[blk-1].bap[ch], 256);
+                memcpy(block->bap[ch], tctx->frame.blocks[blk-1].bap[ch], 256);
             } else {
                 a52_bit_allocation(block->bap[ch], block->psd[ch], block->mask[ch],
                                    frame->ncoefs[ch], snroffst,
@@ -532,10 +533,11 @@ bit_alloc(A52Context *ctx, int snroffst)
 
 /** Counts all frame bits except for mantissas and exponents */
 static void
-count_frame_bits(A52Context *ctx)
+count_frame_bits(A52ThreadContext *tctx)
 {
     static int frame_bits_inc[8] = { 8, 0, 2, 2, 2, 4, 2, 4 };
-    A52Frame *frame = &ctx->frame;
+    A52Context *ctx = tctx->ctx;
+    A52Frame *frame = &tctx->frame;
     A52Block *block;
     int blk, ch;
     int frame_bits;
@@ -595,9 +597,10 @@ count_frame_bits(A52Context *ctx)
  * encoded data within a fixed frame size.
  */
 static int
-cbr_bit_allocation(A52Context *ctx, int prepare)
+cbr_bit_allocation(A52ThreadContext *tctx, int prepare)
 {
-	A52Frame *frame = &ctx->frame;
+    A52Context *ctx = tctx->ctx;
+    A52Frame *frame = &tctx->frame;
     int csnroffst, fsnroffst;
     int current_bits, avail_bits, leftover;
     int snroffst=0;
@@ -606,15 +609,15 @@ cbr_bit_allocation(A52Context *ctx, int prepare)
     avail_bits = (16 * frame->frame_size) - current_bits;
 
     if(prepare)
-        bit_alloc_prepare(ctx);
+        bit_alloc_prepare(tctx);
 
     // starting point
     if(ctx->params.encoding_mode == AFTEN_ENC_MODE_VBR) {
         snroffst = ctx->params.quality;
     } else if(ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
-        snroffst = ctx->last_quality;
+        snroffst = tctx->last_quality;
     }
-    leftover = avail_bits - bit_alloc(ctx, snroffst);
+    leftover = avail_bits - bit_alloc(tctx, snroffst);
 
     if(ctx->params.bitalloc_fast) {
         // fast bit allocation
@@ -627,49 +630,49 @@ cbr_bit_allocation(A52Context *ctx, int prepare)
                     snr0 = snr1;
                     leftover0 = leftover1;
                     snr1 += 16;
-                    leftover1 = avail_bits - bit_alloc(ctx, snr1);
+                    leftover1 = avail_bits - bit_alloc(tctx, snr1);
                 }
             } else {
                 while(leftover0 < 0 && snr0-16 >= 0) {
                     snr1 = snr0;
                     leftover1 = leftover0;
                     snr0 -= 16;
-                    leftover0 = avail_bits - bit_alloc(ctx, snr0);
+                    leftover0 = avail_bits - bit_alloc(tctx, snr0);
                 }
             }
         }
         if(snr0 != snr1) {
             snroffst = snr0;
-            leftover = avail_bits - bit_alloc(ctx, snroffst);
+            leftover = avail_bits - bit_alloc(tctx, snroffst);
         }
     } else {
         // take up to 3 jumps based on estimated distance from optimal
         if(leftover < -400) {
             snroffst += (leftover / (16 * ctx->n_channels));
-            leftover = avail_bits - bit_alloc(ctx, snroffst);
+            leftover = avail_bits - bit_alloc(tctx, snroffst);
         }
         if(leftover > 400) {
             snroffst += (leftover / (24 * ctx->n_channels));
-            leftover = avail_bits - bit_alloc(ctx, snroffst);
+            leftover = avail_bits - bit_alloc(tctx, snroffst);
         }
         if(leftover < -200) {
             snroffst += (leftover / (40 * ctx->n_channels));
-            leftover = avail_bits - bit_alloc(ctx, snroffst);
+            leftover = avail_bits - bit_alloc(tctx, snroffst);
         }
         // adjust snroffst until leftover <= -100
     	while(leftover > -100) {
             snroffst += (10 / ctx->n_channels);
             if(snroffst > 1023) {
                 snroffst = 1023;
-                leftover = avail_bits - bit_alloc(ctx, snroffst);
+                leftover = avail_bits - bit_alloc(tctx, snroffst);
                 break;
             }
-    		leftover = avail_bits - bit_alloc(ctx, snroffst);
+    		leftover = avail_bits - bit_alloc(tctx, snroffst);
     	}
         // adjust snroffst until leftover is positive
     	while(leftover < 0 && snroffst > 0) {
     		snroffst--;
-    		leftover = avail_bits - bit_alloc(ctx, snroffst);
+    		leftover = avail_bits - bit_alloc(tctx, snroffst);
     	}
     }
 
@@ -692,7 +695,7 @@ cbr_bit_allocation(A52Context *ctx, int prepare)
     frame->csnroffst = csnroffst;
     frame->fsnroffst = fsnroffst;
     frame->quality = QUALITY(csnroffst, fsnroffst);
-    ctx->last_quality = frame->quality;
+    tctx->last_quality = frame->quality;
 
     return 0;
 }
@@ -702,9 +705,10 @@ cbr_bit_allocation(A52Context *ctx, int prepare)
  * snroffset value as determined by the user-selected quality setting.
  */
 static int
-vbr_bit_allocation(A52Context *ctx)
+vbr_bit_allocation(A52ThreadContext *tctx)
 {
-    A52Frame *frame = &ctx->frame;
+    A52Context *ctx = tctx->ctx;
+    A52Frame *frame = &tctx->frame;
     int i;
     int frame_size;
     int quality, snroffst, csnroffst, fsnroffst;
@@ -723,10 +727,10 @@ vbr_bit_allocation(A52Context *ctx)
         fsnroffst += 16;
     }
 
-    bit_alloc_prepare(ctx);
+    bit_alloc_prepare(tctx);
     // find an A52 frame size that can hold the data.
     frame_size = 0;
-    frame_bits = current_bits + bit_alloc(ctx, quality);
+    frame_bits = current_bits + bit_alloc(tctx, quality);
     for(i=0; i<=ctx->frmsizecod; i++) {
         frame_size = frmsizetab[i][ctx->fscod];
         if(frame_size >= frame_bits) break;
@@ -741,7 +745,7 @@ vbr_bit_allocation(A52Context *ctx)
     // run CBR bit allocation.
     // this will increase snroffst to make optimal use of the frame bits.
     // also it will lower snroffst if vbr frame won't fit in largest frame.
-    return cbr_bit_allocation(ctx, 0);
+    return cbr_bit_allocation(tctx, 0);
 }
 
 /**
@@ -750,9 +754,10 @@ vbr_bit_allocation(A52Context *ctx)
  * either CBR or VBR mode, depending on the mode selected by the user.
  */
 int
-compute_bit_allocation(A52Context *ctx)
+compute_bit_allocation(A52ThreadContext *tctx)
 {
-    A52Frame *f = &ctx->frame;
+    A52Context *ctx = tctx->ctx;
+    A52Frame *f = &tctx->frame;
 
     // read bit allocation table values
     f->bit_alloc.fscod = ctx->fscod;
@@ -764,13 +769,13 @@ compute_bit_allocation(A52Context *ctx)
     f->bit_alloc.dbknee = dbkneetab[f->dbkneecod];
     f->bit_alloc.floor = floortab[f->floorcod];
 
-    count_frame_bits(ctx);
+    count_frame_bits(tctx);
     if(ctx->params.encoding_mode == AFTEN_ENC_MODE_VBR) {
-        if(vbr_bit_allocation(ctx)) {
+        if(vbr_bit_allocation(tctx)) {
             return -1;
         }
     } else if(ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
-        if(cbr_bit_allocation(ctx, 1)) {
+        if(cbr_bit_allocation(tctx, 1)) {
             return -1;
         }
     } else {
