@@ -1150,30 +1150,11 @@ calculate_dynrng(A52ThreadContext *tctx)
     }
 }
 
-int
-aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, void *samples)
+static void
+encode_frame(A52ThreadContext *tctx)
 {
-    A52Context *ctx;
-    A52ThreadContext *tctx;
-    A52Frame *frame;
-
-    if(s == NULL || frame_buffer == NULL || samples == NULL) {
-        fprintf(stderr, "One or more NULL parameters passed to aften_encode_frame\n");
-        return -1;
-    }
-    ctx = s->private_context;
-    tctx = ctx->tctx;
-    frame = &tctx->frame;
-
-    // convert sample format and de-interleave channels
-    ctx->fmt_convert_from_src(frame->input_audio, samples, ctx->n_all_channels, A52_SAMPLES_PER_FRAME);
-
-    if(frame_init(tctx)) {
-        fprintf(stderr, "Encoding has not properly initialized\n");
-        return -1;
-    }
-
-    copy_samples(tctx);
+    A52Context *ctx = tctx->ctx;
+    A52Frame *frame = &tctx->frame;
 
     calculate_dynrng(tctx);
 
@@ -1193,7 +1174,8 @@ aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, void *samples)
 
     if(compute_bit_allocation(tctx)) {
         fprintf(stderr, "Error in bit allocation\n");
-        return 0;
+        tctx->framesize = 0;
+        return;
     }
 
     quantize_mantissas(tctx);
@@ -1203,13 +1185,48 @@ aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, void *samples)
     tctx->sample_cnt += A52_SAMPLES_PER_FRAME;
 
     // update encoding status
-    s->status.quality = frame->quality;
-    s->status.bit_rate = frame->bit_rate;
-    s->status.bwcode = frame->bwcode;
+    tctx->status.quality = frame->quality;
+    tctx->status.bit_rate = frame->bit_rate;
+    tctx->status.bwcode = frame->bwcode;
 
-    output_frame_header(tctx, frame_buffer);
+    output_frame_header(tctx, tctx->frame_buffer);
     output_audio_blocks(tctx);
-    return output_frame_end(tctx);
+    tctx->framesize = output_frame_end(tctx);
+}
+
+int
+aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, void *samples)
+{
+    A52Context *ctx;
+    A52ThreadContext *tctx;
+    A52Frame *frame;
+
+    if(s == NULL || frame_buffer == NULL || samples == NULL) {
+        fprintf(stderr, "One or more NULL parameters passed to aften_encode_frame\n");
+        return -1;
+    }
+    ctx = s->private_context;
+    tctx = ctx->tctx;
+    frame = &tctx->frame;
+
+    ctx->fmt_convert_from_src(frame->input_audio, samples, ctx->n_all_channels, A52_SAMPLES_PER_FRAME);
+
+    if(frame_init(tctx)) {
+        fprintf(stderr, "Encoding has not properly initialized\n");
+        return -1;
+    }
+
+    copy_samples(tctx);
+
+    encode_frame(tctx);
+
+    memcpy(frame_buffer, tctx->frame_buffer, tctx->framesize);
+
+    s->status.quality   = tctx->status.quality;
+    s->status.bit_rate  = tctx->status.bit_rate;
+    s->status.bwcode    = tctx->status.bwcode;
+
+    return tctx->framesize;
 }
 
 void

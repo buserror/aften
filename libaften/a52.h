@@ -125,7 +125,7 @@ typedef struct A52ThreadContext {
     struct A52Context *ctx;
     int thread_num;
     int state;
-    int fs;
+    int framesize;
 
     AftenStatus status;
     A52Frame frame;
