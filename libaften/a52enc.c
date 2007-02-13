@@ -54,7 +54,7 @@ const uint16_t a52_bitratetab[19] = {
     160, 192, 224, 256, 320, 384, 448, 512, 576, 640
 };
 
-int threaded_encode(void* vtctx);
+static int threaded_encode(void* vtctx);
 
 const char *
 aften_get_version(void)
@@ -1223,7 +1223,7 @@ encode_frame(A52ThreadContext *tctx, uint8_t *frame_buffer)
     tctx->framesize = output_frame_end(tctx);
 }
 
-int
+static int
 threaded_encode(void* vtctx)
 {
     A52ThreadContext *tctx = vtctx;
@@ -1252,7 +1252,7 @@ threaded_encode(void* vtctx)
     return 0;
 }
 
-int
+static int
 encode_frame_parallel(AftenContext *s, uint8_t *frame_buffer, void *samples)
 {
     static int thread_num = 0;
