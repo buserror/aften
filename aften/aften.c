@@ -49,7 +49,7 @@ print_intro(FILE *out)
     const char *vers = aften_get_version();
     fprintf(out, "\nAften: A/52 audio encoder\n"
                  "Version %s\n"
-                 "(c) 2006-2007 Justin Ruggles, et al.\n\n", vers);
+                 "(c) 2006-2007 Justin Ruggles, Prakash Punnoor, et al.\n\n", vers);
 }
 
 static void
@@ -753,6 +753,7 @@ main(int argc, char **argv)
     FLOAT kbps, qual, bw;
     int last_frame;
     int frame_cnt;
+    int done;
 
     opts.s = &s;
     aften_set_defaults(&s);
@@ -900,9 +901,10 @@ main(int argc, char **argv)
     qual = bw = 0.0;
     last_frame = 0;
     frame_cnt = 0;
-
+    done = 0;
+    fs = 0;
     nr = wavfile_read_samples(&wf, fwav, A52_SAMPLES_PER_FRAME);
-    while(nr >= 0) {
+    while(nr > 0 || fs > 0) {
         if(opts.chmap == 0) {
             aften_remap_wav_to_a52(fwav, nr, wf.channels, s.sample_format,
                                    s.acmod);
@@ -911,20 +913,21 @@ main(int argc, char **argv)
         // append extra silent frame if final frame is > 1280 samples
         if(nr == 0) {
             if(last_frame <= 1280) {
-                break;
+                done = 1;
             }
         }
 
         // zero leftover samples at end of last frame
-        if(nr < A52_SAMPLES_PER_FRAME) {
+        if(!done && nr < A52_SAMPLES_PER_FRAME) {
             int i;
             for(i=nr*wf.channels; i<A52_SAMPLES_PER_FRAME*wf.channels; i++) {
                 fwav[i] = 0.0;
             }
         }
 
-        fs = aften_encode_frame(&s, frame, fwav);
-        if(fs <= 0) {
+        fs = aften_encode_frame(&s, frame, done ? NULL : fwav);
+
+        if(fs < 0) {
             fprintf(stderr, "Error encoding frame %d\n", frame_cnt);
         } else {
             if(s.params.verbose > 0) {

@@ -33,6 +33,7 @@
 #include "aften.h"
 #include "filter.h"
 #include "mdct.h"
+#include "threading.h"
 
 #define AFTEN_VERSION "SVN"
 
@@ -123,8 +124,11 @@ typedef struct A52Frame {
 
 typedef struct A52ThreadContext {
     struct A52Context *ctx;
+#ifndef NO_THREADS
+    A52ThreadSync ts;
+#endif
+    ThreadState state;
     int thread_num;
-    int state;
     int framesize;
 
     AftenStatus status;
@@ -148,6 +152,7 @@ typedef struct A52Context {
     void (*fmt_convert_from_src)(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
          void *vsrc, int nch, int n);
 
+    int n_threads;
     int n_channels;
     int n_all_channels;
     int acmod;

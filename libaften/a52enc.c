@@ -54,6 +54,8 @@ const uint16_t a52_bitratetab[19] = {
     160, 192, 224, 256, 320, 384, 448, 512, 576, 640
 };
 
+int threaded_encode(void* vtctx);
+
 const char *
 aften_get_version(void)
 {
@@ -258,6 +260,7 @@ aften_encode_init(AftenContext *s)
     A52Context *ctx;
     A52ThreadContext *tctx;
     int i, j, brate;
+    int last_quality;
 
     if(s == NULL) {
         fprintf(stderr, "NULL parameter passed to aften_encode_init\n");
@@ -378,28 +381,54 @@ aften_encode_init(AftenContext *s)
         ctx->params.use_block_switching = 0;
     }
 
+    last_quality = 240;
+    if(ctx->params.encoding_mode == AFTEN_ENC_MODE_VBR) {
+        last_quality = ctx->params.quality;
+    } else if(ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
+        last_quality = ((((ctx->target_bitrate/ctx->n_channels)*35)/24)+95)+(25*ctx->halfratecod);
+    }
+
     // Initialize thread specific contexts
-    tctx = calloc(sizeof(A52ThreadContext), 1);
-    tctx->ctx = ctx;
+    ctx->n_threads = get_ncpus();
+    tctx = calloc(sizeof(A52ThreadContext), ctx->n_threads);
     ctx->tctx = tctx;
 
-    select_mdct_thread(tctx);
+    for (j=0; j<ctx->n_threads; ++j) {
+        A52ThreadContext *cur_tctx = &ctx->tctx[j];
+        cur_tctx->ctx = ctx;
 
-    tctx->bit_cnt = 0;
-    tctx->sample_cnt = 0;
+        select_mdct_thread(cur_tctx);
+
+        cur_tctx->bit_cnt = 0;
+        cur_tctx->sample_cnt = 0;
+
+        cur_tctx->last_quality = last_quality;
+
+        if (ctx->n_threads > 1) {
+            cur_tctx->state = START;
+
+            posix_cond_init(&cur_tctx->ts.enter_cond);
+            posix_cond_init(&cur_tctx->ts.confirm_cond);
+
+            posix_mutex_init(&cur_tctx->ts.enter_mutex);
+            posix_mutex_init(&cur_tctx->ts.confirm_mutex);
+
+            windows_event_init(&cur_tctx->ts.ready_event);
+            windows_event_init(&cur_tctx->ts.enter_event);
+
+            posix_mutex_lock(&cur_tctx->ts.enter_mutex);
+            thread_create(&cur_tctx->ts.thread, threaded_encode, cur_tctx);
+            posix_cond_wait(&cur_tctx->ts.enter_cond, &cur_tctx->ts.enter_mutex);
+            posix_mutex_unlock(&cur_tctx->ts.enter_mutex);
+        }
+    }
 
     if(s->params.bwcode < -2 || s->params.bwcode > 60) {
         fprintf(stderr, "invalid bandwidth code\n");
         return -1;
     }
-    tctx->last_quality = 240;
-    if(ctx->params.encoding_mode == AFTEN_ENC_MODE_VBR) {
-        tctx->last_quality = ctx->params.quality;
-    } else if(ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
-        tctx->last_quality = ((((ctx->target_bitrate/ctx->n_channels)*35)/24)+95)+(25*ctx->halfratecod);
-    }
     if(ctx->params.bwcode < 0) {
-        int cutoff = ((tctx->last_quality-120) * 120) + 4000;
+        int cutoff = ((last_quality-120) * 120) + 4000;
         ctx->fixed_bwcode = ((cutoff * 512 / ctx->sample_rate) - 73) / 3;
         ctx->fixed_bwcode = CLIP(ctx->fixed_bwcode, 0, 60);
     } else {
@@ -1195,17 +1224,106 @@ encode_frame(A52ThreadContext *tctx)
 }
 
 int
+threaded_encode(void* vtctx)
+{
+    A52ThreadContext *tctx = vtctx;
+
+    posix_mutex_lock(&tctx->ts.enter_mutex);
+    posix_cond_signal(&tctx->ts.enter_cond);
+    while(1) {
+        posix_cond_wait(&tctx->ts.enter_cond, &tctx->ts.enter_mutex);
+        posix_mutex_lock(&tctx->ts.confirm_mutex);
+        posix_cond_signal(&tctx->ts.confirm_cond);
+        posix_mutex_unlock(&tctx->ts.confirm_mutex);
+
+        windows_event_set(&tctx->ts.ready_event);
+        windows_event_wait(&tctx->ts.enter_event);
+        /* end thread if nothing to encode */
+        if (tctx->state == END) {
+            tctx->framesize = 0;
+            break;
+        }
+        encode_frame(tctx);
+    }
+    posix_mutex_unlock(&tctx->ts.enter_mutex);
+
+    windows_event_set(&tctx->ts.ready_event);
+
+    return 0;
+}
+
+int
+encode_frame_parallel(AftenContext *s, uint8_t *frame_buffer, void *samples)
+{
+    static int thread_num = 0;
+    A52Context *ctx = s->private_context;
+    A52ThreadContext *tctx = &ctx->tctx[thread_num];
+    int framesize = 0;
+
+    posix_mutex_lock(&tctx->ts.enter_mutex);
+
+    windows_event_wait(&tctx->ts.ready_event);
+
+    if (tctx->state == START)
+        tctx->state = WORK;
+    else if (tctx->state != ABORT) {
+        if(tctx->framesize > 0) {
+            framesize = tctx->framesize;
+            memcpy(frame_buffer, tctx->frame_buffer, framesize);
+
+            // update encoding status
+            s->status.quality   = tctx->status.quality;
+            s->status.bit_rate  = tctx->status.bit_rate;
+            s->status.bwcode    = tctx->status.bwcode;
+        } else {
+            posix_mutex_unlock(&tctx->ts.enter_mutex);
+            goto end;
+        }
+    }
+    if(!samples)
+        tctx->state = END;
+    else {
+        // convert sample format and de-interleave channels
+        ctx->fmt_convert_from_src(tctx->frame.input_audio, samples, ctx->n_all_channels, A52_SAMPLES_PER_FRAME);
+        if(frame_init(tctx)) {
+            fprintf(stderr, "Encoding has not properly initialized\n");
+            return -1;//FIXME
+        }
+        copy_samples(tctx);
+    }
+    posix_mutex_lock(&tctx->ts.confirm_mutex);
+    posix_cond_signal(&tctx->ts.enter_cond);
+    posix_mutex_unlock(&tctx->ts.enter_mutex);
+    posix_cond_wait(&tctx->ts.confirm_cond, &tctx->ts.confirm_mutex);
+    posix_mutex_unlock(&tctx->ts.confirm_mutex);
+
+    windows_event_set(&tctx->ts.enter_event);
+end:
+    ++thread_num;
+    thread_num %= ctx->n_threads;
+
+    return framesize;
+}
+
+int
 aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, void *samples)
 {
     A52Context *ctx;
     A52ThreadContext *tctx;
     A52Frame *frame;
 
-    if(s == NULL || frame_buffer == NULL || samples == NULL) {
+    if(s == NULL || frame_buffer == NULL) {
         fprintf(stderr, "One or more NULL parameters passed to aften_encode_frame\n");
         return -1;
     }
     ctx = s->private_context;
+
+    if (ctx->n_threads > 1)
+        return encode_frame_parallel(s, frame_buffer, samples);
+
+    if (!samples)
+        return 0;
+
     tctx = ctx->tctx;
     frame = &tctx->frame;
 
@@ -1235,8 +1353,24 @@ aften_encode_close(AftenContext *s)
     if(s != NULL && s->private_context != NULL) {
         A52Context *ctx = s->private_context;
         /* mdct_close deinits both mdcts */
-       ctx->tctx->mdct_tctx_512.mdct_thread_close(ctx->tctx);
         ctx->mdct_ctx_512.mdct_close(ctx);
+        if (ctx->n_threads == 1)
+            ctx->tctx[0].mdct_tctx_512.mdct_thread_close(&ctx->tctx[0]);
+        else {
+            for (int i=0; i<ctx->n_threads; ++i) {
+                A52ThreadContext cur_tctx = ctx->tctx[i];
+                thread_join(cur_tctx.ts.thread);
+                cur_tctx.mdct_tctx_512.mdct_thread_close(&cur_tctx);
+                posix_cond_destroy(&cur_tctx.ts.enter_cond);
+                posix_cond_destroy(&cur_tctx.ts.confirm_cond);
+
+                posix_mutex_destroy(&cur_tctx.ts.enter_mutex);
+                posix_mutex_destroy(&cur_tctx.ts.confirm_mutex);
+
+                windows_event_destroy(&cur_tctx.ts.ready_event);
+                windows_event_destroy(&cur_tctx.ts.enter_event);
+            }
+        }
         free(ctx);
         s->private_context = NULL;
     }
