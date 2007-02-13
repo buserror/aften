@@ -1180,7 +1180,7 @@ calculate_dynrng(A52ThreadContext *tctx)
 }
 
 static void
-encode_frame(A52ThreadContext *tctx)
+encode_frame(A52ThreadContext *tctx, uint8_t *frame_buffer)
 {
     A52Context *ctx = tctx->ctx;
     A52Frame *frame = &tctx->frame;
@@ -1218,7 +1218,7 @@ encode_frame(A52ThreadContext *tctx)
     tctx->status.bit_rate = frame->bit_rate;
     tctx->status.bwcode = frame->bwcode;
 
-    output_frame_header(tctx, tctx->frame_buffer);
+    output_frame_header(tctx, frame_buffer);
     output_audio_blocks(tctx);
     tctx->framesize = output_frame_end(tctx);
 }
@@ -1243,7 +1243,7 @@ threaded_encode(void* vtctx)
             tctx->framesize = 0;
             break;
         }
-        encode_frame(tctx);
+        encode_frame(tctx, tctx->frame_buffer);
     }
     posix_mutex_unlock(&tctx->ts.enter_mutex);
 
@@ -1336,9 +1336,7 @@ aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, void *samples)
 
     copy_samples(tctx);
 
-    encode_frame(tctx);
-
-    memcpy(frame_buffer, tctx->frame_buffer, tctx->framesize);
+    encode_frame(tctx, frame_buffer);
 
     s->status.quality   = tctx->status.quality;
     s->status.bit_rate  = tctx->status.bit_rate;
