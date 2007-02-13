@@ -1356,7 +1356,8 @@ aften_encode_close(AftenContext *s)
         if (ctx->n_threads == 1)
             ctx->tctx[0].mdct_tctx_512.mdct_thread_close(&ctx->tctx[0]);
         else {
-            for (int i=0; i<ctx->n_threads; ++i) {
+            int i;
+            for (i=0; i<ctx->n_threads; ++i) {
                 A52ThreadContext cur_tctx = ctx->tctx[i];
                 thread_join(cur_tctx.ts.thread);
                 cur_tctx.mdct_tctx_512.mdct_thread_close(&cur_tctx);
