@@ -24,7 +24,7 @@ Aften Changelog
 version SVN : current
 - added C++ bindings (pass -DBINDINGS_CXX=1 to cmake to build them)
 - API change of helper functions
-- new bitalloc algoritm
+- new bitalloc algorithm
 - parallelization
 
 version 0.06 : 31 January 2007
