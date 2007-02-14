@@ -184,7 +184,7 @@ compute_expstr_ch(uint8_t exp[A52_NUM_BLOCKS][256], int ncoefs)
     for(str=1; str<6; str++) {
         // collect exponents
         for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
-            memcpy(exponents[blk], exp[blk], ncoefs);
+            memcpy(exponents[blk], exp[blk], 256);
         }
 
         // encode exponents
@@ -197,7 +197,7 @@ compute_expstr_ch(uint8_t exp[A52_NUM_BLOCKS][256], int ncoefs)
             }
             encode_exp_blk_ch(exponents[i], ncoefs, str_predef[str][i]);
             for(k=i+1; k<j; k++) {
-                memcpy(exponents[k], exponents[i], ncoefs);
+                memcpy(exponents[k], exponents[i], 256);
             }
             i = j;
         }
