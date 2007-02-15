@@ -229,7 +229,7 @@ main(int argc, char **argv)
             aften_remap_wav_to_a52(sptr, nr, wf.channels, s.sample_format,
                                    s.acmod);
         }
-        fs = aften_encode_frame(&s, frame, done ? NULL : fwav);
+        fs = aften_encode_frame(&s, frame, fwav);
         if(fs < 0) {
             fprintf(stderr, "Error encoding initial frame\n");
         }
