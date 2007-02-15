@@ -165,7 +165,7 @@ static const char *help_options[HELP_OPTIONS_COUNT] = {
 
 #define CONSOLE_OPTIONS_COUNT 3
 
-static const char *console_heading = "CONSOLE OUTPUT OPTIONS\n";
+static const char console_heading[24] = "CONSOLE OUTPUT OPTIONS\n";
 static const char *console_options[CONSOLE_OPTIONS_COUNT] = {
 "    [-h]           Print out list of commandline options\n",
 
@@ -181,7 +181,7 @@ static const char *console_options[CONSOLE_OPTIONS_COUNT] = {
 
 #define ENCODING_OPTIONS_COUNT 7
 
-static const char *encoding_heading = "ENCODING OPTIONS\n";
+static const char encoding_heading[18] = "ENCODING OPTIONS\n";
 static const char *encoding_options[ENCODING_OPTIONS_COUNT] = {
 "    [-b #]         CBR bitrate in kbps\n"
 "                       CBR mode is selected by default. This option allows for\n"
@@ -261,7 +261,7 @@ static const char *encoding_options[ENCODING_OPTIONS_COUNT] = {
 
 #define BSI_OPTIONS_COUNT 3
 
-static const char *bsi_heading = "BITSTREAM INFO METADATA\n";
+static const char bsi_heading[25] = "BITSTREAM INFO METADATA\n";
 static const char *bsi_options[BSI_OPTIONS_COUNT] = {
 "    [-cmix #]      Center mix level\n"
 "                       When three front channels are in use, this code\n"
@@ -291,7 +291,7 @@ static const char *bsi_options[BSI_OPTIONS_COUNT] = {
 
 #define DRC_OPTIONS_COUNT 2
 
-static const char *drc_heading = "DYNAMIC RANGE COMPRESSION AND DIALOG NORMALIZATION\n";
+static const char drc_heading[52] = "DYNAMIC RANGE COMPRESSION AND DIALOG NORMALIZATION\n";
 static const char *drc_options[DRC_OPTIONS_COUNT] = {
 "    [-dynrng #]    Dynamic Range Compression profile\n"
 "                       Dynamic Range Compression allows for the final output\n"
@@ -322,7 +322,7 @@ static const char *drc_options[DRC_OPTIONS_COUNT] = {
 
 #define CHANNEL_OPTIONS_COUNT 4
 
-static const char *channel_heading = "CHANNEL OPTIONS\n";
+static const char channel_heading[17] = "CHANNEL OPTIONS\n";
 static const char *channel_options[CHANNEL_OPTIONS_COUNT] = {
 "    By default, the channel configuration is determined by the input file wav\n"
 "    header.  However, while the extensible wav format can specify all possible\n"
@@ -356,7 +356,7 @@ static const char *channel_options[CHANNEL_OPTIONS_COUNT] = {
 
 #define FILTER_OPTIONS_COUNT 3
 
-static const char *filter_heading = "INPUT FILTERS\n";
+static const char filter_heading[15] = "INPUT FILTERS\n";
 static const char *filter_options[FILTER_OPTIONS_COUNT] = {
 "    [-bwfilter #]  Specify use of the bandwidth low-pass filter\n"
 "                       The bandwidth low-pass filter pre-filters the input\n"
@@ -385,7 +385,7 @@ static const char *filter_options[FILTER_OPTIONS_COUNT] = {
 
 #define ALT_OPTIONS_COUNT 12
 
-static const char *alt_heading = "ALTERNATE BIT STREAM SYNTAX\n";
+static const char alt_heading[29] = "ALTERNATE BIT STREAM SYNTAX\n";
 static const char *alt_options[ALT_OPTIONS_COUNT] = {
 "    The alternate bit stream syntax allows for encoding additional metadata by\n"
 "    adding 1 or 2 extended bitstream info sections to each frame.\n",
@@ -465,6 +465,38 @@ static const char *alt_options[ALT_OPTIONS_COUNT] = {
 "                       used to capture the PCM audio.\n"
 "                       0 = Standard (default)\n"
 "                       1 = HDCD\n"
+};
+
+typedef struct {
+    int section_count;
+    const char *section_heading;
+    const char **section_options;
+} LongHelpSection;
+
+#define LONG_HELP_SECTIONS_COUNT 7
+
+static const LongHelpSection long_help_sections[LONG_HELP_SECTIONS_COUNT] = {
+    {   CONSOLE_OPTIONS_COUNT,
+        console_heading,
+        console_options },
+    {   ENCODING_OPTIONS_COUNT,
+        encoding_heading,
+        encoding_options },
+    {   BSI_OPTIONS_COUNT,
+        bsi_heading,
+        bsi_options },
+    {   DRC_OPTIONS_COUNT,
+        drc_heading,
+        drc_options },
+    {   CHANNEL_OPTIONS_COUNT,
+        channel_heading,
+        channel_options },
+    {   FILTER_OPTIONS_COUNT,
+        filter_heading,
+        filter_options },
+    {   ALT_OPTIONS_COUNT,
+        alt_heading,
+        alt_options }
 };
 
 #endif /* HELPTEXT_H */

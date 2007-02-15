@@ -41,44 +41,16 @@ print_usage(FILE *out)
 void
 print_long_help(FILE *out)
 {
-    int i;
+    int i, j;
 
     fprintf(out, "%s", usage_heading);
     fprintf(out, "options:\n\n");
 
-    fprintf(out, "%s\n", console_heading);
-    for(i=0; i<CONSOLE_OPTIONS_COUNT; i++) {
-        fprintf(out, "%s\n", console_options[i]);
-    }
-
-    fprintf(out, "%s\n", encoding_heading);
-    for(i=0; i<ENCODING_OPTIONS_COUNT; i++) {
-        fprintf(out, "%s\n", encoding_options[i]);
-    }
-
-    fprintf(out, "%s\n", bsi_heading);
-    for(i=0; i<BSI_OPTIONS_COUNT; i++) {
-        fprintf(out, "%s\n", bsi_options[i]);
-    }
-
-    fprintf(out, "%s\n", drc_heading);
-    for(i=0; i<DRC_OPTIONS_COUNT; i++) {
-        fprintf(out, "%s\n", drc_options[i]);
-    }
-
-    fprintf(out, "%s\n", channel_heading);
-    for(i=0; i<CHANNEL_OPTIONS_COUNT; i++) {
-        fprintf(out, "%s\n", channel_options[i]);
-    }
-
-    fprintf(out, "%s\n", filter_heading);
-    for(i=0; i<FILTER_OPTIONS_COUNT; i++) {
-        fprintf(out, "%s\n", filter_options[i]);
-    }
-
-    fprintf(out, "%s\n", alt_heading);
-    for(i=0; i<ALT_OPTIONS_COUNT; i++) {
-        fprintf(out, "%s\n", alt_options[i]);
+    for(i=0; i<LONG_HELP_SECTIONS_COUNT; i++) {
+        fprintf(out, "%s\n", long_help_sections[i].section_heading);
+        for(j=0; j<long_help_sections[i].section_count; j++) {
+            fprintf(out, "%s\n", long_help_sections[i].section_options[j]);
+        }
     }
 }
 
