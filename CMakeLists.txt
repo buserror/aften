@@ -61,7 +61,7 @@ SET(LIBAFTEN_X86_SSE_SRCS libaften/x86/x86_sse_mdct_dummy.c
 
 SET(LIBAFTEN_X86_SSE3_SRCS libaften/x86/x86_sse3_mdct_dummy.c)
 
-SET(AFTEN_SRCS aften/aften.c)
+SET(AFTEN_SRCS aften/aften.c aften/opts.c)
 
 
 IF(CMAKE_UNAME)
