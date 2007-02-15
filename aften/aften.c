@@ -105,6 +105,14 @@ print_long_help(FILE *out)
 "                       a weighted estimate followed by a fine-level search.\n"
 "                       Turning on fast bit allocation skips the 2nd step.\n"
 "\n"
+"    [-pad #]      Start-of-stream padding\n"
+"                       The AC-3 format uses an overlap/add cycle for encoding\n"
+"                       each block.  By default, Aften pads the delay buffer\n"
+"                       with a block of silence to avoid inaccurate encoding\n"
+"                       of the first frame of audio.  If this behavior is not\n"
+"                       wanted, it can be disabled.  The pad value can be a\n"
+"                       1 (default) to use padding or 0 to not use padding.\n"
+"\n"
 "    [-w #]         Bandwidth\n"
 "                       The bandwidth setting corresponds to the high-frequency\n"
 "                       cutoff.  Specifically, it sets the highest frequency bin\n"
@@ -122,7 +130,8 @@ print_long_help(FILE *out)
 "                       default setting.\n"
 "                       When -2 is used, a bandwidth is chosen for each frame\n"
 "                       based on the results from the previous frame.\n"
-"\n"
+"\n");
+fprintf(out,
 "    [-m #]         Stereo rematrixing\n"
 "                       Using stereo rematrixing can increase quality by\n"
 "                       removing redundant information between the left and\n"
@@ -133,8 +142,7 @@ print_long_help(FILE *out)
 "                       each block.  When this setting is turned off,\n"
 "                       rematrixing is not used for any blocks. The default\n"
 "                       value is 1.\n"
-"\n");
-fprintf(out,
+"\n"
 "    [-s #]         Block switching\n"
 "                       The AC-3 format allows for 2 different types of MDCT\n"
 "                       transformations to translate from time-domain to\n"
@@ -192,7 +200,8 @@ fprintf(out,
 "                       3 = Music Standard\n"
 "                       4 = Speech\n"
 "                       5 = None (default)\n"
-"\n"
+"\n");
+fprintf(out,
 "    [-dnorm #]     Dialog normalization [0 - 31] (default: 31)\n"
 "                       The dialog normalization value sets the average dialog\n"
 "                       level.  The value is typically constant for a particular\n"
@@ -202,8 +211,7 @@ fprintf(out,
 "                       altered.  Otherwise, the overall output volume is\n"
 "                       decreased so that the dialog level is adjusted down to\n"
 "                       -31dB.\n"
-"\n");
-fprintf(out,
+"\n"
 "CHANNEL OPTIONS\n"
 "\n"
 "    By default, the channel configuration is determined by the input file wav\n"
@@ -273,7 +281,8 @@ fprintf(out,
 "                       to the output stream.\n"
 "                       0 = do not write xbsi1\n"
 "                       1 = write xbsi1\n"
-"\n"
+"\n");
+fprintf(out,
 "    [-dmixmod #]   Preferred stereo downmix mode\n"
 "                       This code indicates the type of stereo downmix preferred\n"
 "                       by the mastering engineer, and can be optionally used,\n"
@@ -281,8 +290,7 @@ fprintf(out,
 "                       0 = not indicated (default)\n"
 "                       1 = Lt/Rt downmix preferred\n"
 "                       2 = Lo/Ro downmix preferred\n"
-"\n");
-fprintf(out,
+"\n"
 "    The 4 mix level options below all use the same code table:\n"
 "                       0 = +3.0 dB\n"
 "                       1 = +1.5 dB\n"
@@ -361,6 +369,9 @@ print_help(FILE *out)
                  "    [-fba #]       Fast bit allocation (default: 0)\n"
                  "                       0 = more accurate encoding\n"
                  "                       1 = faster encoding\n"
+                 "    [-pad #]       Start-of-stream padding\n"
+                 "                       0 = no padding\n"
+                 "                       1 = 256 samples of padding (default)\n"
                  "    [-w #]         Bandwidth\n"
                  "                       0 to 60 = fixed bandwidth (28%%-99%% of full bandwidth)\n"
                  "                      -1 = fixed adaptive bandwidth (default)\n"
@@ -456,6 +467,7 @@ typedef struct CommandOptions {
     char *infile;
     char *outfile;
     AftenContext *s;
+    int pad_start;
 } CommandOptions;
 
 static int
@@ -472,6 +484,7 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
     opts->chmap = 0;
     opts->infile = argv[1];
     opts->outfile = argv[2];
+    opts->pad_start = 1;
 
     for(i=1; i<argc; i++) {
         if(argv[i][0] == '-' && argv[i][1] != '\0') {
@@ -656,6 +669,14 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
                     opts->chmap = atoi(argv[i]);
                     if(opts->chmap < 0 || opts->chmap > 1) {
                         fprintf(stderr, "invalid chmap: %d. must be 0 or 1.\n", opts->chmap);
+                        return 1;
+                    }
+                } else if(!strncmp(&argv[i][1], "pad", 6)) {
+                    i++;
+                    if(i >= argc) return 1;
+                    opts->pad_start = atoi(argv[i]);
+                    if(opts->pad_start < 0 || opts->pad_start > 1) {
+                        fprintf(stderr, "invalid pad: %d. must be 0 or 1.\n", opts->pad_start);
                         return 1;
                     }
                 }
@@ -903,6 +924,23 @@ main(int argc, char **argv)
     frame_cnt = 0;
     done = 0;
     fs = 0;
+    nr = 0;
+
+    // don't pad start with zero samples, use input audio instead.
+    // not recommended, but providing the option here for when sync is needed
+    if(!opts.pad_start) {
+        FLOAT *sptr = &fwav[1280*wf.channels];
+        nr = wavfile_read_samples(&wf, sptr, 256);
+        if(opts.chmap == 0) {
+            aften_remap_wav_to_a52(sptr, nr, wf.channels, s.sample_format,
+                                   s.acmod);
+        }
+        fs = aften_encode_frame(&s, frame, done ? NULL : fwav);
+        if(fs < 0) {
+            fprintf(stderr, "Error encoding initial frame\n");
+        }
+    }
+
     nr = wavfile_read_samples(&wf, fwav, A52_SAMPLES_PER_FRAME);
     while(nr > 0 || fs > 0) {
         if(opts.chmap == 0) {
