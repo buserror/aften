@@ -173,7 +173,7 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
  * and the most accurate strategy set (all blocks EXP_D15).
  */
 static int
-compute_expstr_ch(uint8_t exp[A52_NUM_BLOCKS][256], int ncoefs)
+compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs)
 {
     int blk, str, i, j, k;
     int min_error, exp_error[6];
@@ -227,12 +227,12 @@ compute_exponent_strategy(A52ThreadContext *tctx)
     A52Frame *frame = &tctx->frame;
     A52Block *blocks = frame->blocks;
     int *ncoefs = frame->ncoefs;
-    uint8_t exp[A52_MAX_CHANNELS][A52_NUM_BLOCKS][256];
+    uint8_t *exp[A52_MAX_CHANNELS][A52_NUM_BLOCKS];
     int ch, blk, str;
 
     for(ch=0; ch<ctx->n_channels; ch++) {
         for(blk=0; blk<A52_NUM_BLOCKS; blk++)
-            memcpy(exp[ch][blk], blocks[blk].exp[ch], 256);
+            exp[ch][blk] = blocks[blk].exp[ch];
 
         str = compute_expstr_ch(exp[ch], ncoefs[ch]);
         for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
