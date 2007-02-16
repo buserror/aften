@@ -939,7 +939,7 @@ copy_samples(A52ThreadContext *tctx)
         }
         if (ch < ctx->n_channels)
         {
-            // channel bandwidth filter will go here
+            // channel bandwidth filter
             if(ctx->params.use_bw_filter) {
                 filter_run(&ctx->bw_filter[ch], out_audio, in_audio, A52_SAMPLES_PER_FRAME);
                 SWAP_BUFFERS
