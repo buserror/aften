@@ -231,11 +231,9 @@ compute_exponent_strategy(A52ThreadContext *tctx)
     int ch, blk, str;
 
     for(ch=0; ch<ctx->n_channels; ch++) {
-        for(str=1; str<6; str++) {
-            for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
-                memcpy(exp[ch][blk], blocks[blk].exp[ch], 256);
-            }
-        }
+        for(blk=0; blk<A52_NUM_BLOCKS; blk++)
+            memcpy(exp[ch][blk], blocks[blk].exp[ch], 256);
+
         str = compute_expstr_ch(exp[ch], ncoefs[ch]);
         for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
             blocks[blk].exp_strategy[ch] = str_predef[str][blk];
