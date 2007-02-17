@@ -204,13 +204,12 @@ static const char *encoding_options[ENCODING_OPTIONS_COUNT] = {
 "                       future with a better quality measurement.\n",
 
 "    [-fba #]      Fast bit allocation\n"
-"                       The current CBR bit allocation algorithm does a search\n"
-"                       for the highest SNR offset value which still allows for\n"
-"                       the data to fit in the fixed-sized frame.  It is split\n"
-"                       into 2 stages.  The first stage narrows down the SNR\n"
-"                       value to within 16 of the target.  The second stage does\n"
-"                       a weighted estimate followed by a fine-level search.\n"
-"                       Turning on fast bit allocation skips the 2nd step.\n",
+"                       Fast bit allocation is a less-accurate search method\n"
+"                       for CBR bit allocation.  It only narrows down the SNR\n"
+"                       value to within 16 of the optimal value.  The result
+"                       is lower overall quality, but faster encoding.  This\n"
+"                       may not give the same results each time when using\n"
+"                       parallel encoding\n",
 
 "    [-fes #]      Fast exponent strategy decision\n"
 "                       By default, the exponent strategy for each channel\n"
