@@ -99,6 +99,7 @@ aften_set_defaults(AftenContext *s)
     s->params.use_dc_filter = 0;
     s->params.use_lfe_filter = 0;
     s->params.bitalloc_fast = 0;
+    s->params.expstr_fast = 0;
     s->params.dynrng_profile = DYNRNG_PROFILE_NONE;
 
     s->meta.cmixlev = 0;

@@ -197,6 +197,14 @@ typedef struct {
     int bitalloc_fast;
 
     /**
+     * Exponent Strategy speed/quality
+     * This determines whether to use a fixed or adaptive exponent strategy.
+     * Set to 0 for adaptive strategy (better quality, slower)
+     * Set to 1 for fixed strategy (lower quality, faster)
+     */
+    int expstr_fast;
+
+    /**
      * Dynamic Range Compression profile
      * This determines which DRC profile to use.
      * Film Light:     DYNRNG_PROFILE_FILM_LIGHT

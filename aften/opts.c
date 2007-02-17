@@ -258,6 +258,14 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
                         fprintf(stderr, "invalid fba: %d. must be 0 or 1.\n", opts->s->params.bitalloc_fast);
                         return 1;
                     }
+                }  else if(!strncmp(&argv[i][1], "fes", 4)) {
+                    i++;
+                    if(i >= argc) return 1;
+                    opts->s->params.expstr_fast = atoi(argv[i]);
+                    if(opts->s->params.expstr_fast < 0 || opts->s->params.expstr_fast > 1) {
+                        fprintf(stderr, "invalid fes: %d. must be 0 or 1.\n", opts->s->params.expstr_fast);
+                        return 1;
+                    }
                 } else if(!strncmp(&argv[i][1], "longhelp", 9)) {
                     return 3;
                 } else if(!strncmp(&argv[i][1], "chmap", 6)) {

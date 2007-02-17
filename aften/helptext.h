@@ -27,7 +27,7 @@
 
 static const char *usage_heading = "usage: aften [options] <input.wav> <output.ac3>\n";
 
-#define HELP_OPTIONS_COUNT 31
+#define HELP_OPTIONS_COUNT 32
 
 static const char *help_options[HELP_OPTIONS_COUNT] = {
 "    [-h]           Print out list of commandline options\n",
@@ -45,6 +45,10 @@ static const char *help_options[HELP_OPTIONS_COUNT] = {
 
 "    [-fba #]       Fast bit allocation (default: 0)\n"
 "                       0 = more accurate encoding\n"
+"                       1 = faster encoding\n",
+
+"    [-fes #]       Fast exponent strategy decision (default: 0)\n"
+"                       0 = higher quality encoding\n"
 "                       1 = faster encoding\n",
 
 "    [-pad #]       Start-of-stream padding\n"
@@ -179,7 +183,7 @@ static const char *console_options[CONSOLE_OPTIONS_COUNT] = {
 "                       2 - Shows the statistics for each frame.\n"
 };
 
-#define ENCODING_OPTIONS_COUNT 7
+#define ENCODING_OPTIONS_COUNT 8
 
 static const char encoding_heading[18] = "ENCODING OPTIONS\n";
 static const char *encoding_options[ENCODING_OPTIONS_COUNT] = {
@@ -207,6 +211,15 @@ static const char *encoding_options[ENCODING_OPTIONS_COUNT] = {
 "                       value to within 16 of the target.  The second stage does\n"
 "                       a weighted estimate followed by a fine-level search.\n"
 "                       Turning on fast bit allocation skips the 2nd step.\n",
+
+"    [-fes #]      Fast exponent strategy decision\n"
+"                       By default, the exponent strategy for each channel\n"
+"                       in a frame is decided by finding the best choice out of\n"
+"                       5 pre-defined sets of strategies.  When this fast\n"
+"                       option is turned on, the same set is always used\n"
+"                       for every channel in every frame, which leads to\n"
+"                       generally lower quality but gives a significant speed\n"
+"                       increase\n",
 
 "    [-pad #]      Start-of-stream padding\n"
 "                       The AC-3 format uses an overlap/add cycle for encoding\n"
