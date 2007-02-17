@@ -950,6 +950,8 @@ copy_samples(A52ThreadContext *tctx)
                            A52_SAMPLES_PER_FRAME);
                 memcpy(frame->blocks[0].transient_samples[ch],
                        ctx->last_transient_samples[ch], 256 * sizeof(FLOAT));
+                memcpy(&frame->blocks[0].transient_samples[ch][256], out_audio,
+                       256 * sizeof(FLOAT));
                 for(blk=1; blk<A52_NUM_BLOCKS; blk++) {
                     memcpy(frame->blocks[blk].transient_samples[ch],
                            &out_audio[256*(blk-1)], 512 * sizeof(FLOAT));
