@@ -206,7 +206,7 @@ static const char *encoding_options[ENCODING_OPTIONS_COUNT] = {
 "    [-fba #]      Fast bit allocation\n"
 "                       Fast bit allocation is a less-accurate search method\n"
 "                       for CBR bit allocation.  It only narrows down the SNR\n"
-"                       value to within 16 of the optimal value.  The result
+"                       value to within 16 of the optimal value.  The result"
 "                       is lower overall quality, but faster encoding.  This\n"
 "                       may not give the same results each time when using\n"
 "                       parallel encoding.\n",
