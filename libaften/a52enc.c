@@ -934,19 +934,21 @@ copy_samples(A52ThreadContext *tctx)
         in_audio = frame->input_audio[ch];
         // DC-removal high-pass filter
         if(ctx->params.use_dc_filter) {
-            filter_run(&ctx->dc_filter[ch], out_audio, in_audio, A52_SAMPLES_PER_FRAME);
+            filter_run(&ctx->dc_filter[ch], out_audio, in_audio,
+                       A52_SAMPLES_PER_FRAME);
             SWAP_BUFFERS
         }
-        if (ch < ctx->n_channels)
-        {
+        if (ch < ctx->n_channels) {
             // channel bandwidth filter
             if(ctx->params.use_bw_filter) {
-                filter_run(&ctx->bw_filter[ch], out_audio, in_audio, A52_SAMPLES_PER_FRAME);
+                filter_run(&ctx->bw_filter[ch], out_audio, in_audio,
+                           A52_SAMPLES_PER_FRAME);
                 SWAP_BUFFERS
             }
             // block-switching high-pass filter
             if(ctx->params.use_block_switching) {
-                filter_run(&ctx->bs_filter[ch], out_audio, in_audio, A52_SAMPLES_PER_FRAME);
+                filter_run(&ctx->bs_filter[ch], out_audio, in_audio,
+                           A52_SAMPLES_PER_FRAME);
                 memcpy(frame->blocks[0].transient_samples[ch],
                        ctx->last_transient_samples[ch], 256 * sizeof(FLOAT));
                 for(blk=1; blk<A52_NUM_BLOCKS; blk++) {
@@ -960,7 +962,8 @@ copy_samples(A52ThreadContext *tctx)
             // LFE bandwidth low-pass filter
             if(ctx->params.use_lfe_filter) {
                 assert(ch == ctx->lfe_channel);
-                filter_run(&ctx->lfe_filter, out_audio, in_audio, A52_SAMPLES_PER_FRAME);
+                filter_run(&ctx->lfe_filter, out_audio, in_audio,
+                           A52_SAMPLES_PER_FRAME);
                 SWAP_BUFFERS
             }
         }
