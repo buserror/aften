@@ -334,7 +334,16 @@ aften_encode_init(AftenContext *s)
     ctx->sample_rate = s->samplerate;
     ctx->halfratecod = i;
     ctx->fscod = j;
-    ctx->bsid = 8 + ctx->halfratecod;
+    if(ctx->halfratecod) {
+        // DolbyNet
+        ctx->bsid = 8 + ctx->halfratecod;
+    } else if(ctx->meta.xbsi1e || ctx->meta.xbsi2e) {
+        // alternate bit stream syntax
+        ctx->bsid = 6;
+    } else {
+        // normal AC-3
+        ctx->bsid = 8;
+    }
     ctx->bsmod = 0;
 
     // bitrate & frame size
@@ -627,20 +636,26 @@ output_frame_header(A52ThreadContext *tctx, uint8_t *frame_buffer)
     }
     bitwriter_writebits(bw, 1, 0); /* no copyright */
     bitwriter_writebits(bw, 1, 1); /* original bitstream */
-    bitwriter_writebits(bw, 1, ctx->meta.xbsi1e);
-    if(ctx->meta.xbsi1e) {
-        bitwriter_writebits(bw, 2, ctx->meta.dmixmod);
-        bitwriter_writebits(bw, 3, ctx->meta.ltrtcmixlev);
-        bitwriter_writebits(bw, 3, ctx->meta.ltrtsmixlev);
-        bitwriter_writebits(bw, 3, ctx->meta.lorocmixlev);
-        bitwriter_writebits(bw, 3, ctx->meta.lorosmixlev);
-    }
-    bitwriter_writebits(bw, 1, ctx->meta.xbsi2e);
-    if(ctx->meta.xbsi2e) {
-        bitwriter_writebits(bw, 2, ctx->meta.dsurexmod);
-        bitwriter_writebits(bw, 2, ctx->meta.dheadphonmod);
-        bitwriter_writebits(bw, 1, ctx->meta.adconvtyp);
-        bitwriter_writebits(bw, 9, 0);
+    if(ctx->bsid == 6) {
+        // alternate bit stream syntax
+        bitwriter_writebits(bw, 1, ctx->meta.xbsi1e);
+        if(ctx->meta.xbsi1e) {
+            bitwriter_writebits(bw, 2, ctx->meta.dmixmod);
+            bitwriter_writebits(bw, 3, ctx->meta.ltrtcmixlev);
+            bitwriter_writebits(bw, 3, ctx->meta.ltrtsmixlev);
+            bitwriter_writebits(bw, 3, ctx->meta.lorocmixlev);
+            bitwriter_writebits(bw, 3, ctx->meta.lorosmixlev);
+        }
+        bitwriter_writebits(bw, 1, ctx->meta.xbsi2e);
+        if(ctx->meta.xbsi2e) {
+            bitwriter_writebits(bw, 2, ctx->meta.dsurexmod);
+            bitwriter_writebits(bw, 2, ctx->meta.dheadphonmod);
+            bitwriter_writebits(bw, 1, ctx->meta.adconvtyp);
+            bitwriter_writebits(bw, 9, 0);
+        }
+    } else {
+        bitwriter_writebits(bw, 1, 0); // timecod1e
+        bitwriter_writebits(bw, 1, 0); // timecod2e
     }
     bitwriter_writebits(bw, 1, 0); /* no addtional bit stream info */
 }
