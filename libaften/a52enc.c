@@ -921,7 +921,6 @@ copy_samples(A52ThreadContext *tctx)
 {
     A52Context *ctx = tctx->ctx;
     A52Frame *frame = &tctx->frame;
-    A52Block *block;
     FLOAT buffer[A52_SAMPLES_PER_FRAME];
     FLOAT *in_audio;
     FLOAT *out_audio;
