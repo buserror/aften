@@ -262,7 +262,7 @@ main(int argc, char **argv)
         if(fs < 0) {
             fprintf(stderr, "Error encoding frame %d\n", frame_cnt);
         } else {
-            if(s.params.verbose > 0) {
+            if(s.params.verbose > 0 && fs > 0) {
                 samplecount += A52_SAMPLES_PER_FRAME;
                 bytecount += fs;
                 qual += s.status.quality;
