@@ -946,17 +946,15 @@ copy_samples(A52ThreadContext *tctx)
             }
             // block-switching high-pass filter
             if(ctx->params.use_block_switching) {
-                filter_run(&ctx->bs_filter[ch], out_audio,
-                           in_audio, A52_SAMPLES_PER_FRAME);
-                for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
-                    block = &frame->blocks[blk];
-                    memcpy(block->transient_samples[ch],
-                           ctx->last_transient_samples[ch], 256 * sizeof(FLOAT));
-                    memcpy(&block->transient_samples[ch][256],
-                           &out_audio[256*blk], 256 * sizeof(FLOAT));
-                    memcpy(ctx->last_transient_samples[ch],
-                           &out_audio[256*blk], 256 * sizeof(FLOAT));
+                filter_run(&ctx->bs_filter[ch], out_audio, in_audio, A52_SAMPLES_PER_FRAME);
+                memcpy(frame->blocks[0].transient_samples[ch],
+                       ctx->last_transient_samples[ch], 256 * sizeof(FLOAT));
+                for(blk=1; blk<A52_NUM_BLOCKS; blk++) {
+                    memcpy(frame->blocks[blk].transient_samples[ch],
+                           &out_audio[256*(blk-1)], 512 * sizeof(FLOAT));
                 }
+                memcpy(ctx->last_transient_samples[ch],
+                       &out_audio[256*5], 256 * sizeof(FLOAT));
             }
         } else {
             // LFE bandwidth low-pass filter
@@ -966,15 +964,17 @@ copy_samples(A52ThreadContext *tctx)
                 SWAP_BUFFERS
             }
         }
-        for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
-            block = &frame->blocks[blk];
-            memcpy(block->input_samples[ch], ctx->last_samples[ch],
-                   256 * sizeof(FLOAT));
-            memcpy(&block->input_samples[ch][256],
-                   &in_audio[256*blk], 256 * sizeof(FLOAT));
-            memcpy(ctx->last_samples[ch],
-                   &in_audio[256*blk], 256 * sizeof(FLOAT));
+
+        memcpy(frame->blocks[0].input_samples[ch], ctx->last_samples[ch],
+               256 * sizeof(FLOAT));
+        memcpy(&frame->blocks[0].input_samples[ch][256], in_audio,
+               256 * sizeof(FLOAT));
+        for(blk=1; blk<A52_NUM_BLOCKS; blk++) {
+            memcpy(frame->blocks[blk].input_samples[ch], &in_audio[256*(blk-1)],
+                   512 * sizeof(FLOAT));
         }
+        memcpy(ctx->last_samples[ch],
+               &in_audio[256*5], 256 * sizeof(FLOAT));
     }
 #undef SWAP_BUFFERS
 }
