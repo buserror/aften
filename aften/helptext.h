@@ -171,9 +171,9 @@ static const char *help_options[HELP_OPTIONS_COUNT] = {
 
 static const char console_heading[24] = "CONSOLE OUTPUT OPTIONS\n";
 static const char *console_options[CONSOLE_OPTIONS_COUNT] = {
-"    [-h]           Print out list of commandline options\n",
+"    [-h]           Print out list of commandline options.\n",
 
-"    [-longhelp]    Print out commandline option details\n",
+"    [-longhelp]    Print out commandline option details.\n",
 
 "    [-v #]         Verbosity\n"
 "                       This controls the level of console output to stderr.\n"
@@ -209,7 +209,7 @@ static const char *encoding_options[ENCODING_OPTIONS_COUNT] = {
 "                       value to within 16 of the optimal value.  The result
 "                       is lower overall quality, but faster encoding.  This\n"
 "                       may not give the same results each time when using\n"
-"                       parallel encoding\n",
+"                       parallel encoding.\n",
 
 "    [-fes #]      Fast exponent strategy decision\n"
 "                       By default, the exponent strategy for each channel\n"
@@ -218,7 +218,7 @@ static const char *encoding_options[ENCODING_OPTIONS_COUNT] = {
 "                       option is turned on, the same set is always used\n"
 "                       for every channel in every frame, which leads to\n"
 "                       generally lower quality but gives a significant speed\n"
-"                       increase\n",
+"                       increase.\n",
 
 "    [-pad #]      Start-of-stream padding\n"
 "                       The AC-3 format uses an overlap/add cycle for encoding\n"
