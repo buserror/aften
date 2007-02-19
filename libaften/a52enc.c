@@ -1200,7 +1200,7 @@ calculate_dynrng(A52ThreadContext *tctx)
     }
 }
 
-static void
+static int
 encode_frame(A52ThreadContext *tctx, uint8_t *frame_buffer)
 {
     A52Context *ctx = tctx->ctx;
@@ -1225,7 +1225,7 @@ encode_frame(A52ThreadContext *tctx, uint8_t *frame_buffer)
     if(compute_bit_allocation(tctx)) {
         fprintf(stderr, "Error in bit allocation\n");
         tctx->framesize = 0;
-        return;
+        return -1;
     }
 
     quantize_mantissas(tctx);
@@ -1242,6 +1242,8 @@ encode_frame(A52ThreadContext *tctx, uint8_t *frame_buffer)
     output_frame_header(tctx, frame_buffer);
     output_audio_blocks(tctx);
     tctx->framesize = output_frame_end(tctx);
+
+    return 0;
 }
 
 static int
@@ -1264,7 +1266,12 @@ threaded_encode(void* vtctx)
             tctx->framesize = 0;
             break;
         }
-        encode_frame(tctx, tctx->frame_buffer);
+        if (tctx->state == ABORT) {
+            tctx->framesize = -1;
+            break;
+        }
+        if (encode_frame(tctx, tctx->frame_buffer))
+            tctx->state = ABORT;
     }
     posix_mutex_unlock(&tctx->ts.enter_mutex);
 
@@ -1277,51 +1284,65 @@ static int
 encode_frame_parallel(AftenContext *s, uint8_t *frame_buffer, void *samples)
 {
     static int thread_num = 0;
+    static int threads_to_abort = 0;
     A52Context *ctx = s->private_context;
-    A52ThreadContext *tctx = &ctx->tctx[thread_num];
     int framesize = 0;
 
-    posix_mutex_lock(&tctx->ts.enter_mutex);
+    do {
+        A52ThreadContext *tctx = &ctx->tctx[thread_num];
 
-    windows_event_wait(&tctx->ts.ready_event);
+        posix_mutex_lock(&tctx->ts.enter_mutex);
 
-    if (tctx->state == START)
-        tctx->state = WORK;
-    else if (tctx->state != ABORT) {
-        if(tctx->framesize > 0) {
-            framesize = tctx->framesize;
-            memcpy(frame_buffer, tctx->frame_buffer, framesize);
+        windows_event_wait(&tctx->ts.ready_event);
 
-            // update encoding status
-            s->status.quality   = tctx->status.quality;
-            s->status.bit_rate  = tctx->status.bit_rate;
-            s->status.bwcode    = tctx->status.bwcode;
+        if (tctx->state == ABORT || threads_to_abort) {
+            tctx->state = ABORT;
+            framesize = -1;
+            if (!threads_to_abort)
+                threads_to_abort = ctx->n_threads;
+            --threads_to_abort;
         } else {
-            posix_mutex_unlock(&tctx->ts.enter_mutex);
-            goto end;
+            if (tctx->state == START)
+                tctx->state = WORK;
+            else {
+                if(tctx->framesize > 0) {
+                    framesize = tctx->framesize;
+                    memcpy(frame_buffer, tctx->frame_buffer, framesize);
+                   // update encoding status
+                    s->status.quality   = tctx->status.quality;
+                    s->status.bit_rate  = tctx->status.bit_rate;
+                    s->status.bwcode    = tctx->status.bwcode;
+                } else {
+                    posix_mutex_unlock(&tctx->ts.enter_mutex);
+                    goto end;
+                }
+            }
+            if(!samples)
+                tctx->state = END;
+            else {
+                // convert sample format and de-interleave channels
+                ctx->fmt_convert_from_src(tctx->frame.input_audio, samples, ctx->n_all_channels, A52_SAMPLES_PER_FRAME);
+                if(!frame_init(tctx))
+                    copy_samples(tctx);
+                else {
+                    fprintf(stderr, "Encoding has not properly initialized\n");
+                    tctx->state=ABORT;
+                    threads_to_abort = ctx->n_threads - 1;
+                    framesize = -1;
+                }
+            }
         }
-    }
-    if(!samples)
-        tctx->state = END;
-    else {
-        // convert sample format and de-interleave channels
-        ctx->fmt_convert_from_src(tctx->frame.input_audio, samples, ctx->n_all_channels, A52_SAMPLES_PER_FRAME);
-        if(frame_init(tctx)) {
-            fprintf(stderr, "Encoding has not properly initialized\n");
-            return -1;//FIXME
-        }
-        copy_samples(tctx);
-    }
-    posix_mutex_lock(&tctx->ts.confirm_mutex);
-    posix_cond_signal(&tctx->ts.enter_cond);
-    posix_mutex_unlock(&tctx->ts.enter_mutex);
-    posix_cond_wait(&tctx->ts.confirm_cond, &tctx->ts.confirm_mutex);
-    posix_mutex_unlock(&tctx->ts.confirm_mutex);
+        posix_mutex_lock(&tctx->ts.confirm_mutex);
+        posix_cond_signal(&tctx->ts.enter_cond);
+        posix_mutex_unlock(&tctx->ts.enter_mutex);
+        posix_cond_wait(&tctx->ts.confirm_cond, &tctx->ts.confirm_mutex);
+        posix_mutex_unlock(&tctx->ts.confirm_mutex);
 
-    windows_event_set(&tctx->ts.enter_event);
+        windows_event_set(&tctx->ts.enter_event);
 end:
-    ++thread_num;
-    thread_num %= ctx->n_threads;
+        ++thread_num;
+        thread_num %= ctx->n_threads;
+    } while(threads_to_abort);
 
     return framesize;
 }

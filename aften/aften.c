@@ -232,6 +232,7 @@ main(int argc, char **argv)
         fs = aften_encode_frame(&s, frame, fwav);
         if(fs < 0) {
             fprintf(stderr, "Error encoding initial frame\n");
+            goto end;
         }
     }
 
@@ -261,6 +262,7 @@ main(int argc, char **argv)
 
         if(fs < 0) {
             fprintf(stderr, "Error encoding frame %d\n", frame_cnt);
+            break;
         } else {
             if(s.params.verbose > 0 && fs > 0) {
                 samplecount += A52_SAMPLES_PER_FRAME;
@@ -310,7 +312,7 @@ main(int argc, char **argv)
         fprintf(stderr, "average bandwidth: %2.1f\n", (bw / frame_cnt));
         fprintf(stderr, "average bitrate:   %4.1f kbps\n\n", kbps);
     }
-
+end:
     free(fwav);
     free(frame);
 
