@@ -270,7 +270,7 @@ group_exponents(A52ThreadContext *tctx)
     int delta[3];
     int blk, ch, i, gsize, bits;
     int expstr;
-    uint8_t exp0, exp1;
+    int exp0, exp1, exp2, exp3;
 
     bits = 0;
     for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
@@ -296,15 +296,14 @@ group_exponents(A52ThreadContext *tctx)
                 p += gsize;
                 delta[0] = exp1 - exp0 + 2;
 
-                exp0 = exp1;
-                exp1 = p[0];
+                exp2 = p[0];
                 p += gsize;
-                delta[1] = exp1 - exp0 + 2;
+                delta[1] = exp2 - exp1 + 2;
 
-                exp0 = exp1;
-                exp1 = p[0];
+                exp3 = p[0];
                 p += gsize;
-                delta[2] = exp1 - exp0 + 2;
+                delta[2] = exp3 - exp2 + 2;
+                exp1 = exp3;
 
                 block->grp_exp[ch][i] = ((delta[0]*5+delta[1])*5)+delta[2];
             }
