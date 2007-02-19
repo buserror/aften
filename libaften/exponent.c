@@ -283,7 +283,7 @@ group_exponents(A52ThreadContext *tctx)
             }
             block->nexpgrps[ch] = nexpgrptab[expstr-1][frame->ncoefs[ch]];
             bits += (4 + (block->nexpgrps[ch] * 7));
-            gsize = expstr + (expstr / 3);
+            gsize = expstr + (expstr == EXP_D45);
             p = block->exp[ch];
 
             exp1 = *p++;
