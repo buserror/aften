@@ -205,8 +205,10 @@ compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs)
         // select strategy based on minimum error from unencoded exponents
         exp_error[str] = 0;
         for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+            uint8_t *exp_blk = exp[blk];
+            uint8_t *exponents_blk = exponents[blk];
             for(i=0; i<ncoefs; i++) {
-                err = exp[blk][i] - exponents[blk][i];
+                err = exp_blk[i] - exponents_blk[i];
                 exp_error[str] += (err * err);
             }
         }
