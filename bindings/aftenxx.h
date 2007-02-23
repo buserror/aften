@@ -47,7 +47,7 @@ public:
     ~FrameEncoder();
 
     /// Encodes PCM samples to an A/52 frame; returns encoded frame size
-    int Encode(unsigned char *frameBuffer, void *samples);
+    int Encode(unsigned char *frameBuffer, const void *samples);
 
     /// Gets a context with default values
     static AftenContext GetDefaultsContext();

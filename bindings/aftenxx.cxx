@@ -38,7 +38,7 @@ FrameEncoder::~FrameEncoder()
 }
 
 /// Encodes PCM samples to an A/52 frame
-int FrameEncoder::Encode(unsigned char *frameBuffer, void *samples)
+int FrameEncoder::Encode(unsigned char *frameBuffer, const void *samples)
 {
     return aften_encode_frame(&m_context, frameBuffer, samples);
 }

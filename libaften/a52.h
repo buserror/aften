@@ -150,7 +150,7 @@ typedef struct A52Context {
     AftenEncParams params;
     AftenMetadata meta;
     void (*fmt_convert_from_src)(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
-         void *vsrc, int nch, int n);
+          const void *vsrc, int nch, int n);
 
     int n_threads;
     int n_channels;

@@ -58,7 +58,7 @@ AFTEN_API void aften_set_defaults(AftenContext *s);
 AFTEN_API int aften_encode_init(AftenContext *s);
 
 AFTEN_API int aften_encode_frame(AftenContext *s, unsigned char *frame_buffer,
-                                 void *samples);
+                                 const void *samples);
 
 AFTEN_API void aften_encode_close(AftenContext *s);
 

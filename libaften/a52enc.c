@@ -124,10 +124,10 @@ aften_set_defaults(AftenContext *s)
 
 static void
 fmt_convert_from_u8(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
-                    void *vsrc, int nch, int n)
+                    const void *vsrc, int nch, int n)
 {
     int i, ch;
-    uint8_t *src = vsrc;
+    const uint8_t *src = vsrc;
 
     for(ch=0; ch<nch; ch++) {
         for(i=0; i<n; i++) {
@@ -138,10 +138,10 @@ fmt_convert_from_u8(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
 
 static void
 fmt_convert_from_s16(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
-                     void *vsrc, int nch, int n)
+                     const void *vsrc, int nch, int n)
 {
     int i, ch;
-    int16_t *src = vsrc;
+    const int16_t *src = vsrc;
 
     for(ch=0; ch<nch; ch++) {
         for(i=0; i<n; i++) {
@@ -152,10 +152,10 @@ fmt_convert_from_s16(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
 
 static void
 fmt_convert_from_s20(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
-                     void *vsrc, int nch, int n)
+                     const void *vsrc, int nch, int n)
 {
     int i, ch;
-    int32_t *src = vsrc;
+    const int32_t *src = vsrc;
 
     for(ch=0; ch<nch; ch++) {
         for(i=0; i<n; i++) {
@@ -166,10 +166,10 @@ fmt_convert_from_s20(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
 
 static void
 fmt_convert_from_s24(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
-                     void *vsrc, int nch, int n)
+                     const void *vsrc, int nch, int n)
 {
     int i, ch;
-    int32_t *src = vsrc;
+    const int32_t *src = vsrc;
 
     for(ch=0; ch<nch; ch++) {
         for(i=0; i<n; i++) {
@@ -180,10 +180,10 @@ fmt_convert_from_s24(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
 
 static void
 fmt_convert_from_s32(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
-                     void *vsrc, int nch, int n)
+                     const void *vsrc, int nch, int n)
 {
     int i, ch;
-    int32_t *src = vsrc;
+    const int32_t *src = vsrc;
 
     for(ch=0; ch<nch; ch++) {
         for(i=0; i<n; i++) {
@@ -194,10 +194,10 @@ fmt_convert_from_s32(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
 
 static void
 fmt_convert_from_float(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
-                       void *vsrc, int nch, int n)
+                       const void *vsrc, int nch, int n)
 {
     int i, ch;
-    float *src = vsrc;
+    const float *src = vsrc;
 
     for(ch=0; ch<nch; ch++) {
         for(i=0; i<n; i++) {
@@ -208,10 +208,10 @@ fmt_convert_from_float(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
 
 static void
 fmt_convert_from_double(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
-                        void *vsrc, int nch, int n)
+                        const void *vsrc, int nch, int n)
 {
     int i, ch;
-    double *src = vsrc;
+    const double *src = vsrc;
 
     for(ch=0; ch<nch; ch++) {
         for(i=0; i<n; i++) {
@@ -1281,7 +1281,7 @@ threaded_encode(void* vtctx)
 }
 
 static int
-encode_frame_parallel(AftenContext *s, uint8_t *frame_buffer, void *samples)
+encode_frame_parallel(AftenContext *s, uint8_t *frame_buffer, const void *samples)
 {
     static int thread_num = 0;
     static int threads_to_abort = 0;
@@ -1348,7 +1348,7 @@ end:
 }
 
 int
-aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, void *samples)
+aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, const void *samples)
 {
     A52Context *ctx;
     A52ThreadContext *tctx;
