@@ -264,7 +264,7 @@ ADD_EXECUTABLE(wavfilter util/wavfilter.c libaften/filter.c)
 TARGET_LINK_LIBRARIES(wavfilter aften_wav ${LIBM})
 
 IF(BINDINGS_CXX)
-  MESSAGE("## WARNING: The C++ bindings are work-in-progress and currently untested. ##")
+  MESSAGE("## WARNING: The C++ bindings are only lightly tested. Feed-back appreciated. ##")
   Project(aften CXX)
   SET(CMAKE_CXX_FLAGS_RELEASE "${ADD_CFLAGS} ${CMAKE_C_FLAGS_RELEASE}")
   INCLUDE_DIRECTORIES(${Aften_SOURCE_DIR}/bindings)
