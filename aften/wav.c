@@ -976,7 +976,7 @@ wavfile_init(WavFile *wf, FILE *fp, enum WavSampleFormat read_format)
 int
 wavfile_read_samples(WavFile *wf, void *output, int num_samples)
 {
-    int nr, i, j, bps, nsmp, v, br;
+    int nr, i, j, bps, nsmp, br;
     uint32_t bytes_needed;
     uint8_t *buffer;
 
@@ -1033,7 +1033,7 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
         {
             int32_t *input = calloc(nsmp, sizeof(int32_t));
             for(i=0,j=0; i<nsmp*bps; i+=bps,j++) {
-                v = buffer[i] + (buffer[i+1] << 8) + (buffer[i+2] << 16);
+                int v = buffer[i] + (buffer[i+1] << 8) + (buffer[i+2] << 16);
                 if(wf->bit_width == 20) {
                     if(v >= (1<<19)) v -= (1<<20);
                 } else if(wf->bit_width == 24) {
