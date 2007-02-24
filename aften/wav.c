@@ -1058,24 +1058,14 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
         }
         break;
     case 4:
-        if(wf->format == WAVE_FORMAT_IEEEFLOAT) {
-            float *input = (float *)buffer;
+        {
 #ifdef WORDS_BIGENDIAN
             uint32_t *buf32 = (uint32_t *)buffer;
             for(i=0; i<nsmp; i++) {
                 buf32[i] = bswap_32(buf32[i]);
             }
 #endif
-            wf->fmt_convert(output, input, nsmp);
-        } else {
-            int32_t *input = (int32_t*)buffer;
-#ifdef WORDS_BIGENDIAN
-            for(i=0,j=0; i<nsmp*bps; i+=bps,j++) {
-                input[j] = buffer[i] | (buffer[i+1] << 8) | (buffer[i+2] << 16) |
-                    (buffer[i+3] << 24);
-            }
-#endif
-            wf->fmt_convert(output, input, nsmp);
+            wf->fmt_convert(output, buffer, nsmp);
         }
         break;
     default:
