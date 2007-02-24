@@ -1061,7 +1061,7 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
         } else {
             // TODO: I'm sure this can be optimized...
             int64_t v64;
-            int32_t *input = calloc(nsmp, sizeof(int32_t));
+            int32_t *input = (int32_t)buffer;
             for(i=0,j=0; i<nsmp*bps; i+=bps,j++) {
                 v64 = buffer[i] + (buffer[i+1] << 8) + (buffer[i+2] << 16) +
                     (((uint32_t)buffer[i+3]) << 24);
@@ -1069,7 +1069,6 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
                 input[j] = (int32_t)v64;
             }
             wf->fmt_convert(output, input, nsmp);
-            free(input);
         }
         break;
     default:
