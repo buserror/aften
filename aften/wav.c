@@ -1061,7 +1061,7 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
         } else {
             // TODO: I'm sure this can be optimized...
             int64_t v64;
-            int32_t *input = (int32_t)buffer;
+            int32_t *input = (int32_t*)buffer;
             for(i=0,j=0; i<nsmp*bps; i+=bps,j++) {
                 v64 = buffer[i] + (buffer[i+1] << 8) + (buffer[i+2] << 16) +
                     (((uint32_t)buffer[i+3]) << 24);
