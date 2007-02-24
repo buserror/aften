@@ -1038,9 +1038,6 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
                     if(v >= (1<<19)) v -= (1<<20);
                 } else if(wf->bit_width == 24) {
                     if(v >= (1<<23)) v -= (1<<24);
-                } else {
-                    fprintf(stderr, "unsupported bit width: %d\n", wf->bit_width);
-                    return -1;
                 }
                 input[j] = v;
             }
