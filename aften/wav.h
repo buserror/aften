@@ -57,6 +57,7 @@ enum WavSampleFormat {
 /* main decoder context */
 typedef struct WavFile {
     // private fields. do not modify.
+    void (*fmt_convert)(void *dest_v, void *src_v, int n);
     FILE *fp;
     uint64_t filepos;
     int seekable;
@@ -77,7 +78,6 @@ typedef struct WavFile {
     // this is the data format in which samples are returned by
     // wavfile_read_samples.
     enum WavSampleFormat read_format;
-
 } WavFile;
 
 /**
@@ -86,7 +86,7 @@ typedef struct WavFile {
  * pointer aligned at start of data when it exits.
  * Returns non-zero value if an error occurs.
  */
-extern int wavfile_init(WavFile *wf, FILE *fp);
+extern int wavfile_init(WavFile *wf, FILE *fp, enum WavSampleFormat read_format);
 
 /**
  * Reads audio samples to the output buffer.

@@ -42,7 +42,7 @@ wav_filter(FLOAT *samples, int ch, int n, FilterContext *f)
 
     for (i=0, j=0; i<ch; i++,j+=n)
       samples2[i] = samples2_buffer + j;
-    
+
     for(i=0,j=0; i<n; i++) {
         for(c=0; c<ch; c++,j++) {
             samples2[c][i] = samples[j];
@@ -125,6 +125,7 @@ main(int argc, char **argv)
     int i;
     FilterContext f[6];
     int ftype=0;
+    enum WavSampleFormat read_format;
 
     if(argc != 5) {
         fprintf(stderr, "\n%s\n\n", usage);
@@ -151,17 +152,17 @@ main(int argc, char **argv)
         exit(1);
     }
 
-    if(wavfile_init(&wf, ifp)) {
+#ifdef CONFIG_DOUBLE
+    read_format = WAV_SAMPLE_FMT_DBL;
+#else
+    read_format = WAV_SAMPLE_FMT_FLT;
+#endif
+
+    if(wavfile_init(&wf, ifp, read_format)) {
         fprintf(stderr, "error initializing wav reader\n\n");
         exit(1);
     }
     output_wav_header(ofp, &wf);
-
-#ifdef CONFIG_DOUBLE
-    wf.read_format = WAV_SAMPLE_FMT_DBL;
-#else
-    wf.read_format = WAV_SAMPLE_FMT_FLT;
-#endif
 
     for(i=0; i<wf.channels; i++) {
         int cutoff;

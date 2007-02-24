@@ -91,6 +91,7 @@ main(int argc, char **argv)
     int frame_size, nr, rms;
     uint64_t avg_rms, avg_cnt;
     uint64_t time_ms;
+    enum WavSampleFormat read_format;
 
     /* open file */
     if(argc < 2 || argc > 4) {
@@ -128,19 +129,19 @@ main(int argc, char **argv)
         exit(1);
     }
 
-    if(wavfile_init(&wf, fp)) {
+#ifdef CONFIG_DOUBLE
+    read_format = WAV_SAMPLE_FMT_DBL;
+#else
+    read_format = WAV_SAMPLE_FMT_FLT;
+#endif
+
+    if(wavfile_init(&wf, fp, read_format)) {
         fprintf(stderr, "error initializing wav reader\n\n");
         exit(1);
     }
     frame_size = wf.sample_rate * 50 / 1000;
     // seek to start of time range
     wavfile_seek_time_ms(&wf, start_sec*1000, WAV_SEEK_SET);
-
-#ifdef CONFIG_DOUBLE
-    wf.read_format = WAV_SAMPLE_FMT_DBL;
-#else
-    wf.read_format = WAV_SAMPLE_FMT_FLT;
-#endif
 
     buf = calloc(frame_size * wf.channels, sizeof(FLOAT));
 

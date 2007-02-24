@@ -222,7 +222,7 @@ get_format_name(int id)
         case 0x0681: return "AT&T Labs TPC";
 
         case 0x08AE: return "ClearJump LiteWave";
-        
+
         case 0x1000: return "Olivetti GSM";
         case 0x1001: return "Olivetti ADPCM";
         case 0x1002: return "Olivetti CELP";
@@ -234,7 +234,7 @@ get_format_name(int id)
         case 0x1102: return "L&H SBC 0x1102";
         case 0x1103: return "L&H SBC 0x1103";
         case 0x1104: return "L&H SBC 0x1104";
-        
+
         case 0x1400: return "Norris";
         case 0x1401: return "AT&T ISIAudio";
 
@@ -264,7 +264,7 @@ get_format_name(int id)
         case 0x566F: return "Vorbis";
 
         case 0x5756: return "WavPack";
-        
+
         case 0x674F: return "Ogg Vorbis 1";
         case 0x6750: return "Ogg Vorbis 2";
         case 0x6751: return "Ogg Vorbis 3";
@@ -388,7 +388,7 @@ main(int argc, char **argv)
     }
     if(!fp) wavfile_error("cannot open file");
 
-    wavfile_init(wf, fp);
+    wavfile_init(wf, fp, WAV_SAMPLE_FMT_UNKNOWN);
 
     /* print info */
     wavinfo_print(&wi);

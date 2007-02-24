@@ -69,6 +69,7 @@ main(int argc, char **argv)
     int last_frame;
     int frame_cnt;
     int done;
+    enum WavSampleFormat read_format;
 
     opts.s = &s;
     aften_set_defaults(&s);
@@ -106,8 +107,14 @@ main(int argc, char **argv)
         }
     }
 
+#ifdef CONFIG_DOUBLE
+    read_format = WAV_SAMPLE_FMT_DBL;
+#else
+    read_format = WAV_SAMPLE_FMT_FLT;
+#endif
+
     // initialize wavfile using input
-    if(wavfile_init(&wf, ifp)) {
+    if(wavfile_init(&wf, ifp, read_format)) {
         fprintf(stderr, "invalid wav file: %s\n", argv[1]);
         return 1;
     }
@@ -167,10 +174,8 @@ main(int argc, char **argv)
     s.channels = wf.channels;
     s.samplerate = wf.sample_rate;
 #ifdef CONFIG_DOUBLE
-    wf.read_format = WAV_SAMPLE_FMT_DBL;
     s.sample_format = A52_SAMPLE_FMT_DBL;
 #else
-    wf.read_format = WAV_SAMPLE_FMT_FLT;
     s.sample_format = A52_SAMPLE_FMT_FLT;
 #endif
 
