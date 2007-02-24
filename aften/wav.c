@@ -1038,7 +1038,7 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
             //last sample could cause invalid mem access for little endians
             //but instead of complex logic do simple solution...
             for(i=0,j=0; i<(nsmp-1)*bps; i+=bps,j++) {
-#ifndef WORDS_BIGENDIAN
+#ifdef WORDS_BIGENDIAN
                 v = buffer[i] | (buffer[i+1] << 8) | (buffer[i+2] << 16);
 #else
                 v = *(int32_t*)(buffer + i);
