@@ -1005,6 +1005,8 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
 
     // read raw audio samples from input stream into temporary buffer
     nr = fread(buffer, wf->block_align, num_samples, wf->fp);
+    if (nr <= 0)
+        return nr;
     br = nr * wf->block_align;
     wf->filepos += nr * wf->block_align;
     nsmp = nr * wf->channels;
@@ -1032,15 +1034,25 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
     case 3:
         {
             int32_t *input = calloc(nsmp, sizeof(int32_t));
-            for(i=0,j=0; i<nsmp*bps; i+=bps,j++) {
-                int v = buffer[i] + (buffer[i+1] << 8) + (buffer[i+2] << 16);
-                if(wf->bit_width == 20) {
-                    if(v >= (1<<19)) v -= (1<<20);
-                } else if(wf->bit_width == 24) {
-                    if(v >= (1<<23)) v -= (1<<24);
-                }
+            int unused_bits = 32 - wf->bit_width;
+            int32_t v;
+            //last sample could cause invalid mem access for little endians
+            //but instead of complex logic do simple solution...
+            for(i=0,j=0; i<(nsmp-1)*bps; i+=bps,j++) {
+#ifndef WORDS_BIGENDIAN
+                v = buffer[i] | (buffer[i+1] << 8) | (buffer[i+2] << 16);
+#else
+                v = *(int32_t*)(buffer + i);
+#endif
+                v <<= unused_bits; // clear unused high bits
+                v >>= unused_bits; // sign extend
                 input[j] = v;
             }
+            v = buffer[i] | (buffer[i+1] << 8) | (buffer[i+2] << 16);
+            v <<= unused_bits; // clear unused high bits
+            v >>= unused_bits; // sign extend
+            input[j] = v;
+
             wf->fmt_convert(output, input, nsmp);
             free(input);
         }
