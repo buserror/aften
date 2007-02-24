@@ -1408,23 +1408,26 @@ aften_encode_close(AftenContext *s)
         A52Context *ctx = s->private_context;
         /* mdct_close deinits both mdcts */
         ctx->mdct_ctx_512.mdct_close(ctx);
-        if (ctx->n_threads == 1)
-            ctx->tctx[0].mdct_tctx_512.mdct_thread_close(&ctx->tctx[0]);
-        else {
-            int i;
-            for (i=0; i<ctx->n_threads; ++i) {
-                A52ThreadContext cur_tctx = ctx->tctx[i];
-                thread_join(cur_tctx.ts.thread);
-                cur_tctx.mdct_tctx_512.mdct_thread_close(&cur_tctx);
-                posix_cond_destroy(&cur_tctx.ts.enter_cond);
-                posix_cond_destroy(&cur_tctx.ts.confirm_cond);
+        if (ctx->tctx) {
+            if (ctx->n_threads == 1)
+                ctx->tctx[0].mdct_tctx_512.mdct_thread_close(&ctx->tctx[0]);
+            else {
+                int i;
+                for (i=0; i<ctx->n_threads; ++i) {
+                    A52ThreadContext cur_tctx = ctx->tctx[i];
+                    thread_join(cur_tctx.ts.thread);
+                    cur_tctx.mdct_tctx_512.mdct_thread_close(&cur_tctx);
+                    posix_cond_destroy(&cur_tctx.ts.enter_cond);
+                    posix_cond_destroy(&cur_tctx.ts.confirm_cond);
 
-                posix_mutex_destroy(&cur_tctx.ts.enter_mutex);
-                posix_mutex_destroy(&cur_tctx.ts.confirm_mutex);
+                    posix_mutex_destroy(&cur_tctx.ts.enter_mutex);
+                    posix_mutex_destroy(&cur_tctx.ts.confirm_mutex);
 
-                windows_event_destroy(&cur_tctx.ts.ready_event);
-                windows_event_destroy(&cur_tctx.ts.enter_event);
+                    windows_event_destroy(&cur_tctx.ts.ready_event);
+                    windows_event_destroy(&cur_tctx.ts.enter_event);
+                }
             }
+            free(ctx->tctx);
         }
         free(ctx);
         s->private_context = NULL;
