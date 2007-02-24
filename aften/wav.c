@@ -1068,13 +1068,15 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
         }
         break;
     default:
+       {
 #ifdef WORDS_BIGENDIAN
-        uint64_t *buf64 = (uint64_t *)buffer;
-        for(i=0; i<nsmp; i++) {
-            buf64[i] = bswap_64(buf64[i]);
-        }
+            uint64_t *buf64 = (uint64_t *)buffer;
+            for(i=0; i<nsmp; i++) {
+                buf64[i] = bswap_64(buf64[i]);
+            }
 #endif
-        wf->fmt_convert(output, buffer, nsmp);
+            wf->fmt_convert(output, buffer, nsmp);
+        }
         break;
     }
 
