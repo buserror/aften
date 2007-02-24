@@ -1021,14 +1021,13 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
         break;
     case 2:
         {
-            int16_t *input = (int16_t *)buffer;
 #ifdef WORDS_BIGENDIAN
             uint16_t *buf16 = (uint16_t *)buffer;
             for(i=0; i<nsmp; i++) {
                 buf16[i] = bswap_16(buf16[i]);
             }
 #endif
-            wf->fmt_convert(output, input, nsmp);
+            wf->fmt_convert(output, buffer, nsmp);
         }
         break;
     case 3:
@@ -1070,14 +1069,13 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
         break;
     default:
         if(wf->format == WAVE_FORMAT_IEEEFLOAT && bps == 8) {
-            double *input = (double *)buffer;
 #ifdef WORDS_BIGENDIAN
             uint64_t *buf64 = (uint64_t *)buffer;
             for(i=0; i<nsmp; i++) {
                 buf64[i] = bswap_64(buf64[i]);
             }
 #endif
-            wf->fmt_convert(output, input, nsmp);
+            wf->fmt_convert(output, buffer, nsmp);
         }
         break;
     }
