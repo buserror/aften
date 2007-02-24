@@ -88,7 +88,6 @@ aft_seek_set(WavFile *wf, uint64_t dest)
                 }
                 slow_seek = 1;
             }
-            
         }
     }
     if(slow_seek) {
@@ -669,40 +668,48 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
     // do any necessary conversion based on source_format and read_format
     // also do byte swapping on big-endian systems since wave data is always
     // in little-endian order.
-    if(bps == 1) {
+    switch (bps) {
+    case 1:
         if(wf->source_format != WAV_SAMPLE_FMT_U8) return -1;
         fmt_convert(wf->read_format, output, wf->source_format, buffer, nsmp);
-    } else if(bps == 2) {
-        int16_t *input = (int16_t *)buffer;
+        break;
+    case 2:
+        {
+            int16_t *input = (int16_t *)buffer;
 #ifdef WORDS_BIGENDIAN
-        uint16_t *buf16 = (uint16_t *)buffer;
-        for(i=0; i<nsmp; i++) {
-            buf16[i] = bswap_16(buf16[i]);
-        }
-#endif
-        if(wf->source_format != WAV_SAMPLE_FMT_S16) return -1;
-        fmt_convert(wf->read_format, output, wf->source_format, input, nsmp);
-    } else if(bps == 3) {
-        int32_t *input = calloc(nsmp, sizeof(int32_t));
-        for(i=0,j=0; i<nsmp*bps; i+=bps,j++) {
-            v = buffer[i] + (buffer[i+1] << 8) + (buffer[i+2] << 16);
-            if(wf->bit_width == 20) {
-                if(v >= (1<<19)) v -= (1<<20);
-            } else if(wf->bit_width == 24) {
-                if(v >= (1<<23)) v -= (1<<24);
-            } else {
-                fprintf(stderr, "unsupported bit width: %d\n", wf->bit_width);
-                return -1;
+            uint16_t *buf16 = (uint16_t *)buffer;
+            for(i=0; i<nsmp; i++) {
+                buf16[i] = bswap_16(buf16[i]);
             }
-            input[j] = v;
+#endif
+            if(wf->source_format != WAV_SAMPLE_FMT_S16) return -1;
+            fmt_convert(wf->read_format, output, wf->source_format, input, nsmp);
         }
-        if(wf->source_format != WAV_SAMPLE_FMT_S20 &&
-                wf->source_format != WAV_SAMPLE_FMT_S24) {
-            return -1;
+        break;
+    case 3:
+        {
+            int32_t *input = calloc(nsmp, sizeof(int32_t));
+            for(i=0,j=0; i<nsmp*bps; i+=bps,j++) {
+                v = buffer[i] + (buffer[i+1] << 8) + (buffer[i+2] << 16);
+                if(wf->bit_width == 20) {
+                    if(v >= (1<<19)) v -= (1<<20);
+                } else if(wf->bit_width == 24) {
+                    if(v >= (1<<23)) v -= (1<<24);
+                } else {
+                    fprintf(stderr, "unsupported bit width: %d\n", wf->bit_width);
+                    return -1;
+                }
+                input[j] = v;
+            }
+            if(wf->source_format != WAV_SAMPLE_FMT_S20 &&
+               wf->source_format != WAV_SAMPLE_FMT_S24) {
+                   return -1;
+               }
+            fmt_convert(wf->read_format, output, wf->source_format, input, nsmp);
+            free(input);
         }
-        fmt_convert(wf->read_format, output, wf->source_format, input, nsmp);
-        free(input);
-    } else if(bps == 4) {
+        break;
+    case 4:
         if(wf->format == WAVE_FORMAT_IEEEFLOAT) {
             float *input = (float *)buffer;
 #ifdef WORDS_BIGENDIAN
@@ -719,7 +726,7 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
             int32_t *input = calloc(nsmp, sizeof(int32_t));
             for(i=0,j=0; i<nsmp*bps; i+=bps,j++) {
                 v64 = buffer[i] + (buffer[i+1] << 8) + (buffer[i+2] << 16) +
-                      (((uint32_t)buffer[i+3]) << 24);
+                    (((uint32_t)buffer[i+3]) << 24);
                 if(v64 >= (1LL<<31)) v64 -= (1LL<<32);
                 input[j] = (int32_t)v64;
             }
@@ -727,16 +734,20 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
             fmt_convert(wf->read_format, output, wf->source_format, input, nsmp);
             free(input);
         }
-    } else if(wf->format == WAVE_FORMAT_IEEEFLOAT && bps == 8) {
-        double *input = (double *)buffer;
+        break;
+    default:
+        if(wf->format == WAVE_FORMAT_IEEEFLOAT && bps == 8) {
+            double *input = (double *)buffer;
 #ifdef WORDS_BIGENDIAN
-        uint64_t *buf64 = (uint64_t *)buffer;
-        for(i=0; i<nsmp; i++) {
-            buf64[i] = bswap_64(buf64[i]);
-        }
+            uint64_t *buf64 = (uint64_t *)buffer;
+            for(i=0; i<nsmp; i++) {
+                buf64[i] = bswap_64(buf64[i]);
+            }
 #endif
-        if(wf->source_format != WAV_SAMPLE_FMT_DBL) return -1;
-        fmt_convert(wf->read_format, output, wf->source_format, input, nsmp);
+            if(wf->source_format != WAV_SAMPLE_FMT_DBL) return -1;
+            fmt_convert(wf->read_format, output, wf->source_format, input, nsmp);
+        }
+        break;
     }
 
     // free temporary buffer
