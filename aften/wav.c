@@ -1062,10 +1062,8 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
             int32_t *input = (int32_t*)buffer;
 #ifdef WORDS_BIGENDIAN
             for(i=0,j=0; i<nsmp*bps; i+=bps,j++) {
-                int64_t v64 = buffer[i] + (buffer[i+1] << 8) + (buffer[i+2] << 16) +
-                    (((uint32_t)buffer[i+3]) << 24);
-                if(v64 >= (1LL<<31)) v64 -= (1LL<<32);
-                input[j] = (int32_t)v64;
+                input[j] = buffer[i] | (buffer[i+1] << 8) | (buffer[i+2] << 16) |
+                    (buffer[i+3] << 24);
             }
 #endif
             wf->fmt_convert(output, input, nsmp);
