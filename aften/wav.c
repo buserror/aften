@@ -1018,20 +1018,16 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
     // also do byte swapping on big-endian systems since wave data is always
     // in little-endian order.
     switch (bps) {
-    case 1:
-        wf->fmt_convert(output, buffer, nsmp);
-        break;
+#ifdef WORDS_BIGENDIAN
     case 2:
         {
-#ifdef WORDS_BIGENDIAN
             uint16_t *buf16 = (uint16_t *)buffer;
             for(i=0; i<nsmp; i++) {
                 buf16[i] = bswap_16(buf16[i]);
             }
-#endif
-            wf->fmt_convert(output, buffer, nsmp);
         }
         break;
+#endif
     case 3:
         {
             int32_t *input = (int32_t*)buffer;
@@ -1053,33 +1049,28 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
             v <<= unused_bits; // clear unused high bits
             v >>= unused_bits; // sign extend
             input[j] = v;
-
-            wf->fmt_convert(output, input, nsmp);
         }
         break;
+#ifdef WORDS_BIGENDIAN
     case 4:
         {
-#ifdef WORDS_BIGENDIAN
             uint32_t *buf32 = (uint32_t *)buffer;
             for(i=0; i<nsmp; i++) {
                 buf32[i] = bswap_32(buf32[i]);
             }
-#endif
-            wf->fmt_convert(output, buffer, nsmp);
         }
         break;
     default:
-       {
-#ifdef WORDS_BIGENDIAN
+        {
             uint64_t *buf64 = (uint64_t *)buffer;
             for(i=0; i<nsmp; i++) {
                 buf64[i] = bswap_64(buf64[i]);
             }
-#endif
-            wf->fmt_convert(output, buffer, nsmp);
         }
         break;
+#endif
     }
+    wf->fmt_convert(output, buffer, nsmp);
 
     // free temporary buffer
     free(buffer);
