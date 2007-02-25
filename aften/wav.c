@@ -976,9 +976,10 @@ wavfile_init(WavFile *wf, FILE *fp, enum WavSampleFormat read_format)
 int
 wavfile_read_samples(WavFile *wf, void *output, int num_samples)
 {
-    int nr, i, j, bps, nsmp, br;
-    uint32_t bytes_needed;
     uint8_t *buffer;
+    uint8_t *read_buffer;
+    uint32_t bytes_needed, buffer_size;
+    int nr, i, j, bps, nsmp;
 
     // check input and limit number of samples
     if(wf == NULL || wf->fp == NULL || output == NULL || wf->fmt_convert == NULL) {
@@ -1001,16 +1002,17 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
     if(num_samples <= 0) return 0;
 
     // allocate temporary buffer for raw input data
-    buffer = calloc(bytes_needed, 1);
+    bps = wf->block_align / wf->channels;
+    buffer_size = (bps != 3) ? bytes_needed : num_samples * sizeof(int32_t) *  wf->channels;
+    buffer = calloc(buffer_size, 1);
+    read_buffer = buffer + (buffer_size - bytes_needed);
 
     // read raw audio samples from input stream into temporary buffer
-    nr = fread(buffer, wf->block_align, num_samples, wf->fp);
+    nr = fread(read_buffer, wf->block_align, num_samples, wf->fp);
     if (nr <= 0)
         return nr;
-    br = nr * wf->block_align;
     wf->filepos += nr * wf->block_align;
     nsmp = nr * wf->channels;
-    bps = wf->block_align / wf->channels;
 
     // do any necessary conversion based on source_format and read_format
     // also do byte swapping on big-endian systems since wave data is always
@@ -1032,28 +1034,27 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
         break;
     case 3:
         {
-            int32_t *input = calloc(nsmp, sizeof(int32_t));
+            int32_t *input = (int32_t*)buffer;
             int unused_bits = 32 - wf->bit_width;
             int32_t v;
             //last sample could cause invalid mem access for little endians
             //but instead of complex logic do simple solution...
             for(i=0,j=0; i<(nsmp-1)*bps; i+=bps,j++) {
 #ifdef WORDS_BIGENDIAN
-                v = buffer[i] | (buffer[i+1] << 8) | (buffer[i+2] << 16);
+                v = read_buffer[i] | (read_buffer[i+1] << 8) | (read_buffer[i+2] << 16);
 #else
-                v = *(int32_t*)(buffer + i);
+                v = *(int32_t*)(read_buffer + i);
 #endif
                 v <<= unused_bits; // clear unused high bits
                 v >>= unused_bits; // sign extend
                 input[j] = v;
             }
-            v = buffer[i] | (buffer[i+1] << 8) | (buffer[i+2] << 16);
+            v = read_buffer[i] | (read_buffer[i+1] << 8) | (read_buffer[i+2] << 16);
             v <<= unused_bits; // clear unused high bits
             v >>= unused_bits; // sign extend
             input[j] = v;
 
             wf->fmt_convert(output, input, nsmp);
-            free(input);
         }
         break;
     case 4:
