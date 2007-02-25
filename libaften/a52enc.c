@@ -397,7 +397,7 @@ aften_encode_init(AftenContext *s)
 
     bitalloc_init();
     crc_init();
-    a52_window_init();
+    a52_window_init(ctx);
     exponent_init();
     dynrng_init();
 
@@ -1085,7 +1085,7 @@ generate_coefs(A52ThreadContext *tctx)
             } else {
                 block->blksw[ch] = 0;
             }
-            apply_a52_window(block->input_samples[ch]);
+            ctx->apply_a52_window(block->input_samples[ch]);
             if(block->blksw[ch]) {
                 mdct_256(tctx, block->mdct_coef[ch], block->input_samples[ch]);
             } else {

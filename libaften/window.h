@@ -26,9 +26,16 @@
 #define WINDOW_H
 
 #include "common.h"
+#include "a52.h"
 
-extern void a52_window_init(void);
+extern FLOAT a52_window[512];
 
-extern void apply_a52_window(FLOAT *samples);
+extern void a52_window_init(A52Context *ctx);
+
+#ifndef CONFIG_DOUBLE
+#ifdef HAVE_SSE
+extern void apply_a52_window_sse(FLOAT *samples);
+#endif /* HAVE_SSE */
+#endif /* CONFIG_DOUBLE */
 
 #endif /* WINDOW_H */
