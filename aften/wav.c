@@ -1033,8 +1033,8 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
             int32_t *input = (int32_t*)buffer;
             int unused_bits = 32 - wf->bit_width;
             int32_t v;
-            //last sample could cause invalid mem access for little endians
-            //but instead of complex logic do simple solution...
+            // last sample could cause invalid mem access for little endians
+            // but instead of complex logic use simple solution...
             for(i=0,j=0; i<(nsmp-1)*bps; i+=bps,j++) {
 #ifdef WORDS_BIGENDIAN
                 v = read_buffer[i] | (read_buffer[i+1] << 8) | (read_buffer[i+2] << 16);
