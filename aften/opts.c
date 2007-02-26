@@ -276,7 +276,7 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
                         fprintf(stderr, "invalid chmap: %d. must be 0 or 1.\n", opts->chmap);
                         return 1;
                     }
-                } else if(!strncmp(&argv[i][1], "pad", 6)) {
+                } else if(!strncmp(&argv[i][1], "pad", 4)) {
                     i++;
                     if(i >= argc) return 1;
                     opts->pad_start = atoi(argv[i]);
