@@ -138,7 +138,7 @@ compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs)
  * Runs all the processes in extracting, analyzing, and encoding exponents
  */
 void
-sse2_process_exponents(A52ThreadContext *tctx)
+mmx_process_exponents(A52ThreadContext *tctx)
 {
     extract_exponents(tctx);
 

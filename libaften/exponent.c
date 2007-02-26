@@ -61,6 +61,12 @@ exponent_init(A52Context *ctx)
         return;
     }
 #endif /* HAVE_SSE2 */
+#ifdef HAVE_MMX
+    if (_alHaveMMX()) {
+        ctx->process_exponents = mmx_process_exponents;
+        return;
+    }
+#endif /* HAVE_MMX */
     ctx->process_exponents = process_exponents;
 }
 

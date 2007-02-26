@@ -35,5 +35,8 @@ extern void exponent_init(A52Context *ctx);
 #ifdef HAVE_SSE2
 extern void sse2_process_exponents(A52ThreadContext *tctx);
 #endif /* HAVE_SSE2 */
+#ifdef HAVE_MMX
+extern void mmx_process_exponents(A52ThreadContext *tctx);
+#endif /* HAVE_MMX */
 
 #endif /* EXPONENT_H */
