@@ -80,7 +80,7 @@ kbd_window_init(A52Context *ctx, FLOAT alpha, FLOAT *window, int n, int iter)
 #ifndef CONFIG_DOUBLE
 #ifdef HAVE_SSE
     if (_alHaveSSE()) {
-        ctx->apply_a52_window = apply_a52_window_sse;
+        ctx->apply_a52_window = sse_apply_a52_window;
         return;
     }
 #endif /* HAVE_SSE */

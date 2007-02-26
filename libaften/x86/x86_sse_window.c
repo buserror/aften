@@ -21,7 +21,7 @@
 #include <xmmintrin.h>
 
 void
-apply_a52_window_sse(FLOAT *samples)
+sse_apply_a52_window(FLOAT *samples)
 {
     int i;
 

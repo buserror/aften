@@ -34,7 +34,7 @@ extern void a52_window_init(A52Context *ctx);
 
 #ifndef CONFIG_DOUBLE
 #ifdef HAVE_SSE
-extern void apply_a52_window_sse(FLOAT *samples);
+extern void sse_apply_a52_window(FLOAT *samples);
 #endif /* HAVE_SSE */
 #endif /* CONFIG_DOUBLE */
 
