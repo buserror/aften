@@ -31,8 +31,6 @@
 #include "aften.h"
 #include "a52.h"
 
-static const int acmod_to_ch[8] = { 2, 1, 2, 3, 3, 4, 4, 5 };
-
 static const int ch_to_acmod[7] = { -1, 1, 2, 3, 6, 7, 7 };
 
 const uint8_t log2tab[256] = {
