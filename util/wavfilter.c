@@ -166,7 +166,7 @@ main(int argc, char **argv)
 
     for(i=0; i<wf.channels; i++) {
         int cutoff;
-        f[i].type = ftype;
+        f[i].type = (enum FilterType)ftype;
         f[i].cascaded = 1;
         cutoff = atoi(argv[2]);
         f[i].cutoff = (FLOAT)cutoff;
