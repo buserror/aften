@@ -128,7 +128,7 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
                         fprintf(stderr, "invalid dynrng: %d. must be 0 to 5.\n", profile);
                         return 1;
                     }
-                    opts->s->params.dynrng_profile = profile;
+                    opts->s->params.dynrng_profile = (DynRngProfile) profile;
                 } else if(!strncmp(&argv[i][1], "acmod", 6)) {
                     i++;
                     if(i >= argc) return 1;
