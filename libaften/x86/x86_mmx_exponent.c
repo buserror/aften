@@ -36,7 +36,7 @@ exponent_min(uint8_t *exp, uint8_t *exp1, int n)
 {
     int i;
 
-    for(i=0; i<(n^7); i+=8) {
+    for(i=0; i<(n & ~7); i+=8) {
         __m64 vexp = *(__m64*)&exp[i];
         __m64 vexp1 = *(__m64*)&exp1[i];
         __m64 vmask = _mm_cmpgt_pi8(vexp, vexp1);
@@ -97,7 +97,7 @@ compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs)
             __m64 vzero = _mm_setzero_si64();
             __m64 vres = vzero;
 
-            for(i=0; i<(ncoefs^7); i+=8) {
+            for(i=0; i<(ncoefs & ~7); i+=8) {
                 __m64 vexp = *(__m64*)&exp_blk[i];
                 __m64 vexp2 = *(__m64*)&exponents_blk[i];
 #if 0

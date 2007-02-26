@@ -36,7 +36,7 @@ exponent_min(uint8_t *exp, uint8_t *exp1, int n)
 {
     int i;
 
-    for(i=0; i<(n^15); i+=16) {
+    for(i=0; i<(n & ~15); i+=16) {
         __m128i vexp = _mm_loadu_si128((__m128i*)&exp[i]);
         __m128i vexp1 = _mm_loadu_si128((__m128i*)&exp1[i]);
         vexp = _mm_min_epu8(vexp, vexp1);
@@ -94,7 +94,7 @@ compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs)
             __m128i vzero = _mm_setzero_si128();
             __m128i vres = vzero;
 
-            for(i=0; i<(ncoefs^15); i+=16) {
+            for(i=0; i<(ncoefs & ~15); i+=16) {
                 __m128i vexp = _mm_loadu_si128((__m128i*)&exp_blk[i]);
                 __m128i vexp2 = _mm_load_si128((__m128i*)&exponents_blk[i]);
 #if 0
