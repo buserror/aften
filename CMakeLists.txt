@@ -130,8 +130,12 @@ IF(UNIX OR APPLE)
 
   CHECK_FUNCTION_DEFINE("#include <sys/sysinfo.h>" "get_nprocs" "()" HAVE_GET_NPROCS)
   IF(NOT HAVE_GET_NPROCS)
-    MESSAGE(STATUS "Hardcoding 2 threads usage")
-    ADD_DEFINE("NUM_THREADS 2")
+    CHECK_FUNCTION_DEFINE("#include <sys/sysctl.h>" "sysctl" "(0,0,0,0,0,0)" HAVE_SYSCTL)
+
+    IF(NOT HAVE_SYSCTL)
+      MESSAGE(STATUS "Hardcoding 2 threads usage")
+      ADD_DEFINE("NUM_THREADS 2")
+    ENDIF(NOT HAVE_SYSCTL)
   ENDIF(NOT HAVE_GET_NPROCS)
 ENDIF(UNIX OR APPLE)
 

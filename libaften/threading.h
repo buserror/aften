@@ -65,7 +65,19 @@ static __inline int get_ncpus()
 {
     return get_nprocs();
 }
+#elif defined(HAVE_SYSCTL)
+#include <sys/sysctl.h>
+
+static __inline int get_ncpus()
+{
+    int mib[2] = { CTL_HW, HW_NCPU };
+    int numCPUs;
+    size_t len = sizeof(numCPUs);
+
+    return sysctl(mib, 2, &numCPUs, &len, NULL, 0) ? 1 : numCPUs;
+}
 #else
+
 static __inline int get_ncpus()
 {
     return NUM_THREADS;
