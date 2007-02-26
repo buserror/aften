@@ -28,6 +28,8 @@
 
 #include "exponent_common.c"
 
+#include <emmintrin.h>
+
 /**
  * Initialize exponent group size table
  */
