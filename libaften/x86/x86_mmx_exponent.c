@@ -28,7 +28,7 @@
 
 #include "exponent_common.c"
 
-#include <emmintrin.h>
+#include <mmintrin.h>
 
 /* set exp[i] to min(exp[i], exp1[i]) */
 static void
@@ -36,11 +36,14 @@ exponent_min(uint8_t *exp, uint8_t *exp1, int n)
 {
     int i;
 
-    for(i=0; i<(n^15); i+=16) {
-        __m128i vexp = _mm_loadu_si128((__m128i*)&exp[i]);
-        __m128i vexp1 = _mm_loadu_si128((__m128i*)&exp1[i]);
-        vexp = _mm_min_epu8(vexp, vexp1);
-        _mm_storeu_si128 ((__m128i*)&exp[i], vexp);
+    for(i=0; i<(n^7); i+=8) {
+        __m64 vexp = *(__m64*)&exp[i];
+        __m64 vexp1 = *(__m64*)&exp1[i];
+        __m64 vmask = _mm_cmpgt_pi8(vexp, vexp1);
+        vexp = _mm_andnot_si64(vmask, vexp);
+        vexp1 = _mm_and_si64(vmask, vexp1);
+        vexp = _mm_or_si64(vexp, vexp1);
+        *(__m64*)&exp[i] = vexp;
     }
     for(; i<n; ++i)
         exp[i] = MIN(exp[i], exp1[i]);
@@ -88,38 +91,36 @@ compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs)
             uint8_t *exp_blk = exp[blk];
             uint8_t *exponents_blk = exponents[blk];
             union {
-                __m128i v;
-                int32_t res[4];
+                __m64 v;
+                int32_t res[2];
             } ures;
-            __m128i vzero = _mm_setzero_si128();
-            __m128i vres = vzero;
+            __m64 vzero = _mm_setzero_si64();
+            __m64 vres = vzero;
 
-            for(i=0; i<(ncoefs^15); i+=16) {
-                __m128i vexp = _mm_loadu_si128((__m128i*)&exp_blk[i]);
-                __m128i vexp2 = _mm_load_si128((__m128i*)&exponents_blk[i]);
+            for(i=0; i<(ncoefs^7); i+=8) {
+                __m64 vexp = *(__m64*)&exp_blk[i];
+                __m64 vexp2 = *(__m64*)&exponents_blk[i];
 #if 0
                 //safer but needed?
-                __m128i vexphi = _mm_unpackhi_epi8(vexp, vzero);
-                __m128i vexp2hi = _mm_unpackhi_epi8(vexp2, vzero);
-                __m128i vexplo = _mm_unpacklo_epi8(vexp, vzero);
-                __m128i vexp2lo = _mm_unpacklo_epi8(vexp2, vzero);
-                __m128i verrhi = _mm_sub_epi16(vexphi, vexp2hi);
-                __m128i verrlo = _mm_sub_epi16(vexplo, vexp2lo);
+                __m64 vexphi = _mm_unpackhi_pi8(vexp, vzero);
+                __m64 vexp2hi = _mm_unpackhi_pi8(vexp2, vzero);
+                __m64 vexplo = _mm_unpacklo_pi8(vexp, vzero);
+                __m64 vexp2lo = _mm_unpacklo_pi8(vexp2, vzero);
+                __m64 verrhi = _mm_sub_pi16(vexphi, vexp2hi);
+                __m64 verrlo = _mm_sub_pi16(vexplo, vexp2lo);
 #else
-                __m128i verr = _mm_sub_epi8(vexp, vexp2);
-                __m128i vsign = _mm_cmplt_epi8(verr, vzero);
-                __m128i verrhi = _mm_unpackhi_epi8(verr, vsign);
-                __m128i verrlo = _mm_unpacklo_epi8(verr, vsign);
+                __m64 verr = _mm_sub_pi8(vexp, vexp2);
+                __m64 vsign = _mm_cmpgt_pi8(vzero, verr);
+                __m64 verrhi = _mm_unpackhi_pi8(verr, vsign);
+                __m64 verrlo = _mm_unpacklo_pi8(verr, vsign);
 #endif
-                verrhi = _mm_madd_epi16(verrhi, verrhi);
-                verrlo = _mm_madd_epi16(verrlo, verrlo);
-                verrhi = _mm_add_epi32(verrhi, verrlo);
-                vres = _mm_add_epi32(vres, verrhi);
+                verrhi = _mm_madd_pi16(verrhi, verrhi);
+                verrlo = _mm_madd_pi16(verrlo, verrlo);
+                verrhi = _mm_add_pi32(verrhi, verrlo);
+                vres = _mm_add_pi32(vres, verrhi);
             }
-            _mm_store_si128(&ures.v, vres);
-            ures.res[0]+=ures.res[1];
-            ures.res[2]+=ures.res[3];
-            exp_error[str] += ures.res[0]+ures.res[2];
+            ures.v = vres;
+            exp_error[str] += ures.res[0]+ures.res[1];
             for(; i<ncoefs; ++i) {
                 err = exp_blk[i] - exponents_blk[i];
                 exp_error[str] += (err * err);
@@ -146,4 +147,5 @@ sse2_process_exponents(A52ThreadContext *tctx)
     encode_exponents(tctx);
 
     group_exponents(tctx);
+    _mm_empty();
 }
