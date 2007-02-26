@@ -30,8 +30,10 @@
 
 #include "a52.h"
 
-extern void exponent_init(void);
+extern void exponent_init(A52Context *ctx);
 
-extern void process_exponents(A52ThreadContext *tctx);
+#ifdef HAVE_SSE2
+extern void sse2_process_exponents(A52ThreadContext *tctx);
+#endif /* HAVE_SSE2 */
 
 #endif /* EXPONENT_H */

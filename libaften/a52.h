@@ -152,6 +152,7 @@ typedef struct A52Context {
     void (*fmt_convert_from_src)(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
           const void *vsrc, int nch, int n);
     void (*apply_a52_window)(FLOAT *samples);
+    void (*process_exponents)(A52ThreadContext *tctx);
 
     int n_threads;
     int n_channels;

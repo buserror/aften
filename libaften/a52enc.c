@@ -42,6 +42,13 @@
 #include "dynrng.h"
 #include "cpu_caps.h"
 
+/**
+ * LUT for number of exponent groups present.
+ * expsizetab[exponent strategy][number of coefficients]
+ */
+int nexpgrptab[3][256];
+
+
 static const uint8_t rematbndtab[4][2] = {
     {13, 24}, {25, 36}, {37, 60}, {61, 252}
 };
@@ -398,7 +405,7 @@ aften_encode_init(AftenContext *s)
     bitalloc_init();
     crc_init();
     a52_window_init(ctx);
-    exponent_init();
+    exponent_init(ctx);
     dynrng_init();
 
     // can't do block switching with low sample rate due to the high-pass filter
@@ -1230,7 +1237,7 @@ encode_frame(A52ThreadContext *tctx, uint8_t *frame_buffer)
         calc_rematrixing(tctx);
     }
 
-    process_exponents(tctx);
+    ctx->process_exponents(tctx);
 
     if(ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
         adjust_frame_size(tctx);

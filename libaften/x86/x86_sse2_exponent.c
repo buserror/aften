@@ -30,31 +30,6 @@
 
 #include <emmintrin.h>
 
-/**
- * Initialize exponent group size table
- */
-void
-exponent_init(void)
-{
-    int i, j, grpsize, ngrps;
-
-    for(i=1; i<4; i++) {
-        for(j=0; j<256; j++) {
-            grpsize = i;
-            ngrps = 0;
-            if(i == EXP_D45) {
-                grpsize = 4;
-            }
-            if(j == 7) {
-                ngrps = 2;
-            } else {
-                ngrps = (j + (grpsize * 3) - 4) / (3 * grpsize);
-            }
-            nexpgrptab[i-1][j] = ngrps;
-        }
-    }
-}
-
 /* set exp[i] to min(exp[i], exp1[i]) */
 static void
 exponent_min(uint8_t *exp, uint8_t *exp1, int n)

@@ -27,11 +27,15 @@
 
 #include "exponent_common.c"
 
+#include "cpu_caps.h"
+
+static void process_exponents(A52ThreadContext *tctx);
+
 /**
  * Initialize exponent group size table
  */
 void
-exponent_init(void)
+exponent_init(A52Context *ctx)
 {
     int i, j, grpsize, ngrps;
 
@@ -50,6 +54,14 @@ exponent_init(void)
             nexpgrptab[i-1][j] = ngrps;
         }
     }
+
+#ifdef HAVE_SSE2
+    if (_alHaveSSE2()) {
+        ctx->process_exponents = sse2_process_exponents;
+        return;
+    }
+#endif /* HAVE_SSE2 */
+    ctx->process_exponents = process_exponents;
 }
 
 /* set exp[i] to min(exp[i], exp1[i]) */
@@ -119,7 +131,7 @@ compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs)
 /**
  * Runs all the processes in extracting, analyzing, and encoding exponents
  */
-void
+static void
 process_exponents(A52ThreadContext *tctx)
 {
     extract_exponents(tctx);
