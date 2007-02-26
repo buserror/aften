@@ -37,6 +37,22 @@ int main(){__m128 X = _mm_setzero_ps();}
 SET(CMAKE_REQUIRED_FLAGS "")
 ENDMACRO(CHECK_SSE)
 
+MACRO(CHECK_SSE2)
+IF(CMAKE_COMPILER_IS_GNUCC)
+  SET(SSE2_FLAGS "-mmmx -msse -msse2")
+ENDIF(CMAKE_COMPILER_IS_GNUCC)
+
+SET(CMAKE_REQUIRED_FLAGS "${SSE2_FLAGS}")
+CHECK_C_SOURCE_COMPILES(
+"#include <emmintrin.h>
+int main() {
+__m128i X = _mm_setzero_si128();
+__m128i Y = _mm_unpackhi_epi8(X, X);
+}
+" HAVE_SSE2)
+SET(CMAKE_REQUIRED_FLAGS "")
+ENDMACRO(CHECK_SSE2)
+
 MACRO(CHECK_SSE3)
 IF(CMAKE_COMPILER_IS_GNUCC)
   SET(SSE3_FLAGS "-mmmx -msse -msse2 -msse3")
