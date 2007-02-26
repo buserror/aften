@@ -244,6 +244,7 @@ fmt_convert_from_double(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
 static void
 select_mdct(A52Context *ctx)
 {
+#ifndef CONFIG_DOUBLE
 #ifdef HAVE_SSE3
     if (_alHaveSSE3()) {
         sse3_mdct_init(ctx);
@@ -256,12 +257,14 @@ select_mdct(A52Context *ctx)
         return;
     }
 #endif
+#endif /* CONFIG_DOUBLE */
     mdct_init(ctx);
 }
 
 static void
 select_mdct_thread(A52ThreadContext *tctx)
 {
+#ifndef CONFIG_DOUBLE
 #ifdef HAVE_SSE3
     if (_alHaveSSE3()) {
         sse3_mdct_thread_init(tctx);
@@ -274,6 +277,7 @@ select_mdct_thread(A52ThreadContext *tctx)
         return;
     }
 #endif
+#endif /* CONFIG_DOUBLE */
     mdct_thread_init(tctx);
 }
 

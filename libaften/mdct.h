@@ -49,7 +49,8 @@ typedef struct {
     void (*mdct)(struct A52ThreadContext *ctx, FLOAT *out, FLOAT *in);
     void (*mdct_close)(struct A52Context *ctx);
     FLOAT *trig;
-#if defined(HAVE_SSE) || defined(HAVE_SSE3)
+#ifndef CONFIG_DOUBLE
+#ifdef HAVE_SSE
     FLOAT *trig_bitreverse;
     FLOAT *trig_forward;
     FLOAT *trig_butterfly_first;
@@ -58,6 +59,7 @@ typedef struct {
     FLOAT *trig_butterfly_generic32;
     FLOAT *trig_butterfly_generic64;
 #endif
+#endif /* CONFIG_DOUBLE */
     int *bitrev;
     FLOAT scale;
     int n;
@@ -76,6 +78,7 @@ extern void mdct_thread_init(struct A52ThreadContext *tctx);
 
 extern void alloc_block_buffers(struct A52ThreadContext *tctx);
 
+#ifndef CONFIG_DOUBLE
 #ifdef HAVE_SSE
 extern void sse_mdct_init(struct A52Context *ctx);
 extern void sse_mdct_thread_init(struct A52ThreadContext *tctx);
@@ -85,5 +88,6 @@ extern void sse_mdct_thread_init(struct A52ThreadContext *tctx);
 extern void sse3_mdct_init(struct A52Context *ctx);
 extern void sse3_mdct_thread_init(struct A52ThreadContext *tctx);
 #endif
+#endif /* CONFIG_DOUBLE */
 
 #endif /* MDCT_H */
