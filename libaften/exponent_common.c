@@ -21,8 +21,8 @@
  */
 
 /**
- * @file exponent.c
- * A/52 exponent functions
+ * @file exponent_common.c
+ * A/52 common exponent functions
  */
 
 #include "common.h"
@@ -55,40 +55,10 @@ static uint8_t str_predef[6][6] = {
     { EXP_D45,   EXP_D45, EXP_REUSE,   EXP_D45, EXP_REUSE,   EXP_D45 }
 };
 
-/**
- * Initialize exponent group size table
- */
-void
-exponent_init(void)
-{
-    int i, j, grpsize, ngrps;
-
-    for(i=1; i<4; i++) {
-        for(j=0; j<256; j++) {
-            grpsize = i;
-            ngrps = 0;
-            if(i == EXP_D45) {
-                grpsize = 4;
-            }
-            if(j == 7) {
-                ngrps = 2;
-            } else {
-                ngrps = (j + (grpsize * 3) - 4) / (3 * grpsize);
-            }
-            nexpgrptab[i-1][j] = ngrps;
-        }
-    }
-}
 
 /* set exp[i] to min(exp[i], exp1[i]) */
 static void
-exponent_min(uint8_t *exp, uint8_t *exp1, int n)
-{
-    int i;
-    for(i=0; i<n; i++) {
-        exp[i] = MIN(exp[i], exp1[i]);
-    }
-}
+exponent_min(uint8_t *exp, uint8_t *exp1, int n);
 
 /**
  * Update the exponents so that they are the ones the decoder will decode.
@@ -173,51 +143,7 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
  * and the most accurate strategy set (all blocks EXP_D15).
  */
 static int
-compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs)
-{
-    int blk, str, i, j, k;
-    int min_error, exp_error[6];
-    int err;
-    uint8_t exponents[A52_NUM_BLOCKS][256];
-
-    min_error = 1;
-    for(str=1; str<6; str++) {
-        // collect exponents
-        for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
-            memcpy(exponents[blk], exp[blk], 256);
-        }
-
-        // encode exponents
-        i = 0;
-        while(i < A52_NUM_BLOCKS) {
-            j = i + 1;
-            while(j < A52_NUM_BLOCKS && str_predef[str][j]==EXP_REUSE) {
-                exponent_min(exponents[i], exponents[j], ncoefs);
-                j++;
-            }
-            encode_exp_blk_ch(exponents[i], ncoefs, str_predef[str][i]);
-            for(k=i+1; k<j; k++) {
-                memcpy(exponents[k], exponents[i], 256);
-            }
-            i = j;
-        }
-
-        // select strategy based on minimum error from unencoded exponents
-        exp_error[str] = 0;
-        for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
-            uint8_t *exp_blk = exp[blk];
-            uint8_t *exponents_blk = exponents[blk];
-            for(i=0; i<ncoefs; i++) {
-                err = exp_blk[i] - exponents_blk[i];
-                exp_error[str] += (err * err);
-            }
-        }
-        if(exp_error[str] < exp_error[min_error]) {
-            min_error = str;
-        }
-    }
-    return min_error;
-}
+compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs);
 
 /**
  * Runs the per-channel exponent strategy decision function for all channels
@@ -375,19 +301,4 @@ extract_exponents(A52ThreadContext *tctx)
             }
         }
     }
-}
-
-/**
- * Runs all the processes in extracting, analyzing, and encoding exponents
- */
-void
-process_exponents(A52ThreadContext *tctx)
-{
-    extract_exponents(tctx);
-
-    compute_exponent_strategy(tctx);
-
-    encode_exponents(tctx);
-
-    group_exponents(tctx);
 }
