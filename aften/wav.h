@@ -89,6 +89,12 @@ typedef struct WavFile {
 extern int wavfile_init(WavFile *wf, FILE *fp, enum WavSampleFormat read_format);
 
 /**
+ * Explicitly sets the data size, overriding the value specified in the
+ * WAVE file header.
+ */
+extern void wavfile_set_data_size(WavFile *wf, uint64_t data_size);
+
+/**
  * Reads audio samples to the output buffer.
  * Output is channel-interleaved, native byte order.
  * Only up to WAVE_MAX_READ samples can be read in one call.

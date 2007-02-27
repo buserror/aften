@@ -27,7 +27,7 @@
 
 static const char *usage_heading = "usage: aften [options] <input.wav> <output.ac3>\n";
 
-#define HELP_OPTIONS_COUNT 32
+#define HELP_OPTIONS_COUNT 33
 
 static const char *help_options[HELP_OPTIONS_COUNT] = {
 "    [-h]           Print out list of commandline options\n",
@@ -110,6 +110,8 @@ static const char *help_options[HELP_OPTIONS_COUNT] = {
 "    [-chmap #]     Channel mapping order of input audio\n"
 "                       0 = wav mapping (default)\n"
 "                       1 = AC-3 mapping\n",
+
+"    [-datasize #]  Specify the data size, in bytes, of the input audio.\n"
 
 "    [-bwfilter #]  Specify use of the bandwidth low-pass filter\n"
 "                       0 = do not apply filter (default)\n"
@@ -332,16 +334,19 @@ static const char *drc_options[DRC_OPTIONS_COUNT] = {
 "                       -31dB.\n"
 };
 
-#define CHANNEL_OPTIONS_COUNT 4
+#define INPUT_OPTIONS_COUNT 5
 
-static const char channel_heading[17] = "CHANNEL OPTIONS\n";
-static const char *channel_options[CHANNEL_OPTIONS_COUNT] = {
-"    By default, the channel configuration is determined by the input file wav\n"
-"    header.  However, while the extensible wav format can specify all possible\n"
-"    options in AC-3, the basic wav format cannot.  The acmod and lfe options\n"
-"    allow the user to explicitly select the desired channel layout.  This only\n"
-"    controls the interpretation of the input, so no downmixing or upmixing is\n"
-"    done.\n",
+static const char input_heading[17] = "INPUT OPTIONS\n";
+static const char *input_options[INPUT_OPTIONS_COUNT] = {
+"    By default, information about the input file, such as the channel\n"
+"    configuration and data size, is determined by the input file wav header.\n"
+"    However, the basic WAVE format is limited in that it can only support\n"
+"    up to 4 GB of data and cannot specify all channel layouts possible in the\n"
+"    AC-3 format.  The acmod and lfe options allow the user to explicitly\n"
+"    select the desired channel layout.  This only controls the interpretation\n"
+"    of the input, so no downmixing or upmixing is done.  The datasize option\n"
+"    overrides the header and lets the user specify a data size larger than\n"
+"    4 GB.\n",
 
 "    [-acmod #]     Audio coding mode (overrides wav header)\n"
 "                       0 = 1+1 (Ch1,Ch2)\n"
@@ -363,7 +368,11 @@ static const char *channel_options[CHANNEL_OPTIONS_COUNT] = {
 "                       allows the user to specify if the input file uses AC-3\n"
 "                       or wav channel mapping.\n"
 "                       0 = wav mapping (default)\n"
-"                       1 = AC-3 mapping\n"
+"                       1 = AC-3 mapping\n",
+
+"    [-datasize #]  Specify the data size, in bytes, of the input audio.  This\n"
+"                   value overrides the WAVE header, and thus allows for input\n"
+"                   files with data size larger than 4 GB.\n"
 };
 
 #define FILTER_OPTIONS_COUNT 3
@@ -500,9 +509,9 @@ static const LongHelpSection long_help_sections[LONG_HELP_SECTIONS_COUNT] = {
     {   DRC_OPTIONS_COUNT,
         drc_heading,
         drc_options },
-    {   CHANNEL_OPTIONS_COUNT,
-        channel_heading,
-        channel_options },
+    {   INPUT_OPTIONS_COUNT,
+        input_heading,
+        input_options },
     {   FILTER_OPTIONS_COUNT,
         filter_heading,
         filter_options },

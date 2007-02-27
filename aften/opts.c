@@ -82,6 +82,8 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
     opts->infile = argv[1];
     opts->outfile = argv[2];
     opts->pad_start = 1;
+    opts->use_data_size = 0;
+    opts->data_size = 0;
 
     for(i=1; i<argc; i++) {
         if(argv[i][0] == '-' && argv[i][1] != '\0') {
@@ -284,6 +286,15 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
                         fprintf(stderr, "invalid pad: %d. must be 0 or 1.\n", opts->pad_start);
                         return 1;
                     }
+                } else if(!strncmp(&argv[i][1], "datasize", 9)) {
+                    i++;
+                    if(i >= argc) return 1;
+                    opts->data_size = strtoll(argv[i], NULL, 0);
+                    if(opts->data_size < 0) {
+                        fprintf(stderr, "invalid datasize: %"PRId64". must >= 0.\n", opts->data_size);
+                        return 1;
+                    }
+                    opts->use_data_size = 1;
                 }
             } else {
                 // single-character arguments
