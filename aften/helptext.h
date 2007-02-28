@@ -111,7 +111,9 @@ static const char *help_options[HELP_OPTIONS_COUNT] = {
 "                       0 = wav mapping (default)\n"
 "                       1 = AC-3 mapping\n",
 
-"    [-datasize #]  Specify the data size, in bytes, of the input audio.\n"
+"    [-readtoeof #] Read input WAVE audio data until the end-of-file\n"
+"                       0 = use data size in header (default)\n"
+"                       1 = read data until end-of-file\n"
 
 "    [-bwfilter #]  Specify use of the bandwidth low-pass filter\n"
 "                       0 = do not apply filter (default)\n"
@@ -344,9 +346,9 @@ static const char *input_options[INPUT_OPTIONS_COUNT] = {
 "    up to 4 GB of data and cannot specify all channel layouts possible in the\n"
 "    AC-3 format.  The acmod and lfe options allow the user to explicitly\n"
 "    select the desired channel layout.  This only controls the interpretation\n"
-"    of the input, so no downmixing or upmixing is done.  The datasize option\n"
-"    overrides the header and lets the user specify a data size larger than\n"
-"    4 GB.\n",
+"    of the input, so no downmixing or upmixing is done.  The readtoeof option\n"
+"    overrides the header and lets the user specify that Aften should keep\n"
+"    reading data until the end-of-file.\n",
 
 "    [-acmod #]     Audio coding mode (overrides wav header)\n"
 "                       0 = 1+1 (Ch1,Ch2)\n"
@@ -370,9 +372,12 @@ static const char *input_options[INPUT_OPTIONS_COUNT] = {
 "                       0 = wav mapping (default)\n"
 "                       1 = AC-3 mapping\n",
 
-"    [-datasize #]  Specify the data size, in bytes, of the input audio.  This\n"
-"                   value overrides the WAVE header, and thus allows for input\n"
-"                   files with data size larger than 4 GB.\n"
+"    [-readtoeof #] Read input WAVE audio data until the end-of-file.\n"
+"                       This overrides the data size in the WAVE header, and\n"
+"                       can be useful for streaming input or files larger than\n"
+"                       4 GB.\n"
+"                       0 = use data size in header (default)\n"
+"                       1 = read data until end-of-file\n"
 };
 
 #define FILTER_OPTIONS_COUNT 3

@@ -118,9 +118,8 @@ main(int argc, char **argv)
         fprintf(stderr, "invalid wav file: %s\n", argv[1]);
         return 1;
     }
-    if(opts.use_data_size) {
-        wavfile_set_data_size(&wf, (uint64_t)opts.data_size);
-    }
+    wf.read_to_eof = opts.read_to_eof;
+
     // print wav info to console
     if(s.params.verbose > 0) {
         fprintf(stderr, "input format: ");

@@ -35,8 +35,7 @@ typedef struct {
     char *outfile;
     AftenContext *s;
     int pad_start;
-    int use_data_size;
-    int64_t data_size;
+    int read_to_eof;
 } CommandOptions;
 
 extern void print_usage(FILE *out);

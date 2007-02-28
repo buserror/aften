@@ -72,6 +72,7 @@ typedef struct WavFile {
     uint64_t bytes_per_sec;
     int block_align;
     int bit_width;
+    int read_to_eof;
     enum WavSampleFormat source_format;
 
     // public field set by user prior to calling wavfile_init.
@@ -87,12 +88,6 @@ typedef struct WavFile {
  * Returns non-zero value if an error occurs.
  */
 extern int wavfile_init(WavFile *wf, FILE *fp, enum WavSampleFormat read_format);
-
-/**
- * Explicitly sets the data size, overriding the value specified in the
- * WAVE file header.
- */
-extern void wavfile_set_data_size(WavFile *wf, uint64_t data_size);
 
 /**
  * Reads audio samples to the output buffer.

@@ -966,16 +966,6 @@ wavfile_init(WavFile *wf, FILE *fp, enum WavSampleFormat read_format)
     return 0;
 }
 
-void
-wavfile_set_data_size(WavFile *wf, uint64_t data_size)
-{
-    if(wf == NULL) return;
-    fprintf(stderr, "WARNING: OVERRIDING DATA SIZE AS SPECIFIED IN THE WAVE HEADER.\n");
-    wf->data_size = data_size;
-    wf->seekable = 0;
-    wf->samples = (wf->data_size / wf->block_align);
-}
-
 /**
  * Reads audio samples to the output buffer.
  * Output is channel-interleaved, native byte order.
@@ -1005,9 +995,11 @@ wavfile_read_samples(WavFile *wf, void *output, int num_samples)
     // calculate number of bytes to read, being careful not to read past
     // the end of the data chunk
     bytes_needed = wf->block_align * num_samples;
-    if((wf->filepos + bytes_needed) >= (wf->data_start + wf->data_size)) {
-        bytes_needed = (uint32_t)((wf->data_start + wf->data_size) - wf->filepos);
-        num_samples = bytes_needed / wf->block_align;
+    if(!wf->read_to_eof) {
+        if((wf->filepos + bytes_needed) >= (wf->data_start + wf->data_size)) {
+            bytes_needed = (uint32_t)((wf->data_start + wf->data_size) - wf->filepos);
+            num_samples = bytes_needed / wf->block_align;
+        }
     }
     if(num_samples <= 0) return 0;
 

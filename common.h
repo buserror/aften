@@ -145,10 +145,6 @@ typedef float FLOAT;
 #define MIN(a,b) ((a) > (b) ? (b) : (a))
 #define CLIP(x,min,max) MAX(MIN((x), (max)), (min))
 
-#ifdef _WIN32
-#define strtoll _strtoi64
-#endif
-
 #include "bswap.h"
 
 #endif /* COMMON_H */
