@@ -90,10 +90,10 @@ aften_set_defaults(AftenContext *s)
      */
     s->channels = -1;
     s->samplerate = -1;
-    s->sample_format = A52_SAMPLE_FMT_S16;
     s->acmod = -1;
     s->lfe = -1;
 
+    s->sample_format = A52_SAMPLE_FMT_S16;
     s->private_context = NULL;
     s->params.verbose = 1;
     s->params.encoding_mode = AFTEN_ENC_MODE_CBR;
