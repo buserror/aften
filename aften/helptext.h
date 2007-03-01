@@ -27,7 +27,7 @@
 
 static const char *usage_heading = "usage: aften [options] <input.wav> <output.ac3>\n";
 
-#define HELP_OPTIONS_COUNT 33
+#define HELP_OPTIONS_COUNT 34
 
 static const char *help_options[HELP_OPTIONS_COUNT] = {
 "    [-h]           Print out list of commandline options\n",
@@ -38,6 +38,10 @@ static const char *help_options[HELP_OPTIONS_COUNT] = {
 "                       0 = quiet mode\n"
 "                       1 = show average stats (default)\n"
 "                       2 = show each frame's stats\n",
+
+"    [-threads #]   Number of parallel threads to use\n"
+"                       0 = detect number of CPUs (default)\n"
+"                       1 to 128 = number of threads\n"
 
 "    [-b #]         CBR bitrate in kbps (default: about 96kbps per channel)\n",
 
@@ -187,10 +191,18 @@ static const char *console_options[CONSOLE_OPTIONS_COUNT] = {
 "                       2 - Shows the statistics for each frame.\n"
 };
 
-#define ENCODING_OPTIONS_COUNT 8
+#define ENCODING_OPTIONS_COUNT 9
 
 static const char encoding_heading[18] = "ENCODING OPTIONS\n";
 static const char *encoding_options[ENCODING_OPTIONS_COUNT] = {
+"    [-threads #]   Number of threads\n"
+"                       Aften can use multiple threads to speed up encoding.\n"
+"                       By default, Aften uses one thread for each logical CPU\n"
+"                       your system has, but you can override this value.  The\n"
+"                       number of threads used can ba from 1 to 128.  A value\n"
+"                       of 0 is the default and indicates that Aften should\n"
+"                       try to detect the number of CPUs.\n",
+
 "    [-b #]         CBR bitrate in kbps\n"
 "                       CBR mode is selected by default. This option allows for\n"
 "                       setting the fixed bitrate. The default bitrate depends\n"

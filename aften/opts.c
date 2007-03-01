@@ -293,6 +293,16 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
                         fprintf(stderr, "invalid readtoeof: %d. must 0 or 1.\n", opts->read_to_eof);
                         return 1;
                     }
+                } else if(!strncmp(&argv[i][1], "threads", 8)) {
+                    i++;
+                    if(i >= argc) return 1;
+                    opts->s->params.n_threads = atoi(argv[i]);
+                    if(opts->s->params.n_threads < 0 ||
+                            opts->s->params.n_threads > AFTEN_MAX_THREADS) {
+                        fprintf(stderr, "invalid readtoeof: %d. must 0 to %d.\n",
+                                opts->s->params.n_threads, AFTEN_MAX_THREADS);
+                        return 1;
+                    }
                 }
             } else {
                 // single-character arguments

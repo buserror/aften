@@ -108,6 +108,7 @@ aften_set_defaults(AftenContext *s)
     s->params.bitalloc_fast = 0;
     s->params.expstr_fast = 0;
     s->params.dynrng_profile = DYNRNG_PROFILE_NONE;
+    s->params.n_threads = 0;
 
     s->meta.cmixlev = 0;
     s->meta.surmixlev = 0;
@@ -425,7 +426,7 @@ aften_encode_init(AftenContext *s)
     }
 
     // Initialize thread specific contexts
-    ctx->n_threads = get_ncpus();
+    ctx->n_threads = (ctx->params.n_threads > 0) ? s->params.n_threads : get_ncpus();
     tctx = calloc(sizeof(A52ThreadContext), ctx->n_threads);
     ctx->tctx = tctx;
 

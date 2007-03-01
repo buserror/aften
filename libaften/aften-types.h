@@ -42,6 +42,13 @@ enum {
 };
 
 /**
+ * Maximum number of threads
+ */
+enum {
+    AFTEN_MAX_THREADS = 128
+};
+
+/**
  * Aften Encoding Mode
  */
 typedef enum {
@@ -216,6 +223,14 @@ typedef struct {
      * default is None
      */
     DynRngProfile dynrng_profile;
+
+    /**
+     * Number of threads
+     * How many threads should be used.
+     * Default value is 0, which indicates detecting number of CPUs.
+     * Maximum value is AFTEN_MAX_THREADS.
+     */
+    int n_threads;
 
 } AftenEncParams;
 
