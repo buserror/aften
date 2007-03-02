@@ -427,6 +427,7 @@ aften_encode_init(AftenContext *s)
 
     // Initialize thread specific contexts
     ctx->n_threads = (ctx->params.n_threads > 0) ? s->params.n_threads : get_ncpus();
+    ctx->n_threads = MIN(ctx->n_threads, MAX_NUM_THREADS);
     tctx = calloc(sizeof(A52ThreadContext), ctx->n_threads);
     ctx->tctx = tctx;
 
