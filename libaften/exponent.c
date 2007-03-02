@@ -41,11 +41,8 @@ exponent_init(A52Context *ctx)
 
     for(i=1; i<4; i++) {
         for(j=0; j<256; j++) {
-            grpsize = i;
+            grpsize = i + (i == EXP_D45);
             ngrps = 0;
-            if(i == EXP_D45) {
-                grpsize = 4;
-            }
             if(j == 7) {
                 ngrps = 2;
             } else {

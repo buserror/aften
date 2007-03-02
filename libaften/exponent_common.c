@@ -73,7 +73,7 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
     uint8_t v;
 
     ngrps = nexpgrptab[exp_strategy-1][ncoefs] * 3;
-    grpsize = exp_strategy + (exp_strategy / 3);
+    grpsize = exp_strategy + (exp_strategy == EXP_D45);
 
     // for D15 strategy, there is no need to group/ungroup exponents
     if (grpsize == 1) {
