@@ -660,20 +660,20 @@ cbr_bit_allocation(A52ThreadContext *tctx, int prepare)
             leftover = avail_bits - bit_alloc(tctx, snroffst);
         }
         // adjust snroffst until leftover <= -100
-    	while(leftover > -100) {
+        while(leftover > -100) {
             snroffst += (10 / ctx->n_channels);
             if(snroffst > 1023) {
                 snroffst = 1023;
                 leftover = avail_bits - bit_alloc(tctx, snroffst);
                 break;
             }
-    		leftover = avail_bits - bit_alloc(tctx, snroffst);
-    	}
+            leftover = avail_bits - bit_alloc(tctx, snroffst);
+        }
         // adjust snroffst until leftover is positive
-    	while(leftover < 0 && snroffst > 0) {
-    		snroffst--;
-    		leftover = avail_bits - bit_alloc(tctx, snroffst);
-    	}
+        while(leftover < 0 && snroffst > 0) {
+            snroffst--;
+            leftover = avail_bits - bit_alloc(tctx, snroffst);
+        }
     }
 
     frame->mant_bits = avail_bits - leftover;
