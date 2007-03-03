@@ -126,45 +126,32 @@ biquad_init(FilterContext *f)
 static void
 biquad_i_run_filter(FilterContext *f, FLOAT *out, FLOAT *in, int n)
 {
-    int i, j, datasize, loops;
-    FLOAT v;
-    FLOAT *tmp;
     BiquadContext *b = f->private_context;
+    FLOAT *coefs = b->coefs;
+    FLOAT *tmp = in;
+    int i, j;
 
-    datasize = 0;
-    tmp = in;
-    loops = 1;
-    if(f->cascaded) {
-        loops = 2;
-        datasize = n * sizeof(FLOAT);
-        tmp = calloc(datasize, 1);
-        memcpy(tmp, in, datasize);
-    }
-
-    for(j=0; j<loops; j++) {
+    for(j=0; j<1+f->cascaded; j++) {
+        FLOAT *state_j = b->state[j];
         for(i=0; i<n; i++) {
-            b->state[j][0] = tmp[i];
+            FLOAT v = 0;
+            state_j[0] = tmp[i];
 
-            v = 0;
-            v += b->coefs[0] * b->state[j][0];
-            v += b->coefs[1] * b->state[j][1];
-            v += b->coefs[2] * b->state[j][2];
-            v -= b->coefs[3] * b->state[j][3];
-            v -= b->coefs[4] * b->state[j][4];
+            v += coefs[0] * state_j[0];
+            v += coefs[1] * state_j[1];
+            v += coefs[2] * state_j[2];
+            v -= coefs[3] * state_j[3];
+            v -= coefs[4] * state_j[4];
 
-            b->state[j][2] = b->state[j][1];
-            b->state[j][1] = b->state[j][0];
-            b->state[j][4] = b->state[j][3];
-            b->state[j][3] = v;
+            state_j[2] = state_j[1];
+            state_j[4] = state_j[3];
+            state_j[1] = state_j[0];
+            state_j[3] = v;
 
             out[i] = CLIP(v, -FCONST(1.0), FCONST(1.0));
         }
-        if(f->cascaded && j != loops-1) {
-            memcpy(tmp, out, datasize);
-        }
+        tmp = out;
     }
-
-    if(f->cascaded) free(tmp);
 }
 
 static void
