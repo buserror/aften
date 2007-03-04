@@ -41,7 +41,6 @@ static const char *help_options[HELP_OPTIONS_COUNT] = {
 
 "    [-threads #]   Number of parallel threads to use\n"
 "                       0 = detect number of CPUs (default)\n"
-"                       1 to 128 = number of threads\n"
 
 "    [-b #]         CBR bitrate in kbps (default: about 96kbps per channel)\n",
 
@@ -198,10 +197,9 @@ static const char *encoding_options[ENCODING_OPTIONS_COUNT] = {
 "    [-threads #]   Number of threads\n"
 "                       Aften can use multiple threads to speed up encoding.\n"
 "                       By default, Aften uses one thread for each logical CPU\n"
-"                       your system has, but you can override this value.  The\n"
-"                       number of threads used can ba from 1 to 128.  A value\n"
-"                       of 0 is the default and indicates that Aften should\n"
-"                       try to detect the number of CPUs.\n",
+"                       your system has, but you can override this value.  A\n"
+"                       value of 0 is the default and indicates that Aften\n"
+"                       should try to detect the number of CPUs.\n",
 
 "    [-b #]         CBR bitrate in kbps\n"
 "                       CBR mode is selected by default. This option allows for\n"
