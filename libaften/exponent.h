@@ -30,6 +30,8 @@
 
 #include "a52.h"
 
+extern uint16_t expstr_set_bits[6][256];
+
 extern void exponent_init(A52Context *ctx);
 
 #ifdef HAVE_SSE2

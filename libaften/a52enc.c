@@ -109,6 +109,8 @@ aften_set_defaults(AftenContext *s)
     s->params.expstr_fast = 0;
     s->params.dynrng_profile = DYNRNG_PROFILE_NONE;
     s->params.n_threads = 0;
+    s->params.min_bwcode = 0;
+    s->params.max_bwcode = 60;
 
     s->meta.cmixlev = 0;
     s->meta.surmixlev = 0;
@@ -468,7 +470,16 @@ aften_encode_init(AftenContext *s)
     if(ctx->params.bwcode < 0) {
         int cutoff = ((last_quality-120) * 120) + 4000;
         ctx->fixed_bwcode = ((cutoff * 512 / ctx->sample_rate) - 73) / 3;
-        ctx->fixed_bwcode = CLIP(ctx->fixed_bwcode, 0, 60);
+        if(ctx->params.bwcode == -2) {
+            if(ctx->params.min_bwcode < 0 || ctx->params.min_bwcode > 60 ||
+               ctx->params.max_bwcode < 0 || ctx->params.max_bwcode > 60 ||
+               ctx->params.min_bwcode > ctx->params.max_bwcode) {
+                fprintf(stderr, "invalid min/max bandwidth code\n");
+                return -1;
+            }
+        }
+        ctx->fixed_bwcode = CLIP(ctx->fixed_bwcode, ctx->params.min_bwcode,
+                                 ctx->params.max_bwcode);
     } else {
         ctx->fixed_bwcode = ctx->params.bwcode;
     }
@@ -592,14 +603,7 @@ frame_init(A52ThreadContext *tctx)
             frame->bwcode = ((cutoff * 512 / ctx->sample_rate) - 73) / 3;
             frame->bwcode = CLIP(frame->bwcode, 0, 60);
         } else if(ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
-            frame->bwcode = ctx->fixed_bwcode;
-            if(tctx->last_quality < 240) {
-                frame->bwcode -= ((240-tctx->last_quality)/2);
-            } else if(tctx->last_quality > 245) {
-                frame->bwcode += ((tctx->last_quality-240)/5);
-            }
-            frame->bwcode = CLIP(frame->bwcode, 0, 60);
-            ctx->fixed_bwcode = frame->bwcode;
+            frame->bwcode = 60;
         }
     } else {
         frame->bwcode = ctx->fixed_bwcode;
@@ -1241,6 +1245,14 @@ encode_frame(A52ThreadContext *tctx, uint8_t *frame_buffer)
 
     if(ctx->acmod == A52_ACMOD_STEREO) {
         calc_rematrixing(tctx);
+    }
+
+    // variable bandwidth
+    if(ctx->params.bwcode == -2 && ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
+        // process exponents at full bandwidth
+        ctx->process_exponents(tctx);
+        // run bit allocation at q=240 to calculate bandwidth
+        vbw_bit_allocation(tctx);
     }
 
     ctx->process_exponents(tctx);

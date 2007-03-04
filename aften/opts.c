@@ -303,6 +303,26 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
                                 opts->s->params.n_threads, MAX_NUM_THREADS);
                         return 1;
                     }
+                } else if(!strncmp(&argv[i][1], "wmin", 5)) {
+                    i++;
+                    if(i >= argc) return 1;
+                    opts->s->params.min_bwcode = atoi(argv[i]);
+                    if(opts->s->params.min_bwcode < 0 ||
+                            opts->s->params.min_bwcode > 60) {
+                        fprintf(stderr, "invalid wmin: %d. must 0 to 60.\n",
+                                opts->s->params.min_bwcode);
+                        return 1;
+                    }
+                } else if(!strncmp(&argv[i][1], "wmax", 5)) {
+                    i++;
+                    if(i >= argc) return 1;
+                    opts->s->params.max_bwcode = atoi(argv[i]);
+                    if(opts->s->params.max_bwcode < 0 ||
+                            opts->s->params.max_bwcode > 60) {
+                        fprintf(stderr, "invalid wmax: %d. must 0 to 60.\n",
+                                opts->s->params.max_bwcode);
+                        return 1;
+                    }
                 }
             } else {
                 // single-character arguments

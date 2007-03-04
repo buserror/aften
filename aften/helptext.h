@@ -27,7 +27,7 @@
 
 static const char *usage_heading = "usage: aften [options] <input.wav> <output.ac3>\n";
 
-#define HELP_OPTIONS_COUNT 34
+#define HELP_OPTIONS_COUNT 36
 
 static const char *help_options[HELP_OPTIONS_COUNT] = {
 "    [-h]           Print out list of commandline options\n",
@@ -62,6 +62,10 @@ static const char *help_options[HELP_OPTIONS_COUNT] = {
 "                       0 to 60 = fixed bandwidth (28%%-99%% of full bandwidth)\n"
 "                      -1 = fixed adaptive bandwidth (default)\n"
 "                      -2 = variable adaptive bandwidth\n",
+
+"    [-wmin #]      Minimum bandwidth [0 - 60] (default: 0)\n",
+
+"    [-wmax #]      Maximum bandwidth [0 - 60] (default: 60)\n",
 
 "    [-m #]         Stereo rematrixing\n"
 "                       0 = independent L+R channels\n"
@@ -190,7 +194,7 @@ static const char *console_options[CONSOLE_OPTIONS_COUNT] = {
 "                       2 - Shows the statistics for each frame.\n"
 };
 
-#define ENCODING_OPTIONS_COUNT 9
+#define ENCODING_OPTIONS_COUNT 11
 
 static const char encoding_heading[18] = "ENCODING OPTIONS\n";
 static const char *encoding_options[ENCODING_OPTIONS_COUNT] = {
@@ -259,6 +263,18 @@ static const char *encoding_options[ENCODING_OPTIONS_COUNT] = {
 "                       default setting.\n"
 "                       When -2 is used, a bandwidth is chosen for each frame\n"
 "                       based on the results from the previous frame.\n",
+
+"    [-wmin #]      Minimum bandwidth\n"
+"                       For variable bandwidth mode (-2), this option sets the\n"
+"                       minimum value for the bandwidth code.  This allows the\n"
+"                       user to avoid a harsh cutoff frequency by sacrificing\n"
+"                       general audio quality.  The default value is 0.\n",
+
+"    [-wmax #]      Maximum bandwidth\n"
+"                       For variable bandwidth mode (-2), this option sets the\n"
+"                       maximum value for the bandwidth code.  This can be used\n"
+"                       to speed up encoding by using a lower value than 60,\n"
+"                       which is the default.\n",
 
 "    [-m #]         Stereo rematrixing\n"
 "                       Using stereo rematrixing can increase quality by\n"

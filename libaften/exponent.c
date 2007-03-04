@@ -29,6 +29,8 @@
 
 #include "cpu_caps.h"
 
+uint16_t expstr_set_bits[6][256];
+
 static void process_exponents(A52ThreadContext *tctx);
 
 /**
@@ -37,7 +39,7 @@ static void process_exponents(A52ThreadContext *tctx);
 void
 exponent_init(A52Context *ctx)
 {
-    int i, j, grpsize, ngrps;
+    int i, j, grpsize, ngrps, nc, blk;
 
     for(i=1; i<4; i++) {
         for(j=0; j<256; j++) {
@@ -49,6 +51,19 @@ exponent_init(A52Context *ctx)
                 ngrps = (j + (grpsize * 3) - 4) / (3 * grpsize);
             }
             nexpgrptab[i-1][j] = ngrps;
+        }
+    }
+
+    for(i=1; i<6; i++) {
+        uint16_t *expbits = expstr_set_bits[i];
+        for(nc=0; nc<=253; nc++) {
+            uint16_t bits = 0;
+            for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+                uint8_t es = str_predef[i][blk];
+                if(es != EXP_REUSE)
+                    bits += (4 + (nexpgrptab[es-1][nc] * 7));
+            }
+            expbits[nc] = bits;
         }
     }
 

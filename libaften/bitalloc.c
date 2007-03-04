@@ -33,6 +33,7 @@
 #include <string.h>
 
 #include "bitalloc.h"
+#include "exponent.h"
 #include "a52.h"
 #include "aften.h"
 
@@ -749,27 +750,122 @@ vbr_bit_allocation(A52ThreadContext *tctx)
 }
 
 /**
+ * Loads the bit allocation parameters and counts fixed frame bits.
+ */
+static void
+start_bit_allocation(A52ThreadContext *tctx)
+{
+    A52Context *ctx = tctx->ctx;
+    A52Frame *frame = &tctx->frame;
+
+    // read bit allocation table values
+    frame->bit_alloc.fscod = ctx->fscod;
+    frame->bit_alloc.halfratecod = ctx->halfratecod;
+    frame->bit_alloc.sdecay = sdecaytab[frame->sdecaycod] >> ctx->halfratecod;
+    frame->bit_alloc.fdecay = fdecaytab[frame->fdecaycod] >> ctx->halfratecod;
+    frame->bit_alloc.fgain = fgaintab[frame->fgaincod];
+    frame->bit_alloc.sgain = sgaintab[frame->sgaincod];
+    frame->bit_alloc.dbknee = dbkneetab[frame->dbkneecod];
+    frame->bit_alloc.floor = floortab[frame->floorcod];
+
+    count_frame_bits(tctx);
+}
+
+static FLOAT mant_est_tab[16] = {
+    FCONST( 0.000), FCONST( 1.667),
+    FCONST( 2.333), FCONST( 3.000),
+    FCONST( 3.500), FCONST( 4.000),
+    FCONST( 5.000), FCONST( 6.000),
+    FCONST( 7.000), FCONST( 8.000),
+    FCONST( 9.000), FCONST(10.000),
+    FCONST(11.000), FCONST(12.000),
+    FCONST(14.000), FCONST(16.000)
+};
+
+/**
+ * Variable bandwidth bit allocation
+ */
+void
+vbw_bit_allocation(A52ThreadContext *tctx)
+{
+    A52Context *ctx = tctx->ctx;
+    A52Frame *frame = &tctx->frame;
+    FLOAT mant_bits;
+    int blk, ch, bw, nc;
+    int avail_bits, bits;
+    int wmin, wmax, ncmin, ncmax;
+
+    start_bit_allocation(tctx);
+    avail_bits = (16 * frame->frame_size) - frame->frame_bits;
+
+    bit_alloc_prepare(tctx);
+    bit_alloc(tctx, 240);
+
+    // deduct any LFE exponent and mantissa bits
+    if(ctx->lfe) {
+        FLOAT lfe_bits = FCONST(0.0);
+        ch = ctx->lfe_channel;
+        lfe_bits += expstr_set_bits[frame->expstr_set[ch]][7];
+        for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+            uint8_t *bap = frame->blocks[blk].bap[ch];
+            for(nc=0; nc<7; nc++) {
+                lfe_bits += mant_est_tab[bap[nc]];
+            }
+        }
+        avail_bits -= (int)lfe_bits;
+    }
+
+    wmin = ctx->params.min_bwcode;
+    wmax = ctx->params.max_bwcode;
+    ncmin = wmin * 3 + 73;
+    ncmax = wmax * 3 + 73;
+
+    // sum up mantissa bits up to bin 72
+    mant_bits = FCONST(0.0);
+    for(ch=0; ch<ctx->n_channels; ch++) {
+        for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+            uint8_t *bap = frame->blocks[blk].bap[ch];
+            for(nc=0; nc<ncmin; nc++) {
+                mant_bits += mant_est_tab[bap[nc]];
+            }
+        }
+    }
+
+    // add bins while estimated bits fit in the frame
+    for(nc=ncmin; nc<=ncmax; nc++) {
+        bw = (nc - 73) / 3;
+        bits = 0;
+        for(ch=0; ch<ctx->n_channels; ch++) {
+            bits += expstr_set_bits[frame->expstr_set[ch]][nc];
+            for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+                mant_bits += mant_est_tab[frame->blocks[blk].bap[ch][nc]];
+            }
+        }
+        if((bits + (int)mant_bits) > avail_bits) {
+            break;
+        }
+    }
+
+    // set frame bandwidth parameters
+    bw = CLIP((nc - 73) / 3, 0, 60);
+    nc = bw * 3 + 73;
+    frame->bwcode = bw;
+    for(ch=0; ch<ctx->n_channels; ch++) {
+        frame->ncoefs[ch] = nc;
+    }
+}
+
+/**
  * Run the bit allocation encoding routine.
- * This loads the bit allocation parameters and runs the bit allocation in
- * either CBR or VBR mode, depending on the mode selected by the user.
+ * Runs the bit allocation in either CBR or VBR mode, depending on the mode
+ * selected by the user.
  */
 int
 compute_bit_allocation(A52ThreadContext *tctx)
 {
     A52Context *ctx = tctx->ctx;
-    A52Frame *f = &tctx->frame;
 
-    // read bit allocation table values
-    f->bit_alloc.fscod = ctx->fscod;
-    f->bit_alloc.halfratecod = ctx->halfratecod;
-    f->bit_alloc.sdecay = sdecaytab[f->sdecaycod] >> ctx->halfratecod;
-    f->bit_alloc.fdecay = fdecaytab[f->fdecaycod] >> ctx->halfratecod;
-    f->bit_alloc.fgain = fgaintab[f->fgaincod];
-    f->bit_alloc.sgain = sgaintab[f->sgaincod];
-    f->bit_alloc.dbknee = dbkneetab[f->dbkneecod];
-    f->bit_alloc.floor = floortab[f->floorcod];
-
-    count_frame_bits(tctx);
+    start_bit_allocation(tctx);
     if(ctx->params.encoding_mode == AFTEN_ENC_MODE_VBR) {
         if(vbr_bit_allocation(tctx)) {
             return -1;

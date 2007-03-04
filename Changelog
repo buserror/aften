@@ -29,6 +29,8 @@ version SVN : current
 - added SSE version of window function
 - added MMX and SSE2 versions of some exponent related functions
 - removed old build system
+- frame-independent variable bandwidth
+- minimum and maximum bandwidth settings for variable bandwidth mode
 
 version 0.06 : 31 January 2007
 - added SSE/SSE3 mdct code (based on vorbis lancer by blacksword8192@hotmail.com)

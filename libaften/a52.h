@@ -120,6 +120,7 @@ typedef struct A52Frame {
     int fgaincod;
     int fsnroffst;
     int ncoefs[A52_MAX_CHANNELS];
+    int expstr_set[A52_MAX_CHANNELS];
 } A52Frame;
 
 typedef struct A52ThreadContext {

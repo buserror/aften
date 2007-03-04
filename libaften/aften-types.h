@@ -225,6 +225,22 @@ typedef struct {
      */
     int n_threads;
 
+    /**
+     * Minimum bandwidth code.
+     * For use with variable bandwidth mode, this option determines the
+     * minimum value for the bandwidth code.
+     * default is 0.
+     */
+    int min_bwcode;
+
+    /**
+     * Maximum bandwidth code.
+     * For use with variable bandwidth mode, this option determines the
+     * maximum value for the bandwidth code.
+     * default is 60.
+     */
+    int max_bwcode;
+
 } AftenEncParams;
 
 /**
