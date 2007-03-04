@@ -40,7 +40,7 @@ static const char *help_options[HELP_OPTIONS_COUNT] = {
 "                       2 = show each frame's stats\n",
 
 "    [-threads #]   Number of parallel threads to use\n"
-"                       0 = detect number of CPUs (default)\n"
+"                       0 = detect number of CPUs (default)\n",
 
 "    [-b #]         CBR bitrate in kbps (default: about 96kbps per channel)\n",
 
@@ -120,7 +120,7 @@ static const char *help_options[HELP_OPTIONS_COUNT] = {
 
 "    [-readtoeof #] Read input WAVE audio data until the end-of-file\n"
 "                       0 = use data size in header (default)\n"
-"                       1 = read data until end-of-file\n"
+"                       1 = read data until end-of-file\n",
 
 "    [-bwfilter #]  Specify use of the bandwidth low-pass filter\n"
 "                       0 = do not apply filter (default)\n"
