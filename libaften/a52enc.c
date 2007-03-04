@@ -573,7 +573,6 @@ frame_init(A52ThreadContext *tctx)
     A52Frame *frame = &tctx->frame;
     A52Block *block;
     int blk, bnd, ch;
-    int cutoff;
 
     for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
         block = &frame->blocks[blk];
