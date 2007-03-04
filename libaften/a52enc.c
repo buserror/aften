@@ -477,6 +477,10 @@ aften_encode_init(AftenContext *s)
                 fprintf(stderr, "invalid min/max bandwidth code\n");
                 return -1;
             }
+            if(ctx->params.encoding_mode == AFTEN_ENC_MODE_VBR) {
+                fprintf(stderr, "variable bandwidth mode cannot be used with variable bitrate mode\n");
+                return -1;
+            }
         }
         ctx->fixed_bwcode = CLIP(ctx->fixed_bwcode, ctx->params.min_bwcode,
                                  ctx->params.max_bwcode);
@@ -598,13 +602,7 @@ frame_init(A52ThreadContext *tctx)
     }
 
     if(ctx->params.bwcode == -2) {
-        if(ctx->params.encoding_mode == AFTEN_ENC_MODE_VBR) {
-            cutoff = ((tctx->last_quality-120) * 120) + 4000;
-            frame->bwcode = ((cutoff * 512 / ctx->sample_rate) - 73) / 3;
-            frame->bwcode = CLIP(frame->bwcode, 0, 60);
-        } else if(ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
-            frame->bwcode = 60;
-        }
+        frame->bwcode = 60;
     } else {
         frame->bwcode = ctx->fixed_bwcode;
     }
@@ -1248,7 +1246,7 @@ encode_frame(A52ThreadContext *tctx, uint8_t *frame_buffer)
     }
 
     // variable bandwidth
-    if(ctx->params.bwcode == -2 && ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
+    if(ctx->params.bwcode == -2) {
         // process exponents at full bandwidth
         ctx->process_exponents(tctx);
         // run bit allocation at q=240 to calculate bandwidth

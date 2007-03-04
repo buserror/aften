@@ -262,7 +262,8 @@ static const char *encoding_options[ENCODING_OPTIONS_COUNT] = {
 "                       it thinks is an appropriate bandwidth.  This is the\n"
 "                       default setting.\n"
 "                       When -2 is used, a bandwidth is chosen for each frame\n"
-"                       based on the results from the previous frame.\n",
+"                       based on CBR frame size and a target quality of 240.\n"
+"                       Variable bandwidth cannot be used with VBR mode.\n",
 
 "    [-wmin #]      Minimum bandwidth\n"
 "                       For variable bandwidth mode (-2), this option sets the\n"
