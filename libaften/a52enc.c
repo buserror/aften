@@ -62,7 +62,9 @@ const uint16_t a52_bitratetab[19] = {
     160, 192, 224, 256, 320, 384, 448, 512, 576, 640
 };
 
+#ifndef NO_THREADS
 static int threaded_encode(void* vtctx);
+#endif
 
 const char *
 aften_get_version(void)
@@ -1283,6 +1285,7 @@ encode_frame(A52ThreadContext *tctx, uint8_t *frame_buffer)
     return 0;
 }
 
+#ifndef NO_THREADS
 static int
 threaded_encode(void* vtctx)
 {
@@ -1320,24 +1323,22 @@ threaded_encode(void* vtctx)
 static int
 encode_frame_parallel(AftenContext *s, uint8_t *frame_buffer, const void *samples)
 {
-    static int thread_num = 0;
-    static int threads_to_abort = 0;
     A52Context *ctx = s->private_context;
     int framesize = 0;
 
     do {
-        A52ThreadContext *tctx = &ctx->tctx[thread_num];
+        A52ThreadContext *tctx = &ctx->tctx[ctx->ts.current_thread_num];
 
         posix_mutex_lock(&tctx->ts.enter_mutex);
 
         windows_event_wait(&tctx->ts.ready_event);
 
-        if (tctx->state == ABORT || threads_to_abort) {
+        if (tctx->state == ABORT || ctx->ts.threads_to_abort) {
             tctx->state = ABORT;
             framesize = -1;
-            if (!threads_to_abort)
-                threads_to_abort = ctx->n_threads;
-            --threads_to_abort;
+            if (!ctx->ts.threads_to_abort)
+                ctx->ts.threads_to_abort = ctx->n_threads;
+            --ctx->ts.threads_to_abort;
         } else {
             if (tctx->state == START)
                 tctx->state = WORK;
@@ -1364,7 +1365,7 @@ encode_frame_parallel(AftenContext *s, uint8_t *frame_buffer, const void *sample
                 else {
                     fprintf(stderr, "Encoding has not properly initialized\n");
                     tctx->state=ABORT;
-                    threads_to_abort = ctx->n_threads - 1;
+                    ctx->ts.threads_to_abort = ctx->n_threads - 1;
                     framesize = -1;
                 }
             }
@@ -1377,12 +1378,13 @@ encode_frame_parallel(AftenContext *s, uint8_t *frame_buffer, const void *sample
 
         windows_event_set(&tctx->ts.enter_event);
 end:
-        ++thread_num;
-        thread_num %= ctx->n_threads;
-    } while(threads_to_abort);
+        ++ctx->ts.current_thread_num;
+        ctx->ts.current_thread_num %= ctx->n_threads;
+    } while(ctx->ts.threads_to_abort);
 
     return framesize;
 }
+#endif
 
 int
 aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, const void *samples)
@@ -1396,10 +1398,10 @@ aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, const void *samples)
         return -1;
     }
     ctx = s->private_context;
-
+#ifndef NO_THREADS
     if (ctx->n_threads > 1)
         return encode_frame_parallel(s, frame_buffer, samples);
-
+#endif
     if (!samples)
         return 0;
 

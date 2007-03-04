@@ -34,6 +34,12 @@ typedef pthread_t       THREAD;
 typedef pthread_mutex_t MUTEX;
 typedef pthread_cond_t  COND;
 
+typedef struct A52GlobalThreadSync
+{
+    int current_thread_num;
+    int threads_to_abort;
+} A52GlobalThreadSync;
+
 typedef struct A52ThreadSync
 {
     THREAD thread;
@@ -90,6 +96,12 @@ static __inline int get_ncpus()
 
 typedef HANDLE THREAD;
 typedef HANDLE EVENT;
+
+typedef struct A52GlobalThreadSync
+{
+    int current_thread_num;
+    int threads_to_abort;
+} A52GlobalThreadSync;
 
 typedef struct A52ThreadSync
 {

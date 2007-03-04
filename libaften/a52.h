@@ -148,6 +148,9 @@ typedef struct A52ThreadContext {
 
 typedef struct A52Context {
     A52ThreadContext *tctx;
+#ifndef NO_THREADS
+    A52GlobalThreadSync ts;
+#endif
     AftenEncParams params;
     AftenMetadata meta;
     void (*fmt_convert_from_src)(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
