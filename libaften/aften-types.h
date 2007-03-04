@@ -42,13 +42,6 @@ enum {
 };
 
 /**
- * Maximum number of threads
- */
-enum {
-    AFTEN_MAX_THREADS = 128
-};
-
-/**
  * Aften Encoding Mode
  */
 typedef enum {

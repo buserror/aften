@@ -298,9 +298,9 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
                     if(i >= argc) return 1;
                     opts->s->params.n_threads = atoi(argv[i]);
                     if(opts->s->params.n_threads < 0 ||
-                            opts->s->params.n_threads > AFTEN_MAX_THREADS) {
+                            opts->s->params.n_threads > MAX_NUM_THREADS) {
                         fprintf(stderr, "invalid readtoeof: %d. must 0 to %d.\n",
-                                opts->s->params.n_threads, AFTEN_MAX_THREADS);
+                                opts->s->params.n_threads, MAX_NUM_THREADS);
                         return 1;
                     }
                 }
