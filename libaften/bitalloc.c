@@ -771,6 +771,7 @@ start_bit_allocation(A52ThreadContext *tctx)
     count_frame_bits(tctx);
 }
 
+/** estimated number of bits used for a mantissa, indexed by bap value. */
 static FLOAT mant_est_tab[16] = {
     FCONST( 0.000), FCONST( 1.667),
     FCONST( 2.333), FCONST( 3.000),
@@ -784,6 +785,7 @@ static FLOAT mant_est_tab[16] = {
 
 /**
  * Variable bandwidth bit allocation
+ * This estimates the bandwidth code which will give quality around 240.
  */
 void
 vbw_bit_allocation(A52ThreadContext *tctx)
@@ -815,6 +817,7 @@ vbw_bit_allocation(A52ThreadContext *tctx)
         avail_bits -= (int)lfe_bits;
     }
 
+    // set limits
     wmin = ctx->params.min_bwcode;
     wmax = ctx->params.max_bwcode;
     ncmin = wmin * 3 + 73;
