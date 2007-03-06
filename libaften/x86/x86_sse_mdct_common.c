@@ -666,8 +666,12 @@ mdct_256(A52ThreadContext *tctx, FLOAT *out, FLOAT *in)
 
     dct_iv(&tctx->mdct_tctx_256, coef_b, xx);
 
-    for(i=0, j=0; i<128; i++, j+=2) {
-        out[j] = coef_a[i];
-        out[j+1] = coef_b[i];
+    for(i=0, j=0; i<128; i+=4, j+=8) {
+        __m128 XMM0 = _mm_load_ps(coef_a + i);
+        __m128 XMM1 = _mm_load_ps(coef_b + i);
+        __m128 XMM2 = _mm_unpacklo_ps(XMM0, XMM1);
+        __m128 XMM3 = _mm_unpackhi_ps(XMM0, XMM1);
+        _mm_store_ps(out + j  , XMM2);
+        _mm_store_ps(out + j+4, XMM3);
     }
 }
