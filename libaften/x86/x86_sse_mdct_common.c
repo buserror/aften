@@ -55,6 +55,7 @@
 static const union __m128ui PCS_NNRR = {{0x80000000, 0x80000000, 0x00000000, 0x00000000}};
 static const union __m128ui PCS_NRRN = {{0x00000000, 0x80000000, 0x80000000, 0x00000000}};
 static const union __m128ui PCS_RNRN = {{0x00000000, 0x80000000, 0x00000000, 0x80000000}};
+static const union __m128ui PCS_RRRR = {{0x80000000, 0x80000000, 0x80000000, 0x80000000}};
 static const union __m128f PFV_0P5 = {{0.5f, 0.5f, 0.5f, 0.5f}};
 
 /* 8 point butterfly (in place, 4 register) */
@@ -627,29 +628,46 @@ static void
 mdct_256(A52ThreadContext *tctx, FLOAT *out, FLOAT *in)
 {
     FLOAT *coef_a, *coef_b, *xx;
-    int i;
+    int i, j;
 
     coef_a = in;
     coef_b = &in[128];
     xx = tctx->mdct_tctx_256.buffer1;
 
     memcpy(xx, in+64, 192 * sizeof(FLOAT));
-    for(i=0; i<64; ++i)
-        xx[i+192] = -in[i];
+    xx += 192;
+    for(i=0; i<64; i+=4) {
+        __m128 XMM0 = _mm_load_ps(in + i);
+        XMM0 = _mm_xor_ps(XMM0, PCS_RRRR.v);
+        _mm_store_ps(xx + i, XMM0);
+    }
+    xx -= 192;
 
     dct_iv(&tctx->mdct_tctx_256, coef_a, xx);
 
-    for(i=0; i<64; ++i)
-        xx[i] = -in[i+256+192];
+    in += 256 + 192;
+    for(i=0; i<64; i+=4) {
+        __m128 XMM0 = _mm_load_ps(in + i);
+        XMM0 = _mm_xor_ps(XMM0, PCS_RRRR.v);
+        _mm_store_ps(xx + i, XMM0);
+    }
+    in -= 256 + 192;
 
     memcpy(xx+64, in+256, 128 * sizeof(FLOAT));
-    for(i=0; i<64; ++i)
-        xx[i+192] = -in[i+256+128];
+    xx += 192;
+    in += 256 + 128;
+    for(i=0; i<64; i+=4) {
+        __m128 XMM0 = _mm_load_ps(in + i);
+        XMM0 = _mm_xor_ps(XMM0, PCS_RRRR.v);
+        _mm_store_ps(xx + i, XMM0);
+    }
+    xx -= 192;
+    in -= 256 + 128;
 
     dct_iv(&tctx->mdct_tctx_256, coef_b, xx);
 
-    for(i=0; i<128; i++) {
-        out[2*i] = coef_a[i];
-        out[2*i+1] = coef_b[i];
+    for(i=0, j=0; i<128; i++, j+=2) {
+        out[j] = coef_a[i];
+        out[j+1] = coef_b[i];
     }
 }
