@@ -251,13 +251,13 @@ select_mdct(A52Context *ctx)
 {
 #ifndef CONFIG_DOUBLE
 #ifdef HAVE_SSE3
-    if (cpu_caps_have_SSE3()) {
+    if (cpu_caps_have_sse3()) {
         sse3_mdct_init(ctx);
         return;
     }
 #endif
 #ifdef HAVE_SSE
-    if (cpu_caps_have_SSE()) {
+    if (cpu_caps_have_sse()) {
         sse_mdct_init(ctx);
         return;
     }
@@ -271,13 +271,13 @@ select_mdct_thread(A52ThreadContext *tctx)
 {
 #ifndef CONFIG_DOUBLE
 #ifdef HAVE_SSE3
-    if (cpu_caps_have_SSE3()) {
+    if (cpu_caps_have_sse3()) {
         sse3_mdct_thread_init(tctx);
         return;
     }
 #endif
 #ifdef HAVE_SSE
-    if (cpu_caps_have_SSE()) {
+    if (cpu_caps_have_sse()) {
         sse_mdct_thread_init(tctx);
         return;
     }

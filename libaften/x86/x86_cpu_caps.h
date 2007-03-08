@@ -36,52 +36,52 @@ struct x86cpu_caps_s {
 extern struct x86cpu_caps_s x86cpu_caps_use;
 
 void cpu_caps_detect(void);
-static inline int cpu_caps_have_MMX(void);
-static inline int cpu_caps_have_SSE(void);
-static inline int cpu_caps_have_SSE2(void);
-static inline int cpu_caps_have_SSE3(void);
-static inline int cpu_caps_have_SSE4(void);
-static inline int cpu_caps_have_3DNOW(void);
-static inline int cpu_caps_have_3DNOWEXT(void);
-static inline int cpu_caps_have_SSEMMX(void);
+static inline int cpu_caps_have_mmx(void);
+static inline int cpu_caps_have_sse(void);
+static inline int cpu_caps_have_sse2(void);
+static inline int cpu_caps_have_sse3(void);
+static inline int cpu_caps_have_sse4(void);
+static inline int cpu_caps_have_3dnow(void);
+static inline int cpu_caps_have_3dnowext(void);
+static inline int cpu_caps_have_ssemmx(void);
 
 
-static inline int cpu_caps_have_MMX(void)
+static inline int cpu_caps_have_mmx(void)
 {
     return x86cpu_caps_use.mmx;
 }
 
-static inline int cpu_caps_have_SSE(void)
+static inline int cpu_caps_have_sse(void)
 {
     return x86cpu_caps_use.sse;
 }
 
-static inline int cpu_caps_have_SSE2(void)
+static inline int cpu_caps_have_sse2(void)
 {
     return x86cpu_caps_use.sse2;
 }
 
-static inline int cpu_caps_have_SSE3(void)
+static inline int cpu_caps_have_sse3(void)
 {
     return x86cpu_caps_use.sse3;
 }
 
-static inline int cpu_caps_have_SSE4(void)
+static inline int cpu_caps_have_sse4(void)
 {
     return x86cpu_caps_use.sse4;
 }
 
-static inline int cpu_caps_have_3DNOW(void)
+static inline int cpu_caps_have_3dnow(void)
 {
     return x86cpu_caps_use.amd_3dnow;
 }
 
-static inline int cpu_caps_have_3DNOWEXT(void)
+static inline int cpu_caps_have_3dnowext(void)
 {
     return x86cpu_caps_use.amd_3dnowext;
 }
 
-static inline int cpu_caps_have_SSEMMX(void)
+static inline int cpu_caps_have_ssemmx(void)
 {
     return x86cpu_caps_use.amd_sse_mmx;
 }
