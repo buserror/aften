@@ -47,6 +47,11 @@
 #include "a52.h"
 #include "mdct.h"
 
+/**
+ * Allocates and initializes lookup tables in the MDCT context.
+ * @param mdct  The MDCT context
+ * @param n     Number of time-domain samples used in the MDCT transform
+ */
 static void
 ctx_init(MDCTContext *mdct, int n)
 {
@@ -92,6 +97,7 @@ ctx_init(MDCTContext *mdct, int n)
     mdct->scale = FCONST(-2.0) / n;
 }
 
+/** Deallocates memory use by the lookup tables in the MDCT context. */
 static void
 ctx_close(MDCTContext *mdct)
 {
@@ -102,6 +108,7 @@ ctx_close(MDCTContext *mdct)
     }
 }
 
+/** Allocates internal buffers for MDCT calculation. */
 static void
 tctx_init(MDCTThreadContext *tmdct, int n)
 {
@@ -110,6 +117,7 @@ tctx_init(MDCTThreadContext *tmdct, int n)
     tmdct->buffer1 = calloc(n, sizeof(FLOAT));
 }
 
+/** Deallocates internal buffers for MDCT calculation. */
 static void
 tctx_close(MDCTThreadContext *tmdct)
 {
@@ -119,16 +127,16 @@ tctx_close(MDCTThreadContext *tmdct)
     }
 }
 
-/* 8 point butterfly (in place, 4 register) */
+/** 8 point butterfly (in place, 4 register) */
 static inline void
 mdct_butterfly_8(FLOAT *x) {
-    FLOAT r0   = x[6] + x[2];
-    FLOAT r1   = x[6] - x[2];
-    FLOAT r2   = x[4] + x[0];
-    FLOAT r3   = x[4] - x[0];
+    FLOAT r0 = x[6] + x[2];
+    FLOAT r1 = x[6] - x[2];
+    FLOAT r2 = x[4] + x[0];
+    FLOAT r3 = x[4] - x[0];
 
-    x[6] = r0   + r2;
-    x[4] = r0   - r2;
+    x[6] = r0 + r2;
+    x[4] = r0 - r2;
 
     r0   = x[5] - x[1];
     r2   = x[7] - x[3];
@@ -143,7 +151,7 @@ mdct_butterfly_8(FLOAT *x) {
     x[5] = r1   - r0;
 }
 
-/* 16 point butterfly (in place, 4 register) */
+/** 16 point butterfly (in place, 4 register) */
 static inline void
 mdct_butterfly_16(FLOAT *x) {
     FLOAT r0 = x[1] - x[9];
@@ -179,7 +187,7 @@ mdct_butterfly_16(FLOAT *x) {
     mdct_butterfly_8(x+8);
 }
 
-/* 32 point butterfly (in place, 4 register) */
+/** 32 point butterfly (in place, 4 register) */
 static inline void
 mdct_butterfly_32(FLOAT *x) {
     FLOAT r0 = x[30] - x[14];
@@ -243,7 +251,7 @@ mdct_butterfly_32(FLOAT *x) {
     mdct_butterfly_16(x+16);
 }
 
-/* N point first stage butterfly (in place, 2 register) */
+/** N-point first stage butterfly (in place, 2 register) */
 static inline void
 mdct_butterfly_first(FLOAT *trig, FLOAT *x, int points)
 {
@@ -287,7 +295,7 @@ mdct_butterfly_first(FLOAT *trig, FLOAT *x, int points)
     } while(x2 >= x);
 }
 
-/* N/stage point generic N stage butterfly (in place, 2 register) */
+/** N/stage point generic N stage butterfly (in place, 2 register) */
 static inline void
 mdct_butterfly_generic(FLOAT *trig, FLOAT *x, int points, int trigint)
 {
@@ -360,20 +368,20 @@ mdct_butterflies(MDCTContext *mdct, FLOAT *x, int points)
 static inline void
 mdct_bitreverse(MDCTContext *mdct, FLOAT *x)
 {
-    int        n   = mdct->n;
-    int       *bit = mdct->bitrev;
-    FLOAT *w0   = x;
-    FLOAT *w1   = x = w0+(n>>1);
+    int n = mdct->n;
+    int *bit = mdct->bitrev;
+    FLOAT *w0 = x;
+    FLOAT *w1 = x = w0+(n>>1);
     FLOAT *trig = mdct->trig+n;
 
     do{
-        FLOAT *x0    = x+bit[0];
-        FLOAT *x1    = x+bit[1];
+        FLOAT *x0 = x+bit[0];
+        FLOAT *x1 = x+bit[1];
 
-        FLOAT  r0     = x0[1]- x1[1];
-        FLOAT  r1     = x0[0]+ x1[0];
-        FLOAT  r2     = (r1 * trig[0] + r0 * trig[1]);
-        FLOAT  r3     = (r1 * trig[1] - r0 * trig[0]);
+        FLOAT  r0 = x0[1]- x1[1];
+        FLOAT  r1 = x0[0]+ x1[0];
+        FLOAT  r2 = (r1 * trig[0] + r0 * trig[1]);
+        FLOAT  r3 = (r1 * trig[1] - r0 * trig[0]);
 
         w1 -= 4;
 
@@ -403,7 +411,7 @@ mdct_bitreverse(MDCTContext *mdct, FLOAT *x)
 
         trig += 4;
         bit += 4;
-        w0  += 4;
+        w0 += 4;
     } while(w0 < w1);
 }
 
@@ -538,8 +546,8 @@ alloc_block_buffers(A52ThreadContext *tctx)
 {
     int i, j;
 
-    /* we alloced one continous block and
-       now interleave in and out buffers */
+    // we alloced one continous block and
+    // now interleave in and out buffers
     for (i=0; i<A52_NUM_BLOCKS; ++i) {
         if (i) {
             tctx->frame.blocks[i].input_samples[0] =
@@ -602,4 +610,3 @@ mdct_thread_init(A52ThreadContext *tctx)
         malloc(A52_NUM_BLOCKS * A52_MAX_CHANNELS * (256 + 512) * sizeof(FLOAT));
     alloc_block_buffers(tctx);
 }
-
