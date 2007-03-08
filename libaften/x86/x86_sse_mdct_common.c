@@ -485,7 +485,7 @@ mdct_bitreverse(MDCTContext *mdct, FLOAT *x)
 }
 
 static void
-dct_iv(MDCTThreadContext *tmdct, FLOAT *out, FLOAT *in)
+mdct(MDCTThreadContext *tmdct, FLOAT *out, FLOAT *in)
 {
     MDCTContext *mdct = tmdct->mdct;
     int n = mdct->n;
@@ -621,7 +621,7 @@ dct_iv(MDCTThreadContext *tmdct, FLOAT *out, FLOAT *in)
 static void
 mdct_512(A52ThreadContext *tctx, FLOAT *out, FLOAT *in)
 {
-    dct_iv(&tctx->mdct_tctx_512, out, in);
+    mdct(&tctx->mdct_tctx_512, out, in);
 }
 
 static void
@@ -643,7 +643,7 @@ mdct_256(A52ThreadContext *tctx, FLOAT *out, FLOAT *in)
     }
     xx -= 192;
 
-    dct_iv(&tctx->mdct_tctx_256, coef_a, xx);
+    mdct(&tctx->mdct_tctx_256, coef_a, xx);
 
     in += 256 + 192;
     for(i=0; i<64; i+=4) {
@@ -664,7 +664,7 @@ mdct_256(A52ThreadContext *tctx, FLOAT *out, FLOAT *in)
     xx -= 192;
     in -= 256 + 128;
 
-    dct_iv(&tctx->mdct_tctx_256, coef_b, xx);
+    mdct(&tctx->mdct_tctx_256, coef_b, xx);
 
     for(i=0, j=0; i<128; i+=4, j+=8) {
         __m128 XMM0 = _mm_load_ps(coef_a + i);
