@@ -42,6 +42,12 @@
 
 #include "common.h"
 
+#define ONE FCONST(1.0)
+#define TWO FCONST(2.0)
+#define AFT_PI3_8 FCONST(0.38268343236508977175)
+#define AFT_PI2_8 FCONST(0.70710678118654752441)
+#define AFT_PI1_8 FCONST(0.92387953251128675613)
+
 struct A52Context;
 struct A52ThreadContext;
 
