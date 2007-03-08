@@ -68,13 +68,13 @@ exponent_init(A52Context *ctx)
     }
 
 #ifdef HAVE_SSE2
-    if (_alHaveSSE2()) {
+    if (cpu_caps_have_SSE2()) {
         ctx->process_exponents = sse2_process_exponents;
         return;
     }
 #endif /* HAVE_SSE2 */
 #ifdef HAVE_MMX
-    if (_alHaveMMX()) {
+    if (cpu_caps_have_MMX()) {
         ctx->process_exponents = mmx_process_exponents;
         return;
     }

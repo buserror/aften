@@ -23,7 +23,7 @@
 #if defined(HAVE_MMX)
 #include "x86_cpu_caps.h"
 #else
-static inline void _alDetectCPUCaps(void){}
+static inline void cpu_caps_detect(void){}
 #endif
 
 #endif /* CPU_CAPS_H */

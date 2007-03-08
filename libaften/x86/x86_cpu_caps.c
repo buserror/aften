@@ -38,13 +38,13 @@
 #ifdef __INTEL_COMPILER
 #pragma warning(disable : 1419)
 #endif
-int CDECL _alDetectx86CPUCaps(uint32_t* caps1, uint32_t* caps2, uint32_t* caps3);
+int CDECL cpu_caps_detect_x86(uint32_t* caps1, uint32_t* caps2, uint32_t* caps3);
 
 static struct x86cpu_caps_s x86cpu_caps_compile = { 0, 0, 0, 0, 0, 0, 0, 0, 0};
 static struct x86cpu_caps_s x86cpu_caps_detect = { 1, 1, 1, 1, 1, 1, 1, 1, 1};
 struct x86cpu_caps_s x86cpu_caps_use = { 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-void _alDetectCPUCaps(void)
+void cpu_caps_detect(void)
 {
     /* compiled in SIMD routines */
 #ifdef HAVE_MMX
@@ -78,7 +78,7 @@ void _alDetectCPUCaps(void)
     {
         uint32_t caps1, caps2, caps3;
 
-        if (_alDetectx86CPUCaps(&caps1, &caps2, &caps3)) {
+        if (cpu_caps_detect_x86(&caps1, &caps2, &caps3)) {
 
             x86cpu_caps_detect.mmx          = (caps1 >> MMX_BIT) & 1;
             x86cpu_caps_detect.sse          = (caps1 >> SSE_BIT) & 1;

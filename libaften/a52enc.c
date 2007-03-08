@@ -251,13 +251,13 @@ select_mdct(A52Context *ctx)
 {
 #ifndef CONFIG_DOUBLE
 #ifdef HAVE_SSE3
-    if (_alHaveSSE3()) {
+    if (cpu_caps_have_SSE3()) {
         sse3_mdct_init(ctx);
         return;
     }
 #endif
 #ifdef HAVE_SSE
-    if (_alHaveSSE()) {
+    if (cpu_caps_have_SSE()) {
         sse_mdct_init(ctx);
         return;
     }
@@ -271,13 +271,13 @@ select_mdct_thread(A52ThreadContext *tctx)
 {
 #ifndef CONFIG_DOUBLE
 #ifdef HAVE_SSE3
-    if (_alHaveSSE3()) {
+    if (cpu_caps_have_SSE3()) {
         sse3_mdct_thread_init(tctx);
         return;
     }
 #endif
 #ifdef HAVE_SSE
-    if (_alHaveSSE()) {
+    if (cpu_caps_have_SSE()) {
         sse_mdct_thread_init(tctx);
         return;
     }
@@ -298,7 +298,7 @@ aften_encode_init(AftenContext *s)
         fprintf(stderr, "NULL parameter passed to aften_encode_init\n");
         return -1;
     }
-    _alDetectCPUCaps();
+    cpu_caps_detect();
 
     ctx = calloc(sizeof(A52Context), 1);
     if(!ctx) {

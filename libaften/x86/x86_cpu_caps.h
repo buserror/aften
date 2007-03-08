@@ -16,8 +16,8 @@
  * License along with this library; if not, write to the Free Software          *
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA *
  ********************************************************************************/
-#ifndef X86_CPU_CAPS_PRK_H_
-#define X86_CPU_CAPS_PRK_H_
+#ifndef X86_CPU_CAPS_H
+#define X86_CPU_CAPS_H
 
 #include "common.h"
 
@@ -35,55 +35,55 @@ struct x86cpu_caps_s {
 
 extern struct x86cpu_caps_s x86cpu_caps_use;
 
-void _alDetectCPUCaps(void);
-static __inline int _alHaveMMX(void);
-static __inline int _alHaveSSE(void);
-static __inline int _alHaveSSE2(void);
-static __inline int _alHaveSSE3(void);
-static __inline int _alHaveSSE4(void);
-static __inline int _alHave3DNOW(void);
-static __inline int _alHave3DNOWEXT(void);
-static __inline int _alHaveSSEMMX(void);
+void cpu_caps_detect(void);
+static inline int cpu_caps_have_MMX(void);
+static inline int cpu_caps_have_SSE(void);
+static inline int cpu_caps_have_SSE2(void);
+static inline int cpu_caps_have_SSE3(void);
+static inline int cpu_caps_have_SSE4(void);
+static inline int cpu_caps_have_3DNOW(void);
+static inline int cpu_caps_have_3DNOWEXT(void);
+static inline int cpu_caps_have_SSEMMX(void);
 
 
-static __inline int _alHaveMMX(void)
+static inline int cpu_caps_have_MMX(void)
 {
     return x86cpu_caps_use.mmx;
 }
 
-static __inline int _alHaveSSE(void)
+static inline int cpu_caps_have_SSE(void)
 {
     return x86cpu_caps_use.sse;
 }
 
-static __inline int _alHaveSSE2(void)
+static inline int cpu_caps_have_SSE2(void)
 {
     return x86cpu_caps_use.sse2;
 }
 
-static __inline int _alHaveSSE3(void)
+static inline int cpu_caps_have_SSE3(void)
 {
     return x86cpu_caps_use.sse3;
 }
 
-static __inline int _alHaveSSE4(void)
+static inline int cpu_caps_have_SSE4(void)
 {
     return x86cpu_caps_use.sse4;
 }
 
-static __inline int _alHave3DNOW(void)
+static inline int cpu_caps_have_3DNOW(void)
 {
     return x86cpu_caps_use.amd_3dnow;
 }
 
-static __inline int _alHave3DNOWEXT(void)
+static inline int cpu_caps_have_3DNOWEXT(void)
 {
     return x86cpu_caps_use.amd_3dnowext;
 }
 
-static __inline int _alHaveSSEMMX(void)
+static inline int cpu_caps_have_SSEMMX(void)
 {
     return x86cpu_caps_use.amd_sse_mmx;
 }
 
-#endif /* not X86_CPU_CAPS_PRK_H_ */
+#endif /* not X86_CPU_CAPS_H */

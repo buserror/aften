@@ -17,23 +17,23 @@
 ;* Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA *
 ;********************************************************************************
 
-; int _alDetectx86CPUCaps(uint* caps1, uint* caps2, uint* caps3);
+; int cpu_caps_detect_x86(uint* caps1, uint* caps2, uint* caps3);
 ; derived from loki_cpuinfo.c, 1997-98 by H. Dietz and R. Fisher
 ; using infos from sandpile.org
 
 ; returns 0 if no CPUID available
 
 %ifdef HAVE_NASM_VISIBILITY
-global __alDetectx86CPUCaps:function hidden
-global _alDetectx86CPUCaps:function hidden
+global _cpu_caps_detect_x86:function hidden
+global cpu_caps_detect_x86:function hidden
 %else
-global __alDetectx86CPUCaps
-global _alDetectx86CPUCaps
+global _cpu_caps_detect_x86
+global cpu_caps_detect_x86
 %endif
 
 segment .text
-__alDetectx86CPUCaps:
-_alDetectx86CPUCaps:
+_cpu_caps_detect_x86:
+cpu_caps_detect_x86:
 
 pushf
 pop eax
