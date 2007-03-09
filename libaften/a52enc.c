@@ -986,20 +986,17 @@ copy_samples(A52ThreadContext *tctx)
     FLOAT *temp;
     int ch, blk;
 #define SWAP_BUFFERS temp=in_audio;in_audio=out_audio;out_audio=temp;
-#define afprintf
-    afprintf(stderr,"want lock %i\n", tctx->thread_num);
+
     posix_mutex_lock(&ctx->ts.samples_mutex);
 
     windows_cs_enter(&ctx->ts.samples_cs);
-    afprintf(stderr,"lock %i\n", tctx->thread_num);
+
     while (ctx->ts.samples_thread_num != tctx->thread_num) {
-        afprintf(stderr,"wait %i\n", tctx->thread_num);
         posix_cond_wait(&tctx->ts.samples_cond, &ctx->ts.samples_mutex);
 
         windows_cs_leave(&ctx->ts.samples_cs);
         windows_event_wait(&tctx->ts.samples_event);
         windows_cs_enter(&ctx->ts.samples_cs);
-        afprintf(stderr,"wake %i\n", tctx->thread_num);
     }
     windows_event_reset(&tctx->ts.samples_event);
 
@@ -1060,7 +1057,6 @@ copy_samples(A52ThreadContext *tctx)
     ctx->ts.samples_thread_num %= ctx->n_threads;
 #endif
     posix_cond_signal(tctx->ts.next_samples_cond);
-    afprintf(stderr,"unlock %i\n", tctx->thread_num);
     posix_mutex_unlock(&ctx->ts.samples_mutex);
 
     windows_event_set(tctx->ts.next_samples_event);
