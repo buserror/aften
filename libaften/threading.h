@@ -38,6 +38,8 @@ typedef struct A52GlobalThreadSync
 {
     int current_thread_num;
     int threads_to_abort;
+    volatile int samples_thread_num;
+    MUTEX samples_mutex;
 } A52GlobalThreadSync;
 
 typedef struct A52ThreadSync
@@ -47,6 +49,9 @@ typedef struct A52ThreadSync
     MUTEX confirm_mutex;
     COND  enter_cond;
     COND  confirm_cond;
+
+    COND samples_cond;
+    COND* next_samples_cond;
 } A52ThreadSync;
 
 #define thread_create(threadid, threadfunc, threadparam) pthread_create(threadid, NULL, (void *(*) (void *))threadfunc, threadparam)
@@ -96,11 +101,14 @@ static __inline int get_ncpus()
 
 typedef HANDLE THREAD;
 typedef HANDLE EVENT;
+typedef CRITICAL_SECTION CS;
 
 typedef struct A52GlobalThreadSync
 {
     int current_thread_num;
     int threads_to_abort;
+    volatile int samples_thread_num;
+    CS samples_cs;
 } A52GlobalThreadSync;
 
 typedef struct A52ThreadSync
@@ -108,6 +116,8 @@ typedef struct A52ThreadSync
     THREAD thread;
     EVENT ready_event;
     EVENT enter_event;
+    EVENT samples_event;
+    EVENT* next_samples_event;
 } A52ThreadSync;
 
 static __inline void thread_create(HANDLE *thread, int (*threadfunc)(void*), LPVOID threadparam)
@@ -137,9 +147,34 @@ static __inline void windows_event_set(EVENT *event)
     SetEvent(*event);
 }
 
+static __inline void windows_event_reset(EVENT *event)
+{
+    ResetEvent(*event);
+}
+
 static __inline void windows_event_wait(EVENT *event)
 {
     WaitForSingleObject(*event, INFINITE);
+}
+
+static __inline void windows_cs_init(CS *cs)
+{
+    InitializeCriticalSection(cs);
+}
+
+static __inline void windows_cs_destroy(CS *cs)
+{
+    DeleteCriticalSection(cs);
+}
+
+static __inline void windows_cs_enter(CS *cs)
+{
+    EnterCriticalSection(cs);
+}
+
+static __inline void windows_cs_leave(CS *cs)
+{
+    LeaveCriticalSection(cs);
 }
 
 
@@ -182,7 +217,13 @@ static __inline int get_ncpus()
 #define windows_event_init(x)
 #define windows_event_destroy(x)
 #define windows_event_set(x)
+#define windows_event_reset(x)
 #define windows_event_wait(x)
+
+#define windows_cs_init(x)
+#define windows_cs_destroy(x)
+#define windows_cs_enter(x)
+#define windows_cs_leave(x)
 #endif /* HAVE_WINDOWS_THREADS */
 
 #endif /* THREADING_H */

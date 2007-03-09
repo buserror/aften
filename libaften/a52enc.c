@@ -438,6 +438,7 @@ aften_encode_init(AftenContext *s)
     for (j=0; j<ctx->n_threads; ++j) {
         A52ThreadContext *cur_tctx = &ctx->tctx[j];
         cur_tctx->ctx = ctx;
+        cur_tctx->thread_num = j;
 
         select_mdct_thread(cur_tctx);
 
@@ -451,12 +452,14 @@ aften_encode_init(AftenContext *s)
 
             posix_cond_init(&cur_tctx->ts.enter_cond);
             posix_cond_init(&cur_tctx->ts.confirm_cond);
+            posix_cond_init(&cur_tctx->ts.samples_cond);
 
             posix_mutex_init(&cur_tctx->ts.enter_mutex);
             posix_mutex_init(&cur_tctx->ts.confirm_mutex);
 
             windows_event_init(&cur_tctx->ts.ready_event);
             windows_event_init(&cur_tctx->ts.enter_event);
+            windows_event_init(&cur_tctx->ts.samples_event);
 
             posix_mutex_lock(&cur_tctx->ts.enter_mutex);
             thread_create(&cur_tctx->ts.thread, threaded_encode, cur_tctx);
@@ -464,6 +467,16 @@ aften_encode_init(AftenContext *s)
             posix_mutex_unlock(&cur_tctx->ts.enter_mutex);
         }
     }
+    for (j=0; j<ctx->n_threads; ++j) {
+#ifdef HAVE_POSIX_THREADS
+        ctx->tctx[j].ts.next_samples_cond = &ctx->tctx[(j + 1) % ctx->n_threads].ts.samples_cond;
+#endif
+#ifdef HAVE_WINDOWS_THREADS
+        ctx->tctx[j].ts.next_samples_event = &ctx->tctx[(j + 1) % ctx->n_threads].ts.samples_event;
+#endif
+    }
+    posix_mutex_init(&ctx->ts.samples_mutex);
+    windows_cs_init(&ctx->ts.samples_cs);
 
     if(s->params.bwcode < -2 || s->params.bwcode > 60) {
         fprintf(stderr, "invalid bandwidth code\n");
@@ -973,6 +986,22 @@ copy_samples(A52ThreadContext *tctx)
     FLOAT *temp;
     int ch, blk;
 #define SWAP_BUFFERS temp=in_audio;in_audio=out_audio;out_audio=temp;
+#define afprintf
+    afprintf(stderr,"want lock %i\n", tctx->thread_num);
+    posix_mutex_lock(&ctx->ts.samples_mutex);
+
+    windows_cs_enter(&ctx->ts.samples_cs);
+    afprintf(stderr,"lock %i\n", tctx->thread_num);
+    while (ctx->ts.samples_thread_num != tctx->thread_num) {
+        afprintf(stderr,"wait %i\n", tctx->thread_num);
+        posix_cond_wait(&tctx->ts.samples_cond, &ctx->ts.samples_mutex);
+
+        windows_cs_leave(&ctx->ts.samples_cs);
+        windows_event_wait(&ctx->ts.samples_event);
+        windows_cs_enter(&ctx->ts.samples_cs);
+        afprintf(stderr,"wake %i\n", tctx->thread_num);
+    }
+    windows_event_reset(&ctx->ts.samples_event);
 
     for(ch=0; ch<ctx->n_all_channels; ch++) {
         out_audio = buffer;
@@ -1026,6 +1055,16 @@ copy_samples(A52ThreadContext *tctx)
         memcpy(ctx->last_samples[ch],
                &in_audio[256*5], 256 * sizeof(FLOAT));
     }
+#ifndef NO_THREADS
+    ++ctx->ts.samples_thread_num;
+    ctx->ts.samples_thread_num %= ctx->n_threads;
+#endif
+    posix_cond_signal(tctx->ts.next_samples_cond);
+    afprintf(stderr,"unlock %i\n", tctx->thread_num);
+    posix_mutex_unlock(&ctx->ts.samples_mutex);
+
+    windows_event_set(&ctx->ts.samples_event);
+    windows_cs_leave(&ctx->ts.samples_cs);
 #undef SWAP_BUFFERS
 }
 
@@ -1236,6 +1275,13 @@ encode_frame(A52ThreadContext *tctx, uint8_t *frame_buffer)
     A52Context *ctx = tctx->ctx;
     A52Frame *frame = &tctx->frame;
 
+    if(frame_init(tctx)) {
+        fprintf(stderr, "Encoding has not properly initialized\n");
+        return -1;
+    }
+
+    copy_samples(tctx);
+
     calculate_dynrng(tctx);
 
     generate_coefs(tctx);
@@ -1356,18 +1402,9 @@ encode_frame_parallel(AftenContext *s, uint8_t *frame_buffer, const void *sample
             }
             if(!samples)
                 tctx->state = END;
-            else {
+            else
                 // convert sample format and de-interleave channels
                 ctx->fmt_convert_from_src(tctx->frame.input_audio, samples, ctx->n_all_channels, A52_SAMPLES_PER_FRAME);
-                if(!frame_init(tctx))
-                    copy_samples(tctx);
-                else {
-                    fprintf(stderr, "Encoding has not properly initialized\n");
-                    tctx->state=ABORT;
-                    ctx->ts.threads_to_abort = ctx->n_threads - 1;
-                    framesize = -1;
-                }
-            }
         }
         posix_mutex_lock(&tctx->ts.confirm_mutex);
         posix_cond_signal(&tctx->ts.enter_cond);
@@ -1409,13 +1446,6 @@ aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, const void *samples)
 
     ctx->fmt_convert_from_src(frame->input_audio, samples, ctx->n_all_channels, A52_SAMPLES_PER_FRAME);
 
-    if(frame_init(tctx)) {
-        fprintf(stderr, "Encoding has not properly initialized\n");
-        return -1;
-    }
-
-    copy_samples(tctx);
-
     encode_frame(tctx, frame_buffer);
 
     s->status.quality   = tctx->status.quality;
@@ -1432,6 +1462,10 @@ aften_encode_close(AftenContext *s)
         A52Context *ctx = s->private_context;
         /* mdct_close deinits both mdcts */
         ctx->mdct_ctx_512.mdct_close(ctx);
+
+        posix_mutex_destroy(&ctx->ts.samples_mutex);
+
+        windows_cs_destroy(&ctx->ts.samples_cs);
         if (ctx->tctx) {
             if (ctx->n_threads == 1)
                 ctx->tctx[0].mdct_tctx_512.mdct_thread_close(&ctx->tctx[0]);
@@ -1443,12 +1477,14 @@ aften_encode_close(AftenContext *s)
                     cur_tctx.mdct_tctx_512.mdct_thread_close(&cur_tctx);
                     posix_cond_destroy(&cur_tctx.ts.enter_cond);
                     posix_cond_destroy(&cur_tctx.ts.confirm_cond);
+                    posix_cond_destroy(&cur_tctx.ts.samples_cond);
 
                     posix_mutex_destroy(&cur_tctx.ts.enter_mutex);
                     posix_mutex_destroy(&cur_tctx.ts.confirm_mutex);
 
                     windows_event_destroy(&cur_tctx.ts.ready_event);
                     windows_event_destroy(&cur_tctx.ts.enter_event);
+                    windows_event_destroy(&cur_tctx.ts.samples_event);
                 }
             }
             free(ctx->tctx);
