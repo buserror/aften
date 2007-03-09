@@ -997,11 +997,11 @@ copy_samples(A52ThreadContext *tctx)
         posix_cond_wait(&tctx->ts.samples_cond, &ctx->ts.samples_mutex);
 
         windows_cs_leave(&ctx->ts.samples_cs);
-        windows_event_wait(&ctx->ts.samples_event);
+        windows_event_wait(&tctx->ts.samples_event);
         windows_cs_enter(&ctx->ts.samples_cs);
         afprintf(stderr,"wake %i\n", tctx->thread_num);
     }
-    windows_event_reset(&ctx->ts.samples_event);
+    windows_event_reset(&tctx->ts.samples_event);
 
     for(ch=0; ch<ctx->n_all_channels; ch++) {
         out_audio = buffer;
@@ -1063,7 +1063,7 @@ copy_samples(A52ThreadContext *tctx)
     afprintf(stderr,"unlock %i\n", tctx->thread_num);
     posix_mutex_unlock(&ctx->ts.samples_mutex);
 
-    windows_event_set(&ctx->ts.samples_event);
+    windows_event_set(tctx->ts.next_samples_event);
     windows_cs_leave(&ctx->ts.samples_cs);
 #undef SWAP_BUFFERS
 }
