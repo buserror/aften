@@ -69,7 +69,8 @@ calculate_rms(FLOAT *samples, int ch, int n)
 static void
 print_intro(FILE *stream)
 {
-    fprintf(stream, "\nWavRMS: utility program to calculate AC-3 dialnorm.\n(c) 2006-2007 Justin Ruggles, et al.\n\n");
+    fprintf(stream, "\nWavRMS: utility program to calculate AC-3 dialnorm.\n"
+                    "(c) 2006-2007 Justin Ruggles, et al.\n\n");
 }
 
 static void
@@ -168,7 +169,8 @@ main(int argc, char **argv)
     avg_rms /= avg_cnt;
 
     time_ms /= 1000;
-    fprintf(stdout, "Time Range: %"PRIu64" to %"PRIu64" sec\n", MIN(start_sec, time_ms), time_ms);
+    fprintf(stdout, "Time Range: %"PRIu64" to %"PRIu64" sec\n",
+            MIN(start_sec, time_ms), time_ms);
     fprintf(stdout, "Dialnorm: -%d dB\n\n", (int)MIN(avg_rms, 31));
 
     free(buf);

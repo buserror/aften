@@ -952,7 +952,8 @@ output_frame_end(A52ThreadContext *tctx)
     bitcount = bitwriter_bitcount(&tctx->bw);
     n = (fs << 1) - 2 - (bitcount >> 3);
     if(n < 0) {
-        fprintf(stderr, "data size exceeds frame size (frame=%d data=%d)\n", (fs << 1) - 2, bitcount >> 3);
+        fprintf(stderr, "data size exceeds frame size (frame=%d data=%d)\n",
+                (fs << 1) - 2, bitcount >> 3);
         return -1;
     }
     if(n > 0) memset(&tctx->bw.buffer[bitcount>>3], 0, n);
@@ -1400,7 +1401,9 @@ encode_frame_parallel(AftenContext *s, uint8_t *frame_buffer, const void *sample
                 tctx->state = END;
             else
                 // convert sample format and de-interleave channels
-                ctx->fmt_convert_from_src(tctx->frame.input_audio, samples, ctx->n_all_channels, A52_SAMPLES_PER_FRAME);
+                ctx->fmt_convert_from_src(tctx->frame.input_audio, samples,
+                                          ctx->n_all_channels,
+                                          A52_SAMPLES_PER_FRAME);
         }
         posix_mutex_lock(&tctx->ts.confirm_mutex);
         posix_cond_signal(&tctx->ts.enter_cond);
@@ -1440,7 +1443,8 @@ aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, const void *samples)
     tctx = ctx->tctx;
     frame = &tctx->frame;
 
-    ctx->fmt_convert_from_src(frame->input_audio, samples, ctx->n_all_channels, A52_SAMPLES_PER_FRAME);
+    ctx->fmt_convert_from_src(frame->input_audio, samples, ctx->n_all_channels,
+                              A52_SAMPLES_PER_FRAME);
 
     encode_frame(tctx, frame_buffer);
 

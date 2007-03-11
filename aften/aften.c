@@ -50,7 +50,8 @@ print_intro(FILE *out)
     const char *vers = aften_get_version();
     fprintf(out, "\nAften: A/52 audio encoder\n"
                  "Version %s\n"
-                 "(c) 2006-2007 Justin Ruggles, Prakash Punnoor, et al.\n\n", vers);
+                 "(c) 2006-2007 Justin Ruggles, Prakash Punnoor, et al.\n\n",
+                 vers);
 }
 
 int
@@ -204,7 +205,8 @@ main(int argc, char **argv)
 
     // print ac3 info to console
     if(s.params.verbose > 0) {
-        fprintf(stderr, "output format: %d Hz %s", s.samplerate, acmod_str[s.acmod]);
+        fprintf(stderr, "output format: %d Hz %s", s.samplerate,
+                acmod_str[s.acmod]);
         if(s.lfe) {
             fprintf(stderr, " + LFE");
         }

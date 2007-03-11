@@ -56,7 +56,8 @@ typedef struct A52ThreadSync
     COND* next_samples_cond;
 } A52ThreadSync;
 
-#define thread_create(threadid, threadfunc, threadparam) pthread_create(threadid, NULL, (void *(*) (void *))threadfunc, threadparam)
+#define thread_create(threadid, threadfunc, threadparam) \
+    pthread_create(threadid, NULL, (void *(*) (void *))threadfunc, threadparam)
 #define thread_join(x)         pthread_join(x, NULL)
 
 #define posix_mutex_init(x)          pthread_mutex_init(x, NULL)
@@ -129,7 +130,8 @@ static inline void
 thread_create(HANDLE *thread, int (*threadfunc)(void*), LPVOID threadparam)
 {
     DWORD thread_id;
-    *thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)threadfunc, threadparam, 0, &thread_id);
+    *thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)threadfunc,
+                           threadparam, 0, &thread_id);
 }
 
 static inline void
