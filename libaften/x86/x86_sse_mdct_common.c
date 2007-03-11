@@ -89,10 +89,10 @@ mdct_butterfly_8(FLOAT *x) {
 /* 16 point butterfly (in place, 4 register) */
 static inline void
 mdct_butterfly_16(FLOAT *x) {
-    static _MM_ALIGN16 const float PFV0[4] = { cPI2_8,  cPI2_8,     1.f,    -1.f};
-    static _MM_ALIGN16 const float PFV1[4] = { cPI2_8, -cPI2_8,     0.f,     0.f};
-    static _MM_ALIGN16 const float PFV2[4] = { cPI2_8,  cPI2_8,     1.f,     1.f};
-    static _MM_ALIGN16 const float PFV3[4] = {-cPI2_8,  cPI2_8,     0.f,     0.f};
+    static _MM_ALIGN16 const float PFV0[4] = { AFT_PI2_8,  AFT_PI2_8, 1.f, -1.f};
+    static _MM_ALIGN16 const float PFV1[4] = { AFT_PI2_8, -AFT_PI2_8, 0.f,  0.f};
+    static _MM_ALIGN16 const float PFV2[4] = { AFT_PI2_8,  AFT_PI2_8, 1.f,  1.f};
+    static _MM_ALIGN16 const float PFV3[4] = {-AFT_PI2_8,  AFT_PI2_8, 0.f,  0.f};
     __m128  XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7;
 
     XMM3     = _mm_load_ps(x+12);
@@ -133,14 +133,14 @@ mdct_butterfly_16(FLOAT *x) {
 /* 32 point butterfly (in place, 4 register) */
 static inline void
 mdct_butterfly_32(FLOAT *x) {
-    static _MM_ALIGN16 const float PFV0[4] = {-cPI3_8, -cPI1_8, -cPI2_8, -cPI2_8};
-    static _MM_ALIGN16 const float PFV1[4] = {-cPI1_8,  cPI3_8, -cPI2_8,  cPI2_8};
-    static _MM_ALIGN16 const float PFV2[4] = {-cPI1_8, -cPI3_8,    -1.f,     1.f};
-    static _MM_ALIGN16 const float PFV3[4] = {-cPI3_8,  cPI1_8,     0.f,     0.f};
-    static _MM_ALIGN16 const float PFV4[4] = { cPI3_8,  cPI3_8,  cPI2_8,  cPI2_8};
-    static _MM_ALIGN16 const float PFV5[4] = {-cPI1_8,  cPI1_8, -cPI2_8,  cPI2_8};
-    static _MM_ALIGN16 const float PFV6[4] = { cPI1_8,  cPI3_8,     1.f,     1.f};
-    static _MM_ALIGN16 const float PFV7[4] = {-cPI3_8,  cPI1_8,     0.f,     0.f};
+    static _MM_ALIGN16 const float PFV0[4] = {-AFT_PI3_8, -AFT_PI1_8, -AFT_PI2_8, -AFT_PI2_8};
+    static _MM_ALIGN16 const float PFV1[4] = {-AFT_PI1_8,  AFT_PI3_8, -AFT_PI2_8,  AFT_PI2_8};
+    static _MM_ALIGN16 const float PFV2[4] = {-AFT_PI1_8, -AFT_PI3_8,    -1.f,     1.f};
+    static _MM_ALIGN16 const float PFV3[4] = {-AFT_PI3_8,  AFT_PI1_8,     0.f,     0.f};
+    static _MM_ALIGN16 const float PFV4[4] = { AFT_PI3_8,  AFT_PI3_8,  AFT_PI2_8,  AFT_PI2_8};
+    static _MM_ALIGN16 const float PFV5[4] = {-AFT_PI1_8,  AFT_PI1_8, -AFT_PI2_8,  AFT_PI2_8};
+    static _MM_ALIGN16 const float PFV6[4] = { AFT_PI1_8,  AFT_PI3_8,     1.f,     1.f};
+    static _MM_ALIGN16 const float PFV7[4] = {-AFT_PI3_8,  AFT_PI1_8,     0.f,     0.f};
     __m128  XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7;
 
     XMM0     = _mm_load_ps(x+16);

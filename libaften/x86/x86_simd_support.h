@@ -52,10 +52,6 @@ _mm_malloc(size_t size, size_t alignment)
 #define _mm_lddqu_ps(x) _mm_loadu_ps(x)
 #endif /* USE_SSE3 */
 
-#define cPI3_8 .38268343236508977175F
-#define cPI2_8 .70710678118654752441F
-#define cPI1_8 .92387953251128675613F
-
 #ifndef _MM_ALIGN16
 #define _MM_ALIGN16  __attribute__((aligned(16)))
 #endif
