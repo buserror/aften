@@ -23,7 +23,7 @@
 
 /**
  * @file aften.h
- * libaften public header
+ * libaften public header for type definitions
  */
 
 #ifndef AFTEN_TYPES_H
@@ -303,6 +303,9 @@ typedef struct {
     int bwcode;
 } AftenStatus;
 
+/**
+ * libaften public encoding context
+ */
 typedef struct {
 
     AftenEncParams params;

@@ -23,7 +23,7 @@
 
 /**
  * @file aften.h
- * libaften public header
+ * libaften public header for function declarations
  */
 
 #ifndef AFTEN_H
@@ -49,29 +49,66 @@ extern "C" {
  #endif
 #endif
 
-/* main encoding functions */
+/**
+ * @defgroup encoding Main encoding functions
+ * @{
+ */
 
+/**
+ * Gets the libaften version string.
+ */
 AFTEN_API const char *aften_get_version(void);
 
+/**
+ * Sets the parameters for an encoding context to their default values.
+ * @param s The encoding context
+ */
 AFTEN_API void aften_set_defaults(AftenContext *s);
 
+/**
+ * Initializes an encoding context.
+ * This must be called before any calls to @c aften_encode_frame
+ * @param s The encoding context
+ * @return Returns 0 on success, non-zero on failure.
+ */
 AFTEN_API int aften_encode_init(AftenContext *s);
 
+/**
+ * Encodes a single AC-3 frame.
+ * @param s    The encoding context
+ * @param[out] frame_buffer Pointer to output frame data
+ * @param[in]  samples      Pointer to input audio samples
+ * @return Returns the number of bytes written to @p frame_buffer, or returns
+ * a negative value on error.
+ */
 AFTEN_API int aften_encode_frame(AftenContext *s, unsigned char *frame_buffer,
                                  const void *samples);
 
+/**
+ * Sets the parameters in the context @p s to their default values.
+ * @param s The encoding context
+ */
 AFTEN_API void aften_encode_close(AftenContext *s);
 
-/* utility functions */
+/** @} end encoding functions */
+
+/**
+ * @defgroup utility Utility functions
+ * @{
+ */
 
 /**
  * Determines the proper A/52 acmod and lfe parameters based on the
  * number of channels and the WAVE_FORMAT_EXTENSIBLE channel mask.  If the
  * chmask value has the high bit set to 1 (e.g. 0xFFFFFFFF), then the default
  * plain WAVE channel selection is assumed.
- * On error, the acmod and lfe output params are set to -1 and the function
- * returns -1.  On success, the acmod and lfe params are set to appropriate
- * values and the function returns 0.
+ * @param[in]  ch      number of channels
+ * @param[in]  chmask  channel mask
+ * @param[out] acmod   pointer to audio coding mode
+ * @param[out] lfe     pointer to LFE flag
+ * @return On error, the @p acmod and @p lfe output params are set to -1 and
+ * the function returns -1;  on success, the @p acmod and @p lfe params are set
+ * to appropriate values and the function returns 0.
  */
 AFTEN_API int aften_wav_channels_to_acmod(int ch, unsigned int chmask,
                                           int *acmod, int *lfe);
@@ -79,7 +116,12 @@ AFTEN_API int aften_wav_channels_to_acmod(int ch, unsigned int chmask,
 /**
  * Takes a channel-interleaved array of audio samples, where the channel order
  * is the default WAV order. The samples are rearranged to the proper A/52
- * channel order based on the acmod and lfe parameters.
+ * channel order based on the @p acmod and @p lfe parameters.
+ * @param     samples  array of interleaved audio samples
+ * @param[in] n        number of samples in the array
+ * @param[in] ch       number of channels
+ * @param[in] fmt      sample format
+ * @param[in] acmod    audio coding mode
  */
 AFTEN_API void aften_remap_wav_to_a52(void *samples, int n, int ch,
                                       A52SampleFormat fmt, int acmod);
@@ -88,6 +130,8 @@ AFTEN_API void aften_remap_wav_to_a52(void *samples, int n, int ch,
  * Tells whether libaften was configured to use floats or doubles
  */
 AFTEN_API FloatType aften_get_float_type(void);
+
+/** @} end utility functions */
 
 #undef AFTEN_API
 
