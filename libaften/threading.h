@@ -19,6 +19,8 @@
 #ifndef THREADING_H
 #define THREADING_H
 
+#include "common.h"
+
 typedef enum
 {
     START,
@@ -72,14 +74,16 @@ typedef struct A52ThreadSync
 #ifdef HAVE_GET_NPROCS
 #include <sys/sysinfo.h>
 
-static __inline int get_ncpus()
+static inline int
+get_ncpus()
 {
     return get_nprocs();
 }
 #elif defined(HAVE_SYSCTL)
 #include <sys/sysctl.h>
 
-static __inline int get_ncpus()
+static inline int
+get_ncpus()
 {
     int mib[2] = { CTL_HW, HW_NCPU };
     int numCPUs;
@@ -89,7 +93,8 @@ static __inline int get_ncpus()
 }
 #else
 
-static __inline int get_ncpus()
+static inline int
+get_ncpus()
 {
     return NUM_THREADS;
 }
@@ -120,65 +125,77 @@ typedef struct A52ThreadSync
     EVENT* next_samples_event;
 } A52ThreadSync;
 
-static __inline void thread_create(HANDLE *thread, int (*threadfunc)(void*), LPVOID threadparam)
+static inline void
+thread_create(HANDLE *thread, int (*threadfunc)(void*), LPVOID threadparam)
 {
     DWORD thread_id;
     *thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)threadfunc, threadparam, 0, &thread_id);
 }
 
-static __inline void thread_join(HANDLE thread)
+static inline void
+thread_join(HANDLE thread)
 {
     WaitForSingleObject(thread, INFINITE);
     CloseHandle(thread);
 }
 
-static __inline void windows_event_init(EVENT *event)
+static inline void
+windows_event_init(EVENT *event)
 {
     *event = CreateEvent(NULL, FALSE, FALSE, NULL);
 }
 
-static __inline void windows_event_destroy(EVENT *event)
+static inline void
+windows_event_destroy(EVENT *event)
 {
     CloseHandle(*event);
 }
 
-static __inline void windows_event_set(EVENT *event)
+static inline void
+windows_event_set(EVENT *event)
 {
     SetEvent(*event);
 }
 
-static __inline void windows_event_reset(EVENT *event)
+static inline void
+windows_event_reset(EVENT *event)
 {
     ResetEvent(*event);
 }
 
-static __inline void windows_event_wait(EVENT *event)
+static inline void
+windows_event_wait(EVENT *event)
 {
     WaitForSingleObject(*event, INFINITE);
 }
 
-static __inline void windows_cs_init(CS *cs)
+static inline void
+windows_cs_init(CS *cs)
 {
     InitializeCriticalSection(cs);
 }
 
-static __inline void windows_cs_destroy(CS *cs)
+static inline void
+windows_cs_destroy(CS *cs)
 {
     DeleteCriticalSection(cs);
 }
 
-static __inline void windows_cs_enter(CS *cs)
+static inline void
+windows_cs_enter(CS *cs)
 {
     EnterCriticalSection(cs);
 }
 
-static __inline void windows_cs_leave(CS *cs)
+static inline void
+windows_cs_leave(CS *cs)
 {
     LeaveCriticalSection(cs);
 }
 
 
-static __inline int get_ncpus()
+static inline int
+get_ncpus()
 {
     SYSTEM_INFO sys_info;
 
@@ -189,7 +206,8 @@ static __inline int get_ncpus()
 
 #define NO_THREADS
 
-static __inline int get_ncpus()
+static inline int
+get_ncpus()
 {
     return 1;
 }
