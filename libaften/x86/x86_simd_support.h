@@ -19,25 +19,9 @@
 #ifndef X86_SIMD_SUPPORT_H
 #define X86_SIMD_SUPPORT_H
 
-#include "common.h"
+#include "mem.h"
 
 #include <xmmintrin.h>
-
-#ifdef EMU_MM_MALLOC
-/* FIXME: check for posix_memalign */
-static inline void*
-_mm_malloc(size_t size, size_t alignment)
-{
-    void *mem;
-
-    if (posix_memalign(&mem, alignment, size))
-        return NULL;
-
-    return mem;
-}
-
-#define _mm_free(X) free(X)
-#endif /* EMU_MM_MALLOC */
 
 #ifdef USE_SSE3
 #include <pmmintrin.h>
@@ -55,7 +39,6 @@ _mm_malloc(size_t size, size_t alignment)
 #ifndef _MM_ALIGN16
 #define _MM_ALIGN16  __attribute__((aligned(16)))
 #endif
-#define aligned_malloc(X) _mm_malloc(X,16)
 
 #define PM128(x) (*(__m128*)(x))
 

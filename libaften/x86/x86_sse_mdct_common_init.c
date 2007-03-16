@@ -379,15 +379,15 @@ void
 sse_mdct_ctx_close(MDCTContext *mdct)
 {
     if(mdct) {
-        if(mdct->trig)   _mm_free(mdct->trig);
-        if(mdct->bitrev) _mm_free(mdct->bitrev);
-        if(mdct->trig_bitreverse) _mm_free(mdct->trig_bitreverse);
-        if(mdct->trig_forward) _mm_free(mdct->trig_forward);
-        if(mdct->trig_butterfly_first) _mm_free(mdct->trig_butterfly_first);
-        if(mdct->trig_butterfly_generic8) _mm_free(mdct->trig_butterfly_generic8);
-        if(mdct->trig_butterfly_generic16) _mm_free(mdct->trig_butterfly_generic16);
-        if(mdct->trig_butterfly_generic32) _mm_free(mdct->trig_butterfly_generic32);
-        if(mdct->trig_butterfly_generic64) _mm_free(mdct->trig_butterfly_generic64);
+        if(mdct->trig)   aligned_free(mdct->trig);
+        if(mdct->bitrev) aligned_free(mdct->bitrev);
+        if(mdct->trig_bitreverse) aligned_free(mdct->trig_bitreverse);
+        if(mdct->trig_forward) aligned_free(mdct->trig_forward);
+        if(mdct->trig_butterfly_first) aligned_free(mdct->trig_butterfly_first);
+        if(mdct->trig_butterfly_generic8) aligned_free(mdct->trig_butterfly_generic8);
+        if(mdct->trig_butterfly_generic16) aligned_free(mdct->trig_butterfly_generic16);
+        if(mdct->trig_butterfly_generic32) aligned_free(mdct->trig_butterfly_generic32);
+        if(mdct->trig_butterfly_generic64) aligned_free(mdct->trig_butterfly_generic64);
         memset(mdct, 0, sizeof(MDCTContext));
     }
 }
@@ -404,7 +404,7 @@ void
 sse_mdct_tctx_close(MDCTThreadContext *tmdct)
 {
     if(tmdct) {
-        if(tmdct->buffer) _mm_free(tmdct->buffer);
-        if(tmdct->buffer1) _mm_free(tmdct->buffer1);
+        if(tmdct->buffer) aligned_free(tmdct->buffer);
+        if(tmdct->buffer1) aligned_free(tmdct->buffer1);
     }
 }

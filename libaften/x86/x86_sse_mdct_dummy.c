@@ -32,7 +32,7 @@ sse_mdct_thread_close(A52ThreadContext *tctx)
     sse_mdct_tctx_close(&tctx->mdct_tctx_512);
     sse_mdct_tctx_close(&tctx->mdct_tctx_256);
 
-    _mm_free(tctx->frame.blocks[0].input_samples[0]);
+    aligned_free(tctx->frame.blocks[0].input_samples[0]);
 }
 
 void
