@@ -637,7 +637,7 @@ frame_init(A52ThreadContext *tctx)
     frame->sgaincod = 1;
     frame->dbkneecod = 2;
     frame->floorcod = 7;
-    frame->fgaincod = 3;
+    frame->fgaincod = 4;
 
     return 0;
 }
