@@ -988,19 +988,22 @@ copy_samples(A52ThreadContext *tctx)
     int ch, blk;
 #define SWAP_BUFFERS temp=in_audio;in_audio=out_audio;out_audio=temp;
 
-    posix_mutex_lock(&ctx->ts.samples_mutex);
+#ifndef NO_THREADS
+    if (ctx->n_threads > 1) {
+        posix_mutex_lock(&ctx->ts.samples_mutex);
 
-    windows_cs_enter(&ctx->ts.samples_cs);
-
-    while (ctx->ts.samples_thread_num != tctx->thread_num) {
-        posix_cond_wait(&tctx->ts.samples_cond, &ctx->ts.samples_mutex);
-
-        windows_cs_leave(&ctx->ts.samples_cs);
-        windows_event_wait(&tctx->ts.samples_event);
         windows_cs_enter(&ctx->ts.samples_cs);
-    }
-    windows_event_reset(&tctx->ts.samples_event);
 
+        while (ctx->ts.samples_thread_num != tctx->thread_num) {
+            posix_cond_wait(&tctx->ts.samples_cond, &ctx->ts.samples_mutex);
+
+            windows_cs_leave(&ctx->ts.samples_cs);
+            windows_event_wait(&tctx->ts.samples_event);
+            windows_cs_enter(&ctx->ts.samples_cs);
+        }
+        windows_event_reset(&tctx->ts.samples_event);
+    }
+#endif
     for(ch=0; ch<ctx->n_all_channels; ch++) {
         out_audio = buffer;
         in_audio = frame->input_audio[ch];
@@ -1054,14 +1057,17 @@ copy_samples(A52ThreadContext *tctx)
                &in_audio[256*5], 256 * sizeof(FLOAT));
     }
 #ifndef NO_THREADS
-    ++ctx->ts.samples_thread_num;
-    ctx->ts.samples_thread_num %= ctx->n_threads;
-#endif
-    posix_cond_signal(tctx->ts.next_samples_cond);
-    posix_mutex_unlock(&ctx->ts.samples_mutex);
+    if (ctx->n_threads > 1) {
+        ++ctx->ts.samples_thread_num;
+        ctx->ts.samples_thread_num %= ctx->n_threads;
 
-    windows_event_set(tctx->ts.next_samples_event);
-    windows_cs_leave(&ctx->ts.samples_cs);
+        posix_cond_signal(tctx->ts.next_samples_cond);
+        posix_mutex_unlock(&ctx->ts.samples_mutex);
+
+        windows_event_set(tctx->ts.next_samples_event);
+        windows_cs_leave(&ctx->ts.samples_cs);
+    }
+#endif
 #undef SWAP_BUFFERS
 }
 
