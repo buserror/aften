@@ -262,6 +262,12 @@ select_mdct(A52Context *ctx)
         return;
     }
 #endif
+#ifdef HAVE_ALTIVEC
+    if (cpu_caps_have_altivec()) {
+        mdct_init_altivec(ctx);
+        return;
+    }
+#endif
 #endif /* CONFIG_DOUBLE */
     mdct_init(ctx);
 }
@@ -279,6 +285,12 @@ select_mdct_thread(A52ThreadContext *tctx)
 #ifdef HAVE_SSE
     if (cpu_caps_have_sse()) {
         sse_mdct_thread_init(tctx);
+        return;
+    }
+#endif
+#ifdef HAVE_ALTIVEC
+    if (cpu_caps_have_altivec()) {
+        mdct_thread_init_altivec(tctx);
         return;
     }
 #endif

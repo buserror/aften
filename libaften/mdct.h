@@ -94,6 +94,11 @@ extern void sse_mdct_thread_init(struct A52ThreadContext *tctx);
 extern void sse3_mdct_init(struct A52Context *ctx);
 extern void sse3_mdct_thread_init(struct A52ThreadContext *tctx);
 #endif
+
+#ifdef HAVE_ALTIVEC
+extern void mdct_init_altivec(struct A52Context *ctx);
+extern void mdct_thread_init_altivec(struct A52ThreadContext *tctx);
+#endif
 #endif /* CONFIG_DOUBLE */
 
 #endif /* MDCT_H */

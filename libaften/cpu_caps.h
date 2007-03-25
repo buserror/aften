@@ -22,6 +22,8 @@
 
 #if defined(HAVE_MMX)
 #include "x86_cpu_caps.h"
+#elif defined(HAVE_ALTIVEC)
+#include "ppc_cpu_caps.h"
 #else
 static inline void cpu_caps_detect(void){}
 #endif
