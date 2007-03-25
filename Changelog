@@ -31,6 +31,8 @@ version SVN : current
 - removed old build system
 - frame-independent variable bandwidth
 - minimum and maximum bandwidth settings for variable bandwidth mode
+- altivec support framework (by David Conrad)
+- altivec MDCT (by David Conrad)
 
 version 0.06 : 31 January 2007
 - added SSE/SSE3 mdct code (based on vorbis lancer by blacksword8192@hotmail.com)
