@@ -80,7 +80,7 @@ get_ncpus()
 {
     return get_nprocs();
 }
-#elif defined(HAVE_SYSCTL)
+#elif defined(SYS_DARWIN)
 #include <sys/sysctl.h>
 
 static inline int
