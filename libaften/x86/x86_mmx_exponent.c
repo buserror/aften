@@ -154,7 +154,7 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
             v1 = _mm_and_si64(v1, vmask2.v);
             *(__m64*)&exp1[i] = v1;
         }
-        for(; i<=ngrps; ++i, k+=4) {
+        if(ngrps & 1) {
             exp_min1 = MIN(exp[k  ], exp[k+1]);
             exp_min2 = MIN(exp[k+2], exp[k+3]);
             exp1[i]  = MIN(exp_min1, exp_min2);
@@ -180,7 +180,7 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
             v1 = _mm_or_si64(v1, v2);
             *(__m64*)&exp[k] = v1;
         }
-        for(; i<ngrps; ++i, k+=4) {
+        if(ngrps & 1) {
             v = exp1[i];
             exp[k] = v;
             exp[k+1] = v;
