@@ -42,6 +42,11 @@
 
 #define PM128(x) (*(__m128*)(x))
 
+union __m64ui {
+    unsigned int ui[4];
+    __m64 v;
+};
+
 union __m128ui {
     unsigned int ui[4];
     __m128 v;
@@ -50,6 +55,11 @@ union __m128ui {
 union __m128f {
     float f[4];
     __m128 v;
+};
+
+union __m128iui {
+    unsigned int ui[4];
+    __m128i v;
 };
 
 #endif /* X86_SIMD_SUPPORT_H */

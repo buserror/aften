@@ -94,6 +94,84 @@ exponent_min(uint8_t *exp, uint8_t *exp1, int n)
 
 
 /**
+ * Update the exponents so that they are the ones the decoder will decode.
+ * Constrain DC exponent, group exponents based on strategy, constrain delta
+ * between adjacent exponents to +2/-2.
+ */
+static void
+encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
+{
+    int grpsize, ngrps, i, k, exp_min1, exp_min2;
+    uint8_t exp1[256];
+    uint8_t v;
+
+    ngrps = nexpgrptab[exp_strategy-1][ncoefs] * 3;
+    grpsize = exp_strategy + (exp_strategy == EXP_D45);
+
+    // for D15 strategy, there is no need to group/ungroup exponents
+    if (grpsize == 1) {
+        // constraint for DC exponent
+        exp[0] = MIN(exp[0], 15);
+
+        // Decrease the delta between each groups to within 2
+        // so that they can be differentially encoded
+        for(i=1; i<=ngrps; i++)
+            exp[i] = MIN(exp[i], exp[i-1]+2);
+        for(i=ngrps-1; i>=0; i--)
+            exp[i] = MIN(exp[i], exp[i+1]+2);
+
+        return;
+    }
+
+    // for each group, compute the minimum exponent
+    exp1[0] = exp[0]; // DC exponent is handled separately
+    if (grpsize == 2) {
+        for(i=0,k=1; i<ngrps; i++) {
+            exp1[i] = MIN(exp[k], exp[k+1]);
+            k += 2;
+        }
+    } else {
+        for(i=0,k=1; i<ngrps; i++) {
+            exp_min1 = MIN(exp[k  ], exp[k+1]);
+            exp_min2 = MIN(exp[k+2], exp[k+3]);
+            exp1[i]  = MIN(exp_min1, exp_min2);
+            k += 4;
+        }
+    }
+
+    // constraint for DC exponent
+    exp[0] = MIN(exp[0], 15);
+    // Decrease the delta between each groups to within 2
+    // so that they can be differentially encoded
+    exp1[0] = MIN(exp1[0], exp[0]+2);
+    for(i=1; i<ngrps; i++)
+        exp1[i] = MIN(exp1[i], exp1[i-1]+2);
+    for(i=ngrps-2; i>=0; i--)
+        exp1[i] = MIN(exp1[i], exp1[i+1]+2);
+    // now we have the exponent values the decoder will see
+    exp[0] = MIN(exp[0], exp1[0]+2); // DC exponent is handled separately
+
+    if (grpsize == 2) {
+        for(i=0,k=1; i<ngrps; i++) {
+            v = exp1[i];
+            exp[k] = v;
+            exp[k+1] = v;
+            k += 2;
+        }
+    } else {
+        for(i=0,k=1; i<ngrps; i++) {
+            v = exp1[i];
+            exp[k] = v;
+            exp[k+1] = v;
+            exp[k+2] = v;
+            exp[k+3] = v;
+            k += 4;
+        }
+    }
+}
+
+
+/**
  * Determine a good exponent strategy for all blocks of a single channel.
  * A pre-defined set of strategies is chosen based on the SSE between each set
  * and the most accurate strategy set (all blocks EXP_D15).

@@ -27,8 +27,12 @@
  */
 
 #include "exponent_common.c"
+#include "x86_simd_support.h"
 
 #include <emmintrin.h>
+
+static const union __m128iui vmask = {{0x00ff00ff, 0x00ff00ff, 0x00ff00ff, 0x00ff00ff}};
+static const union __m128iui vmask2 = {{0x000000ff, 0x000000ff, 0x000000ff, 0x000000ff}};
 
 /* set exp[i] to min(exp[i], exp1[i]) */
 static void
@@ -44,6 +48,129 @@ exponent_min(uint8_t *exp, uint8_t *exp1, int n)
     }
     for(; i<n; ++i)
         exp[i] = MIN(exp[i], exp1[i]);
+}
+
+
+/**
+ * Update the exponents so that they are the ones the decoder will decode.
+ * Constrain DC exponent, group exponents based on strategy, constrain delta
+ * between adjacent exponents to +2/-2.
+ */
+static void
+encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
+{
+    int grpsize, ngrps, i, k, exp_min1, exp_min2;
+    uint8_t v;
+
+    ngrps = nexpgrptab[exp_strategy-1][ncoefs] * 3;
+    grpsize = exp_strategy + (exp_strategy == EXP_D45);
+
+    // for D15 strategy, there is no need to group/ungroup exponents
+    switch (grpsize) {
+    case 1: {
+        // constraint for DC exponent
+        exp[0] = MIN(exp[0], 15);
+
+        // Decrease the delta between each groups to within 2
+        // so that they can be differentially encoded
+        for(i=1; i<=ngrps; i++)
+            exp[i] = MIN(exp[i], exp[i-1]+2);
+        for(i=ngrps-1; i>=0; i--)
+            exp[i] = MIN(exp[i], exp[i+1]+2);
+
+        return;
+    }
+    // for each group, compute the minimum exponent
+    case 2: {
+        ALIGN16(uint16_t) exp1[256];
+
+        i=0;k=1;
+        for(; i<=(ngrps & ~7); i+=8, k+=16) {
+            __m128i v1 = _mm_loadu_si128((__m128i*)&exp[k]);
+            __m128i v2 = _mm_srli_si128(v1, 1);
+            v1 = _mm_and_si128(v1, vmask.v);
+            v1 = _mm_min_epu8(v1, v2);
+            _mm_store_si128((__m128i*)&exp1[i], v1);
+        }
+        for(; i<=ngrps; ++i) {
+            exp1[i] = MIN(exp[k], exp[k+1]);
+            k += 2;
+        }
+        // constraint for DC exponent
+        exp[0] = MIN(exp[0], 15);
+        // Decrease the delta between each groups to within 2
+        // so that they can be differentially encoded
+        exp1[0] = MIN(exp1[0], (uint16_t)exp[0]+2);
+        for(i=1; i<ngrps; i++)
+            exp1[i] = MIN(exp1[i], exp1[i-1]+2);
+        for(i=ngrps-2; i>=0; i--)
+            exp1[i] = MIN(exp1[i], exp1[i+1]+2);
+        // now we have the exponent values the decoder will see
+        exp[0] = MIN(exp[0], exp1[0]+2); // DC exponent is handled separately
+
+        i=0;k=1;
+        for(; i<=(ngrps & ~7); i+=8, k+=16) {
+            __m128i v1 = _mm_load_si128((__m128i*)&exp1[i]);
+            __m128i v2 = _mm_slli_si128(v1, 1);
+            v1 = _mm_or_si128(v1, v2);
+            _mm_storeu_si128((__m128i*)&exp[k], v1);
+        }
+        for(; i<ngrps; ++i, k+=2) {
+            v = exp1[i];
+            exp[k] = v;
+            exp[k+1] = v;
+        }
+        return;
+        }
+    default: {
+        ALIGN16(uint32_t) exp1[256];
+
+        i=0;k=1;
+        for(; i<=(ngrps & ~3); i+=4, k+=16) {
+            __m128i v1 = _mm_loadu_si128((__m128i*)&exp[k]);
+            __m128i v2 = _mm_srli_si128(v1, 1);
+            v1 = _mm_min_epu8(v1, v2);
+            v2 = _mm_srli_si128(v1, 2);
+            v1 = _mm_min_epu8(v1, v2);
+            v1 = _mm_and_si128(v1, vmask2.v);
+            _mm_store_si128((__m128i*)&exp1[i], v1);
+        }
+        for(; i<=ngrps; ++i, k+=4) {
+            exp_min1 = MIN(exp[k  ], exp[k+1]);
+            exp_min2 = MIN(exp[k+2], exp[k+3]);
+            exp1[i]  = MIN(exp_min1, exp_min2);
+        }
+        // constraint for DC exponent
+        exp[0] = MIN(exp[0], 15);
+        // Decrease the delta between each groups to within 2
+        // so that they can be differentially encoded
+        exp1[0] = MIN(exp1[0], (uint32_t)exp[0]+2);
+        for(i=1; i<ngrps; i++)
+            exp1[i] = MIN(exp1[i], exp1[i-1]+2);
+        for(i=ngrps-2; i>=0; i--)
+            exp1[i] = MIN(exp1[i], exp1[i+1]+2);
+        // now we have the exponent values the decoder will see
+        exp[0] = MIN(exp[0], exp1[0]+2); // DC exponent is handled separately
+
+        i=0;k=1;
+        for(; i<=(ngrps & ~3); i+=4, k+=16) {
+            __m128i v1 = _mm_load_si128((__m128i*)&exp1[i]);
+            __m128i v2 = _mm_slli_si128(v1, 1);
+            v1 = _mm_or_si128(v1, v2);
+            v2 = _mm_slli_si128(v1, 2);
+            v1 = _mm_or_si128(v1, v2);
+            _mm_storeu_si128((__m128i*)&exp[k], v1);
+        }
+        for(; i<ngrps; ++i, k+=4) {
+            v = exp1[i];
+            exp[k] = v;
+            exp[k+1] = v;
+            exp[k+2] = v;
+            exp[k+3] = v;
+        }
+        return;
+    }
+    }
 }
 
 
