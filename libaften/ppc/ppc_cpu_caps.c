@@ -1,5 +1,5 @@
 /**
-* Aften: A/52 audio encoder
+ * Aften: A/52 audio encoder
  * Copyright (c) 2006, David Conrad
  *
  * This library is free software; you can redistribute it and/or
