@@ -92,9 +92,35 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
             v1 = _mm_min_epu8(v1, v2);
             _mm_store_si128((__m128i*)&exp1[i], v1);
         }
-        for(; i<=ngrps; ++i) {
+        switch (ngrps & 7) {
+        case 7:
             exp1[i] = MIN(exp[k], exp[k+1]);
+            ++i;
             k += 2;
+        case 6:
+            exp1[i] = MIN(exp[k], exp[k+1]);
+            ++i;
+            k += 2;
+        case 5:
+            exp1[i] = MIN(exp[k], exp[k+1]);
+            ++i;
+            k += 2;
+        case 4:
+            exp1[i] = MIN(exp[k], exp[k+1]);
+            ++i;
+            k += 2;
+        case 3:
+            exp1[i] = MIN(exp[k], exp[k+1]);
+            ++i;
+            k += 2;
+        case 2:
+            exp1[i] = MIN(exp[k], exp[k+1]);
+            ++i;
+            k += 2;
+        case 1:
+            exp1[i] = MIN(exp[k], exp[k+1]);
+        case 0:
+            ;
         }
         // constraint for DC exponent
         exp[0] = MIN(exp[0], 15);
@@ -115,10 +141,49 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
             v1 = _mm_or_si128(v1, v2);
             _mm_storeu_si128((__m128i*)&exp[k], v1);
         }
-        for(; i<ngrps; ++i, k+=2) {
+        switch (ngrps & 7) {
+        case 7:
             v = exp1[i];
             exp[k] = v;
             exp[k+1] = v;
+            ++i;
+            k += 2;
+        case 6:
+            v = exp1[i];
+            exp[k] = v;
+            exp[k+1] = v;
+            ++i;
+            k += 2;
+        case 5:
+            v = exp1[i];
+            exp[k] = v;
+            exp[k+1] = v;
+            ++i;
+            k += 2;
+        case 4:
+            v = exp1[i];
+            exp[k] = v;
+            exp[k+1] = v;
+            ++i;
+            k += 2;
+        case 3:
+            v = exp1[i];
+            exp[k] = v;
+            exp[k+1] = v;
+            ++i;
+            k += 2;
+        case 2:
+            v = exp1[i];
+            exp[k] = v;
+            exp[k+1] = v;
+            ++i;
+            k += 2;
+        case 1:
+            v = exp1[i];
+            exp[k] = v;
+            exp[k+1] = v;
+        case 0:
+            ;
         }
         return;
         }
@@ -135,10 +200,25 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
             v1 = _mm_and_si128(v1, vmask2.v);
             _mm_store_si128((__m128i*)&exp1[i], v1);
         }
-        for(; i<=ngrps; ++i, k+=4) {
+        switch (ngrps & 3) {
+        case 3:
             exp_min1 = MIN(exp[k  ], exp[k+1]);
             exp_min2 = MIN(exp[k+2], exp[k+3]);
             exp1[i]  = MIN(exp_min1, exp_min2);
+            ++i;
+            k += 4;
+        case 2:
+            exp_min1 = MIN(exp[k  ], exp[k+1]);
+            exp_min2 = MIN(exp[k+2], exp[k+3]);
+            exp1[i]  = MIN(exp_min1, exp_min2);
+            ++i;
+            k += 4;
+        case 1:
+            exp_min1 = MIN(exp[k  ], exp[k+1]);
+            exp_min2 = MIN(exp[k+2], exp[k+3]);
+            exp1[i]  = MIN(exp_min1, exp_min2);
+        case 0:
+            ;
         }
         // constraint for DC exponent
         exp[0] = MIN(exp[0], 15);
@@ -161,12 +241,31 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
             v1 = _mm_or_si128(v1, v2);
             _mm_storeu_si128((__m128i*)&exp[k], v1);
         }
-        for(; i<ngrps; ++i, k+=4) {
+        switch (ngrps & 3) {
+        case 3:
             v = exp1[i];
             exp[k] = v;
             exp[k+1] = v;
             exp[k+2] = v;
             exp[k+3] = v;
+            ++i;
+            k += 4;
+        case 2:
+            v = exp1[i];
+            exp[k] = v;
+            exp[k+1] = v;
+            exp[k+2] = v;
+            exp[k+3] = v;
+            ++i;
+            k += 4;
+        case 1:
+            v = exp1[i];
+            exp[k] = v;
+            exp[k+1] = v;
+            exp[k+2] = v;
+            exp[k+3] = v;
+        case 0:
+            ;
         }
         return;
     }
