@@ -49,8 +49,30 @@ exponent_min(uint8_t *exp, uint8_t *exp1, int n)
         vexp = _mm_or_si64(vexp, vexp1);
         *(__m64*)&exp[i] = vexp;
     }
-    for(; i<n; ++i)
+    switch(n & 7) {
+    case 7:
         exp[i] = MIN(exp[i], exp1[i]);
+        ++i;
+    case 6:
+        exp[i] = MIN(exp[i], exp1[i]);
+        ++i;
+    case 5:
+        exp[i] = MIN(exp[i], exp1[i]);
+        ++i;
+    case 4:
+        exp[i] = MIN(exp[i], exp1[i]);
+        ++i;
+    case 3:
+        exp[i] = MIN(exp[i], exp1[i]);
+        ++i;
+    case 2:
+        exp[i] = MIN(exp[i], exp1[i]);
+        ++i;
+    case 1:
+        exp[i] = MIN(exp[i], exp1[i]);
+    case 0:
+        ;
+    }
 }
 
 
@@ -101,9 +123,19 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
 
             *(__m64*)&exp1[i] = v1;
         }
-        for(; i<=ngrps; ++i) {
+        switch (ngrps & 3) {
+        case 3:
             exp1[i] = MIN(exp[k], exp[k+1]);
+            ++i;
             k += 2;
+        case 2:
+            exp1[i] = MIN(exp[k], exp[k+1]);
+            ++i;
+            k += 2;
+        case 1:
+            exp1[i] = MIN(exp[k], exp[k+1]);
+        case 0:
+            ;
         }
         // constraint for DC exponent
         exp[0] = MIN(exp[0], 15);
@@ -124,10 +156,25 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
             v1 = _mm_or_si64(v1, v2);
             *(__m64*)&exp[k] = v1;
         }
-        for(; i<ngrps; ++i, k+=2) {
+        switch (ngrps & 3) {
+        case 3:
             v = exp1[i];
             exp[k] = v;
             exp[k+1] = v;
+            ++i;
+            k += 2;
+        case 2:
+            v = exp1[i];
+            exp[k] = v;
+            exp[k+1] = v;
+            ++i;
+            k += 2;
+        case 1:
+            v = exp1[i];
+            exp[k] = v;
+            exp[k+1] = v;
+        case 0:
+            ;
         }
         return;
         }
@@ -264,9 +311,36 @@ compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs)
             }
             ures.v = vres;
             exp_error[str] += ures.res[0]+ures.res[1];
-            for(; i<ncoefs; ++i) {
+            switch(ncoefs & 7) {
+            case 7:
                 err = exp_blk[i] - exponents_blk[i];
                 exp_error[str] += (err * err);
+                ++i;
+            case 6:
+                err = exp_blk[i] - exponents_blk[i];
+                exp_error[str] += (err * err);
+                ++i;
+            case 5:
+                err = exp_blk[i] - exponents_blk[i];
+                exp_error[str] += (err * err);
+                ++i;
+            case 4:
+                err = exp_blk[i] - exponents_blk[i];
+                exp_error[str] += (err * err);
+                ++i;
+            case 3:
+                err = exp_blk[i] - exponents_blk[i];
+                exp_error[str] += (err * err);
+                ++i;
+            case 2:
+                err = exp_blk[i] - exponents_blk[i];
+                exp_error[str] += (err * err);
+                ++i;
+            case 1:
+                err = exp_blk[i] - exponents_blk[i];
+                exp_error[str] += (err * err);
+            case 0:
+                ;
             }
         }
         if(exp_error[str] < exp_error[min_error]) {
