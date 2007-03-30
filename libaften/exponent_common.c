@@ -46,15 +46,7 @@ extern int nexpgrptab[3][256];
  * bits.  Set 0 is only used as the reference of optimal accuracy.
  * TODO: more options and other sets which use greater or fewer bits
  */
-static uint8_t str_predef[6][6] = {
-    { EXP_D15,   EXP_D15,   EXP_D15,   EXP_D15,   EXP_D15,   EXP_D15 },
-    { EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE, EXP_REUSE, EXP_REUSE },
-    { EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D25, EXP_REUSE, EXP_REUSE },
-    { EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D45, EXP_REUSE,   EXP_D45 },
-    { EXP_D25, EXP_REUSE,   EXP_D45, EXP_REUSE,   EXP_D45, EXP_REUSE },
-    { EXP_D45,   EXP_D45, EXP_REUSE,   EXP_D45, EXP_REUSE,   EXP_D45 }
-};
-
+extern uint8_t str_predef[6][6];
 
 /* set exp[i] to min(exp[i], exp1[i]) */
 static void
