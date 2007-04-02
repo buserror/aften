@@ -27,7 +27,7 @@
 
 /* caps2 */
 #define SSE3_BIT             0
-#define SSE4_BIT             9
+#define SSSE3_BIT            9
 
 /* caps3 */
 #define AMD_3DNOW_BIT       31
@@ -59,8 +59,8 @@ void cpu_caps_detect(void)
 #ifdef HAVE_SSE3
     x86cpu_caps_compile.sse3 = 1;
 #endif
-#ifdef HAVE_SSE4
-    x86cpu_caps_compile.sse4 = 1;
+#ifdef HAVE_SSSE3
+    x86cpu_caps_compile.ssse3 = 1;
 #endif
 #ifdef HAVE_3DNOW
     x86cpu_caps_compile.amd_3dnow = 1;
@@ -85,7 +85,7 @@ void cpu_caps_detect(void)
             x86cpu_caps_detect.sse2         = (caps1 >> SSE2_BIT) & 1;
 
             x86cpu_caps_detect.sse3         = (caps2 >> SSE3_BIT) & 1;
-            x86cpu_caps_detect.sse4         = (caps2 >> SSE4_BIT) & 1;
+            x86cpu_caps_detect.ssse3         = (caps2 >> SSSE3_BIT) & 1;
 
             x86cpu_caps_detect.amd_3dnow    = (caps3 >> AMD_3DNOW_BIT) & 1;
             x86cpu_caps_detect.amd_3dnowext = (caps3 >> AMD_3DNOWEXT_BIT) & 1;
@@ -103,7 +103,7 @@ void cpu_caps_detect(void)
     x86cpu_caps_use.sse          = x86cpu_caps_detect.sse          & x86cpu_caps_compile.sse;
     x86cpu_caps_use.sse2         = x86cpu_caps_detect.sse2         & x86cpu_caps_compile.sse2;
     x86cpu_caps_use.sse3         = x86cpu_caps_detect.sse3         & x86cpu_caps_compile.sse3;
-    x86cpu_caps_use.sse4         = x86cpu_caps_detect.sse4         & x86cpu_caps_compile.sse4;
+    x86cpu_caps_use.ssse3         = x86cpu_caps_detect.ssse3         & x86cpu_caps_compile.ssse3;
     x86cpu_caps_use.amd_3dnow    = x86cpu_caps_detect.amd_3dnow    & x86cpu_caps_compile.amd_3dnow;
     x86cpu_caps_use.amd_3dnowext = x86cpu_caps_detect.amd_3dnowext & x86cpu_caps_compile.amd_3dnowext;
     x86cpu_caps_use.amd_sse_mmx  = x86cpu_caps_detect.amd_sse_mmx  & x86cpu_caps_compile.amd_sse_mmx;

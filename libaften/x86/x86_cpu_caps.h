@@ -26,7 +26,7 @@ struct x86cpu_caps_s {
     int sse;
     int sse2;
     int sse3;
-    int sse4;
+    int ssse3;
     int amd_3dnow;
     int amd_3dnowext;
     int amd_sse_mmx;
@@ -40,7 +40,7 @@ static inline int cpu_caps_have_mmx(void);
 static inline int cpu_caps_have_sse(void);
 static inline int cpu_caps_have_sse2(void);
 static inline int cpu_caps_have_sse3(void);
-static inline int cpu_caps_have_sse4(void);
+static inline int cpu_caps_have_ssse3(void);
 static inline int cpu_caps_have_3dnow(void);
 static inline int cpu_caps_have_3dnowext(void);
 static inline int cpu_caps_have_ssemmx(void);
@@ -66,9 +66,9 @@ static inline int cpu_caps_have_sse3(void)
     return x86cpu_caps_use.sse3;
 }
 
-static inline int cpu_caps_have_sse4(void)
+static inline int cpu_caps_have_ssse3(void)
 {
-    return x86cpu_caps_use.sse4;
+    return x86cpu_caps_use.ssse3;
 }
 
 static inline int cpu_caps_have_3dnow(void)
