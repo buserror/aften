@@ -311,7 +311,7 @@ TARGET_LINK_LIBRARIES(wavfilter aften_wav ${LIBM})
 
 IF(BINDINGS_CXX)
   MESSAGE("## WARNING: The C++ bindings are only lightly tested. Feed-back appreciated. ##")
-  Project(aften CXX)
+  Project(Aften CXX)
   SET(CMAKE_CXX_FLAGS_RELEASE "${ADD_CFLAGS} ${CMAKE_C_FLAGS_RELEASE}")
   INCLUDE_DIRECTORIES(${Aften_SOURCE_DIR}/bindings)
   ADD_LIBRARY(aftenxx SHARED bindings/aftenxx.cxx)
