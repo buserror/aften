@@ -23,7 +23,7 @@ Aften Changelog
 version SVN : current
 - added C++ bindings (pass -DBINDINGS_CXX=1 to cmake to build them)
 - API change of helper functions
-- new bitalloc algorithm
+- new and more precise bitalloc algorithm
 - parallelization
 - optional faster exponent strategy decision
 - added SSE version of window function
