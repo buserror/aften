@@ -57,10 +57,6 @@ DOUBLE: Builds aften using double precision. Beware that you won't get
 BINDINGS_CXX: Builds C++ bindings for aften. Include aftenxx.h in your
         C++ project and link to aftenxx.
 
-Beware: Due to a possible bug in ccmake, you might have to call cmake
-(without setting any option) after setting options with ccmake. This
-is currently the case for BINDINGS_CXX.
-
 Some tips:
 
    - You can use a console GUI named ccmake for configuring cmake. This
