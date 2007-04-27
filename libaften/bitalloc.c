@@ -220,13 +220,12 @@ bitalloc_init(void)
 }
 
 static inline int
-calc_lowcomp1(int a, int b0, int b1)
+calc_lowcomp1(int a, int b0, int b1, int c)
 {
     if((b0 + 256) == b1) {
-        a = 384;
+        a = c;
     } else if(b0 > b1) {
-        a = a - 64;
-        if(a < 0) a = 0;
+        a = MAX(a - 64, 0);
     }
     return a;
 }
@@ -235,19 +234,12 @@ static inline int
 calc_lowcomp(int a, int b0, int b1, int bin)
 {
     if(bin < 7) {
-        a = calc_lowcomp1(a, b0, b1);
+        return calc_lowcomp1(a, b0, b1, 384);
     } else if(bin < 20) {
-        if((b0 + 256) == b1) {
-            a = 320;
-        } else if(b0 > b1) {
-            a = a - 64;
-            if(a < 0) a = 0;
-        }
+        return calc_lowcomp1(a, b0, b1, 320);
     } else {
-        a = a - 128;
-        if(a < 0) a = 0;
+        return MAX(a - 128, 0);
     }
-    return a;
 }
 
 /** combine psd value in multiple bins into a single psd value */
@@ -303,14 +295,14 @@ a52_bit_allocation_prepare(A52BitAllocParams *s,
     if(bndstrt == 0) {
         // fbw and lfe channels
         lowcomp = 0;
-        lowcomp = calc_lowcomp1(lowcomp, bndpsd[0], bndpsd[1]);
+        lowcomp = calc_lowcomp(lowcomp, bndpsd[0], bndpsd[1], 0);
         excite[0] = bndpsd[0] - s->fgain - lowcomp;
-        lowcomp = calc_lowcomp1(lowcomp, bndpsd[1], bndpsd[2]);
+        lowcomp = calc_lowcomp(lowcomp, bndpsd[1], bndpsd[2], 1);
         excite[1] = bndpsd[1] - s->fgain - lowcomp ;
         begin = 7;
         for(bnd=2; bnd<7; bnd++) {
             if(!(is_lfe && bnd == 6)) {
-                lowcomp = calc_lowcomp1(lowcomp, bndpsd[bnd], bndpsd[bnd+1]);
+                lowcomp = calc_lowcomp(lowcomp, bndpsd[bnd], bndpsd[bnd+1], bnd);
             }
             fastleak = bndpsd[bnd] - s->fgain;
             slowleak = bndpsd[bnd] - s->sgain;
