@@ -274,8 +274,6 @@ a52_bit_allocation_prepare(A52BitAllocParams *s,
     int16_t bndpsd[50]; // power spectral density for critical bands
     int16_t excite[50]; // excitation function
 
-    if(end <= 0) return;
-
     // exponent mapping to PSD
     for(i=0; i<end; i++) {
         psd[i] = psdtab[exp[i]];
