@@ -265,7 +265,7 @@ psd_combine(int16_t *psd, int bins)
 static void
 a52_bit_allocation_prepare(A52BitAllocParams *s,
                    uint8_t *exp, int16_t *psd, int16_t *mask,
-                   int end, int is_lfe,
+                   int end,
                    int deltbae,int deltnseg, uint8_t *deltoffst,
                    uint8_t *deltlen, uint8_t *deltba)
 {
@@ -301,13 +301,13 @@ a52_bit_allocation_prepare(A52BitAllocParams *s,
         excite[1] = bndpsd[1] - s->fgain - lowcomp;
         begin = 7;
         for(bnd=2; bnd<7; bnd++) {
-            if(!(is_lfe && bnd == 6)) {
+            if(bnd+1 < bndend) {
                 lowcomp = calc_lowcomp(lowcomp, bndpsd[bnd], bndpsd[bnd+1], bnd);
             }
             fastleak = bndpsd[bnd] - s->fgain;
             slowleak = bndpsd[bnd] - s->sgain;
             excite[bnd] = fastleak - lowcomp;
-            if(!(is_lfe && bnd == 6)) {
+            if(bnd+1 < bndend) {
                 if(bndpsd[bnd] <= bndpsd[bnd+1]) {
                     begin = bnd + 1;
                     break;
@@ -318,7 +318,7 @@ a52_bit_allocation_prepare(A52BitAllocParams *s,
         end1 = MIN(bndend, 22);
 
         for(bnd=begin; bnd<end1; bnd++) {
-            if(!(is_lfe && bnd == 6)) {
+            if(bnd+1 < bndend) {
                 lowcomp = calc_lowcomp(lowcomp, bndpsd[bnd], bndpsd[bnd+1], bnd);
             }
             fastleak = MAX(fastleak-s->fdecay, bndpsd[bnd]-s->fgain);
@@ -467,7 +467,6 @@ bit_alloc_prepare(A52ThreadContext *tctx)
                 a52_bit_allocation_prepare(&frame->bit_alloc,
                                block->exp[ch], block->psd[ch], block->mask[ch],
                                frame->ncoefs[ch],
-                               (ch == ctx->lfe_channel),
                                2, 0, NULL, NULL, NULL);
             }
         }
