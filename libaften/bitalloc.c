@@ -298,7 +298,7 @@ a52_bit_allocation_prepare(A52BitAllocParams *s,
         lowcomp = calc_lowcomp(lowcomp, bndpsd[0], bndpsd[1], 0);
         excite[0] = bndpsd[0] - s->fgain - lowcomp;
         lowcomp = calc_lowcomp(lowcomp, bndpsd[1], bndpsd[2], 1);
-        excite[1] = bndpsd[1] - s->fgain - lowcomp ;
+        excite[1] = bndpsd[1] - s->fgain - lowcomp;
         begin = 7;
         for(bnd=2; bnd<7; bnd++) {
             if(!(is_lfe && bnd == 6)) {
