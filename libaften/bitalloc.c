@@ -321,10 +321,8 @@ a52_bit_allocation_prepare(A52BitAllocParams *s,
             if(!(is_lfe && bnd == 6)) {
                 lowcomp = calc_lowcomp(lowcomp, bndpsd[bnd], bndpsd[bnd+1], bnd);
             }
-            fastleak -= s->fdecay;
-            fastleak = MAX(fastleak, bndpsd[bnd]-s->fgain);
-            slowleak -= s->sdecay;
-            slowleak = MAX(slowleak, bndpsd[bnd]-s->sgain);
+            fastleak = MAX(fastleak-s->fdecay, bndpsd[bnd]-s->fgain);
+            slowleak = MAX(slowleak-s->sdecay, bndpsd[bnd]-s->sgain);
             excite[bnd] = MAX(slowleak, fastleak-lowcomp);
         }
         begin = 22;
@@ -336,10 +334,8 @@ a52_bit_allocation_prepare(A52BitAllocParams *s,
     }
 
     for(bnd=begin; bnd<bndend; bnd++) {
-        fastleak -= s->fdecay;
-        fastleak = MAX(fastleak, bndpsd[bnd]-s->fgain);
-        slowleak -= s->sdecay;
-        slowleak = MAX(slowleak, bndpsd[bnd]-s->sgain);
+        fastleak = MAX(fastleak-s->fdecay, bndpsd[bnd]-s->fgain);
+        slowleak = MAX(slowleak-s->sdecay, bndpsd[bnd]-s->sgain);
         excite[bnd] = MAX(slowleak, fastleak);
     }
 
