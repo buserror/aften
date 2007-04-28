@@ -136,11 +136,6 @@ static const uint16_t sgaintab[4]= {
     1344, 1240, 1144, 1040,
 };
 
-/* dB per bit table */
-static const uint16_t dbkneetab[4]= {
-    0, 1792, 2304, 2816,
-};
-
 /* floor table */
 static const int16_t floortab[8]= {
     752, 688, 624, 560, 496, 368, 240, -2048,
@@ -152,6 +147,9 @@ static const uint8_t bndsz[50]={
      1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  3,  3,  3,  3,  3, 3,
      3,  6,  6,  6,  6,  6,  6, 12, 12, 12, 12, 24, 24, 24, 24, 24
 };
+
+/* dB per bit table */
+static uint16_t dbkneetab[4];
 
 /* slow decay table */
 static uint8_t sdecaytab[4];
@@ -178,6 +176,12 @@ void
 bitalloc_init(void)
 {
     int i, j, k, l, v;
+
+    // compute dbkneetab
+    dbkneetab[0] = 0;
+    for(i=1; i<4; i++) {
+        dbkneetab[i] = (i << 9) + 1280;
+    }
 
     // compute sdecaytab
     for(i=0; i<4; i++) {
