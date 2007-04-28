@@ -265,7 +265,7 @@ psd_combine(int16_t *psd, int bins)
 static void
 a52_bit_allocation_prepare(A52BitAllocParams *s,
                    uint8_t *exp, int16_t *psd, int16_t *mask,
-                   int end,
+                   int start, int end,
                    int deltbae,int deltnseg, uint8_t *deltoffst,
                    uint8_t *deltlen, uint8_t *deltba)
 {
@@ -275,14 +275,14 @@ a52_bit_allocation_prepare(A52BitAllocParams *s,
     int16_t excite[50]; // excitation function
 
     // exponent mapping to PSD
-    for(i=0; i<end; i++) {
+    for(i=start; i<end; i++) {
         psd[i] = psdtab[exp[i]];
     }
 
     // use log addition to combine PSD for each critical band
-    bndstrt = masktab[0];
+    bndstrt = masktab[start];
     bndend = masktab[end-1] + 1;
-    i = 0;
+    i = start;
     for(bnd=bndstrt; bnd<bndend; bnd++) {
         int bins = MIN(bndtab[bnd+1], end) - i;
         bndpsd[bnd] = psd_combine(&psd[i], bins);
@@ -374,7 +374,7 @@ a52_bit_allocation_prepare(A52BitAllocParams *s,
  */
 static void
 a52_bit_allocation(uint8_t *bap, int16_t *psd, int16_t *mask,
-                   int end, int snroffset, int floor)
+                   int start, int end, int snroffset, int floor)
 {
     int i, j, endj;
     int v, address1, address2, offset;
@@ -382,12 +382,12 @@ a52_bit_allocation(uint8_t *bap, int16_t *psd, int16_t *mask,
     // csnroffst=0 & fsnroffst=0 is a special-case scenario in which all baps
     // are set to zero and the core bit allocation is skipped.
     if(snroffset == SNROFFST(0, 0)) {
-        memset(bap, 0, end);
+        memset(&bap[start], 0, end-start);
         return;
     }
 
     offset = snroffset + floor;
-    for (i = 0, j = masktab[0]; end > bndtab[j]; ++j) {
+    for (i = start, j = masktab[start]; end > bndtab[j]; ++j) {
         v = (MAX(mask[j] - offset, 0) & 0x1FE0) + floor;
         endj = MIN(bndtab[j] + bndsz[j], end);
         if ((endj-i) & 1) {
@@ -464,7 +464,7 @@ bit_alloc_prepare(A52ThreadContext *tctx)
             if(block->exp_strategy[ch] != EXP_REUSE) {
                 a52_bit_allocation_prepare(&frame->bit_alloc,
                                block->exp[ch], block->psd[ch], block->mask[ch],
-                               frame->ncoefs[ch],
+                               0, frame->ncoefs[ch],
                                2, 0, NULL, NULL, NULL);
             }
         }
@@ -505,7 +505,7 @@ bit_alloc(A52ThreadContext *tctx, int snroffst)
                 memcpy(block->bap[ch], tctx->frame.blocks[blk-1].bap[ch], 256);
             } else {
                 a52_bit_allocation(block->bap[ch], block->psd[ch], block->mask[ch],
-                                   frame->ncoefs[ch], snroffst,
+                                   0, frame->ncoefs[ch], snroffst,
                                    frame->bit_alloc.floor);
             }
             bits += compute_mantissa_size(mant_cnt, block->bap[ch], frame->ncoefs[ch]);
