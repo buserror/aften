@@ -1186,6 +1186,7 @@ static void
 calc_rematrixing(A52ThreadContext *tctx)
 {
     A52Context *ctx = tctx->ctx;
+    A52Frame *frame = &tctx->frame;
     A52Block *block;
     FLOAT sum[4][4];
     FLOAT lt, rt, ctmp1, ctmp2;
@@ -1193,18 +1194,18 @@ calc_rematrixing(A52ThreadContext *tctx)
 
 
     if(!ctx->params.use_rematrixing) {
-        tctx->frame.blocks[0].rematstr = 1;
+        frame->blocks[0].rematstr = 1;
         for(bnd=0; bnd<4; bnd++) {
-            tctx->frame.blocks[0].rematflg[bnd] = 0;
+            frame->blocks[0].rematflg[bnd] = 0;
         }
         for(blk=1; blk<A52_NUM_BLOCKS; blk++) {
-            tctx->frame.blocks[blk].rematstr = 0;
+            frame->blocks[blk].rematstr = 0;
         }
         return;
     }
 
     for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
-        block = &tctx->frame.blocks[blk];
+        block = &frame->blocks[blk];
 
         block->rematstr = 0;
         if(blk == 0) block->rematstr = 1;
@@ -1213,7 +1214,7 @@ calc_rematrixing(A52ThreadContext *tctx)
             block->rematflg[bnd] = 0;
             sum[bnd][0] = sum[bnd][1] = sum[bnd][2] = sum[bnd][3] = 0;
             for(i=rematbndtab[bnd][0]; i<=rematbndtab[bnd][1]; i++) {
-                if(i == tctx->frame.ncoefs[0]) break;
+                if(i == frame->ncoefs[0]) break;
                 lt = block->mdct_coef[0][i];
                 rt = block->mdct_coef[1][i];
                 sum[bnd][0] += lt * lt;
@@ -1224,7 +1225,7 @@ calc_rematrixing(A52ThreadContext *tctx)
             if(sum[bnd][0]+sum[bnd][1] >= (sum[bnd][2]+sum[bnd][3])/FCONST(2.0)) {
                 block->rematflg[bnd] = 1;
                 for(i=rematbndtab[bnd][0]; i<=rematbndtab[bnd][1]; i++) {
-                    if(i == tctx->frame.ncoefs[0]) break;
+                    if(i == frame->ncoefs[0]) break;
                     ctmp1 = block->mdct_coef[0][i] * FCONST(0.5);
                     ctmp2 = block->mdct_coef[1][i] * FCONST(0.5);
                     block->mdct_coef[0][i] = ctmp1 + ctmp2;
@@ -1232,7 +1233,7 @@ calc_rematrixing(A52ThreadContext *tctx)
                 }
             }
             if(blk != 0 && block->rematstr == 0 &&
-               block->rematflg[bnd] != tctx->frame.blocks[blk-1].rematflg[bnd]) {
+                    block->rematflg[bnd] != frame->blocks[blk-1].rematflg[bnd]) {
                 block->rematstr = 1;
             }
         }
