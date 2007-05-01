@@ -750,84 +750,95 @@ asym_quant(int c, int e, int qbits)
 }
 
 static void
+quant_mant_ch(FLOAT *mdct_coef, uint8_t *exp, uint8_t *bap, uint16_t *qmant,
+              int ncoefs, uint16_t *qmant_ptr[3], int mant_cnt[3])
+{
+    int i, c, e, b, v;
+
+    for(i=0; i<ncoefs; i++) {
+        c = (int)(mdct_coef[i] * (1 << 24));
+        e = exp[i];
+        b = bap[i];
+        switch(b) {
+            case 0:
+                v = 0;
+                break;
+            case 1:
+                v = sym_quant(c, e, 3);
+                if(mant_cnt[0] == 0) {
+                    qmant_ptr[0] = &qmant[i];
+                    v = 9 * v;
+                } else if(mant_cnt[0] == 1) {
+                    *qmant_ptr[0] += 3 * v;
+                    v = 128;
+                } else {
+                    *qmant_ptr[0] += v;
+                    v = 128;
+                }
+                mant_cnt[0] = (mant_cnt[0] + 1) % 3;
+                break;
+            case 2:
+                v = sym_quant(c, e, 5);
+                if(mant_cnt[1] == 0) {
+                    qmant_ptr[1] = &qmant[i];
+                    v = 25 * v;
+                } else if(mant_cnt[1] == 1) {
+                    *qmant_ptr[1] += 5 * v;
+                    v = 128;
+                } else {
+                    *qmant_ptr[1] += v;
+                    v = 128;
+                }
+                mant_cnt[1] = (mant_cnt[1] + 1) % 3;
+                break;
+            case 3:
+                v = sym_quant(c, e, 7);
+                break;
+            case 4:
+                v = sym_quant(c, e, 11);
+                if(mant_cnt[2]== 0) {
+                    qmant_ptr[2] = &qmant[i];
+                    v = 11 * v;
+                } else {
+                    *qmant_ptr[2] += v;
+                    v = 128;
+                }
+                mant_cnt[2] = (mant_cnt[2] + 1) % 2;
+                break;
+            case 5:
+                v = sym_quant(c, e, 15);
+                break;
+            case 14:
+                v = asym_quant(c, e, 14);
+                break;
+            case 15:
+                v = asym_quant(c, e, 16);
+                break;
+            default:
+                v = asym_quant(c, e, b - 1);
+        }
+        qmant[i] = v;
+    }
+}
+
+static void
 quantize_mantissas(A52ThreadContext *tctx)
 {
     A52Context *ctx = tctx->ctx;
     A52Frame *frame = &tctx->frame;
     A52Block *block;
-    uint16_t *qmant1_ptr, *qmant2_ptr, *qmant4_ptr;
-    int blk, ch, i, b, c, e, v;
-    int mant1_cnt, mant2_cnt, mant4_cnt;
+    uint16_t *qmant_ptr[3];
+    int blk, ch;
+    int mant_cnt[3];
 
     for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
         block = &frame->blocks[blk];
-        mant1_cnt = mant2_cnt = mant4_cnt = 0;
-        qmant1_ptr = qmant2_ptr = qmant4_ptr = NULL;
+        mant_cnt[0] = mant_cnt[1] = mant_cnt[2] = 0;
+        qmant_ptr[0] = qmant_ptr[1] = qmant_ptr[2] = NULL;
         for(ch=0; ch<ctx->n_all_channels; ch++) {
-            for(i=0; i<frame->ncoefs[ch]; i++) {
-                c = (int)(block->mdct_coef[ch][i] * (1 << 24));
-                e = block->exp[ch][i];
-                b = block->bap[ch][i];
-                switch(b) {
-                    case 0:
-                        v = 0;
-                        break;
-                    case 1:
-                        v = sym_quant(c, e, 3);
-                        if(mant1_cnt == 0) {
-                            qmant1_ptr = &block->qmant[ch][i];
-                            v = 9 * v;
-                        } else if(mant1_cnt == 1) {
-                            *qmant1_ptr += 3 * v;
-                            v = 128;
-                        } else {
-                            *qmant1_ptr += v;
-                            v = 128;
-                        }
-                        mant1_cnt = (mant1_cnt + 1) % 3;
-                        break;
-                    case 2:
-                        v = sym_quant(c, e, 5);
-                        if(mant2_cnt == 0) {
-                            qmant2_ptr = &block->qmant[ch][i];
-                            v = 25 * v;
-                        } else if(mant2_cnt == 1) {
-                            *qmant2_ptr += 5 * v;
-                            v = 128;
-                        } else {
-                            *qmant2_ptr += v;
-                            v = 128;
-                        }
-                        mant2_cnt = (mant2_cnt + 1) % 3;
-                        break;
-                    case 3:
-                        v = sym_quant(c, e, 7);
-                        break;
-                    case 4:
-                        v = sym_quant(c, e, 11);
-                        if(mant4_cnt == 0) {
-                            qmant4_ptr = &block->qmant[ch][i];
-                            v = 11 * v;
-                        } else {
-                            *qmant4_ptr += v;
-                            v = 128;
-                        }
-                        mant4_cnt = (mant4_cnt + 1) % 2;
-                        break;
-                    case 5:
-                        v = sym_quant(c, e, 15);
-                        break;
-                    case 14:
-                        v = asym_quant(c, e, 14);
-                        break;
-                    case 15:
-                        v = asym_quant(c, e, 16);
-                        break;
-                    default:
-                        v = asym_quant(c, e, b - 1);
-                }
-                block->qmant[ch][i] = v;
-            }
+            quant_mant_ch(block->mdct_coef[ch], block->exp[ch], block->bap[ch],
+                          block->qmant[ch], frame->ncoefs[ch], qmant_ptr,
+                          mant_cnt);
         }
     }
 }
