@@ -154,17 +154,17 @@ static const uint8_t bndsz[50]={
 };
 
 /* slow decay table */
-static uint8_t sdecaytab[4] = {
+static const uint8_t sdecaytab[4] = {
     15, 17, 19, 21
 };
 
 /* fast decay table */
-static uint8_t fdecaytab[4] = {
+static const uint8_t fdecaytab[4] = {
     63, 83, 103, 123
 };
 
 /* fast gain table */
-static uint16_t fgaintab[8] = {
+static const uint16_t fgaintab[8] = {
     128, 256, 384, 512, 640, 768, 896, 1024
 };
 
