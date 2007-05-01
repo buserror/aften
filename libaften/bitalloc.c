@@ -154,13 +154,19 @@ static const uint8_t bndsz[50]={
 };
 
 /* slow decay table */
-static uint8_t sdecaytab[4];
+static uint8_t sdecaytab[4] = {
+    15, 17, 19, 21
+};
 
 /* fast decay table */
-static uint8_t fdecaytab[4];
+static uint8_t fdecaytab[4] = {
+    63, 83, 103, 123
+};
 
 /* fast gain table */
-static uint16_t fgaintab[8];
+static uint16_t fgaintab[8] = {
+    128, 256, 384, 512, 640, 768, 896, 1024
+};
 
 /* power spectral density table */
 static uint16_t psdtab[25];
@@ -178,21 +184,6 @@ void
 bitalloc_init(void)
 {
     int i, j, k, l, v;
-
-    // compute sdecaytab
-    for(i=0; i<4; i++) {
-        sdecaytab[i] = (i * 2) + 15;
-    }
-
-    // compute fdecaytab
-    for(i=0; i<4; i++) {
-        fdecaytab[i] = (i * 20) + 63;
-    }
-
-    // compute fgaintab
-    for(i=0; i<8; i++) {
-        fgaintab[i] = (i + 1) * 128;
-    }
 
     // compute psdtab
     for(i=0; i<25; i++) {
