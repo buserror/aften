@@ -449,7 +449,7 @@ bit_alloc_prepare(A52ThreadContext *tctx)
     int blk, ch;
 
     for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
-        block = &tctx->frame.blocks[blk];
+        block = &frame->blocks[blk];
         for(ch=0; ch<ctx->n_all_channels; ch++) {
             // We don't have to run the bit allocation when reusing exponents
             if(block->exp_strategy[ch] != EXP_REUSE) {
@@ -480,7 +480,7 @@ bit_alloc(A52ThreadContext *tctx, int snroffst)
     snroffst = (snroffst << 2) - 960;
 
     for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
-        block = &tctx->frame.blocks[blk];
+        block = &frame->blocks[blk];
         // initialize grouped mantissa counts. these are set so that they are
         // padded to the next whole group size when bits are counted in
         // compute_mantissa_size_final
@@ -493,7 +493,7 @@ bit_alloc(A52ThreadContext *tctx, int snroffst)
             // exponent values.  We can take advantage of that by reusing the
             // bit allocation pointers whenever we reuse exponents.
             if(block->exp_strategy[ch] == EXP_REUSE) {
-                memcpy(block->bap[ch], tctx->frame.blocks[blk-1].bap[ch], 256);
+                memcpy(block->bap[ch], frame->blocks[blk-1].bap[ch], 256);
             } else {
                 a52_bit_allocation(block->bap[ch], block->psd[ch], block->mask[ch],
                                    0, frame->ncoefs[ch], snroffst,

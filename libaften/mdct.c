@@ -544,23 +544,24 @@ mdct_256(A52ThreadContext *tctx, FLOAT *out, FLOAT *in)
 void
 alloc_block_buffers(A52ThreadContext *tctx)
 {
+    A52Frame *frame = &tctx->frame;
     int i, j;
 
     // we alloced one continous block and
     // now interleave in and out buffers
     for (i=0; i<A52_NUM_BLOCKS; ++i) {
         if (i) {
-            tctx->frame.blocks[i].input_samples[0] =
-                tctx->frame.blocks[i-1].input_samples[A52_MAX_CHANNELS-1] + 512 + 256;
+            frame->blocks[i].input_samples[0] =
+                frame->blocks[i-1].input_samples[A52_MAX_CHANNELS-1] + 512 + 256;
         }
-        tctx->frame.blocks[i].mdct_coef[0] =
-            tctx->frame.blocks[i].input_samples[0] + 512;
+        frame->blocks[i].mdct_coef[0] =
+            frame->blocks[i].input_samples[0] + 512;
 
         for (j=1; j<A52_MAX_CHANNELS; ++j) {
-            tctx->frame.blocks[i].input_samples[j] =
-                tctx->frame.blocks[i].input_samples[j-1] + 512 + 256;
-            tctx->frame.blocks[i].mdct_coef[j] =
-                tctx->frame.blocks[i].mdct_coef[j-1] + 512 + 256;
+            frame->blocks[i].input_samples[j] =
+                frame->blocks[i].input_samples[j-1] + 512 + 256;
+            frame->blocks[i].mdct_coef[j] =
+                frame->blocks[i].mdct_coef[j-1] + 512 + 256;
         }
     }
 }
