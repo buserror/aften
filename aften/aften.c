@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #ifdef _WIN32
 #include <io.h>
@@ -71,6 +72,11 @@ main(int argc, char **argv)
     int frame_cnt;
     int done;
     enum WavSampleFormat read_format;
+    /* update output every 200ms */
+    clock_t update_clock_span = 0.2f * CLOCKS_PER_SEC;
+    clock_t current_clock;
+    clock_t last_update_clock = clock() - update_clock_span;
+
 
     opts.s = &s;
     aften_set_defaults(&s);
@@ -273,11 +279,16 @@ main(int argc, char **argv)
             fprintf(stderr, "Error encoding frame %d\n", frame_cnt);
             break;
         } else {
-            if(s.params.verbose > 0 && fs > 0) {
+            if(s.params.verbose > 0) {
+                if (fs > 0) {
                 samplecount += A52_SAMPLES_PER_FRAME;
                 bytecount += fs;
                 qual += s.status.quality;
                 bw += s.status.bwcode;
+                }
+                current_clock = clock();
+                /* make sure we write out when finished, i.e. when fs == 0 */
+	            if (current_clock - last_update_clock >= update_clock_span || !fs) {
                 if(s.params.verbose == 1) {
                     t1 = samplecount / wf.sample_rate;
                     if(frame_cnt > 0 && (t1 > t0 || samplecount >= wf.samples)) {
@@ -299,6 +310,8 @@ main(int argc, char **argv)
                     fprintf(stderr, "frame: %7d | q: %4d | bw: %2d | bitrate: %3d kbps\n",
                             frame_cnt, s.status.quality, s.status.bwcode,
                             s.status.bit_rate);
+                }
+                    last_update_clock = current_clock;
                 }
             }
             fwrite(frame, 1, fs, ofp);
