@@ -281,36 +281,36 @@ main(int argc, char **argv)
         } else {
             if(s.params.verbose > 0) {
                 if (fs > 0) {
-                samplecount += A52_SAMPLES_PER_FRAME;
-                bytecount += fs;
-                qual += s.status.quality;
-                bw += s.status.bwcode;
+                    samplecount += A52_SAMPLES_PER_FRAME;
+                    bytecount += fs;
+                    qual += s.status.quality;
+                    bw += s.status.bwcode;
                 }
                 current_clock = clock();
                 /* make sure we write out when finished, i.e. when fs == 0 */
-	            if (current_clock - last_update_clock >= update_clock_span || !fs) {
-                if(s.params.verbose == 1) {
-                    t1 = samplecount / wf.sample_rate;
-                    if(frame_cnt > 0 && (t1 > t0 || samplecount >= wf.samples)) {
-                        kbps = (bytecount * FCONST(8.0) * wf.sample_rate) /
-                               (FCONST(1000.0) * samplecount);
-                        percent = 0;
-                        if(wf.samples > 0) {
-                            percent = (uint32_t)((samplecount * FCONST(100.0)) /
-                                      wf.samples);
-                            percent = CLIP(percent, 0, 100);
+                if (current_clock - last_update_clock >= update_clock_span || !fs) {
+                    if(s.params.verbose == 1) {
+                        t1 = samplecount / wf.sample_rate;
+                        if(frame_cnt > 0 && (t1 > t0 || samplecount >= wf.samples)) {
+                            kbps = (bytecount * FCONST(8.0) * wf.sample_rate) /
+                                (FCONST(1000.0) * samplecount);
+                            percent = 0;
+                            if(wf.samples > 0) {
+                                percent = (uint32_t)((samplecount * FCONST(100.0)) /
+                                                     wf.samples);
+                                percent = CLIP(percent, 0, 100);
+                            }
+                            fprintf(stderr, "\rprogress: %3u%% | q: %4.1f | "
+                                    "bw: %2.1f | bitrate: %4.1f kbps ",
+                                    percent, (qual / (frame_cnt+1)),
+                                    (bw / (frame_cnt+1)), kbps);
                         }
-                        fprintf(stderr, "\rprogress: %3u%% | q: %4.1f | "
-                                        "bw: %2.1f | bitrate: %4.1f kbps ",
-                                percent, (qual / (frame_cnt+1)),
-                                (bw / (frame_cnt+1)), kbps);
+                        t0 = t1;
+                    } else if(s.params.verbose == 2) {
+                        fprintf(stderr, "frame: %7d | q: %4d | bw: %2d | bitrate: %3d kbps\n",
+                                frame_cnt, s.status.quality, s.status.bwcode,
+                                s.status.bit_rate);
                     }
-                    t0 = t1;
-                } else if(s.params.verbose == 2) {
-                    fprintf(stderr, "frame: %7d | q: %4d | bw: %2d | bitrate: %3d kbps\n",
-                            frame_cnt, s.status.quality, s.status.bwcode,
-                            s.status.bit_rate);
-                }
                     last_update_clock = current_clock;
                 }
             }
