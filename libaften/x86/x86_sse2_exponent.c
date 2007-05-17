@@ -85,7 +85,7 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
         ALIGN16(uint16_t) exp1[256];
 
         i=0;k=1;
-        for(; i<=(ngrps & ~7); i+=8, k+=16) {
+        for(; i<(ngrps & ~7); i+=8, k+=16) {
             __m128i v1 = _mm_loadu_si128((__m128i*)&exp[k]);
             __m128i v2 = _mm_srli_si128(v1, 1);
             v1 = _mm_and_si128(v1, vmask.v);
@@ -135,7 +135,7 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
         exp[0] = MIN(exp[0], exp1[0]+2); // DC exponent is handled separately
 
         i=0;k=1;
-        for(; i<=(ngrps & ~7); i+=8, k+=16) {
+        for(; i<(ngrps & ~7); i+=8, k+=16) {
             __m128i v1 = _mm_load_si128((__m128i*)&exp1[i]);
             __m128i v2 = _mm_slli_si128(v1, 1);
             v1 = _mm_or_si128(v1, v2);
@@ -191,7 +191,7 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
         ALIGN16(uint32_t) exp1[256];
 
         i=0;k=1;
-        for(; i<=(ngrps & ~3); i+=4, k+=16) {
+        for(; i<(ngrps & ~3); i+=4, k+=16) {
             __m128i v1 = _mm_loadu_si128((__m128i*)&exp[k]);
             __m128i v2 = _mm_srli_si128(v1, 1);
             v1 = _mm_min_epu8(v1, v2);
@@ -233,7 +233,7 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
         exp[0] = MIN(exp[0], exp1[0]+2); // DC exponent is handled separately
 
         i=0;k=1;
-        for(; i<=(ngrps & ~3); i+=4, k+=16) {
+        for(; i<(ngrps & ~3); i+=4, k+=16) {
             __m128i v1 = _mm_load_si128((__m128i*)&exp1[i]);
             __m128i v2 = _mm_slli_si128(v1, 1);
             v1 = _mm_or_si128(v1, v2);

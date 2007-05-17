@@ -110,7 +110,7 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
         ALIGN16(uint16_t) exp1[256];
 
         i=0;k=1;
-        for(; i<=(ngrps & ~3); i+=4, k+=8) {
+        for(; i<(ngrps & ~3); i+=4, k+=8) {
             __m64 v1 = *(__m64*)&exp[k];
             __m64 v2 = _mm_srli_si64(v1, 8);
             __m64 vcmask;
@@ -150,7 +150,7 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
         exp[0] = MIN(exp[0], exp1[0]+2); // DC exponent is handled separately
 
         i=0;k=1;
-        for(; i<=(ngrps & ~3); i+=4, k+=8) {
+        for(; i<(ngrps & ~3); i+=4, k+=8) {
             __m64 v1 = *(__m64*)&exp1[i];
             __m64 v2 = _mm_slli_si64(v1, 8);
             v1 = _mm_or_si64(v1, v2);
@@ -182,7 +182,7 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
         ALIGN16(uint32_t) exp1[256];
 
         i=0;k=1;
-        for(; i<=(ngrps & ~1); i+=2, k+=8) {
+        for(; i<(ngrps & ~1); i+=2, k+=8) {
             __m64 v1 = *(__m64*)&exp[k];
             __m64 v2 = _mm_srli_si64(v1, 8);
             //v1 = _mm_min_pi8(v1, v2);
@@ -219,7 +219,7 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
         exp[0] = MIN(exp[0], exp1[0]+2); // DC exponent is handled separately
 
         i=0;k=1;
-        for(; i<=(ngrps & ~1); i+=2, k+=8) {
+        for(; i<(ngrps & ~1); i+=2, k+=8) {
             __m64 v1 = *(__m64*)&exp1[i];
             __m64 v2 = _mm_slli_si64(v1, 8);
             v1 = _mm_or_si64(v1, v2);
