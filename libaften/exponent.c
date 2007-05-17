@@ -124,7 +124,6 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
     }
 
     // for each group, compute the minimum exponent
-    exp1[0] = exp[0]; // DC exponent is handled separately
     if (grpsize == 2) {
         for(i=0,k=1; i<ngrps; i++) {
             exp1[i] = MIN(exp[k], exp[k+1]);
