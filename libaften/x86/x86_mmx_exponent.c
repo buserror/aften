@@ -31,8 +31,6 @@
 
 #include <mmintrin.h>
 
-static const union __m64ui vmask = {{0x00ff00ff, 0x00ff00ff}};
-static const union __m64ui vmask2 = {{0x000000ff, 0x000000ff}};
 
 /* set exp[i] to min(exp[i], exp1[i]) */
 static void
@@ -108,6 +106,7 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
     // for each group, compute the minimum exponent
     case 2: {
         ALIGN16(uint16_t) exp1[256];
+        ALIGN16(const union __m64ui) vmask = {{0x00ff00ff, 0x00ff00ff}};
 
         i=0;k=1;
         for(; i<(ngrps & ~3); i+=4, k+=8) {
@@ -180,6 +179,7 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
         }
     default: {
         ALIGN16(uint32_t) exp1[256];
+        ALIGN16(const union __m64ui) vmask2 = {{0x000000ff, 0x000000ff}};
 
         i=0;k=1;
         for(; i<(ngrps & ~1); i+=2, k+=8) {
