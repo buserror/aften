@@ -281,10 +281,10 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
 static int
 compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs)
 {
+    ALIGN16(uint8_t) exponents[A52_NUM_BLOCKS][256];
     int blk, str, i, j, k;
     int min_error, exp_error[6];
     int err;
-    ALIGN16(uint8_t) exponents[A52_NUM_BLOCKS][256];
 
     min_error = 1;
     for(str=1; str<6; str++) {
