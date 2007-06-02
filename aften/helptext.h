@@ -395,7 +395,7 @@ static const char *input_options[INPUT_OPTIONS_COUNT] = {
 "    [-chmap #]     Channel mapping order of input audio\n"
 "                       Some programs create wav files which use a channel\n"
 "                       mapping other than the standard wav mapping.  This\n"
-"                       option allows the user to specify if the input file\n
+"                       option allows the user to specify if the input file\n"
 "                       uses WAVE, AC-3, or MPEG channel mapping.  The MPEG\n"
 "                       channel mapping is used by DTS, MP2, and AAC formats.\n"
 "                       0 = WAVE mapping (default)\n"
