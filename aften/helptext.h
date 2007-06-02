@@ -115,7 +115,7 @@ static const char *help_options[HELP_OPTIONS_COUNT] = {
 "                       1 = LFE channel is present\n",
 
 "    [-chmap #]     Channel mapping order of input audio\n"
-"                       0 = wav mapping (default)\n"
+"                       0 = WAVE mapping (default)\n"
 "                       1 = AC-3 mapping\n"
 "                       2 = MPEG mapping\n",
 
@@ -393,13 +393,14 @@ static const char *input_options[INPUT_OPTIONS_COUNT] = {
 "                       1 = LFE channel is present\n",
 
 "    [-chmap #]     Channel mapping order of input audio\n"
-"                       Some programs create wav files which use AC-3 channel\n"
-"                       mapping rather than standard wav mapping.  This option\n"
-"                       allows the user to specify if the input file uses AC-3\n"
-"                       or wav channel mapping.\n"
-"                       0 = wav mapping (default)\n"
+"                       Some programs create wav files which use a channel\n"
+"                       mapping other than the standard wav mapping.  This\n"
+"                       option allows the user to specify if the input file\n
+"                       uses WAVE, AC-3, or MPEG channel mapping.  The MPEG\n"
+"                       channel mapping is used by DTS, MP2, and AAC formats.\n"
+"                       0 = WAVE mapping (default)\n"
 "                       1 = AC-3 mapping\n"
-"                       2 = MPEG mapping (DTS, MP2, AAC)\n",
+"                       2 = MPEG mapping\n",
 
 "    [-readtoeof #] Read input WAVE audio data until the end-of-file.\n"
 "                       This overrides the data size in the WAVE header, and\n"
