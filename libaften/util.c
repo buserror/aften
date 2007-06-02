@@ -139,7 +139,7 @@ remap_wav_to_a52_u8(uint8_t *samples, int n, int ch, int acmod)
     int i, j;
     uint8_t tmp[6];
 
-    if(ch > 3 && acmod != 4 && acmod != 6) {
+    if(ch > 2 && acmod != 4 && acmod != 6) {
         if(ch == 6) {
             for(i=0; i<n*6; i+=6) {
                 memcpy(tmp, &samples[i], 6*sizeof(uint8_t));
@@ -163,7 +163,7 @@ remap_wav_to_a52_s16(int16_t *samples, int n, int ch, int acmod)
     int i, j;
     int16_t tmp[6];
 
-    if(ch > 3 && acmod != 4 && acmod != 6) {
+    if(ch > 2 && acmod != 4 && acmod != 6) {
         if(ch == 6) {
             for(i=0; i<n*6; i+=6) {
                 memcpy(tmp, &samples[i], 6*sizeof(int16_t));
@@ -187,7 +187,7 @@ remap_wav_to_a52_s32(int32_t *samples, int n, int ch, int acmod)
     int i, j;
     int32_t tmp[6];
 
-    if(ch > 3 && acmod != 4 && acmod != 6) {
+    if(ch > 2 && acmod != 4 && acmod != 6) {
         if(ch == 6) {
             for(i=0; i<n*6; i+=6) {
                 memcpy(tmp, &samples[i], 6*sizeof(int32_t));
@@ -211,7 +211,7 @@ remap_wav_to_a52_float(float *samples, int n, int ch, int acmod)
     int i, j;
     float tmp[6];
 
-    if(ch > 3 && acmod != 4 && acmod != 6) {
+    if(ch > 2 && acmod != 4 && acmod != 6) {
         if(ch == 6) {
             for(i=0; i<n*6; i+=6) {
                 memcpy(tmp, &samples[i], 6*sizeof(float));
@@ -235,7 +235,7 @@ remap_wav_to_a52_double(double *samples, int n, int ch, int acmod)
     int i, j;
     double tmp[6];
 
-    if(ch > 3 && acmod != 4 && acmod != 6) {
+    if(ch > 2 && acmod != 4 && acmod != 6) {
         if(ch == 6) {
             for(i=0; i<n*6; i+=6) {
                 memcpy(tmp, &samples[i], 6*sizeof(double));
