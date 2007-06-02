@@ -116,7 +116,8 @@ static const char *help_options[HELP_OPTIONS_COUNT] = {
 
 "    [-chmap #]     Channel mapping order of input audio\n"
 "                       0 = wav mapping (default)\n"
-"                       1 = AC-3 mapping\n",
+"                       1 = AC-3 mapping\n"
+"                       2 = MPEG mapping\n",
 
 "    [-readtoeof #] Read input WAVE audio data until the end-of-file\n"
 "                       0 = use data size in header (default)\n"
@@ -397,7 +398,8 @@ static const char *input_options[INPUT_OPTIONS_COUNT] = {
 "                       allows the user to specify if the input file uses AC-3\n"
 "                       or wav channel mapping.\n"
 "                       0 = wav mapping (default)\n"
-"                       1 = AC-3 mapping\n",
+"                       1 = AC-3 mapping\n"
+"                       2 = MPEG mapping (DTS, MP2, AAC)\n",
 
 "    [-readtoeof #] Read input WAVE audio data until the end-of-file.\n"
 "                       This overrides the data size in the WAVE header, and\n"

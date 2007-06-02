@@ -295,8 +295,8 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
                     i++;
                     if(i >= argc) return 1;
                     opts->chmap = atoi(argv[i]);
-                    if(opts->chmap < 0 || opts->chmap > 1) {
-                        fprintf(stderr, "invalid chmap: %d. must be 0 or 1.\n",
+                    if(opts->chmap < 0 || opts->chmap > 2) {
+                        fprintf(stderr, "invalid chmap: %d. must be 0 to 2.\n",
                                 opts->chmap);
                         return 1;
                     }

@@ -81,6 +81,15 @@ void Utility::RemapWaveToA52(void *samples, int samplesCount, int channels,
     aften_remap_wav_to_a52(samples, samplesCount, channels, format, acmod);
 }
 
+/// Takes a channel-interleaved array of audio samples, where the channels are
+/// in MPEG order. The samples are rearranged to the proper A/52 channel order
+/// based on the acmod parameter.
+void Utility::RemapMpegToA52(void *samples, int samplesCount, int channels,
+                             A52SampleFormat format, int acmod)
+{
+    aften_remap_mpeg_to_a52(samples, samplesCount, channels, format, acmod);
+}
+
 /// Tells whether libaften was configured to use floats or doubles
 FloatType Utility::GetFloatType()
 {

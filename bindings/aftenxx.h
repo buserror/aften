@@ -73,6 +73,12 @@ public:
     static void RemapWaveToA52(void *samples, int samplesCount, int channels,
                                A52SampleFormat format, int acmod);
 
+    /// Takes a channel-interleaved array of audio samples, where the channels
+    /// are in MPEG order. The samples are rearranged to the proper A/52
+    /// channel order based on the acmod parameter.
+    static void RemapMpegToA52(void *samples, int samplesCount, int channels,
+                               A52SampleFormat format, int acmod);
+
     /// Tells whether libaften was configured to use floats or doubles
     static FloatType GetFloatType();
 };

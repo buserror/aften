@@ -127,6 +127,19 @@ AFTEN_API void aften_remap_wav_to_a52(void *samples, int n, int ch,
                                       A52SampleFormat fmt, int acmod);
 
 /**
+ * Takes a channel-interleaved array of audio samples, where the channels are
+ * in MPEG order. The samples are rearranged to the proper A/52 channel order
+ * based on the @p acmod parameter.
+ * @param     samples  array of interleaved audio samples
+ * @param[in] n        number of samples in the array
+ * @param[in] ch       number of channels
+ * @param[in] fmt      sample format
+ * @param[in] acmod    audio coding mode
+ */
+AFTEN_API void aften_remap_mpeg_to_a52(void *samples, int n, int ch,
+                                       A52SampleFormat fmt, int acmod);
+
+/**
  * Tells whether libaften was configured to use floats or doubles
  */
 AFTEN_API FloatType aften_get_float_type(void);

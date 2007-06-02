@@ -278,6 +278,107 @@ aften_remap_wav_to_a52(void *samples, int n, int ch, A52SampleFormat fmt,
     }
 }
 
+/**
+ * MPEG to A/52 channel mapping
+ * Can be used for multi-channel DTS, MP2, or AAC
+ */
+
+static void
+remap_mpeg_to_a52_u8(uint8_t *samples, int n, int ch, int acmod)
+{
+    int i;
+
+    if(ch > 2 && acmod & 1) {
+        for(i=0; i<n*ch; i+=ch) {
+            uint8_t tmp = samples[i];
+            samples[i] = samples[i+1];
+            samples[i+1] = tmp;
+        }
+    }
+}
+
+static void
+remap_mpeg_to_a52_s16(int16_t *samples, int n, int ch, int acmod)
+{
+    int i;
+
+    if(ch > 2 && acmod & 1) {
+        fprintf(stderr, "converting s16 mpeg to s16 ac3\n");
+        for(i=0; i<n*ch; i+=ch) {
+            int16_t tmp = samples[i];
+            samples[i] = samples[i+1];
+            samples[i+1] = tmp;
+        }
+    }
+}
+
+static void
+remap_mpeg_to_a52_s32(int32_t *samples, int n, int ch, int acmod)
+{
+    int i;
+
+    if(ch > 2 && acmod & 1) {
+        for(i=0; i<n*ch; i+=ch) {
+            int32_t tmp = samples[i];
+            samples[i] = samples[i+1];
+            samples[i+1] = tmp;
+        }
+    }
+}
+
+static void
+remap_mpeg_to_a52_float(float *samples, int n, int ch, int acmod)
+{
+    int i;
+
+    if(ch > 2 && acmod & 1) {
+        for(i=0; i<n*ch; i+=ch) {
+            float tmp = samples[i];
+            samples[i] = samples[i+1];
+            samples[i+1] = tmp;
+        }
+    }
+}
+
+static void
+remap_mpeg_to_a52_double(double *samples, int n, int ch, int acmod)
+{
+    int i;
+
+    if(ch > 2 && acmod & 1) {
+        for(i=0; i<n*ch; i+=ch) {
+            double tmp = samples[i];
+            samples[i] = samples[i+1];
+            samples[i+1] = tmp;
+        }
+    }
+}
+
+void
+aften_remap_mpeg_to_a52(void *samples, int n, int ch, A52SampleFormat fmt,
+                        int acmod)
+{
+    if(samples == NULL) {
+        fprintf(stderr, "NULL parameter passed to aften_remap_wav_to_a52\n");
+        return;
+    }
+
+    switch(fmt) {
+        case A52_SAMPLE_FMT_U8:  remap_mpeg_to_a52_u8(samples, n, ch, acmod);
+                                 break;
+        case A52_SAMPLE_FMT_S16: remap_mpeg_to_a52_s16(samples, n, ch, acmod);
+                                 break;
+        case A52_SAMPLE_FMT_S20:
+        case A52_SAMPLE_FMT_S24:
+        case A52_SAMPLE_FMT_S32: remap_mpeg_to_a52_s32(samples, n, ch, acmod);
+                                 break;
+        case A52_SAMPLE_FMT_FLT: remap_mpeg_to_a52_float(samples, n, ch, acmod);
+                                 break;
+        case A52_SAMPLE_FMT_DBL: remap_mpeg_to_a52_double(samples, n, ch, acmod);
+                                 break;
+    }
+}
+
 FloatType
 aften_get_float_type(void)
 {

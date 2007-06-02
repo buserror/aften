@@ -244,6 +244,9 @@ main(int argc, char **argv)
         if(opts.chmap == 0) {
             aften_remap_wav_to_a52(sptr, nr, wf.channels, s.sample_format,
                                    s.acmod);
+        } else if(opts.chmap == 2) {
+            aften_remap_mpeg_to_a52(sptr, nr, wf.channels, s.sample_format,
+                                    s.acmod);
         }
         fs = aften_encode_frame(&s, frame, fwav);
         if(fs < 0) {
@@ -257,6 +260,9 @@ main(int argc, char **argv)
         if(opts.chmap == 0) {
             aften_remap_wav_to_a52(fwav, nr, wf.channels, s.sample_format,
                                    s.acmod);
+        } else if(opts.chmap == 2) {
+            aften_remap_mpeg_to_a52(fwav, nr, wf.channels, s.sample_format,
+                                    s.acmod);
         }
 
         // append extra silent frame if final frame is > 1280 samples
