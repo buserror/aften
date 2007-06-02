@@ -7,6 +7,7 @@ Aften TODO list
 - Frame parser / analyzer
 - AIFF file support for the MAC people
 - CAFF file support
+- Raw PCM file support
 - Option to downmix/upmix/resample prior to encoding
     - 2-channel surround-matrix downmix
     - 2-channel headphone downmix
