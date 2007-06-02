@@ -830,7 +830,7 @@ wavfile_init(WavFile *wf, FILE *fp, enum WavSampleFormat read_format)
         wf->filepos += 4;
         chunksize = read4le(fp);
         wf->filepos += 4;
-        if(id == 0 || chunksize == 0) {
+        if(id == 0) {
             fprintf(stderr, "invalid or empty chunk in wav header\n");
             return -1;
         }
@@ -907,6 +907,8 @@ wavfile_init(WavFile *wf, FILE *fp, enum WavSampleFormat read_format)
                 break;
             case DATA_ID:
                 if(!found_fmt) return -1;
+                if(chunksize == 0)
+                    wf->read_to_eof = 1;
                 wf->data_size = chunksize;
                 wf->data_start = wf->filepos;
                 if(wf->seekable && wf->file_size > 0) {
@@ -918,7 +920,7 @@ wavfile_init(WavFile *wf, FILE *fp, enum WavSampleFormat read_format)
                 break;
             default:
                 // skip unknown chunk
-                if(aft_seek_set(wf, wf->filepos + chunksize)) {
+                if(chunksize > 0 && aft_seek_set(wf, wf->filepos + chunksize)) {
                     fprintf(stderr, "error seeking in wav file\n");
                     return -1;
                 }

@@ -125,7 +125,8 @@ main(int argc, char **argv)
         fprintf(stderr, "invalid wav file: %s\n", argv[1]);
         return 1;
     }
-    wf.read_to_eof = opts.read_to_eof;
+    if(opts.read_to_eof)
+        wf.read_to_eof = 1;
 
     // print wav info to console
     if(s.params.verbose > 0) {
