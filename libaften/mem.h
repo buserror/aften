@@ -1,7 +1,7 @@
 /**
  * Aften: A/52 audio encoder
- * Copyright (c) 2007  Justin Ruggles <justinruggles@bellsouth.net>
- * Copyright (c) 2007  Prakash Punnoor <prakash@punnoor.de>
+ * Copyright (c) 2007 Justin Ruggles
+ * Copyright (c) 2007 Prakash Punnoor <prakash@punnoor.de>
  *
  * Uses a modified version of memalign hack from FFmpeg
  * Copyright (c) 2002 Fabrice Bellard.

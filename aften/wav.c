@@ -1,6 +1,6 @@
 /**
  * Aften: A/52 audio encoder
- * Copyright (c) 2006  Justin Ruggles <justinruggles@bellsouth.net>
+ * Copyright (c) 2006 Justin Ruggles
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

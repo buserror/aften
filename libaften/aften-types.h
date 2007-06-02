@@ -1,6 +1,6 @@
 /**
  * Aften: A/52 audio encoder
- * Copyright (c) 2006-2007 Justin Ruggles <justinruggles@bellsouth.net>
+ * Copyright (c) 2006-2007 Justin Ruggles
  *               2006-2007 Prakash Punnoor <prakash@punnoor.de>
  *
  * Based on "The simplest AC3 encoder" from FFmpeg
