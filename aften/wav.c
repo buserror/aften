@@ -830,10 +830,6 @@ wavfile_init(WavFile *wf, FILE *fp, enum WavSampleFormat read_format)
         wf->filepos += 4;
         chunksize = read4le(fp);
         wf->filepos += 4;
-        if(id == 0) {
-            fprintf(stderr, "invalid or empty chunk in wav header\n");
-            return -1;
-        }
         switch(id) {
             case FMT__ID:
                 if(chunksize < 16) {
