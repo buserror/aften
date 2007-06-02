@@ -393,11 +393,12 @@ static const char *input_options[INPUT_OPTIONS_COUNT] = {
 "                       1 = LFE channel is present\n",
 
 "    [-chmap #]     Channel mapping order of input audio\n"
-"                       Some programs create wav files which use a channel\n"
-"                       mapping other than the standard wav mapping.  This\n"
+"                       Some programs create WAVE files which use a channel\n"
+"                       mapping other than the standard WAVE mapping.  This\n"
 "                       option allows the user to specify if the input file\n"
 "                       uses WAVE, AC-3, or MPEG channel mapping.  The MPEG\n"
-"                       channel mapping is used by DTS, MP2, and AAC formats.\n"
+"                       channel mapping is used by DTS and by MPEG-2/4 formats\n"
+"                       such as MP2 and AAC.\n"
 "                       0 = WAVE mapping (default)\n"
 "                       1 = AC-3 mapping\n"
 "                       2 = MPEG mapping\n",
