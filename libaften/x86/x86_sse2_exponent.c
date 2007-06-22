@@ -322,7 +322,7 @@ compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs)
 
             for(i=0; i<(ncoefs & ~15); i+=16) {
                 __m128i vexp = _mm_loadu_si128((__m128i*)&exp_blk[i]);
-                __m128i vexp2 = _mm_loadu_si128((__m128i*)&exponents_blk[i]);//FIXME: Why does gcc not align the array?
+                __m128i vexp2 = _mm_load_si128((__m128i*)&exponents_blk[i]);
 #if 0
                 //safer but needed?
                 __m128i vexphi = _mm_unpackhi_epi8(vexp, vzero);
