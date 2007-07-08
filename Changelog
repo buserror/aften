@@ -7,7 +7,6 @@ Aften TODO list
 - Frame parser / analyzer
 - AIFF file support for the MAC people
 - CAFF file support
-- Raw PCM file support
 - Option to downmix/upmix/resample prior to encoding
     - 2-channel surround-matrix downmix
     - 2-channel headphone downmix
@@ -24,6 +23,7 @@ Aften Changelog
 version SVN : current
 - fixed piped input from FFmpeg
 - added support for MPEG channel order remapping
+- restructured audio input. enables raw pcm file support.
 
 version 0.07 : 25 April 2007
 - added C++ bindings (pass -DBINDINGS_CXX=1 to cmake to build them)

@@ -35,7 +35,7 @@
 #include <fcntl.h>
 #endif
 
-#include "wav.h"
+#include "pcm.h"
 
 static int
 calculate_rms(FLOAT *samples, int ch, int n)
@@ -86,13 +86,13 @@ int
 main(int argc, char **argv)
 {
     FILE *fp;
-    WavFile wf;
+    PcmFile pf;
     FLOAT *buf;
     uint32_t start_sec, end_sec;
     int frame_size, nr, rms;
     uint64_t avg_rms, avg_cnt;
     uint64_t time_ms;
-    enum WavSampleFormat read_format;
+    int read_format;
 
     /* open file */
     if(argc < 2 || argc > 4) {
@@ -131,40 +131,40 @@ main(int argc, char **argv)
     }
 
 #ifdef CONFIG_DOUBLE
-    read_format = WAV_SAMPLE_FMT_DBL;
+    read_format = PCM_SAMPLE_FMT_DBL;
 #else
-    read_format = WAV_SAMPLE_FMT_FLT;
+    read_format = PCM_SAMPLE_FMT_FLT;
 #endif
 
-    if(wavfile_init(&wf, fp, read_format)) {
+    if(pcmfile_init(&pf, fp, read_format, PCM_FORMAT_WAVE)) {
         fprintf(stderr, "error initializing wav reader\n\n");
         exit(1);
     }
-    frame_size = wf.sample_rate * 50 / 1000;
+    frame_size = pf.sample_rate * 50 / 1000;
     // seek to start of time range
-    wavfile_seek_time_ms(&wf, start_sec*1000, WAV_SEEK_SET);
+    pcmfile_seek_time_ms(&pf, start_sec*1000, PCM_SEEK_SET);
 
-    buf = calloc(frame_size * wf.channels, sizeof(FLOAT));
+    buf = calloc(frame_size * pf.channels, sizeof(FLOAT));
 
     avg_rms = 31;
     avg_cnt = 1;
-    time_ms = wavfile_position_time_ms(&wf);
-    nr = wavfile_read_samples(&wf, buf, frame_size);
+    time_ms = pcmfile_position_time_ms(&pf);
+    nr = pcmfile_read_samples(&pf, buf, frame_size);
     while(nr > 0) {
         // check for end of time range
         if(time_ms > (end_sec*1000)) {
             break;
         }
 
-        rms = calculate_rms(buf, wf.channels, nr);
+        rms = calculate_rms(buf, pf.channels, nr);
         // use a reasonable dialog range
         if(rms < 40 && rms > 15) {
             avg_rms += rms;
             avg_cnt++;
         }
 
-        time_ms = wavfile_position_time_ms(&wf);
-        nr = wavfile_read_samples(&wf, buf, frame_size);
+        time_ms = pcmfile_position_time_ms(&pf);
+        nr = pcmfile_read_samples(&pf, buf, frame_size);
     }
     avg_rms /= avg_cnt;
 
@@ -174,6 +174,7 @@ main(int argc, char **argv)
     fprintf(stdout, "Dialnorm: -%d dB\n\n", (int)MIN(avg_rms, 31));
 
     free(buf);
+    pcmfile_close(&pf);
     fclose(fp);
 
     return 0;

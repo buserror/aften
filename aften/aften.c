@@ -35,7 +35,7 @@
 #endif
 
 #include "aften.h"
-#include "wav.h"
+#include "pcm.h"
 #include "opts.h"
 
 static const int acmod_to_ch[8] = { 2, 1, 2, 3, 3, 4, 4, 5 };
@@ -63,7 +63,7 @@ main(int argc, char **argv)
     int nr, fs, err;
     FILE *ifp;
     FILE *ofp;
-    WavFile wf;
+    PcmFile pf;
     CommandOptions opts;
     AftenContext s;
     uint32_t samplecount, bytecount, t0, t1, percent;
@@ -71,12 +71,12 @@ main(int argc, char **argv)
     int last_frame;
     int frame_cnt;
     int done;
-    enum WavSampleFormat read_format;
+    int input_file_format;
+    enum PcmSampleFormat read_format;
     /* update output every 200ms */
     clock_t update_clock_span = 0.2f * CLOCKS_PER_SEC;
     clock_t current_clock;
     clock_t last_update_clock = clock() - update_clock_span;
-
 
     opts.s = &s;
     aften_set_defaults(&s);
@@ -115,29 +115,37 @@ main(int argc, char **argv)
     }
 
 #ifdef CONFIG_DOUBLE
-    read_format = WAV_SAMPLE_FMT_DBL;
+    read_format = PCM_SAMPLE_FMT_DBL;
 #else
-    read_format = WAV_SAMPLE_FMT_FLT;
+    read_format = PCM_SAMPLE_FMT_FLT;
 #endif
 
-    // initialize wavfile using input
-    if(wavfile_init(&wf, ifp, read_format)) {
-        fprintf(stderr, "invalid wav file: %s\n", argv[1]);
+    // initialize pcmfile using input
+    input_file_format = PCM_FORMAT_UNKNOWN;
+    if(opts.raw_input)
+        input_file_format = PCM_FORMAT_RAW;
+    if(pcmfile_init(&pf, ifp, read_format, input_file_format)) {
+        fprintf(stderr, "invalid input file: %s\n", argv[1]);
         return 1;
     }
     if(opts.read_to_eof)
-        wf.read_to_eof = 1;
+        pf.read_to_eof = 1;
+    if(opts.raw_input) {
+        pf.sample_rate = opts.raw_sr;
+        pf.channels = opts.raw_ch;
+        pcmfile_set_source(&pf, opts.raw_fmt, opts.raw_order);
+    }
 
     // print wav info to console
     if(s.params.verbose > 0) {
         fprintf(stderr, "input format: ");
-        wavfile_print(stderr, &wf);
+        pcmfile_print(&pf, stderr);
     }
 
     // if acmod is given on commandline, determine lfe from number of channels
     if(s.acmod >= 0) {
         int ch = acmod_to_ch[s.acmod];
-        if(ch == wf.channels) {
+        if(ch == pf.channels) {
             if(s.lfe < 0) {
                 s.lfe = 0;
             } else {
@@ -146,7 +154,7 @@ main(int argc, char **argv)
                     return 1;
                 }
             }
-        } else if(ch == (wf.channels - 1)) {
+        } else if(ch == (pf.channels - 1)) {
             if(s.lfe < 0) {
                 s.lfe = 1;
             } else {
@@ -162,7 +170,7 @@ main(int argc, char **argv)
     }
     // if acmod is not given on commandline, determine from WAVE file
     if(s.acmod < 0) {
-        int ch = wf.channels;
+        int ch = pf.channels;
         if(s.lfe >= 0) {
             if(s.lfe == 0 && ch == 6) {
                 fprintf(stderr, "cannot encode 6 channels w/o LFE\n");
@@ -172,17 +180,17 @@ main(int argc, char **argv)
                 return 1;
             }
             if(s.lfe) {
-                wf.ch_mask |= 0x08;
+                pf.ch_mask |= 0x08;
             }
         }
-        if(aften_wav_channels_to_acmod(ch, wf.ch_mask, &s.acmod, &s.lfe)) {
+        if(aften_wav_channels_to_acmod(ch, pf.ch_mask, &s.acmod, &s.lfe)) {
             fprintf(stderr, "mismatch in channels, acmod, and lfe params\n");
             return 1;
         }
     }
     // set some encoding parameters using wav info
-    s.channels = wf.channels;
-    s.samplerate = wf.sample_rate;
+    s.channels = pf.channels;
+    s.samplerate = pf.sample_rate;
 #ifdef CONFIG_DOUBLE
     s.sample_format = A52_SAMPLE_FMT_DBL;
 #else
@@ -222,7 +230,7 @@ main(int argc, char **argv)
 
     // allocate memory for coded frame and sample buffer
     frame = calloc(A52_MAX_CODED_FRAME_SIZE, 1);
-    fwav = calloc(A52_SAMPLES_PER_FRAME * wf.channels, sizeof(FLOAT));
+    fwav = calloc(A52_SAMPLES_PER_FRAME * s.channels, sizeof(FLOAT));
     if(frame == NULL || fwav == NULL) {
         aften_encode_close(&s);
         exit(1);
@@ -239,13 +247,13 @@ main(int argc, char **argv)
     // don't pad start with zero samples, use input audio instead.
     // not recommended, but providing the option here for when sync is needed
     if(!opts.pad_start) {
-        FLOAT *sptr = &fwav[1280*wf.channels];
-        nr = wavfile_read_samples(&wf, sptr, 256);
+        FLOAT *sptr = &fwav[1280*s.channels];
+        nr = pcmfile_read_samples(&pf, sptr, 256);
         if(opts.chmap == 0) {
-            aften_remap_wav_to_a52(sptr, nr, wf.channels, s.sample_format,
+            aften_remap_wav_to_a52(sptr, nr, s.channels, s.sample_format,
                                    s.acmod);
         } else if(opts.chmap == 2) {
-            aften_remap_mpeg_to_a52(sptr, nr, wf.channels, s.sample_format,
+            aften_remap_mpeg_to_a52(sptr, nr, s.channels, s.sample_format,
                                     s.acmod);
         }
         fs = aften_encode_frame(&s, frame, fwav);
@@ -255,13 +263,13 @@ main(int argc, char **argv)
         }
     }
 
-    nr = wavfile_read_samples(&wf, fwav, A52_SAMPLES_PER_FRAME);
+    nr = pcmfile_read_samples(&pf, fwav, A52_SAMPLES_PER_FRAME);
     while(nr > 0 || fs > 0) {
         if(opts.chmap == 0) {
-            aften_remap_wav_to_a52(fwav, nr, wf.channels, s.sample_format,
+            aften_remap_wav_to_a52(fwav, nr, s.channels, s.sample_format,
                                    s.acmod);
         } else if(opts.chmap == 2) {
-            aften_remap_mpeg_to_a52(fwav, nr, wf.channels, s.sample_format,
+            aften_remap_mpeg_to_a52(fwav, nr, s.channels, s.sample_format,
                                     s.acmod);
         }
 
@@ -275,7 +283,7 @@ main(int argc, char **argv)
         // zero leftover samples at end of last frame
         if(!done && nr < A52_SAMPLES_PER_FRAME) {
             int i;
-            for(i=nr*wf.channels; i<A52_SAMPLES_PER_FRAME*wf.channels; i++) {
+            for(i=nr*s.channels; i<A52_SAMPLES_PER_FRAME*s.channels; i++) {
                 fwav[i] = 0.0;
             }
         }
@@ -297,14 +305,14 @@ main(int argc, char **argv)
                 /* make sure we write out when finished, i.e. when fs == 0 */
                 if (current_clock - last_update_clock >= update_clock_span || !fs) {
                     if(s.params.verbose == 1) {
-                        t1 = samplecount / wf.sample_rate;
-                        if(frame_cnt > 0 && (t1 > t0 || samplecount >= wf.samples)) {
-                            kbps = (bytecount * FCONST(8.0) * wf.sample_rate) /
+                        t1 = samplecount / pf.sample_rate;
+                        if(frame_cnt > 0 && (t1 > t0 || samplecount >= pf.samples)) {
+                            kbps = (bytecount * FCONST(8.0) * pf.sample_rate) /
                                 (FCONST(1000.0) * samplecount);
                             percent = 0;
-                            if(wf.samples > 0) {
+                            if(pf.samples > 0) {
                                 percent = (uint32_t)((samplecount * FCONST(100.0)) /
-                                                     wf.samples);
+                                                     pf.samples);
                                 percent = CLIP(percent, 0, 100);
                             }
                             fprintf(stderr, "\rprogress: %3u%% | q: %4.1f | "
@@ -325,13 +333,13 @@ main(int argc, char **argv)
         }
         frame_cnt++;
         last_frame = nr;
-        nr = wavfile_read_samples(&wf, fwav, A52_SAMPLES_PER_FRAME);
+        nr = pcmfile_read_samples(&pf, fwav, A52_SAMPLES_PER_FRAME);
     }
     if(s.params.verbose == 1) {
         fprintf(stderr, "\n\n");
     } else if(s.params.verbose == 2) {
         if(samplecount > 0) {
-            kbps = (bytecount * FCONST(8.0) * wf.sample_rate) / (FCONST(1000.0) * samplecount);
+            kbps = (bytecount * FCONST(8.0) * pf.sample_rate) / (FCONST(1000.0) * samplecount);
         } else {
             kbps = 0;
         }
@@ -345,6 +353,7 @@ end:
     free(fwav);
     free(frame);
 
+    pcmfile_close(&pf);
     fclose(ifp);
     fclose(ofp);
 

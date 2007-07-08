@@ -18,37 +18,36 @@
  */
 
 /**
- * @file opts.h
- * Commandline options header
+ * @file byteio.h
+ * Byte buffer header
  */
 
-#ifndef OPTS_H
-#define OPTS_H
+#ifndef BYTEIO_H
+#define BYTEIO_H
+
+#include "common.h"
 
 #include <stdio.h>
 
-#include "aften.h"
+#define BYTEIO_BUFFER_SIZE 16384
 
-typedef struct {
-    int chmap;
-    char *infile;
-    char *outfile;
-    AftenContext *s;
-    int pad_start;
-    int read_to_eof;
-    int raw_input;
-    int raw_fmt;
-    int raw_order;
-    int raw_sr;
-    int raw_ch;
-} CommandOptions;
+typedef struct ByteIOContext {
+    FILE *fp;
+    uint8_t *buffer;
+    int index;
+    int size;
+} ByteIOContext;
 
-extern void print_usage(FILE *out);
+extern int byteio_init(ByteIOContext *ctx, FILE *fp);
 
-extern void print_long_help(FILE *out);
+extern void byteio_align(ByteIOContext *ctx);
 
-extern void print_help(FILE *out);
+extern int byteio_flush(ByteIOContext *ctx);
 
-extern int parse_commandline(int argc, char **argv, CommandOptions *opts);
+extern int byteio_read(void *ptr, int n, ByteIOContext *ctx);
 
-#endif /* OPTS_H */
+extern int byteio_peek(void *ptr, int n, ByteIOContext *ctx);
+
+extern void byteio_close(ByteIOContext *ctx);
+
+#endif /* BYTEIO_H */

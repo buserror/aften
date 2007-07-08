@@ -33,7 +33,7 @@
 #include <fcntl.h>
 #endif
 
-#include "wav.h"
+#include "pcm.h"
 
 static char *
 get_format_name(int id)
@@ -294,7 +294,7 @@ get_format_name(int id)
 
 typedef struct WavInfo {
     char *fname;
-    WavFile wf;
+    PcmFile pf;
 } WavInfo;
 
 static void
@@ -303,9 +303,9 @@ wavinfo_print(WavInfo *wi)
     char *type;
     int64_t leftover;
     float playtime;
-    WavFile *wf = &wi->wf;
+    PcmFile *wf = &wi->pf;
 
-    type = get_format_name(wf->format);
+    type = get_format_name(wf->wav_format);
 
     printf("\n=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n");
     printf("File:\n");
@@ -317,13 +317,13 @@ wavinfo_print(WavInfo *wi)
     }
     printf("Format:\n");
     if(type == NULL) {
-        printf("   Type:          unknown - 0x%04X\n", wf->format);
+        printf("   Type:          unknown - 0x%04X\n", wf->wav_format);
     } else {
         printf("   Type:          %s\n", type);
     }
     printf("   Channels:      %d\n", wf->channels);
     printf("   Sample Rate:   %d Hz\n", wf->sample_rate);
-    printf("   Avg bytes/sec: %"PRIu64"\n", wf->bytes_per_sec);
+    printf("   Avg bytes/sec: %d\n", wf->block_align * wf->sample_rate);
     printf("   Block Align:   %d bytes\n", wf->block_align);
     printf("   Bit Width:     %d\n", wf->bit_width);
     if(wf->ch_mask > 0) {
@@ -342,7 +342,7 @@ wavinfo_print(WavInfo *wi)
     } else if(leftover > 0) {
         printf("   Leftover:  %"PRId64" bytes\n", leftover);
     }
-    if(wf->format == 0x0001 || wf->format == 0x0003 || wf->format == 0xFFFE) {
+    if(wf->wav_format == 0x0001 || wf->wav_format == 0x0003) {
         playtime = (float)wf->samples / (float)wf->sample_rate;
         printf("   Samples:       %"PRIu64"\n", wf->samples);
         printf("   Playing Time:  %0.2f sec\n", playtime);
@@ -367,7 +367,7 @@ main(int argc, char **argv)
 {
     FILE *fp;
     WavInfo wi;
-    WavFile *wf = &wi.wf;
+    PcmFile *pf = &wi.pf;
 
     /* initialize WavInfo to zero */
     memset(&wi, 0, sizeof(WavInfo));
@@ -388,11 +388,12 @@ main(int argc, char **argv)
     }
     if(!fp) wavfile_error("cannot open file");
 
-    wavfile_init(wf, fp, WAV_SAMPLE_FMT_UNKNOWN);
+    pcmfile_init(pf, fp, PCM_SAMPLE_FMT_UNKNOWN, PCM_FORMAT_WAVE);
 
     /* print info */
     wavinfo_print(&wi);
 
+    pcmfile_close(pf);
     fclose(fp);
 
     return 0;

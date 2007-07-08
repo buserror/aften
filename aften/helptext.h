@@ -27,7 +27,7 @@
 
 static const char *usage_heading = "usage: aften [options] <input.wav> <output.ac3>\n";
 
-#define HELP_OPTIONS_COUNT 36
+#define HELP_OPTIONS_COUNT 39
 
 static const char *help_options[HELP_OPTIONS_COUNT] = {
 "    [-h]           Print out list of commandline options\n",
@@ -113,6 +113,15 @@ static const char *help_options[HELP_OPTIONS_COUNT] = {
 "    [-lfe #]       Specify use of LFE channel (overrides wav header)\n"
 "                       0 = LFE channel is not present\n"
 "                       1 = LFE channel is present\n",
+
+"    [-raw_fmt X]   Raw audio input sample format (default: s16_le)\n"
+"                       One of the pre-defined sample formats:\n"
+"                       u8, s16_le, s16_be, s20_le, s20_be, s24_le, s24_be,\n"
+"                       s32_le, s32_be, float_le, float_be, double_le, double_be\n",
+
+"    [-raw_sr #]    Raw audio input sample rate (default: 48000)\n",
+
+"    [-raw_ch #]    Raw audio input channels (default: 2)\n",
 
 "    [-chmap #]     Channel mapping order of input audio\n"
 "                       0 = WAVE mapping (default)\n"
@@ -364,7 +373,7 @@ static const char *drc_options[DRC_OPTIONS_COUNT] = {
 "                       -31dB.\n"
 };
 
-#define INPUT_OPTIONS_COUNT 5
+#define INPUT_OPTIONS_COUNT 8
 
 static const char input_heading[17] = "INPUT OPTIONS\n";
 static const char *input_options[INPUT_OPTIONS_COUNT] = {
@@ -391,6 +400,22 @@ static const char *input_options[INPUT_OPTIONS_COUNT] = {
 "    [-lfe #]       Specify use of LFE channel (overrides wav header)\n"
 "                       0 = LFE channel is not present\n"
 "                       1 = LFE channel is present\n",
+
+"    [-raw_fmt X]   Raw audio input sample format (default: s16_le)\n"
+"                       This options specifies the sample format when using\n"
+"                       raw audio input.  Using this option forces Aften to\n"
+"                       treat the input as raw audio.  The choices for the\n"
+"                       pre-defined sample formats are:\n"
+"                       u8, s16_le, s16_be, s20_le, s20_be, s24_le, s24_be,\n"
+"                       s32_le, s32_be, float_le, float_be, double_le, double_be\n",
+
+"    [-raw_sr #]    Raw audio input sample rate (default: 48000)\n"
+"                       Using this option forces Aften to treat the input as\n"
+"                       raw audio.\n",
+
+"    [-raw_ch #]    Raw audio input channels (default: 2)\n"
+"                       Using this option forces Aften to treat the input as\n"
+"                       raw audio.\n",
 
 "    [-chmap #]     Channel mapping order of input audio\n"
 "                       Some programs create WAVE files which use a channel\n"

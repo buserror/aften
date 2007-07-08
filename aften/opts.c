@@ -30,6 +30,7 @@
 
 #include "opts.h"
 #include "helptext.h"
+#include "pcm.h"
 
 void
 print_usage(FILE *out)
@@ -83,6 +84,11 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
     opts->outfile = argv[2];
     opts->pad_start = 1;
     opts->read_to_eof = 0;
+    opts->raw_input = 0;
+    opts->raw_fmt = PCM_SAMPLE_FMT_S16;
+    opts->raw_order = PCM_BYTE_ORDER_LE;
+    opts->raw_sr = 48000;
+    opts->raw_ch = 2;
 
     for(i=1; i<argc; i++) {
         if(argv[i][0] == '-' && argv[i][1] != '\0') {
@@ -348,6 +354,97 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
                                 opts->s->params.max_bwcode);
                         return 1;
                     }
+                } else if(!strncmp(&argv[i][1], "raw_fmt", 8)) {
+                    i++;
+                    if(i >= argc) return 1;
+                    if(!strncmp(argv[i], "u8", 3)) {
+                        opts->raw_fmt = PCM_SAMPLE_FMT_U8;
+                        opts->raw_order = PCM_BYTE_ORDER_LE;
+                    } else if(!strncmp(argv[i], "s16_", 4)) {
+                        opts->raw_fmt = PCM_SAMPLE_FMT_S16;
+                        if(!strncmp(&argv[i][4], "le", 3)) {
+                            opts->raw_order = PCM_BYTE_ORDER_LE;
+                        } else if(!strncmp(&argv[i][4], "be", 3)) {
+                            opts->raw_order = PCM_BYTE_ORDER_BE;
+                        } else {
+                            fprintf(stderr, "invalid raw_fmt: %s\n", argv[i]);
+                            return 1;
+                        }
+                    } else if(!strncmp(argv[i], "s20_", 4)) {
+                        opts->raw_fmt = PCM_SAMPLE_FMT_S20;
+                        if(!strncmp(&argv[i][4], "le", 3)) {
+                            opts->raw_order = PCM_BYTE_ORDER_LE;
+                        } else if(!strncmp(&argv[i][4], "be", 3)) {
+                            opts->raw_order = PCM_BYTE_ORDER_BE;
+                        } else {
+                            fprintf(stderr, "invalid raw_fmt: %s\n", argv[i]);
+                            return 1;
+                        }
+                    } else if(!strncmp(argv[i], "s24_", 4)) {
+                        opts->raw_fmt = PCM_SAMPLE_FMT_S24;
+                        if(!strncmp(&argv[i][4], "le", 3)) {
+                            opts->raw_order = PCM_BYTE_ORDER_LE;
+                        } else if(!strncmp(&argv[i][4], "be", 3)) {
+                            opts->raw_order = PCM_BYTE_ORDER_BE;
+                        } else {
+                            fprintf(stderr, "invalid raw_fmt: %s\n", argv[i]);
+                            return 1;
+                        }
+                    } else if(!strncmp(argv[i], "s32_", 4)) {
+                        opts->raw_fmt = PCM_SAMPLE_FMT_S32;
+                        if(!strncmp(&argv[i][4], "le", 3)) {
+                            opts->raw_order = PCM_BYTE_ORDER_LE;
+                        } else if(!strncmp(&argv[i][4], "be", 3)) {
+                            opts->raw_order = PCM_BYTE_ORDER_BE;
+                        } else {
+                            fprintf(stderr, "invalid raw_fmt: %s\n", argv[i]);
+                            return 1;
+                        }
+                    } else if(!strncmp(argv[i], "float_", 6)) {
+                        opts->raw_fmt = PCM_SAMPLE_FMT_FLT;
+                        if(!strncmp(&argv[i][6], "le", 3)) {
+                            opts->raw_order = PCM_BYTE_ORDER_LE;
+                        } else if(!strncmp(&argv[i][6], "be", 3)) {
+                            opts->raw_order = PCM_BYTE_ORDER_BE;
+                        } else {
+                            fprintf(stderr, "invalid raw_fmt: %s\n", argv[i]);
+                            return 1;
+                        }
+                    } else if(!strncmp(argv[i], "double_", 7)) {
+                        opts->raw_fmt = PCM_SAMPLE_FMT_DBL;
+                        if(!strncmp(&argv[i][7], "le", 3)) {
+                            opts->raw_order = PCM_BYTE_ORDER_LE;
+                        } else if(!strncmp(&argv[i][7], "be", 3)) {
+                            opts->raw_order = PCM_BYTE_ORDER_BE;
+                        } else {
+                            fprintf(stderr, "invalid raw_fmt: %s\n", argv[i]);
+                            return 1;
+                        }
+                    } else {
+                        fprintf(stderr, "invalid raw_fmt: %s\n", argv[i]);
+                        return 1;
+                    }
+                    opts->raw_input = 1;
+                } else if(!strncmp(&argv[i][1], "raw_sr", 7)) {
+                    i++;
+                    if(i >= argc) return 1;
+                    opts->raw_sr = atoi(argv[i]);
+                    if(opts->raw_sr <= 0) {
+                        fprintf(stderr, "invalid raw_sr: %d. must be > 0.\n",
+                                opts->raw_sr);
+                        return 1;
+                    }
+                    opts->raw_input = 1;
+                } else if(!strncmp(&argv[i][1], "raw_ch", 7)) {
+                    i++;
+                    if(i >= argc) return 1;
+                    opts->raw_ch = atoi(argv[i]);
+                    if(opts->raw_ch <= 0 || opts->raw_ch > 255) {
+                        fprintf(stderr, "invalid raw_ch: %d. must be 0 to 255.\n",
+                                opts->raw_ch);
+                        return 1;
+                    }
+                    opts->raw_input = 1;
                 }
             } else {
                 // single-character arguments

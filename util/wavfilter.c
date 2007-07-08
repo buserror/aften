@@ -29,7 +29,7 @@
 #include <string.h>
 #include <assert.h>
 
-#include "wav.h"
+#include "pcm.h"
 #include "filter.h"
 
 static void
@@ -82,7 +82,7 @@ write4le(uint32_t v, FILE *ofp)
 }
 
 static void
-output_wav_header(FILE *ofp, WavFile *wf)
+output_wav_header(FILE *ofp, PcmFile *wf)
 {
     fwrite("RIFF", 1, 4, ofp);
     write4le(((uint32_t)wf->data_size + 40), ofp);
@@ -118,14 +118,14 @@ int
 main(int argc, char **argv)
 {
     FILE *ifp, *ofp;
-    WavFile wf;
+    PcmFile pf;
     FLOAT *buf;
     int frame_size;
     int nr;
     int i;
     FilterContext f[6];
     int ftype=0;
-    enum WavSampleFormat read_format;
+    int read_format;
 
     if(argc != 5) {
         fprintf(stderr, "\n%s\n\n", usage);
@@ -153,24 +153,24 @@ main(int argc, char **argv)
     }
 
 #ifdef CONFIG_DOUBLE
-    read_format = WAV_SAMPLE_FMT_DBL;
+    read_format = PCM_SAMPLE_FMT_DBL;
 #else
-    read_format = WAV_SAMPLE_FMT_FLT;
+    read_format = PCM_SAMPLE_FMT_FLT;
 #endif
 
-    if(wavfile_init(&wf, ifp, read_format)) {
+    if(pcmfile_init(&pf, ifp, read_format, PCM_FORMAT_WAVE)) {
         fprintf(stderr, "error initializing wav reader\n\n");
         exit(1);
     }
-    output_wav_header(ofp, &wf);
+    output_wav_header(ofp, &pf);
 
-    for(i=0; i<wf.channels; i++) {
+    for(i=0; i<pf.channels; i++) {
         int cutoff;
         f[i].type = (enum FilterType)ftype;
         f[i].cascaded = 1;
         cutoff = atoi(argv[2]);
         f[i].cutoff = (FLOAT)cutoff;
-        f[i].samplerate = (FLOAT)wf.sample_rate;
+        f[i].samplerate = (FLOAT)pf.sample_rate;
         if(filter_init(&f[i], FILTER_ID_BUTTERWORTH_II)) {
             fprintf(stderr, "error initializing filter\n");
             exit(1);
@@ -178,20 +178,21 @@ main(int argc, char **argv)
     }
 
     frame_size = 512;
-    buf = calloc(frame_size * wf.channels, sizeof(FLOAT));
+    buf = calloc(frame_size * pf.channels, sizeof(FLOAT));
 
-    nr = wavfile_read_samples(&wf, buf, frame_size);
+    nr = pcmfile_read_samples(&pf, buf, frame_size);
     while(nr > 0) {
-        wav_filter(buf, wf.channels, nr, f);
-        output_wav_data(ofp, buf, wf.channels, nr);
-        nr = wavfile_read_samples(&wf, buf, frame_size);
+        wav_filter(buf, pf.channels, nr, f);
+        output_wav_data(ofp, buf, pf.channels, nr);
+        nr = pcmfile_read_samples(&pf, buf, frame_size);
     }
 
-    for(i=0; i<wf.channels; i++) {
+    for(i=0; i<pf.channels; i++) {
         filter_close(&f[i]);
     }
 
     free(buf);
+    pcmfile_close(&pf);
     fclose(ifp);
     fclose(ofp);
 

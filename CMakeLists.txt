@@ -38,6 +38,7 @@ INCLUDE_DIRECTORIES(${Aften_BINARY_DIR}/)
 INCLUDE_DIRECTORIES(${Aften_SOURCE_DIR}/)
 INCLUDE_DIRECTORIES(${Aften_SOURCE_DIR}/libaften)
 INCLUDE_DIRECTORIES(${Aften_SOURCE_DIR}/aften)
+INCLUDE_DIRECTORIES(${Aften_SOURCE_DIR}/pcm)
 
 SET(LIBAFTEN_SRCS libaften/a52enc.c
                   libaften/bitalloc.c
@@ -70,6 +71,12 @@ SET(LIBAFTEN_PPC_SRCS libaften/ppc/ppc_cpu_caps.c)
 SET(LIBAFTEN_ALTIVEC_SRCS libaften/ppc/mdct_altivec.c)
 
 SET(AFTEN_SRCS aften/aften.c aften/opts.c)
+
+SET(PCM_SRCS pcm/byteio.c
+             pcm/convert.c
+             pcm/pcm.c
+             pcm/raw.c
+             pcm/wav.c)
 
 
 IF(CMAKE_UNAME)
@@ -288,8 +295,8 @@ SET_TARGET_PROPERTIES(aften_static PROPERTIES LINKER_LANGUAGE C)
 SET_TARGET_PROPERTIES(aften_static PROPERTIES COMPILE_FLAGS -DAFTEN_BUILD_LIBRARY)
 TARGET_LINK_LIBRARIES(aften_static ${LIBM} ${ADD_LIBS})
 
-# building a static lib to prevent recompilation of wav.c
-ADD_LIBRARY(aften_wav STATIC aften/wav.c)
+# building a separate static lib for the pcm audio decoder
+ADD_LIBRARY(aften_pcm STATIC ${PCM_SRCS})
 
 ADD_EXECUTABLE(aften_exe ${AFTEN_SRCS})
 SET_TARGET_PROPERTIES(aften_exe PROPERTIES OUTPUT_NAME aften)
@@ -298,16 +305,16 @@ IF(WIN32)
   # When linking to static aften, dllimport mustn't be used
   SET_TARGET_PROPERTIES(aften_exe PROPERTIES COMPILE_FLAGS -DAFTEN_BUILD_LIBRARY)
 ENDIF(WIN32)
-TARGET_LINK_LIBRARIES(aften_exe aften_wav aften_static)
+TARGET_LINK_LIBRARIES(aften_exe aften_pcm aften_static)
 
 ADD_EXECUTABLE(wavinfo util/wavinfo.c)
-TARGET_LINK_LIBRARIES(wavinfo aften_wav)
+TARGET_LINK_LIBRARIES(wavinfo aften_pcm)
 
 ADD_EXECUTABLE(wavrms util/wavrms.c)
-TARGET_LINK_LIBRARIES(wavrms aften_wav ${LIBM})
+TARGET_LINK_LIBRARIES(wavrms aften_pcm ${LIBM})
 
 ADD_EXECUTABLE(wavfilter util/wavfilter.c libaften/filter.c)
-TARGET_LINK_LIBRARIES(wavfilter aften_wav ${LIBM})
+TARGET_LINK_LIBRARIES(wavfilter aften_pcm ${LIBM})
 
 IF(BINDINGS_CXX)
   MESSAGE("## WARNING: The C++ bindings are only lightly tested. Feed-back appreciated. ##")
