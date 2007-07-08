@@ -1375,14 +1375,17 @@ encode_frame(A52ThreadContext *tctx, uint8_t *frame_buffer)
 static int
 threaded_encode(void* vtctx)
 {
+    A52ThreadContext *tctx;
+    
 #ifdef MINGW_ALIGN_STACK_HACK
-	asm volatile (
-	    "pushl %%ecx\n"
-	    "pushl %%ecx\n"
-	    : : : "%esp","%ecx");
+    asm volatile (
+        "pushl %%ecx\n"
+        "pushl %%ecx\n"
+        "pushl %%ecx\n"
+        : : : "%esp","%ecx");
 #endif
 
-    A52ThreadContext *tctx = vtctx;
+    tctx = vtctx;
 
     posix_mutex_lock(&tctx->ts.enter_mutex);
     posix_cond_signal(&tctx->ts.enter_cond);
@@ -1411,10 +1414,11 @@ threaded_encode(void* vtctx)
     windows_event_set(&tctx->ts.ready_event);
 
 #ifdef MINGW_ALIGN_STACK_HACK
-	volatile asm (
-		"popl %%ecx\n"
-		"popl %%ecx\n"
-		: : : "%esp", "%ecx");
+    asm volatile (
+        "popl %%ecx\n"
+        "popl %%ecx\n"
+        "popl %%ecx\n"
+        : : : "%esp", "%ecx");
 #endif
 
     return 0;
