@@ -1379,6 +1379,10 @@ threaded_encode(void* vtctx)
     
 #ifdef MINGW_ALIGN_STACK_HACK
     asm volatile (
+        "movl %%esp, %%ecx\n"
+        "andl $15, %%ecx\n" 
+        "subl %%ecx, %%esp\n"
+        "pushl %%ecx\n"
         "pushl %%ecx\n"
         "pushl %%ecx\n"
         "pushl %%ecx\n"
@@ -1418,6 +1422,8 @@ threaded_encode(void* vtctx)
         "popl %%ecx\n"
         "popl %%ecx\n"
         "popl %%ecx\n"
+        "popl %%ecx\n"
+        "addl %%ecx, %%esp\n"
         : : : "%esp", "%ecx");
 #endif
 
