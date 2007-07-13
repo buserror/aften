@@ -55,6 +55,31 @@ print_intro(FILE *out)
                  vers);
 }
 
+static void
+print_simd_in_use(FILE *out, AftenSimdInstructions *simd_instructions)
+{
+    fprintf(out, "SIMD usage: ");
+    if (simd_instructions->mmx)
+        fprintf(out, "MMX ");
+    if (simd_instructions->sse)
+        fprintf(out, "SSE ");
+    if (simd_instructions->sse2)
+        fprintf(out, "SSE2 ");
+    if (simd_instructions->sse3)
+        fprintf(out, "SSE3 ");
+    if (simd_instructions->ssse3)
+        fprintf(out, "SSSE3 ");
+    if (simd_instructions->amd_3dnow)
+        fprintf(out, "3DNOW ");
+    if (simd_instructions->amd_3dnowext)
+        fprintf(out, "3DNOWEXT ");
+    if (simd_instructions->amd_sse_mmx)
+        fprintf(out, "SSE-MMX ");
+    if (simd_instructions->altivec)
+        fprintf(out, "Altivec ");
+    fprintf(out, "\n");
+}
+
 int
 main(int argc, char **argv)
 {
@@ -227,6 +252,12 @@ main(int argc, char **argv)
         }
         fprintf(stderr, "\n\n");
     }
+
+    /* print SIMD instructions used */
+    print_simd_in_use(stdout, &s.system.wanted_simd_instructions);
+
+    /* print number of threads used */
+    fprintf(stdout, "Threads: %i\n\n", s.system.n_threads);
 
     // allocate memory for coded frame and sample buffer
     frame = calloc(A52_MAX_CODED_FRAME_SIZE, 1);

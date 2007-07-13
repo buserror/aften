@@ -103,9 +103,20 @@ void cpu_caps_detect(void)
     x86cpu_caps_use.sse          = x86cpu_caps_detect.sse          & x86cpu_caps_compile.sse;
     x86cpu_caps_use.sse2         = x86cpu_caps_detect.sse2         & x86cpu_caps_compile.sse2;
     x86cpu_caps_use.sse3         = x86cpu_caps_detect.sse3         & x86cpu_caps_compile.sse3;
-    x86cpu_caps_use.ssse3         = x86cpu_caps_detect.ssse3         & x86cpu_caps_compile.ssse3;
+    x86cpu_caps_use.ssse3        = x86cpu_caps_detect.ssse3        & x86cpu_caps_compile.ssse3;
     x86cpu_caps_use.amd_3dnow    = x86cpu_caps_detect.amd_3dnow    & x86cpu_caps_compile.amd_3dnow;
     x86cpu_caps_use.amd_3dnowext = x86cpu_caps_detect.amd_3dnowext & x86cpu_caps_compile.amd_3dnowext;
     x86cpu_caps_use.amd_sse_mmx  = x86cpu_caps_detect.amd_sse_mmx  & x86cpu_caps_compile.amd_sse_mmx;
 }
 
+void apply_simd_restrictions(AftenSimdInstructions *simd_instructions)
+{
+    x86cpu_caps_use.mmx          &= simd_instructions->mmx;
+    x86cpu_caps_use.sse          &= simd_instructions->sse;
+    x86cpu_caps_use.sse2         &= simd_instructions->sse2;
+    x86cpu_caps_use.sse3         &= simd_instructions->sse3;
+    x86cpu_caps_use.ssse3        &= simd_instructions->ssse3;
+    x86cpu_caps_use.amd_3dnow    &= simd_instructions->amd_3dnow;
+    x86cpu_caps_use.amd_3dnowext &= simd_instructions->amd_3dnowext;
+    x86cpu_caps_use.amd_sse_mmx  &= simd_instructions->amd_sse_mmx;
+}

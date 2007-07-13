@@ -19,6 +19,7 @@
 #ifndef X86_CPU_CAPS_H
 #define X86_CPU_CAPS_H
 
+#include "aften-types.h"
 #include "common.h"
 
 struct x86cpu_caps_s {
@@ -36,6 +37,8 @@ struct x86cpu_caps_s {
 extern struct x86cpu_caps_s x86cpu_caps_use;
 
 void cpu_caps_detect(void);
+void apply_simd_restrictions(AftenSimdInstructions *simd_instructions);
+
 static inline int cpu_caps_have_mmx(void);
 static inline int cpu_caps_have_sse(void);
 static inline int cpu_caps_have_sse2(void);

@@ -91,3 +91,8 @@ void cpu_caps_detect(void)
     ppc_cpu_caps_altivec = g_is_altivec_present;
 }
 #endif
+
+void apply_simd_restrictions(AftenSimdInstructions *simd_instructions)
+{
+    ppc_cpu_caps_altivec &= simd_instructions->altivec;
+}

@@ -26,6 +26,7 @@
 extern int ppc_cpu_caps_altivec;
 
 void cpu_caps_detect(void);
+void apply_simd_restrictions(AftenSimdInstructions *simd_instructions);
 
 static inline int cpu_caps_have_altivec(void)
 {

@@ -92,6 +92,45 @@ aften_get_version(void)
     return str;
 }
 
+static void
+set_available_simd_instructions(AftenSimdInstructions *simd_instructions)
+{
+    cpu_caps_detect();
+
+    memset(simd_instructions, 0, sizeof(AftenSimdInstructions));
+
+#ifdef HAVE_MMX
+    simd_instructions->mmx = cpu_caps_have_mmx();
+#endif
+#ifdef HAVE_SSE
+    simd_instructions->sse = cpu_caps_have_sse();
+#endif
+#ifdef HAVE_SSE2
+    simd_instructions->sse2 = cpu_caps_have_sse2();
+#endif
+#ifdef HAVE_SSE3
+    simd_instructions->sse3 = cpu_caps_have_sse3();
+#endif
+/* Following SIMD code doesn't exist yet, so don't set it available */
+#if 0
+#ifdef HAVE_SSSE3
+    simd_instructions->ssse3 = cpu_caps_have_ssse3();
+#endif
+#ifdef HAVE_HAVE_3DNOW
+    simd_instructions->amd_3dnow = cpu_caps_have_3dnow();
+#endif
+#ifdef HAVE_HAVE_SSE_MMX
+    simd_instructions->amd_sse_mmx = cpu_caps_have_sse_mmx();
+#endif
+#ifdef HAVE_HAVE_3DNOWEXT
+    simd_instructions->amd_3dnowext = cpu_caps_have_3dnowext();
+#endif
+#endif
+#ifdef HAVE_ALTIVEC
+    simd_instructions->altivec = cpu_caps_have_altivec();
+#endif
+}
+
 void
 aften_set_defaults(AftenContext *s)
 {
@@ -100,10 +139,17 @@ aften_set_defaults(AftenContext *s)
         return;
     }
 
+
     /**
-     * These 4 must be set explicitly before initialization.
+     * These 5 must be set explicitly before initialization.
      * There are utility functions to help setting acmod and lfe.
      */
+
+    /* Tell the context which SIMD instruction sets are available. */
+    set_available_simd_instructions(&s->system.available_simd_instructions);
+    s->system.wanted_simd_instructions = s->system.available_simd_instructions;
+    s->system.n_threads = 0;
+
     s->channels = -1;
     s->samplerate = -1;
     s->acmod = -1;
@@ -124,7 +170,6 @@ aften_set_defaults(AftenContext *s)
     s->params.bitalloc_fast = 0;
     s->params.expstr_fast = 0;
     s->params.dynrng_profile = DYNRNG_PROFILE_NONE;
-    s->params.n_threads = 0;
     s->params.min_bwcode = 0;
     s->params.max_bwcode = 60;
 
@@ -325,6 +370,7 @@ aften_encode_init(AftenContext *s)
         return -1;
     }
     cpu_caps_detect();
+    apply_simd_restrictions(&s->system.wanted_simd_instructions);
 
     ctx = calloc(sizeof(A52Context), 1);
     if(!ctx) {
@@ -456,8 +502,9 @@ aften_encode_init(AftenContext *s)
     }
 
     // Initialize thread specific contexts
-    ctx->n_threads = (ctx->params.n_threads > 0) ? s->params.n_threads : get_ncpus();
+    ctx->n_threads = (s->system.n_threads > 0) ? s->system.n_threads : get_ncpus();
     ctx->n_threads = MIN(ctx->n_threads, MAX_NUM_THREADS);
+    s->system.n_threads = ctx->n_threads;
     tctx = calloc(sizeof(A52ThreadContext), ctx->n_threads);
     ctx->tctx = tctx;
 
@@ -1376,11 +1423,11 @@ static int
 threaded_encode(void* vtctx)
 {
     A52ThreadContext *tctx;
-    
+
 #ifdef MINGW_ALIGN_STACK_HACK
     asm volatile (
         "movl %%esp, %%ecx\n"
-        "andl $15, %%ecx\n" 
+        "andl $15, %%ecx\n"
         "subl %%ecx, %%esp\n"
         "pushl %%ecx\n"
         "pushl %%ecx\n"
