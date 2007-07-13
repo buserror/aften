@@ -122,7 +122,7 @@ main(int argc, char **argv)
         }
     }
 
-    if(s.params.verbose > 0) {
+    if(s.verbose > 0) {
         print_intro(stderr);
     }
 
@@ -162,7 +162,7 @@ main(int argc, char **argv)
     }
 
     // print wav info to console
-    if(s.params.verbose > 0) {
+    if(s.verbose > 0) {
         fprintf(stderr, "input format: ");
         pcmfile_print(&pf, stderr);
     }
@@ -244,7 +244,7 @@ main(int argc, char **argv)
     }
 
     // print ac3 info to console
-    if(s.params.verbose > 0) {
+    if(s.verbose > 0) {
         fprintf(stderr, "output format: %d Hz %s", s.samplerate,
                 acmod_str[s.acmod]);
         if(s.lfe) {
@@ -325,7 +325,7 @@ main(int argc, char **argv)
             fprintf(stderr, "Error encoding frame %d\n", frame_cnt);
             break;
         } else {
-            if(s.params.verbose > 0) {
+            if(s.verbose > 0) {
                 if (fs > 0) {
                     samplecount += A52_SAMPLES_PER_FRAME;
                     bytecount += fs;
@@ -335,7 +335,7 @@ main(int argc, char **argv)
                 current_clock = clock();
                 /* make sure we write out when finished, i.e. when fs == 0 */
                 if (current_clock - last_update_clock >= update_clock_span || !fs) {
-                    if(s.params.verbose == 1) {
+                    if(s.verbose == 1) {
                         t1 = samplecount / pf.sample_rate;
                         if(frame_cnt > 0 && (t1 > t0 || samplecount >= pf.samples)) {
                             kbps = (bytecount * FCONST(8.0) * pf.sample_rate) /
@@ -352,7 +352,7 @@ main(int argc, char **argv)
                                     (bw / (frame_cnt+1)), kbps);
                         }
                         t0 = t1;
-                    } else if(s.params.verbose == 2) {
+                    } else if(s.verbose == 2) {
                         fprintf(stderr, "frame: %7d | q: %4d | bw: %2d | bitrate: %3d kbps\n",
                                 frame_cnt, s.status.quality, s.status.bwcode,
                                 s.status.bit_rate);
@@ -366,9 +366,9 @@ main(int argc, char **argv)
         last_frame = nr;
         nr = pcmfile_read_samples(&pf, fwav, A52_SAMPLES_PER_FRAME);
     }
-    if(s.params.verbose == 1) {
+    if(s.verbose == 1) {
         fprintf(stderr, "\n\n");
-    } else if(s.params.verbose == 2) {
+    } else if(s.verbose == 2) {
         if(samplecount > 0) {
             kbps = (bytecount * FCONST(8.0) * pf.sample_rate) / (FCONST(1000.0) * samplecount);
         } else {

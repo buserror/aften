@@ -138,14 +138,6 @@ typedef struct {
  * Parameters which affect encoded audio output
  */
 typedef struct {
-
-    /**
-     * Verbosity level.
-     * 0 is quiet mode. 1 and 2 are more verbose.
-     * default is 1
-     */
-    int verbose;
-
     /**
      * Bitrate selection mode.
      * AFTEN_ENC_MODE_CBR : constant bitrate
@@ -278,7 +270,6 @@ typedef struct {
  * See the A/52 specification for details regarding the metadata.
  */
 typedef struct {
-
     /** Center mix level */
     int cmixlev;
 
@@ -337,11 +328,17 @@ typedef struct {
  * libaften public encoding context
  */
 typedef struct {
-
     AftenEncParams params;
     AftenMetadata meta;
     AftenStatus status;
     AftenSystemParams system;
+
+    /**
+     * Verbosity level.
+     * 0 is quiet mode. 1 and 2 are more verbose.
+     * default is 1
+     */
+    int verbose;
 
     /**
      * Total number of channels in the input stream.

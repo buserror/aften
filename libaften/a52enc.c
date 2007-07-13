@@ -150,6 +150,7 @@ aften_set_defaults(AftenContext *s)
     s->system.wanted_simd_instructions = s->system.available_simd_instructions;
     s->system.n_threads = 0;
 
+    s->verbose = 1;
     s->channels = -1;
     s->samplerate = -1;
     s->acmod = -1;
@@ -157,7 +158,6 @@ aften_set_defaults(AftenContext *s)
 
     s->sample_format = A52_SAMPLE_FMT_S16;
     s->private_context = NULL;
-    s->params.verbose = 1;
     s->params.encoding_mode = AFTEN_ENC_MODE_CBR;
     s->params.bitrate = 0;
     s->params.quality = 240;

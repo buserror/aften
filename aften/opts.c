@@ -453,10 +453,10 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
                 } else if(argv[i][1] == 'v') {
                     i++;
                     if(i >= argc) return 1;
-                    opts->s->params.verbose = atoi(argv[i]);
-                    if(opts->s->params.verbose < 0 || opts->s->params.verbose > 2) {
+                    opts->s->verbose = atoi(argv[i]);
+                    if(opts->s->verbose < 0 || opts->s->verbose > 2) {
                         fprintf(stderr, "invalid verbosity level: %d. must be 0 to 2.\n",
-                                opts->s->params.verbose);
+                                opts->s->verbose);
                         return 1;
                     }
                 } else if(argv[i][1] == 'b') {
