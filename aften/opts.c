@@ -1,6 +1,7 @@
 /**
  * Aften: A/52 audio encoder
  * Copyright (c) 2007 Justin Ruggles
+ *               2007 Prakash Punnoor <prakash@punnoor.de>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -66,6 +67,41 @@ print_help(FILE *out)
         fprintf(out, "%s", help_options[i]);
     }
     fprintf(out, "\n");
+}
+
+static int
+deactivate_simd(char *simd, AftenSimdInstructions *wanted_simd_instructions)
+{
+    int i, j;
+    int last = 0;
+
+    for (i=0; simd[i]; i=j+1) {
+        for (j=i; simd[j]!=','; ++j) {
+            if (!simd[j]) {
+                last = 1;
+                break;
+            }
+        }
+        simd[j] = 0;
+
+        if (!strcmp(&simd[i], "mmx"))
+            wanted_simd_instructions->mmx = 0;
+        else if (!strcmp(&simd[i], "sse"))
+            wanted_simd_instructions->sse = 0;
+        else if (!strcmp(&simd[i], "sse2"))
+            wanted_simd_instructions->sse2 = 0;
+        else if (!strcmp(&simd[i], "sse3"))
+            wanted_simd_instructions->sse3 = 0;
+        else if (!strcmp(&simd[i], "altivec"))
+            wanted_simd_instructions->altivec = 0;
+        else {
+            fprintf(stderr, "invalid simd instruction set: %s. must be mmx, sse, sse2, sse3 or altivec.\n", &simd[i]);
+            return 1;
+        }
+        if (last)
+            break;
+    }
+    return 0;
 }
 
 int
@@ -306,6 +342,10 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
                                 opts->chmap);
                         return 1;
                     }
+                } else if(!strncmp(&argv[i][1], "nosimd", 7)) {
+                    i++;
+                    if(i >= argc) return 1;
+                    if (deactivate_simd(argv[i], &opts->s->system.wanted_simd_instructions)) return 1;
                 } else if(!strncmp(&argv[i][1], "pad", 4)) {
                     i++;
                     if(i >= argc) return 1;
