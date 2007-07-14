@@ -24,6 +24,10 @@ version SVN : current
 - fixed piped input from FFmpeg
 - added support for MPEG channel order remapping
 - restructured audio input. enables raw pcm file support.
+- bugfixes in MMX/SSE2 code
+- stack align hack for x86 MinGW with threads
+- API changes
+- SIMD usage now shown and configurable
 
 version 0.07 : 25 April 2007
 - added C++ bindings (pass -DBINDINGS_CXX=1 to cmake to build them)
