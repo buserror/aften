@@ -192,9 +192,8 @@ main(int argc, char **argv)
             fprintf(stderr, "acmod does not match number of channels\n");
             return 1;
         }
-    }
-    // if acmod is not given on commandline, determine from WAVE file
-    if(s.acmod < 0) {
+    } else {
+        // if acmod is not given on commandline, determine from WAVE file
         int ch = pf.channels;
         if(s.lfe >= 0) {
             if(s.lfe == 0 && ch == 6) {
