@@ -39,6 +39,8 @@
 #ifdef HAVE_CPU_CAPS_DETECTION
 #include "asm_support.h"
 
+// derived from loki_cpuinfo.c, 1997-98 by H. Dietz and R. Fisher
+// using infos from sandpile.org
 static int cpu_caps_detect_x86(uint32_t *caps1, uint32_t *caps2, uint32_t *caps3)
 {
     uint32_t c1, c2, c3;
