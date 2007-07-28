@@ -29,6 +29,8 @@ version SVN : current
 - API changes
 - SIMD usage now shown and configurable
 - screen updates not permanently anymore
+- SIMD detection as compiler-independent inline assembly;
+  nasm/yasm not needed anymore
 
 version 0.07 : 25 April 2007
 - added C++ bindings (pass -DBINDINGS_CXX=1 to cmake to build them)
