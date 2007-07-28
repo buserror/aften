@@ -41,42 +41,23 @@
 
 // derived from loki_cpuinfo.c, 1997-98 by H. Dietz and R. Fisher
 // using infos from sandpile.org
-static int cpu_caps_detect_x86(uint32_t *caps1, uint32_t *caps2, uint32_t *caps3)
+static void cpu_caps_detect_x86(uint32_t *caps1, uint32_t *caps2, uint32_t *caps3)
 {
     uint32_t c1, c2, c3;
-    int retval;
 
 #if __GNUC__
 #define param1      %0
 #define param2      %1
 #define param3      %2
-#define param4      %3
 
     asm volatile (
 #else
 #define param1 c1
 #define param2 c2
 #define param3 c3
-#define param4 retval
 
   __asm {
 #endif
-        // detecting CPUID
-        _pushf
-        _pop(_a)
-        _mov(_eax, _ecx)
-
-        _xor(_(0x200000), _eax)
-        _push(_a)
-        _popf
-
-        _pushf
-        _pop(_a)
-
-        _xor(_ebx, _ebx)
-        _test(_(0x200000), _eax)
-        _jz(End)
-
         // standard CPUID
         _mov(_(0x1), _eax)
         _cpuid
@@ -87,13 +68,10 @@ static int cpu_caps_detect_x86(uint32_t *caps1, uint32_t *caps2, uint32_t *caps3
         _mov(_(0x80000001), _eax)
         _cpuid
         _mov(_edx, param3) //caps3 - 3DNOW!, 3DNOW!EXT, CYRIX-MMXEXT, AMD-MMX-SSE
-
-        _l(End)
-        _mov(_ebx, param4)
 #if __GNUC__
-        :"=m"(c1), "=m"(c2), "=m"(c3), "=m"(retval) /* output */
-        :                                           /* input */
-        :"%eax", "%ebx", "%ecx", "%edx"             /* clobbered register */
+        :"=m"(c1), "=m"(c2), "=m"(c3)   /* output */
+        :                               /* input */
+        :"%eax", "%ebx", "%ecx", "%edx" /* clobbered register */
     );
 #else
  }
@@ -102,8 +80,6 @@ static int cpu_caps_detect_x86(uint32_t *caps1, uint32_t *caps2, uint32_t *caps3
     *caps1 = c1;
     *caps2 = c2;
     *caps3 = c3;
-
-    return retval;
 }
 #endif
 
@@ -145,23 +121,22 @@ void cpu_caps_detect(void)
     {
         uint32_t caps1, caps2, caps3;
 
-        if (cpu_caps_detect_x86(&caps1, &caps2, &caps3)) {
+        cpu_caps_detect_x86(&caps1, &caps2, &caps3);
 
-            x86cpu_caps_detect.mmx          = (caps1 >> MMX_BIT) & 1;
-            x86cpu_caps_detect.sse          = (caps1 >> SSE_BIT) & 1;
-            x86cpu_caps_detect.sse2         = (caps1 >> SSE2_BIT) & 1;
+        x86cpu_caps_detect.mmx          = (caps1 >> MMX_BIT) & 1;
+        x86cpu_caps_detect.sse          = (caps1 >> SSE_BIT) & 1;
+        x86cpu_caps_detect.sse2         = (caps1 >> SSE2_BIT) & 1;
 
-            x86cpu_caps_detect.sse3         = (caps2 >> SSE3_BIT) & 1;
-            x86cpu_caps_detect.ssse3         = (caps2 >> SSSE3_BIT) & 1;
+        x86cpu_caps_detect.sse3         = (caps2 >> SSE3_BIT) & 1;
+        x86cpu_caps_detect.ssse3         = (caps2 >> SSSE3_BIT) & 1;
 
-            x86cpu_caps_detect.amd_3dnow    = (caps3 >> AMD_3DNOW_BIT) & 1;
-            x86cpu_caps_detect.amd_3dnowext = (caps3 >> AMD_3DNOWEXT_BIT) & 1;
-            x86cpu_caps_detect.amd_sse_mmx  = (caps3 >> AMD_SSE_MMX_BIT) & 1;
-            /* FIXME: For Cyrix MMXEXT detect Cyrix CPU first! */
-            /*
-            x86cpu_caps.cyrix_mmxext = (caps3 >> CYRIX_MMXEXT_BIT) & 1;
-            */
-        }
+        x86cpu_caps_detect.amd_3dnow    = (caps3 >> AMD_3DNOW_BIT) & 1;
+        x86cpu_caps_detect.amd_3dnowext = (caps3 >> AMD_3DNOWEXT_BIT) & 1;
+        x86cpu_caps_detect.amd_sse_mmx  = (caps3 >> AMD_SSE_MMX_BIT) & 1;
+        /* FIXME: For Cyrix MMXEXT detect Cyrix CPU first! */
+        /*
+        x86cpu_caps.cyrix_mmxext = (caps3 >> CYRIX_MMXEXT_BIT) & 1;
+        */
     }
 #endif /*HAVE_CPU_CAPS_DETECTION*/
     /* end runtime detection */
