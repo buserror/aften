@@ -35,10 +35,81 @@
 #define AMD_SSE_MMX_BIT     22
 #define CYRIX_MMXEXT_BIT    24
 
+/*
 #ifdef __INTEL_COMPILER
 #pragma warning(disable : 1419)
 #endif
 int CDECL cpu_caps_detect_x86(uint32_t* caps1, uint32_t* caps2, uint32_t* caps3);
+*/
+
+#ifdef HAVE_CPU_CAPS_DETECTION
+#include "asm_support.h"
+
+static int cpu_caps_detect_x86(uint32_t *caps1, uint32_t *caps2, uint32_t *caps3)
+{
+	uint32_t c1, c2, c3;
+	int retval;
+
+#if __GNUC__
+#define param1		%0
+#define param2		%1
+#define param3		%2
+#define param4		%3
+
+	asm volatile (
+#else
+#define param1 c1
+#define param2 c2
+#define param3 c3
+#define param4 retval
+
+  __asm {
+#endif
+		// detecting CPUID
+		_pushf
+		_pop(_a)
+		_mov(_eax, _ecx)
+		
+		_xor(_(0x200000), _eax)
+		_push(_a)
+		_popf
+		
+		_pushf
+		_pop(_a)
+		
+		_xor(_ebx, _ebx)
+		_test(_(0x200000), _eax)
+		_jz(End)
+		
+		// standard CPUID
+		_mov(_(0x1), _eax)
+		_cpuid
+		_mov(_edx, param1) //caps1 - MMX, SSE, SSE2
+		_mov(_ecx, param2) //caps2 - SSE3
+		
+		// extended CPUID
+		_mov(_(0x80000001), _eax)
+		_cpuid
+		_mov(_edx, param3) //caps3 - 3DNOW!, 3DNOW!EXT, CYRIX-MMXEXT, AMD-MMX-SSE
+		
+		_l(End)
+		_mov(_ebx, param4)
+#if __GNUC__
+		:"=m"(c1), "=m"(c2), "=m"(c3), "=m"(retval)	/* output */
+		:											/* input */
+		:"%eax", "%ebx", "%ecx", "%edx"				/* clobbered register */
+	);
+#else
+ }
+#endif
+
+	*caps1 = c1;
+	*caps2 = c2;
+	*caps3 = c3;
+
+	return retval;
+}
+#endif
 
 static struct x86cpu_caps_s x86cpu_caps_compile = { 0, 0, 0, 0, 0, 0, 0, 0, 0};
 static struct x86cpu_caps_s x86cpu_caps_detect = { 1, 1, 1, 1, 1, 1, 1, 1, 1};
