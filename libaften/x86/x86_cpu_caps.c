@@ -74,7 +74,7 @@ static void cpu_caps_detect_x86(uint32_t *caps1, uint32_t *caps2, uint32_t *caps
 
         _mov(_s, _b)
 #if __GNUC__
-        :"=rm"(c1), "=rm"(c2), "=rm"(c3)/* output */
+        :"=m"(c1), "=m"(c2), "=m"(c3)   /* output */
         :                               /* input */
         :"%eax", "%ecx", "%edx", "%esi" /* clobbered registers */
     );
