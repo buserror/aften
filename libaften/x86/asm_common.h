@@ -20,11 +20,11 @@
 #ifndef ASM_COMMON_H
 #define ASM_COMMON_H
 
-#define _pushf		_s(pushf)
-#define _popf		_s(popf)
-#define _push(x)	_s(push x)
-#define _pop(x) 	_s(pop x)
-#define _jz(x)		_s(jz x)
-#define _cpuid		_s(cpuid)
+#define _pushf		_st(pushf)
+#define _popf		_st(popf)
+#define _push(x)	_st(push x)
+#define _pop(x) 	_st(pop x)
+#define _jz(x)		_st(jz x)
+#define _cpuid		_st(cpuid)
 
 #endif /* ASM_COMMON_H */

@@ -59,7 +59,7 @@ static void cpu_caps_detect_x86(uint32_t *caps1, uint32_t *caps2, uint32_t *caps
 
   __asm {
 #endif
-        _push(_b)
+        _mov(_b, _s)
 
         // standard CPUID
         _mov(_(0x1), _eax)
@@ -72,11 +72,11 @@ static void cpu_caps_detect_x86(uint32_t *caps1, uint32_t *caps2, uint32_t *caps
         _cpuid
         _mov(_edx, param3) //caps3 - 3DNOW!, 3DNOW!EXT, CYRIX-MMXEXT, AMD-MMX-SSE
 
-        _pop(_b)
+        _mov(_s, _b)
 #if __GNUC__
         :"=rm"(c1), "=rm"(c2), "=rm"(c3)/* output */
         :                               /* input */
-        :"%eax", "%ecx", "%edx"         /* clobbered registers */
+        :"%eax", "%ecx", "%edx", "%esi" /* clobbered registers */
     );
 #else
  }

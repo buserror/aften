@@ -21,12 +21,12 @@
 #ifndef INTELAS_SUPPORT_H
 #define INTELAS_SUPPORT_H
 
-#define _s(x)		x
-#define __s(x,y)	x, y
+#define _st(x)		x
+#define __st(x,y)	x, y
 
-#define _mov(x, y)	__s(mov y, x)
-#define _xor(x, y)	__s(xor y, x)
-#define _test(x, y)	__s(test y, x)
+#define _mov(x, y)	__st(mov y, x)
+#define _xor(x, y)	__st(xor y, x)
+#define _test(x, y)	__st(test y, x)
 
 #define _(x)		x
 #define _l(x)		x##:
@@ -35,6 +35,7 @@
 #define _ebx		EBX
 #define _ecx		ECX
 #define _edx		EDX
+#define _esi		ESI
 
 #include "asm_common.h"
 
@@ -43,11 +44,13 @@
 #define _b			RBX
 #define _c			RCX
 #define _d			RDX
+#define _s			RSI
 #else
 #define _a			_eax
 #define _b			_ebx
 #define _c			_ecx
 #define _d			_edx
+#define _s			_esi
 #endif
 
 #endif /* INTELAS_SUPPORT_H */
