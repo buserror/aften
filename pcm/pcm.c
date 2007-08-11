@@ -207,8 +207,10 @@ pcmfile_read_samples(PcmFile *pf, void *output, int num_samples)
 
     // read raw audio samples from input stream into temporary buffer
     nr = byteio_read(read_buffer, bytes_needed, &pf->io);
-    if (nr <= 0)
+    if (nr <= 0) {
+        free(buffer);
         return nr;
+    }
     pf->filepos += nr;
     nr /= pf->block_align;
     nsmp = nr * pf->channels;
