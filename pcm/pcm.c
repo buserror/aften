@@ -30,17 +30,6 @@
 
 #include "pcm.h"
 
-/**
- * File format functions
- */
-
-extern int pcmfile_probe_raw(uint8_t *data, int size);
-extern int pcmfile_init_raw(PcmFile *pf);
-
-extern int pcmfile_probe_wave(uint8_t *data, int size);
-extern int pcmfile_init_wave(PcmFile *pf);
-
-
 int
 pcmfile_seek_set(PcmFile *pf, uint64_t dest)
 {

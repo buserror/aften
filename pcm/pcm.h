@@ -170,4 +170,15 @@ extern uint64_t pcmfile_position_time_ms(PcmFile *pf);
  */
 extern void pcmfile_print(PcmFile *pf, FILE *st);
 
+
+/**
+ * File format functions
+ */
+
+extern int pcmfile_probe_raw(uint8_t *data, int size);
+extern int pcmfile_init_raw(PcmFile *pf);
+
+extern int pcmfile_probe_wave(uint8_t *data, int size);
+extern int pcmfile_init_wave(PcmFile *pf);
+
 #endif /* PCM_H */
