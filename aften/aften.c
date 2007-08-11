@@ -58,25 +58,25 @@ print_intro(FILE *out)
 static void
 print_simd_in_use(FILE *out, AftenSimdInstructions *simd_instructions)
 {
-    fprintf(out, "SIMD usage: ");
+    fprintf(out, "SIMD usage:");
     if (simd_instructions->mmx)
-        fprintf(out, "MMX ");
+        fprintf(out, " MMX");
     if (simd_instructions->sse)
-        fprintf(out, "SSE ");
+        fprintf(out, " SSE");
     if (simd_instructions->sse2)
-        fprintf(out, "SSE2 ");
+        fprintf(out, " SSE2");
     if (simd_instructions->sse3)
-        fprintf(out, "SSE3 ");
+        fprintf(out, " SSE3");
     if (simd_instructions->ssse3)
-        fprintf(out, "SSSE3 ");
+        fprintf(out, " SSSE3");
     if (simd_instructions->amd_3dnow)
-        fprintf(out, "3DNOW ");
+        fprintf(out, " 3DNOW");
     if (simd_instructions->amd_3dnowext)
-        fprintf(out, "3DNOWEXT ");
+        fprintf(out, " 3DNOWEXT");
     if (simd_instructions->amd_sse_mmx)
-        fprintf(out, "SSE-MMX ");
+        fprintf(out, " SSE-MMX");
     if (simd_instructions->altivec)
-        fprintf(out, "Altivec ");
+        fprintf(out, " Altivec");
     fprintf(out, "\n");
 }
 
