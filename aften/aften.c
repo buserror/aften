@@ -333,7 +333,7 @@ main(int argc, char **argv)
                 }
                 current_clock = clock();
                 /* make sure we write out when finished, i.e. when fs == 0 */
-                if (current_clock - last_update_clock >= update_clock_span || !fs) {
+                if (current_clock - last_update_clock >= update_clock_span || !fs || s.verbose == 2) {
                     if(s.verbose == 1) {
                         t1 = samplecount / pf.sample_rate;
                         if(frame_cnt > 0 && (t1 > t0 || samplecount >= pf.samples)) {
