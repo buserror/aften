@@ -256,7 +256,7 @@ main(int argc, char **argv)
     print_simd_in_use(stderr, &s.system.wanted_simd_instructions);
 
     /* print number of threads used */
-    fprintf(stdout, "Threads: %i\n\n", s.system.n_threads);
+    fprintf(stderr, "Threads: %i\n\n", s.system.n_threads);
 
     // allocate memory for coded frame and sample buffer
     frame = calloc(A52_MAX_CODED_FRAME_SIZE, 1);
