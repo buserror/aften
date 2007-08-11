@@ -63,7 +63,7 @@ static const char *help_options[HELP_OPTIONS_COUNT] = {
 "                       1 = 256 samples of padding (default)\n",
 
 "    [-w #]         Bandwidth\n"
-"                       0 to 60 = fixed bandwidth (28%%-99%% of full bandwidth)\n"
+"                       0 to 60 = fixed bandwidth (28\45-99\45 of full bandwidth)\n"
 "                      -1 = fixed adaptive bandwidth (default)\n"
 "                      -2 = variable adaptive bandwidth\n",
 
