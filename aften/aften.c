@@ -253,7 +253,7 @@ main(int argc, char **argv)
     }
 
     /* print SIMD instructions used */
-    print_simd_in_use(stdout, &s.system.wanted_simd_instructions);
+    print_simd_in_use(stderr, &s.system.wanted_simd_instructions);
 
     /* print number of threads used */
     fprintf(stdout, "Threads: %i\n\n", s.system.n_threads);
