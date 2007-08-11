@@ -88,6 +88,7 @@ pcmfile_init(PcmFile *pf, FILE *fp, enum PcmSampleFormat read_format,
         return -1;
     }
 
+    pf->read_to_eof = 0;
     pf->file_format = file_format;
     pf->read_format = read_format;
 
