@@ -27,12 +27,14 @@
 
 static const char *usage_heading = "usage: aften [options] <input.wav> <output.ac3>\n";
 
-#define HELP_OPTIONS_COUNT 40
+#define HELP_OPTIONS_COUNT 41
 
 static const char *help_options[HELP_OPTIONS_COUNT] = {
 "    [-h]           Print out list of commandline options\n",
 
 "    [-longhelp]    Print out commandline option details\n",
+
+"    [-version]     Print out the build version\n",
 
 "    [-v #]         Verbosity (controls output to console)\n"
 "                       0 = quiet mode\n"
@@ -192,13 +194,15 @@ static const char *help_options[HELP_OPTIONS_COUNT] = {
 
 /* longhelp string constants */
 
-#define CONSOLE_OPTIONS_COUNT 3
+#define CONSOLE_OPTIONS_COUNT 4
 
 static const char console_heading[24] = "CONSOLE OUTPUT OPTIONS\n";
 static const char *console_options[CONSOLE_OPTIONS_COUNT] = {
 "    [-h]           Print out list of commandline options.\n",
 
 "    [-longhelp]    Print out commandline option details.\n",
+
+"    [-version]     Print out the build version.\n",
 
 "    [-v #]         Verbosity\n"
 "                       This controls the level of console output to stderr.\n"

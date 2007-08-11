@@ -485,6 +485,8 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
                         return 1;
                     }
                     opts->raw_input = 1;
+                } else if(!strncmp(&argv[i][1], "version", 8)) {
+                    return 4;
                 }
             } else {
                 // single-character arguments

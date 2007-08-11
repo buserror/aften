@@ -107,18 +107,18 @@ main(int argc, char **argv)
     aften_set_defaults(&s);
     err = parse_commandline(argc, argv, &opts);
     if(err) {
-        if(err == 2 || err == 3) {
-            print_intro(stdout);
-            if(err == 2) {
-                print_help(stdout);
-            } else {
-                print_long_help(stdout);
-            }
-            return 0;
-        } else {
+        if(err == 1) {
             print_intro(stderr);
             print_usage(stderr);
             return 1;
+        } else {
+            print_intro(stdout);
+            if(err == 2) {
+                print_help(stdout);
+            } else if(err == 3) {
+                print_long_help(stdout);
+            }
+            return 0;
         }
     }
 
