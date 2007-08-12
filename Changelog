@@ -27,10 +27,10 @@ version SVN : current
 - bugfixes in MMX/SSE2 code
 - stack align hack for x86 MinGW with threads
 - API changes
-- SIMD usage now shown and configurable
-- screen updates not permanently anymore
-- SIMD detection as compiler-independent inline assembly;
-  nasm/yasm not needed anymore
+- SIMD and threads usage is shown and is configurable
+- screen output gets updated every 200ms to reduce load
+- SIMD detection changed to compiler-independent inline assembly,
+  thus nasm/yasm not needed anymore
 
 version 0.07 : 25 April 2007
 - added C++ bindings (pass -DBINDINGS_CXX=1 to cmake to build them)
