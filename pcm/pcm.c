@@ -56,24 +56,23 @@ pcmfile_seek_set(PcmFile *pf, uint64_t dest)
                 slow_seek = 1;
             }
         }
+        byteio_flush(&pf->io);
     }
     if(slow_seek) {
         // do forward-only seek by reading data to temp buffer
         uint64_t offset;
         uint8_t buf[1024];
-        int c=0;
-        if(dest < pf->filepos) return -1;
-        offset = dest - pf->filepos;
-        while(offset > 1024) {
-            fread(buf, 1, 1024, fp);
-            offset -= 1024;
-        }
-        while(offset-- > 0 && c != EOF) {
-            c = fgetc(fp);
-        }
+
+        if(dest < pf->filepos)
+            return -1;
+
+        for(offset = dest - pf->filepos; offset > 1024; offset -= 1024)
+            byteio_read(buf, 1024, &pf->io);
+
+        byteio_read(buf, offset, &pf->io);
     }
     pf->filepos = dest;
-    byteio_flush(&pf->io);
+
     return 0;
 }
 
