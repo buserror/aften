@@ -85,7 +85,7 @@ static void
 output_wav_header(FILE *ofp, PcmFile *wf)
 {
     fwrite("RIFF", 1, 4, ofp);
-    write4le(((uint32_t)wf->data_size + 40), ofp);
+    write4le(((uint32_t)wf->data_size + 36), ofp);
     fwrite("WAVE", 1, 4, ofp);
     fwrite("fmt ", 1, 4, ofp);
     write4le(16, ofp);
