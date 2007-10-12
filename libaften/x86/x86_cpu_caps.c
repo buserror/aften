@@ -133,7 +133,7 @@ void cpu_caps_detect(void)
         x86cpu_caps_detect.sse2         = (caps1 >> SSE2_BIT) & 1;
 
         x86cpu_caps_detect.sse3         = (caps2 >> SSE3_BIT) & 1;
-        x86cpu_caps_detect.ssse3         = (caps2 >> SSSE3_BIT) & 1;
+        x86cpu_caps_detect.ssse3        = (caps2 >> SSSE3_BIT) & 1;
 
         x86cpu_caps_detect.amd_3dnow    = (caps3 >> AMD_3DNOW_BIT) & 1;
         x86cpu_caps_detect.amd_3dnowext = (caps3 >> AMD_3DNOWEXT_BIT) & 1;
