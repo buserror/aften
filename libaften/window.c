@@ -33,7 +33,7 @@
 #include "cpu_caps.h"
 
 
-ALIGN16(FLOAT) a52_window[512];
+ALIGN16(FLOAT) a52_window[512] = {0};
 
 static void
 apply_a52_window(FLOAT *samples)

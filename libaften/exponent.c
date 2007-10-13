@@ -29,7 +29,7 @@
 
 #include "cpu_caps.h"
 
-uint16_t expstr_set_bits[6][256];
+uint16_t expstr_set_bits[6][256] = {{0}};
 
 static void process_exponents(A52ThreadContext *tctx);
 

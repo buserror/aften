@@ -46,7 +46,7 @@
  * LUT for number of exponent groups present.
  * expsizetab[exponent strategy][number of coefficients]
  */
-int nexpgrptab[3][256];
+int nexpgrptab[3][256] = {{0}};
 
 /**
  * Pre-defined sets of exponent strategies. A strategy set is selected for
