@@ -83,6 +83,8 @@ print_simd_in_use(FILE *out, AftenSimdInstructions *simd_instructions)
 int
 main(int argc, char **argv)
 {
+    void (*aften_remap)(void *samples, int n, int ch,
+                        A52SampleFormat fmt, int acmod) = NULL;
     uint8_t *frame;
     FLOAT *fwav;
     int nr, fs, err;
@@ -274,18 +276,19 @@ main(int argc, char **argv)
     fs = 0;
     nr = 0;
 
+    if(opts.chmap == 0)
+        aften_remap = aften_remap_wav_to_a52;
+    else if (opts.chmap == 2)
+        aften_remap = aften_remap_mpeg_to_a52;
+
     // don't pad start with zero samples, use input audio instead.
     // not recommended, but providing the option here for when sync is needed
     if(!opts.pad_start) {
         FLOAT *sptr = &fwav[1280*s.channels];
         nr = pcmfile_read_samples(&pf, sptr, 256);
-        if(opts.chmap == 0) {
-            aften_remap_wav_to_a52(sptr, nr, s.channels, s.sample_format,
-                                   s.acmod);
-        } else if(opts.chmap == 2) {
-            aften_remap_mpeg_to_a52(sptr, nr, s.channels, s.sample_format,
-                                    s.acmod);
-        }
+        if(aften_remap)
+            aften_remap(sptr, nr, s.channels, s.sample_format, s.acmod);
+
         fs = aften_encode_frame(&s, frame, fwav);
         if(fs < 0) {
             fprintf(stderr, "Error encoding initial frame\n");
@@ -295,28 +298,16 @@ main(int argc, char **argv)
 
     nr = pcmfile_read_samples(&pf, fwav, A52_SAMPLES_PER_FRAME);
     while(nr > 0 || fs > 0) {
-        if(opts.chmap == 0) {
-            aften_remap_wav_to_a52(fwav, nr, s.channels, s.sample_format,
-                                   s.acmod);
-        } else if(opts.chmap == 2) {
-            aften_remap_mpeg_to_a52(fwav, nr, s.channels, s.sample_format,
-                                    s.acmod);
-        }
+        if(aften_remap)
+            aften_remap(fwav, nr, s.channels, s.sample_format, s.acmod);
 
         // append extra silent frame if final frame is > 1280 samples
-        if(nr == 0) {
-            if(last_frame <= 1280) {
-                done = 1;
-            }
-        }
+        if(nr == 0 && last_frame <= 1280)
+            done = 1;
 
         // zero leftover samples at end of last frame
-        if(!done && nr < A52_SAMPLES_PER_FRAME) {
-            int i;
-            for(i=nr*s.channels; i<A52_SAMPLES_PER_FRAME*s.channels; i++) {
-                fwav[i] = 0.0;
-            }
-        }
+        if(!done && nr < A52_SAMPLES_PER_FRAME)
+            memset(fwav + nr*s.channels, 0, A52_SAMPLES_PER_FRAME*s.channels*sizeof(FLOAT));
 
         fs = aften_encode_frame(&s, frame, done ? NULL : fwav);
 
