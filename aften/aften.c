@@ -307,7 +307,7 @@ main(int argc, char **argv)
 
         // zero leftover samples at end of last frame
         if(!done && nr < A52_SAMPLES_PER_FRAME)
-            memset(fwav + nr*s.channels, 0, A52_SAMPLES_PER_FRAME*s.channels*sizeof(FLOAT));
+            memset(fwav + nr*s.channels, 0, (A52_SAMPLES_PER_FRAME-nr)*s.channels*sizeof(FLOAT));
 
         fs = aften_encode_frame(&s, frame, done ? NULL : fwav);
 
