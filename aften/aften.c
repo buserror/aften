@@ -281,8 +281,11 @@ main(int argc, char **argv)
     else if (opts.chmap == 2)
         aften_remap = aften_remap_mpeg_to_a52;
 
-    // don't pad start with zero samples, use input audio instead.
-    // not recommended, but providing the option here for when sync is needed
+    // Don't pad start with zero samples, use input audio instead:
+    // First 256 samples are read so mdct get intialized with real samples than with zero samples.
+    // This first encoded frame is discarded.
+    // It is not recommended, but providing the option here for when perfect sync is needed for the cost
+    // of improper reproduction of first 256 samples
     if(!opts.pad_start) {
         FLOAT *sptr = &fwav[1280*s.channels];
         nr = pcmfile_read_samples(&pf, sptr, 256);
