@@ -99,6 +99,7 @@ main(int argc, char **argv)
     int frame_cnt;
     int done;
     int input_file_format;
+    int discard_first_frame = 0;
     enum PcmSampleFormat read_format;
     /* update output every 200ms */
     clock_t update_clock_span = 0.2f * CLOCKS_PER_SEC;
@@ -297,6 +298,7 @@ main(int argc, char **argv)
             fprintf(stderr, "Error encoding initial frame\n");
             goto end;
         }
+        discard_first_frame = !fs;
     }
 
     nr = pcmfile_read_samples(&pf, fwav, A52_SAMPLES_PER_FRAME);
@@ -353,11 +355,16 @@ main(int argc, char **argv)
                     last_update_clock = current_clock;
                 }
             }
-            fwrite(frame, 1, fs, ofp);
+            if (fs) {
+                if (!discard_first_frame) {
+                    fwrite(frame, 1, fs, ofp);
+                    frame_cnt++;
+                } else
+                    discard_first_frame = 0;
+            }
+            last_frame = nr;
+            nr = pcmfile_read_samples(&pf, fwav, A52_SAMPLES_PER_FRAME);
         }
-        frame_cnt++;
-        last_frame = nr;
-        nr = pcmfile_read_samples(&pf, fwav, A52_SAMPLES_PER_FRAME);
     }
     if(s.verbose == 1) {
         fprintf(stderr, "\n\n");
