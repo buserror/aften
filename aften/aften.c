@@ -300,9 +300,8 @@ main(int argc, char **argv)
         }
         discard_first_frame = !fs;
     }
-
-    nr = pcmfile_read_samples(&pf, fwav, A52_SAMPLES_PER_FRAME);
-    while(nr > 0 || fs > 0) {
+    do {
+        nr = pcmfile_read_samples(&pf, fwav, A52_SAMPLES_PER_FRAME);
         if(aften_remap)
             aften_remap(fwav, nr, s.channels, s.sample_format, s.acmod);
 
@@ -363,9 +362,9 @@ main(int argc, char **argv)
                     discard_first_frame = 0;
             }
             last_frame = nr;
-            nr = pcmfile_read_samples(&pf, fwav, A52_SAMPLES_PER_FRAME);
         }
-    }
+    } while(nr > 0 || fs > 0 || !frame_cnt);
+
     if(s.verbose == 1) {
         fprintf(stderr, "\n\n");
     } else if(s.verbose == 2) {
