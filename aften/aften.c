@@ -241,6 +241,7 @@ main(int argc, char **argv)
         ofp = fopen(opts.outfile, "wb");
         if(!ofp) {
             fprintf(stderr, "error opening output file: %s\n", opts.outfile);
+            aften_encode_close(&s);
             return 1;
         }
     }

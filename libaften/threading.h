@@ -40,6 +40,7 @@ typedef struct A52GlobalThreadSync
 {
     int current_thread_num;
     int threads_to_abort;
+    int threads_running;
     volatile int samples_thread_num;
     MUTEX samples_mutex;
 } A52GlobalThreadSync;
@@ -113,6 +114,7 @@ typedef struct A52GlobalThreadSync
 {
     int current_thread_num;
     int threads_to_abort;
+    int threads_running;
     volatile int samples_thread_num;
     CS samples_cs;
 } A52GlobalThreadSync;

@@ -1437,7 +1437,7 @@ threaded_encode(void* vtctx)
 #endif
 
     tctx = vtctx;
-
+    ++tctx->ctx->ts.threads_running;//no need to lock, as thread creater waits
     posix_mutex_lock(&tctx->ts.enter_mutex);
     posix_cond_signal(&tctx->ts.enter_cond);
     while(1) {
@@ -1494,12 +1494,12 @@ encode_frame_parallel(AftenContext *s, uint8_t *frame_buffer, const void *sample
             tctx->state = ABORT;
             framesize = -1;
             if (!ctx->ts.threads_to_abort)
-                ctx->ts.threads_to_abort = ctx->n_threads;
+                ctx->ts.threads_to_abort = ctx->ts.threads_running;
             --ctx->ts.threads_to_abort;
         } else {
-            if (tctx->state == START)
+            if (tctx->state == START) {
                 tctx->state = WORK;
-            else {
+            } else {
                 if(tctx->framesize > 0) {
                     framesize = tctx->framesize;
                     memcpy(frame_buffer, tctx->frame_buffer, framesize);
@@ -1512,13 +1512,15 @@ encode_frame_parallel(AftenContext *s, uint8_t *frame_buffer, const void *sample
                     goto end;
                 }
             }
-            if(!samples)
+            if(!samples) {
                 tctx->state = END;
-            else
+                --ctx->ts.threads_running;
+            } else {
                 // convert sample format and de-interleave channels
                 ctx->fmt_convert_from_src(tctx->frame.input_audio, samples,
                                           ctx->n_all_channels,
                                           A52_SAMPLES_PER_FRAME);
+            }
         }
         posix_mutex_lock(&tctx->ts.confirm_mutex);
         posix_cond_signal(&tctx->ts.enter_cond);
@@ -1578,6 +1580,12 @@ aften_encode_close(AftenContext *s)
         /* mdct_close deinits both mdcts */
         ctx->mdct_ctx_512.mdct_close(ctx);
 
+#ifndef NO_THREADS
+        while (ctx->ts.threads_running) {
+            uint8_t frame_buffer[A52_MAX_CODED_FRAME_SIZE];
+            aften_encode_frame(s, frame_buffer, NULL);
+        }
+#endif
         posix_mutex_destroy(&ctx->ts.samples_mutex);
 
         windows_cs_destroy(&ctx->ts.samples_cs);
