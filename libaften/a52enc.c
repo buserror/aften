@@ -1496,6 +1496,7 @@ encode_frame_parallel(AftenContext *s, uint8_t *frame_buffer, const void *sample
             if (!ctx->ts.threads_to_abort)
                 ctx->ts.threads_to_abort = ctx->ts.threads_running;
             --ctx->ts.threads_to_abort;
+            --ctx->ts.threads_running;
         } else {
             if (tctx->state == START) {
                 tctx->state = WORK;
