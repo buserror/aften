@@ -97,7 +97,6 @@ main(int argc, char **argv)
     FLOAT kbps, qual, bw;
     int last_frame;
     int frame_cnt;
-    int done;
     int input_file_format;
     int discard_first_frame = 0;
     enum PcmSampleFormat read_format;
@@ -271,7 +270,6 @@ main(int argc, char **argv)
     qual = bw = 0.0;
     last_frame = 0;
     frame_cnt = 0;
-    done = 0;
     fs = 0;
     nr = 0;
 
@@ -286,12 +284,12 @@ main(int argc, char **argv)
     // It is not recommended, but providing the option here for when perfect sync is needed for the cost
     // of improper reproduction of first 256 samples
     if(!opts.pad_start) {
-        FLOAT *sptr = &fwav[1280*s.channels];
+        FLOAT *sptr = &fwav[(A52_SAMPLES_PER_FRAME - 256)*s.channels];
         nr = pcmfile_read_samples(&pf, sptr, 256);
         if(aften_remap)
             aften_remap(sptr, nr, s.channels, s.sample_format, s.acmod);
 
-        fs = aften_encode_frame(&s, frame, fwav);
+        fs = aften_encode_frame(&s, frame, fwav, A52_SAMPLES_PER_FRAME);
         if(fs < 0) {
             fprintf(stderr, "Error encoding initial frame\n");
             goto error_end;
@@ -303,15 +301,7 @@ main(int argc, char **argv)
         if(aften_remap)
             aften_remap(fwav, nr, s.channels, s.sample_format, s.acmod);
 
-        // append extra silent frame if final frame is > 1280 samples
-        if(nr == 0 && last_frame <= 1280)
-            done = 1;
-
-        // zero leftover samples at end of last frame
-        if(!done && nr < A52_SAMPLES_PER_FRAME)
-            memset(fwav + nr*s.channels, 0, (A52_SAMPLES_PER_FRAME-nr)*s.channels*sizeof(FLOAT));
-
-        fs = aften_encode_frame(&s, frame, done ? NULL : fwav);
+        fs = aften_encode_frame(&s, frame, fwav, nr);
 
         if(fs < 0) {
             fprintf(stderr, "Error encoding frame %d\n", frame_cnt);

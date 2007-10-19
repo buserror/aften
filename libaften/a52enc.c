@@ -447,6 +447,7 @@ aften_encode_init(AftenContext *s)
         ctx->bsid = 8;
     }
     ctx->bsmod = 0;
+    ctx->last_samples_count = -1;
 
     // bitrate & frame size
     brate = s->params.bitrate;
@@ -1418,6 +1419,19 @@ encode_frame(A52ThreadContext *tctx, uint8_t *frame_buffer)
     return 0;
 }
 
+static int
+convert_samples_from_src(A52ThreadContext *tctx, const void *vsrc, int count)
+{
+    A52Context *ctx = tctx->ctx;
+    ctx->fmt_convert_from_src(tctx->frame.input_audio, vsrc, ctx->n_all_channels, count);
+    if (count < A52_SAMPLES_PER_FRAME) {
+        int ch;
+        for(ch=0;ch<ctx->n_all_channels;++ch)
+            memset(&tctx->frame.input_audio[ch][count], 0, (A52_SAMPLES_PER_FRAME - count) * sizeof(FLOAT));
+    }
+    return 0;
+}
+
 #ifndef NO_THREADS
 static int
 threaded_encode(void* vtctx)
@@ -1478,10 +1492,13 @@ threaded_encode(void* vtctx)
 }
 
 static int
-encode_frame_parallel(AftenContext *s, uint8_t *frame_buffer, const void *samples)
+encode_frame_parallel(AftenContext *s, uint8_t *frame_buffer, const void *samples, int count)
 {
     A52Context *ctx = s->private_context;
     int framesize = 0;
+
+    if (!ctx->ts.threads_running)
+        return 0;
 
     do {
         A52ThreadContext *tctx = &ctx->tctx[ctx->ts.current_thread_num];
@@ -1513,14 +1530,14 @@ encode_frame_parallel(AftenContext *s, uint8_t *frame_buffer, const void *sample
                     goto end;
                 }
             }
-            if(!samples) {
+            // append extra silent frame if final frame is > 1280 samples, to flush 256 samples in mdct
+            if (ctx->last_samples_count <= (A52_SAMPLES_PER_FRAME - 256) && ctx->last_samples_count != -1) {
                 tctx->state = END;
                 --ctx->ts.threads_running;
             } else {
                 // convert sample format and de-interleave channels
-                ctx->fmt_convert_from_src(tctx->frame.input_audio, samples,
-                                          ctx->n_all_channels,
-                                          A52_SAMPLES_PER_FRAME);
+                convert_samples_from_src(tctx, samples, count);
+                ctx->last_samples_count = count;
             }
         }
         posix_mutex_lock(&tctx->ts.confirm_mutex);
@@ -1540,31 +1557,39 @@ end:
 #endif
 
 int
-aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, const void *samples)
+aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, const void *samples, int count)
 {
     A52Context *ctx;
     A52ThreadContext *tctx;
     A52Frame *frame;
 
-    if(s == NULL || frame_buffer == NULL) {
+    if(s == NULL || frame_buffer == NULL || (samples == NULL && count)) {
         fprintf(stderr, "One or more NULL parameters passed to aften_encode_frame\n");
         return -1;
     }
+    if (count > A52_SAMPLES_PER_FRAME || count < 0) {
+        fprintf(stderr, "Invalid count passed to aften_encode_frame\n");
+        return -1;
+    }
     ctx = s->private_context;
+    if (count && ctx->last_samples_count != -1 && ctx->last_samples_count < A52_SAMPLES_PER_FRAME) {
+        fprintf(stderr, "count must be 0 after having once been <A52_SAMPLES_PER_FRAME when passed to aften_encode_frame\n");
+        return -1;
+    }
 #ifndef NO_THREADS
     if (ctx->n_threads > 1)
-        return encode_frame_parallel(s, frame_buffer, samples);
+        return encode_frame_parallel(s, frame_buffer, samples, count);
 #endif
-    if (!samples)
+    // append extra silent frame if final frame is > 1280 samples, to flush 256 samples in mdct
+    if (ctx->last_samples_count <= (A52_SAMPLES_PER_FRAME - 256) && ctx->last_samples_count != -1)
         return 0;
 
     tctx = ctx->tctx;
     frame = &tctx->frame;
-
-    ctx->fmt_convert_from_src(frame->input_audio, samples, ctx->n_all_channels,
-                              A52_SAMPLES_PER_FRAME);
+    convert_samples_from_src(tctx, samples, count);
 
     encode_frame(tctx, frame_buffer);
+    ctx->last_samples_count = count;
 
     s->status.quality   = tctx->status.quality;
     s->status.bit_rate  = tctx->status.bit_rate;
@@ -1586,7 +1611,7 @@ aften_encode_close(AftenContext *s)
 #ifndef NO_THREADS
         while (ctx->ts.threads_running) {
             uint8_t frame_buffer[A52_MAX_CODED_FRAME_SIZE];
-            aften_encode_frame(s, frame_buffer, NULL);
+            aften_encode_frame(s, frame_buffer, NULL, 0);
             ret_val = -1;
         }
 #endif

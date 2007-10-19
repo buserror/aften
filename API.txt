@@ -7,9 +7,9 @@ That means, if aften runs with n threads, the first n calls to aften_encode_fram
 Similarly, once you have no more input samples, the queue must be flushed, before the encoder can be closed.
 Otherwise you'll have dead-locks or segfaults. So you have to call aften_encode_frame will a NULL samples buffer,
 so that the encoder flushes the remainig frames. (These contain valid data, of course, so don't forget to handle them properly.)
+Even if you are *not* in threaded mode, you need to flush the encoder, as it might give back an additional frame due to padding.
 
-In case you want to abort the encoder, you have to fake the same behaviour as explained above. In the sample code below,
-this is easiest achived by read_samples return no more samples.
+In case you want to abort the encoder, you can simply call aften_encode_close now. Aften will shut down running threads if needed.
 
 
 This is a stripped down version of aften.c. You should model your routine similarly if you want to run aften in threaded mode.
@@ -25,7 +25,6 @@ main(int argc, char **argv)
     AftenContext s;
     int last_frame = 0;
     int got_fs_once = 0;
-    int done = 0;
     int fs = 0;
     int nr = 0;
 
@@ -45,15 +44,10 @@ main(int argc, char **argv)
     do {
         nr = read_samples(...);
 
-        // call remapping function here
+        // call remapping function here...
 
-        if(nr == 0 && last_frame <= 1280) // we have no more samples; 1280, because of mdct which uses previous 256 samples
-            done = 1;
-
-        if(!done && nr < A52_SAMPLES_PER_FRAME) // not done yet, but samples_buffer not full
-            // set input buffer for (samples > nr) to zero
-
-        fs = aften_encode_frame(&s, frame_buffer, done ? NULL : samples_buffer);// flush encoder by putting in NULL
+        // encode
+        fs = aften_encode_frame(&s, frame_buffer, samples_buffer, nr);// flush encoder by giving zero count
         // if got_fs_once is true and than on flushing we get back 0, it means we have to close encoder
 
         if(fs < 0) {

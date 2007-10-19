@@ -159,6 +159,7 @@ typedef struct A52Context {
     void (*process_exponents)(A52ThreadContext *tctx);
 
     int n_threads;
+    int last_samples_count;
     int n_channels;
     int n_all_channels;
     int acmod;
