@@ -85,11 +85,11 @@ main(int argc, char **argv)
 {
     void (*aften_remap)(void *samples, int n, int ch,
                         A52SampleFormat fmt, int acmod) = NULL;
-    uint8_t *frame;
-    FLOAT *fwav;
+    uint8_t *frame = NULL;
+    FLOAT *fwav = NULL;
     int nr, fs, err;
-    FILE *ifp;
-    FILE *ofp;
+    FILE *ifp = NULL;
+    FILE *ofp = NULL;
     PcmFile pf;
     CommandOptions opts;
     AftenContext s;
@@ -105,6 +105,7 @@ main(int argc, char **argv)
     clock_t update_clock_span = 0.2f * CLOCKS_PER_SEC;
     clock_t current_clock;
     clock_t last_update_clock = clock() - update_clock_span;
+    int ret_val = 0;
 
     opts.s = &s;
     aften_set_defaults(&s);
@@ -138,7 +139,7 @@ main(int argc, char **argv)
         ifp = fopen(opts.infile, "rb");
         if(!ifp) {
             fprintf(stderr, "error opening input file: %s\n", opts.infile);
-            return 1;
+            goto error_end;
         }
     }
 
@@ -154,7 +155,7 @@ main(int argc, char **argv)
         input_file_format = PCM_FORMAT_RAW;
     if(pcmfile_init(&pf, ifp, read_format, input_file_format)) {
         fprintf(stderr, "invalid input file: %s\n", argv[1]);
-        return 1;
+        goto error_end;
     }
     if(opts.read_to_eof)
         pf.read_to_eof = 1;
@@ -179,7 +180,7 @@ main(int argc, char **argv)
             } else {
                 if(s.lfe != 0) {
                     fprintf(stderr, "acmod and lfe do not match number of channels\n");
-                    return 1;
+                    goto error_end;
                 }
             }
         } else if(ch == (pf.channels - 1)) {
@@ -188,12 +189,12 @@ main(int argc, char **argv)
             } else {
                 if(s.lfe != 1) {
                     fprintf(stderr, "acmod and lfe do not match number of channels\n");
-                    return 1;
+                    goto error_end;
                 }
             }
         } else {
             fprintf(stderr, "acmod does not match number of channels\n");
-            return 1;
+            goto error_end;
         }
     } else {
         // if acmod is not given on commandline, determine from WAVE file
@@ -201,10 +202,10 @@ main(int argc, char **argv)
         if(s.lfe >= 0) {
             if(s.lfe == 0 && ch == 6) {
                 fprintf(stderr, "cannot encode 6 channels w/o LFE\n");
-                return 1;
+                goto error_end;
             } else if(s.lfe == 1 && ch == 1) {
                 fprintf(stderr, "cannot encode LFE channel only\n");
-                return 1;
+                goto error_end;
             }
             if(s.lfe) {
                 pf.ch_mask |= 0x08;
@@ -212,7 +213,7 @@ main(int argc, char **argv)
         }
         if(aften_wav_channels_to_acmod(ch, pf.ch_mask, &s.acmod, &s.lfe)) {
             fprintf(stderr, "mismatch in channels, acmod, and lfe params\n");
-            return 1;
+            goto error_end;
         }
     }
     // set some encoding parameters using wav info
@@ -227,8 +228,7 @@ main(int argc, char **argv)
     // initialize encoder
     if(aften_encode_init(&s)) {
         fprintf(stderr, "error initializing encoder\n");
-        aften_encode_close(&s);
-        return 1;
+        goto error_end;
     }
 
     // open output file
@@ -241,8 +241,7 @@ main(int argc, char **argv)
         ofp = fopen(opts.outfile, "wb");
         if(!ofp) {
             fprintf(stderr, "error opening output file: %s\n", opts.outfile);
-            aften_encode_close(&s);
-            return 1;
+            goto error_end;
         }
     }
 
@@ -265,10 +264,8 @@ main(int argc, char **argv)
     // allocate memory for coded frame and sample buffer
     frame = calloc(A52_MAX_CODED_FRAME_SIZE, 1);
     fwav = calloc(A52_SAMPLES_PER_FRAME * s.channels, sizeof(FLOAT));
-    if(frame == NULL || fwav == NULL) {
-        aften_encode_close(&s);
-        exit(1);
-    }
+    if(frame == NULL || fwav == NULL)
+        goto error_end;
 
     samplecount = bytecount = t0 = t1 = percent = 0;
     qual = bw = 0.0;
@@ -297,7 +294,7 @@ main(int argc, char **argv)
         fs = aften_encode_frame(&s, frame, fwav);
         if(fs < 0) {
             fprintf(stderr, "Error encoding initial frame\n");
-            goto end;
+            goto error_end;
         }
         discard_first_frame = !fs;
     }
@@ -380,15 +377,24 @@ main(int argc, char **argv)
         fprintf(stderr, "average bandwidth: %2.1f\n", (bw / frame_cnt));
         fprintf(stderr, "average bitrate:   %4.1f kbps\n\n", kbps);
     }
+    goto end;
+error_end:
+    ret_val = 1;
 end:
-    free(fwav);
-    free(frame);
+    if (fwav)
+        free(fwav);
 
-    pcmfile_close(&pf);
-    fclose(ifp);
-    fclose(ofp);
+    if (frame)
+        free(frame);
+
+    if (ifp) {
+        pcmfile_close(&pf);
+        fclose(ifp);
+    }
+    if (ofp)
+        fclose(ofp);
 
     aften_encode_close(&s);
 
-    return 0;
+    return ret_val;
 }
