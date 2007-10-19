@@ -394,7 +394,8 @@ end:
     if (ofp)
         fclose(ofp);
 
-    aften_encode_close(&s);
+    if (aften_encode_close(&s))
+        return 1;
 
     return ret_val;
 }
