@@ -21,10 +21,10 @@ Aften TODO list
 Aften Changelog
 ---------------
 version SVN : current
-- changed API to simplify its use
+- changed API to simplify its usage
 - added API.txt
 - fixed aften error handling
-- fixed libaften closing in threaded mode, simplifying its use
+- fixed libaften closing in threaded mode, simplifying its usage
 
 version 0.08 :
 - fixed piped input from FFmpeg
