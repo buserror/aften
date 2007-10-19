@@ -9,7 +9,8 @@ Otherwise you'll have dead-locks or segfaults. So you have to call aften_encode_
 so that the encoder flushes the remainig frames. (These contain valid data, of course, so don't forget to handle them properly.)
 Even if you are *not* in threaded mode, you need to flush the encoder, as it might give back an additional frame due to padding.
 
-In case you want to abort the encoder, you can simply call aften_encode_close now. Aften will shut down running threads if needed.
+In case you want to abort the encoder, you can simply call aften_encode_close now. Aften will shut down running threads if needed,
+and inform you about this via error code.
 
 
 This is a stripped down version of aften.c. You should model your routine similarly if you want to run aften in threaded mode.
