@@ -21,6 +21,12 @@ Aften TODO list
 Aften Changelog
 ---------------
 version SVN : current
+- changed API to simplify its use
+- added API.txt
+- fixed aften error handling
+- fixed libaften closing in threaded mode, simplifying its use
+
+version 0.08 :
 - fixed piped input from FFmpeg
 - added support for MPEG channel order remapping
 - restructured audio input. enables raw pcm file support.
