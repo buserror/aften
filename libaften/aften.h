@@ -87,8 +87,9 @@ AFTEN_API int aften_encode_frame(AftenContext *s, unsigned char *frame_buffer,
 /**
  * Sets the parameters in the context @p s to their default values.
  * @param s The encoding context
+ * @return Returns a negative value on error.
  */
-AFTEN_API void aften_encode_close(AftenContext *s);
+AFTEN_API int aften_encode_close(AftenContext *s);
 
 /** @} end encoding functions */
 

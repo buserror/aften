@@ -1573,9 +1573,11 @@ aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, const void *samples)
     return tctx->framesize;
 }
 
-void
+int
 aften_encode_close(AftenContext *s)
 {
+    int ret_val = 0;
+
     if(s != NULL && s->private_context != NULL) {
         A52Context *ctx = s->private_context;
         /* mdct_close deinits both mdcts */
@@ -1585,6 +1587,7 @@ aften_encode_close(AftenContext *s)
         while (ctx->ts.threads_running) {
             uint8_t frame_buffer[A52_MAX_CODED_FRAME_SIZE];
             aften_encode_frame(s, frame_buffer, NULL);
+            ret_val = -1;
         }
 #endif
         posix_mutex_destroy(&ctx->ts.samples_mutex);
@@ -1616,4 +1619,6 @@ aften_encode_close(AftenContext *s)
         free(ctx);
         s->private_context = NULL;
     }
+
+    return ret_val;
 }
