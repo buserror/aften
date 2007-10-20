@@ -79,7 +79,7 @@ AFTEN_API int aften_encode_init(AftenContext *s);
  * @param[out] frame_buffer Pointer to output frame data
  * @param[in]  samples      Pointer to input audio samples
  * @param[in]  count        Number of input audio samples (per channel);
- * must be equal to A52_MAX_CODED_FRAME_SIZE, less than A52_MAX_CODED_FRAME_SIZE
+ * must be equal to A52_SAMPLES_PER_FRAME, less than A52_SAMPLES_PER_FRAME
  * for the last frame, and equal to 0 while flushing
  * @return Returns the number of bytes written to @p frame_buffer, or returns
  * a negative value on error.
