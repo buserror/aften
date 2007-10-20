@@ -549,8 +549,10 @@ aften_encode_init(AftenContext *s)
         ctx->tctx[j].ts.next_samples_event = &ctx->tctx[(j + 1) % ctx->n_threads].ts.samples_event;
 #endif
     }
-    posix_mutex_init(&ctx->ts.samples_mutex);
-    windows_cs_init(&ctx->ts.samples_cs);
+    if (ctx->n_threads > 1) {
+        posix_mutex_init(&ctx->ts.samples_mutex);
+        windows_cs_init(&ctx->ts.samples_cs);
+    }
 
     if(s->params.bwcode < -2 || s->params.bwcode > 60) {
         fprintf(stderr, "invalid bandwidth code\n");
@@ -1426,7 +1428,7 @@ convert_samples_from_src(A52ThreadContext *tctx, const void *vsrc, int count)
     ctx->fmt_convert_from_src(tctx->frame.input_audio, vsrc, ctx->n_all_channels, count);
     if (count < A52_SAMPLES_PER_FRAME) {
         int ch;
-        for(ch=0;ch<ctx->n_all_channels;++ch)
+        for(ch=0; ch<ctx->n_all_channels; ++ch)
             memset(&tctx->frame.input_audio[ch][count], 0, (A52_SAMPLES_PER_FRAME - count) * sizeof(FLOAT));
     }
     return 0;
@@ -1609,19 +1611,16 @@ aften_encode_close(AftenContext *s)
 
     if(s != NULL && s->private_context != NULL) {
         A52Context *ctx = s->private_context;
-        /* mdct_close deinits both mdcts */
-        ctx->mdct_ctx_512.mdct_close(ctx);
 
 #ifndef NO_THREADS
         while (ctx->ts.threads_running) {
             uint8_t frame_buffer[A52_MAX_CODED_FRAME_SIZE];
-            aften_encode_frame(s, frame_buffer, NULL, 0);
+            FLOAT samples_buffer[A52_SAMPLES_PER_FRAME * A52_MAX_CHANNELS * sizeof(FLOAT)];
+
+            encode_frame_parallel(s, frame_buffer, samples_buffer, 0);
             ret_val = -1;
         }
 #endif
-        posix_mutex_destroy(&ctx->ts.samples_mutex);
-
-        windows_cs_destroy(&ctx->ts.samples_cs);
         if (ctx->tctx) {
             if (ctx->n_threads == 1)
                 ctx->tctx[0].mdct_tctx_512.mdct_thread_close(&ctx->tctx[0]);
@@ -1642,6 +1641,10 @@ aften_encode_close(AftenContext *s)
                     windows_event_destroy(&cur_tctx.ts.enter_event);
                     windows_event_destroy(&cur_tctx.ts.samples_event);
                 }
+                posix_mutex_destroy(&ctx->ts.samples_mutex);
+                windows_cs_destroy(&ctx->ts.samples_cs);
+                /* mdct_close deinits both mdcts */
+                ctx->mdct_ctx_512.mdct_close(ctx);
             }
             free(ctx->tctx);
         }
