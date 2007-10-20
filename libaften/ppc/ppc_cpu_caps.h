@@ -21,6 +21,7 @@
 #define PPC_CPU_CAPS_H
 
 #include "common.h"
+#include "aften-types.h"
 #include "cpu_caps.h"
 
 extern int ppc_cpu_caps_altivec;
