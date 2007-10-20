@@ -17,6 +17,7 @@ Aften TODO list
 - Streaming interface to libaften / internal sample buffer
 - Multiple-file commandline input with channel designation
 - Better error logging for libaften
+- pkg-config support or alike
 
 Aften Changelog
 ---------------
