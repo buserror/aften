@@ -1615,9 +1615,8 @@ aften_encode_close(AftenContext *s)
 #ifndef NO_THREADS
         while (ctx->ts.threads_running) {
             uint8_t frame_buffer[A52_MAX_CODED_FRAME_SIZE];
-            FLOAT samples_buffer[A52_SAMPLES_PER_FRAME * A52_MAX_CHANNELS * sizeof(FLOAT)];
 
-            encode_frame_parallel(s, frame_buffer, samples_buffer, 0);
+            encode_frame_parallel(s, frame_buffer, NULL, 0);
             ret_val = -1;
         }
 #endif
