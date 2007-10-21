@@ -1582,10 +1582,6 @@ aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, const void *samples, 
         fprintf(stderr, "count must be 0 after having once been <A52_SAMPLES_PER_FRAME when passed to aften_encode_frame\n");
         return -1;
     }
-    if (!count && ctx->last_samples_count == -1) {
-        fprintf(stderr, "count mustn't be 0 when passed the first time to aften_encode_frame\n");
-        return -1;
-    }
 #ifndef NO_THREADS
     if (ctx->n_threads > 1)
         return encode_frame_parallel(s, frame_buffer, samples, count);
