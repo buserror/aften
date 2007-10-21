@@ -26,6 +26,11 @@ version SVN : current
 - added API.txt
 - fixed aften error handling
 - fixed libaften closing in threaded mode, simplifying its usage
+- AftenContext has a new member called initial_samples.
+  If 256 samples are provided here, the first frame is not padded
+  with zero samples. Nevertheless, you shouldn't use this option unless
+  you need perfect sync, as these first 256 samples can't properly be
+  reconstructed.
 
 version 0.08 :
 - fixed piped input from FFmpeg
