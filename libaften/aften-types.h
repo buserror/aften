@@ -375,7 +375,7 @@ typedef struct {
      * To prevent padding und thus to get perfect sync,
      * exactly 256 samples/channel can be provided here.
      * This is not recommended, as without padding these samples can't be properly
-     * decoded anymore.
+     * reconstructed anymore.
      */
     void* initial_samples;
 
