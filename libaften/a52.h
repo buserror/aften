@@ -179,7 +179,7 @@ typedef struct A52Context {
     FilterContext bw_filter[A52_MAX_CHANNELS];
     FilterContext lfe_filter;
 
-    FLOAT last_samples[A52_MAX_CHANNELS][256];
+    FLOAT last_samples[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME]; // 256 would be enough, but want to use converting functions
     FLOAT last_transient_samples[A52_MAX_CHANNELS][256];
 
     MDCTContext mdct_ctx_512;

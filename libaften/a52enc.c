@@ -652,6 +652,10 @@ aften_encode_init(AftenContext *s)
         }
     }
 
+	// copy initial samples
+	if (s->initial_samples)
+		ctx->fmt_convert_from_src(ctx->last_samples, s->initial_samples, ctx->n_all_channels, 256);
+
     return 0;
 }
 

@@ -371,6 +371,15 @@ typedef struct {
     A52SampleFormat sample_format;
 
     /**
+     * Initial samples
+     * To prevent padding und thus to get perfect sync,
+     * exactly 256 samples/channel can be provided here.
+     * This is not recommended, as without padding these samples can't be properly
+     * decoded anymore.
+     */
+    void* initial_samples;
+
+    /**
      * Used internally by the encoder. The user should leave this alone.
      * It is allocated in aften_encode_init and free'd in aften_encode_close.
      */

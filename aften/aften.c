@@ -98,7 +98,6 @@ main(int argc, char **argv)
     int last_frame;
     int frame_cnt;
     int input_file_format;
-    int discard_first_frame = 0;
     enum PcmSampleFormat read_format;
     /* update output every 200ms */
     clock_t update_clock_span = 0.2f * CLOCKS_PER_SEC;
@@ -224,12 +223,6 @@ main(int argc, char **argv)
     s.sample_format = A52_SAMPLE_FMT_FLT;
 #endif
 
-    // initialize encoder
-    if(aften_encode_init(&s)) {
-        fprintf(stderr, "error initializing encoder\n");
-        goto error_end;
-    }
-
     // open output file
     if(!strncmp(opts.outfile, "-", 2)) {
 #ifdef _WIN32
@@ -278,23 +271,24 @@ main(int argc, char **argv)
     else if (opts.chmap == 2)
         aften_remap = aften_remap_mpeg_to_a52;
 
-    // Don't pad start with zero samples, use input audio instead:
-    // First 256 samples are read so mdct get intialized with real samples than with zero samples.
-    // This first encoded frame is discarded.
-    // It is not recommended, but providing the option here for when perfect sync is needed for the cost
-    // of improper reproduction of first 256 samples
+    // Don't pad start with zero samples, use input audio instead.
     if(!opts.pad_start) {
-        FLOAT *sptr = &fwav[(A52_SAMPLES_PER_FRAME - 256)*s.channels];
-        nr = pcmfile_read_samples(&pf, sptr, 256);
-        if(aften_remap)
-            aften_remap(sptr, nr, s.channels, s.sample_format, s.acmod);
-
-        fs = aften_encode_frame(&s, frame, fwav, A52_SAMPLES_PER_FRAME);
-        if(fs < 0) {
-            fprintf(stderr, "Error encoding initial frame\n");
-            goto error_end;
+        int diff;
+        nr = pcmfile_read_samples(&pf, fwav, 256);
+        diff = 256 - nr;
+        if (diff > 0) {
+            memmove(fwav + diff * s.channels, fwav, nr);
+            memset(fwav, 0, diff * s.channels * sizeof(FLOAT));
         }
-        discard_first_frame = !fs;
+        if(aften_remap)
+            aften_remap(fwav + diff, nr, s.channels, s.sample_format, s.acmod);
+
+        s.initial_samples = fwav;
+    }
+    // initialize encoder
+    if(aften_encode_init(&s)) {
+        fprintf(stderr, "error initializing encoder\n");
+        goto error_end;
     }
     do {
         nr = pcmfile_read_samples(&pf, fwav, A52_SAMPLES_PER_FRAME);
@@ -343,11 +337,8 @@ main(int argc, char **argv)
                 }
             }
             if (fs) {
-                if (!discard_first_frame) {
-                    fwrite(frame, 1, fs, ofp);
-                    frame_cnt++;
-                } else
-                    discard_first_frame = 0;
+                fwrite(frame, 1, fs, ofp);
+                frame_cnt++;
             }
             last_frame = nr;
         }
