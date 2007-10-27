@@ -30,17 +30,6 @@
 
 #include "byteio.h"
 
-/*
-#define BYTEIO_BUFFER_SIZE 16384
-
-typedef struct ByteIOContext {
-    FILE *fp;
-    uint8_t *buffer;
-    int index;
-    int size;
-} ByteIOContext;
-*/
-
 int
 byteio_init(ByteIOContext *ctx, FILE *fp)
 {
