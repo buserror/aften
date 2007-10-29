@@ -414,6 +414,7 @@ aften_encode_init(AftenContext *s)
             thread_create(&cur_tctx->ts.thread, threaded_encode, cur_tctx);
             posix_cond_wait(&cur_tctx->ts.enter_cond, &cur_tctx->ts.enter_mutex);
             posix_mutex_unlock(&cur_tctx->ts.enter_mutex);
+            windows_event_wait(&cur_tctx->ts.enter_event);
         }
     }
     for (j=0; j<ctx->n_threads; ++j) {
