@@ -33,132 +33,132 @@ static void
 fmt_convert_from_u8(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
                     const void *vsrc, int nch, int n)
 {
-	int i, j, ch;
-	const uint8_t *src = vsrc;
-	
-	for(ch=0; ch<nch; ch++) {
-		FLOAT *dest_ch = dest[ch];
-		const uint8_t *src_ch = src + ch;
-		for(i=0, j=0; i<n; i++, j+=nch) {
-			dest_ch[i] = (src_ch[j]-FCONST(128.0)) / FCONST(128.0);
-		}
-	}
+    int i, j, ch;
+    const uint8_t *src = vsrc;
+
+    for(ch=0; ch<nch; ch++) {
+        FLOAT *dest_ch = dest[ch];
+        const uint8_t *src_ch = src + ch;
+        for(i=0, j=0; i<n; i++, j+=nch) {
+            dest_ch[i] = (src_ch[j]-FCONST(128.0)) / FCONST(128.0);
+        }
+    }
 }
 
 static void
 fmt_convert_from_s16(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
                      const void *vsrc, int nch, int n)
 {
-	int i, j, ch;
-	const int16_t *src = vsrc;
-	
-	for(ch=0; ch<nch; ch++) {
-		FLOAT *dest_ch = dest[ch];
-		const int16_t *src_ch = src + ch;
-		for(i=0, j=0; i<n; i++, j+=nch) {
-			dest_ch[i] = src_ch[j] / FCONST(32768.0);
-		}
-	}
+    int i, j, ch;
+    const int16_t *src = vsrc;
+
+    for(ch=0; ch<nch; ch++) {
+        FLOAT *dest_ch = dest[ch];
+        const int16_t *src_ch = src + ch;
+        for(i=0, j=0; i<n; i++, j+=nch) {
+            dest_ch[i] = src_ch[j] / FCONST(32768.0);
+        }
+    }
 }
 
 static void
 fmt_convert_from_s20(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
                      const void *vsrc, int nch, int n)
 {
-	int i, j, ch;
-	const int32_t *src = vsrc;
-	
-	for(ch=0; ch<nch; ch++) {
-		FLOAT *dest_ch = dest[ch];
-		const int32_t *src_ch = src + ch;
-		for(i=0, j=0; i<n; i++, j+=nch) {
-			dest_ch[i] = src_ch[j] / FCONST(524288.0);
-		}
-	}
+    int i, j, ch;
+    const int32_t *src = vsrc;
+
+    for(ch=0; ch<nch; ch++) {
+        FLOAT *dest_ch = dest[ch];
+        const int32_t *src_ch = src + ch;
+        for(i=0, j=0; i<n; i++, j+=nch) {
+            dest_ch[i] = src_ch[j] / FCONST(524288.0);
+        }
+    }
 }
 
 static void
 fmt_convert_from_s24(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
                      const void *vsrc, int nch, int n)
 {
-	int i, j, ch;
-	const int32_t *src = vsrc;
-	
-	for(ch=0; ch<nch; ch++) {
-		FLOAT *dest_ch = dest[ch];
-		const int32_t *src_ch = src + ch;
-		for(i=0, j=0; i<n; i++, j+=nch) {
-			dest_ch[i] = src_ch[j] / FCONST(8388608.0);
-		}
-	}
+    int i, j, ch;
+    const int32_t *src = vsrc;
+
+    for(ch=0; ch<nch; ch++) {
+        FLOAT *dest_ch = dest[ch];
+        const int32_t *src_ch = src + ch;
+        for(i=0, j=0; i<n; i++, j+=nch) {
+            dest_ch[i] = src_ch[j] / FCONST(8388608.0);
+        }
+    }
 }
 
 static void
 fmt_convert_from_s32(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
                      const void *vsrc, int nch, int n)
 {
-	int i, j, ch;
-	const int32_t *src = vsrc;
-	
-	for(ch=0; ch<nch; ch++) {
-		FLOAT *dest_ch = dest[ch];
-		const int32_t *src_ch = src + ch;
-		for(i=0, j=0; i<n; i++, j+=nch) {
-			dest_ch[i] = src_ch[j] / FCONST(2147483648.0);
-		}
-	}
+    int i, j, ch;
+    const int32_t *src = vsrc;
+
+    for(ch=0; ch<nch; ch++) {
+        FLOAT *dest_ch = dest[ch];
+        const int32_t *src_ch = src + ch;
+        for(i=0, j=0; i<n; i++, j+=nch) {
+            dest_ch[i] = src_ch[j] / FCONST(2147483648.0);
+        }
+    }
 }
 
 static void
 fmt_convert_from_float(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
                        const void *vsrc, int nch, int n)
 {
-	int i, j, ch;
-	const float *src = vsrc;
-	
-	for(ch=0; ch<nch; ch++) {
-		FLOAT *dest_ch = dest[ch];
-		const float *src_ch = src + ch;
-		for(i=0, j=0; i<n; i++, j+=nch) {
-			dest_ch[i] = src_ch[j];
-		}
-	}
+    int i, j, ch;
+    const float *src = vsrc;
+
+    for(ch=0; ch<nch; ch++) {
+        FLOAT *dest_ch = dest[ch];
+        const float *src_ch = src + ch;
+        for(i=0, j=0; i<n; i++, j+=nch) {
+            dest_ch[i] = src_ch[j];
+        }
+    }
 }
 
 static void
 fmt_convert_from_double(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
                         const void *vsrc, int nch, int n)
 {
-	int i, j, ch;
-	const double *src = vsrc;
-	
-	for(ch=0; ch<nch; ch++) {
-		FLOAT *dest_ch = dest[ch];
-		const double *src_ch = src + ch;
-		for(i=0, j=0; i<n; i++, j+=nch) {
-			dest_ch[i] = (FLOAT)src_ch[j];
-		}
-	}
+    int i, j, ch;
+    const double *src = vsrc;
+
+    for(ch=0; ch<nch; ch++) {
+        FLOAT *dest_ch = dest[ch];
+        const double *src_ch = src + ch;
+        for(i=0, j=0; i<n; i++, j+=nch) {
+            dest_ch[i] = (FLOAT)src_ch[j];
+        }
+    }
 }
 
 void
 set_converter(A52Context *ctx, A52SampleFormat sample_format)
 {
-	switch(sample_format) {
-	case A52_SAMPLE_FMT_U8:  ctx->fmt_convert_from_src = fmt_convert_from_u8;
-		break;
-	case A52_SAMPLE_FMT_S16: ctx->fmt_convert_from_src = fmt_convert_from_s16;
-		break;
-	case A52_SAMPLE_FMT_S20: ctx->fmt_convert_from_src = fmt_convert_from_s20;
-		break;
-	case A52_SAMPLE_FMT_S24: ctx->fmt_convert_from_src = fmt_convert_from_s24;
-		break;
-	case A52_SAMPLE_FMT_S32: ctx->fmt_convert_from_src = fmt_convert_from_s32;
-		break;
-	case A52_SAMPLE_FMT_FLT: ctx->fmt_convert_from_src = fmt_convert_from_float;
-		break;
-	case A52_SAMPLE_FMT_DBL: ctx->fmt_convert_from_src = fmt_convert_from_double;
-		break;
-	default: break;
-	}
+    switch(sample_format) {
+    case A52_SAMPLE_FMT_U8:  ctx->fmt_convert_from_src = fmt_convert_from_u8;
+        break;
+    case A52_SAMPLE_FMT_S16: ctx->fmt_convert_from_src = fmt_convert_from_s16;
+        break;
+    case A52_SAMPLE_FMT_S20: ctx->fmt_convert_from_src = fmt_convert_from_s20;
+        break;
+    case A52_SAMPLE_FMT_S24: ctx->fmt_convert_from_src = fmt_convert_from_s24;
+        break;
+    case A52_SAMPLE_FMT_S32: ctx->fmt_convert_from_src = fmt_convert_from_s32;
+        break;
+    case A52_SAMPLE_FMT_FLT: ctx->fmt_convert_from_src = fmt_convert_from_float;
+        break;
+    case A52_SAMPLE_FMT_DBL: ctx->fmt_convert_from_src = fmt_convert_from_double;
+        break;
+    default: break;
+    }
 }
