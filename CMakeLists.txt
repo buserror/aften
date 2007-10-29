@@ -49,7 +49,8 @@ SET(LIBAFTEN_SRCS libaften/a52enc.c
                   libaften/mdct.c
                   libaften/exponent.c
                   libaften/filter.c
-                  libaften/util.c)
+                  libaften/util.c
+                  libaften/convert.c)
 
 SET(LIBAFTEN_X86_SRCS libaften/x86/x86_cpu_caps.c)
 
