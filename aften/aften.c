@@ -247,12 +247,6 @@ main(int argc, char **argv)
         fprintf(stderr, "\n\n");
     }
 
-    /* print SIMD instructions used */
-    print_simd_in_use(stderr, &s.system.wanted_simd_instructions);
-
-    /* print number of threads used */
-    fprintf(stderr, "Threads: %i\n\n", s.system.n_threads);
-
     // allocate memory for coded frame and sample buffer
     frame = calloc(A52_MAX_CODED_FRAME_SIZE, 1);
     fwav = calloc(A52_SAMPLES_PER_FRAME * s.channels, sizeof(FLOAT));
@@ -290,6 +284,12 @@ main(int argc, char **argv)
         fprintf(stderr, "error initializing encoder\n");
         goto error_end;
     }
+    // print SIMD instructions used
+    print_simd_in_use(stderr, &s.system.wanted_simd_instructions);
+
+    // print number of threads used
+    fprintf(stderr, "Threads: %i\n\n", s.system.n_threads);
+
     do {
         nr = pcmfile_read_samples(&pf, fwav, A52_SAMPLES_PER_FRAME);
         if(aften_remap)
