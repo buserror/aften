@@ -191,6 +191,8 @@ aften_set_defaults(AftenContext *s)
     s->status.quality = 0;
     s->status.bit_rate = 0;
     s->status.bwcode = 0;
+
+    s->initial_samples = NULL;
 }
 
 static void
