@@ -100,7 +100,7 @@ main(int argc, char **argv)
     int input_file_format;
     enum PcmSampleFormat read_format;
     /* update output every 200ms */
-    clock_t update_clock_span = 0.2f * CLOCKS_PER_SEC;
+    clock_t update_clock_span = (clock_t)(0.2f * CLOCKS_PER_SEC);
     clock_t current_clock;
     clock_t last_update_clock = clock() - update_clock_span;
     int ret_val = 0;
