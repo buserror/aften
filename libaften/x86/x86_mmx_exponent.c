@@ -31,6 +31,9 @@
 
 #include <mmintrin.h>
 
+#ifdef _MSC_VER
+	#pragma warning (disable: 4799)
+#endif
 
 /* set exp[i] to min(exp[i], exp1[i]) */
 static void
@@ -157,19 +160,19 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
         }
         switch (ngrps & 3) {
         case 3:
-            v = exp1[i];
+            v = (uint8_t)exp1[i];
             exp[k] = v;
             exp[k+1] = v;
             ++i;
             k += 2;
         case 2:
-            v = exp1[i];
+            v = (uint8_t)exp1[i];
             exp[k] = v;
             exp[k+1] = v;
             ++i;
             k += 2;
         case 1:
-            v = exp1[i];
+            v = (uint8_t)exp1[i];
             exp[k] = v;
             exp[k+1] = v;
         case 0:
