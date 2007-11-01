@@ -142,43 +142,43 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
         }
         switch (ngrps & 7) {
         case 7:
-            v = exp1[i];
+            v = (uint8_t)exp1[i];
             exp[k] = v;
             exp[k+1] = v;
             ++i;
             k += 2;
         case 6:
-            v = exp1[i];
+            v = (uint8_t)exp1[i];
             exp[k] = v;
             exp[k+1] = v;
             ++i;
             k += 2;
         case 5:
-            v = exp1[i];
+            v = (uint8_t)exp1[i];
             exp[k] = v;
             exp[k+1] = v;
             ++i;
             k += 2;
         case 4:
-            v = exp1[i];
+            v = (uint8_t)exp1[i];
             exp[k] = v;
             exp[k+1] = v;
             ++i;
             k += 2;
         case 3:
-            v = exp1[i];
+            v = (uint8_t)exp1[i];
             exp[k] = v;
             exp[k+1] = v;
             ++i;
             k += 2;
         case 2:
-            v = exp1[i];
+            v = (uint8_t)exp1[i];
             exp[k] = v;
             exp[k+1] = v;
             ++i;
             k += 2;
         case 1:
-            v = exp1[i];
+            v = (uint8_t)exp1[i];
             exp[k] = v;
             exp[k+1] = v;
         case 0:
