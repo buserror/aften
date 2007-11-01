@@ -69,7 +69,7 @@ pcmfile_seek_set(PcmFile *pf, uint64_t dest)
         for(offset = dest - pf->filepos; offset > 1024; offset -= 1024)
             byteio_read(buf, 1024, &pf->io);
 
-        byteio_read(buf, offset, &pf->io);
+        byteio_read(buf, (int)offset, &pf->io);
     }
     pf->filepos = dest;
 
