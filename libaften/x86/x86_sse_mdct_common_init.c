@@ -137,21 +137,12 @@ sse_mdct_ctx_init(MDCTContext *mdct, int n)
         S    = mdct->trig;
         for(i=0,j=n2-4;i<n8;i+=4,j-=4)
         {
-            __m128  XMM0, XMM1, XMM2, XMM3;
-#ifdef __INTEL_COMPILER
-#pragma warning(disable : 592)
-#endif
-            XMM0     = _mm_loadl_pi(XMM0, (__m64*)(S+j+2));
-            XMM2     = _mm_loadl_pi(XMM2, (__m64*)(S+j  ));
-            XMM0     = _mm_loadh_pi(XMM0, (__m64*)(S+i  ));
-            XMM2     = _mm_loadh_pi(XMM2, (__m64*)(S+i+2));
-#ifdef __INTEL_COMPILER
-#pragma warning(default : 592)
-#endif
-            XMM1     = XMM0;
-            XMM3     = XMM2;
-            XMM0     = _mm_shuffle_ps(XMM0, XMM0, _MM_SHUFFLE(2,3,0,1));
-            XMM2     = _mm_shuffle_ps(XMM2, XMM2, _MM_SHUFFLE(2,3,0,1));
+            __m128 XMM0 = _mm_load_ps(S+i);
+            __m128 XMM2 = _mm_load_ps(S+j);
+            __m128 XMM1 = _mm_shuffle_ps(XMM2, XMM0, _MM_SHUFFLE(1,0,3,2));
+            __m128 XMM3 = _mm_shuffle_ps(XMM2, XMM0, _MM_SHUFFLE(3,2,1,0));
+            XMM0     = _mm_shuffle_ps(XMM1, XMM1, _MM_SHUFFLE(2,3,0,1));
+            XMM2     = _mm_shuffle_ps(XMM3, XMM3, _MM_SHUFFLE(2,3,0,1));
             XMM0     = _mm_xor_ps(XMM0, PCS_RRNN.v);
             XMM1     = _mm_xor_ps(XMM1, PCS_RNNR.v);
             XMM2     = _mm_xor_ps(XMM2, PCS_RRNN.v);
@@ -163,21 +154,12 @@ sse_mdct_ctx_init(MDCTContext *mdct, int n)
         }
         for(;i<n4;i+=4,j-=4)
         {
-            __m128  XMM0, XMM1, XMM2, XMM3;
-#ifdef __INTEL_COMPILER
-#pragma warning(disable : 592)
-#endif
-            XMM0     = _mm_loadl_pi(XMM0, (__m64*)(S+j+2));
-            XMM2     = _mm_loadl_pi(XMM2, (__m64*)(S+j  ));
-            XMM0     = _mm_loadh_pi(XMM0, (__m64*)(S+i  ));
-            XMM2     = _mm_loadh_pi(XMM2, (__m64*)(S+i+2));
-#ifdef __INTEL_COMPILER
-#pragma warning(default : 592)
-#endif
-            XMM1     = XMM0;
-            XMM3     = XMM2;
-            XMM0     = _mm_shuffle_ps(XMM0, XMM0, _MM_SHUFFLE(2,3,0,1));
-            XMM2     = _mm_shuffle_ps(XMM2, XMM2, _MM_SHUFFLE(2,3,0,1));
+            __m128 XMM0 = _mm_load_ps(S+i);
+            __m128 XMM2 = _mm_load_ps(S+j);
+            __m128 XMM1 = _mm_shuffle_ps(XMM2, XMM0, _MM_SHUFFLE(1,0,3,2));
+            __m128 XMM3 = _mm_shuffle_ps(XMM2, XMM0, _MM_SHUFFLE(3,2,1,0));
+            XMM0     = _mm_shuffle_ps(XMM1, XMM1, _MM_SHUFFLE(2,3,0,1));
+            XMM2     = _mm_shuffle_ps(XMM3, XMM3, _MM_SHUFFLE(2,3,0,1));
             XMM0     = _mm_xor_ps(XMM0, PCS_NNRR.v);
             XMM2     = _mm_xor_ps(XMM2, PCS_NNRR.v);
             XMM1     = _mm_xor_ps(XMM1, PCS_RNNR.v);
