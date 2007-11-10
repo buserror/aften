@@ -131,149 +131,70 @@ aften_wav_channels_to_acmod(int ch, unsigned int chmask, int *acmod, int *lfe)
  * note: thanks to Tebasuna for help in getting this order right.
  */
 
-static const int wav_chmap[6] = { 0, 2, 1, 4, 5, 3 };
+static const int wav_chmap_5[6] = { 0, 2, 1, 4, 3 };
+static const int wav_chmap_6[6] = { 0, 1, 3, 4, 2 };
+static const int wav_chmap_7[6] = { 0, 2, 1, 4, 5, 3 };
 
-static void
-remap_wav_to_a52_u8(uint8_t *samples, int n, int ch, int acmod)
-{
-    int i, j;
-    uint8_t tmp[6];
-
-    if(ch > 2 && acmod != 4 && acmod != 6) {
-        if(ch == 6) {
-            for(i=0; i<n*6; i+=6) {
-                memcpy(tmp, &samples[i], 6*sizeof(uint8_t));
-                for(j=0; j<6; j++) {
-                    samples[i+j] = tmp[wav_chmap[j]];
-                }
-            }
-        } else {
-            for(i=0; i<n*ch; i+=ch) {
-                tmp[0] = samples[i+1];
-                samples[i+1] = samples[i+2];
-                samples[i+2] = tmp[0];
-            }
-        }
-    }
+#define REMAP_WAV_TO_A52_COMMON(DATA_TYPE) \
+{ \
+    int i, j; \
+    DATA_TYPE *smp = samples; \
+    DATA_TYPE tmp[6]; \
+    int sample_size = sizeof(DATA_TYPE); \
+    if(acmod < 3 || acmod == 4 || (acmod == 6 && lfe)) { \
+        return; \
+    } \
+    if(acmod == 3 || (acmod == 5 && !lfe) || (acmod == 7 && !lfe)) { \
+        for(i=0; i<n*ch; i+=ch) { \
+            tmp[0] = smp[i+1]; \
+            smp[i+1] = smp[i+2]; \
+            smp[i+2] = tmp[0]; \
+        } \
+    } else { \
+        const int *wav_chmap = NULL; \
+        switch(acmod) { \
+            case 5: wav_chmap = wav_chmap_5; break; \
+            case 6: wav_chmap = wav_chmap_6; break; \
+            case 7: wav_chmap = wav_chmap_7; break; \
+        } \
+        for(i=0; i<n*ch; i+=ch) { \
+            memcpy(tmp, &smp[i], ch*sample_size); \
+            for(j=0; j<ch; j++) { \
+                smp[i+j] = tmp[wav_chmap_5[j]]; \
+            } \
+        } \
+    } \
 }
 
-static void
-remap_wav_to_a52_s16(int16_t *samples, int n, int ch, int acmod)
-{
-    int i, j;
-    int16_t tmp[6];
-
-    if(ch > 2 && acmod != 4 && acmod != 6) {
-        if(ch == 6) {
-            for(i=0; i<n*6; i+=6) {
-                memcpy(tmp, &samples[i], 6*sizeof(int16_t));
-                for(j=0; j<6; j++) {
-                    samples[i+j] = tmp[wav_chmap[j]];
-                }
-            }
-        } else {
-            for(i=0; i<n*ch; i+=ch) {
-                tmp[0] = samples[i+1];
-                samples[i+1] = samples[i+2];
-                samples[i+2] = tmp[0];
-            }
-        }
-    }
-}
-
-static void
-remap_wav_to_a52_s32(int32_t *samples, int n, int ch, int acmod)
-{
-    int i, j;
-    int32_t tmp[6];
-
-    if(ch > 2 && acmod != 4 && acmod != 6) {
-        if(ch == 6) {
-            for(i=0; i<n*6; i+=6) {
-                memcpy(tmp, &samples[i], 6*sizeof(int32_t));
-                for(j=0; j<6; j++) {
-                    samples[i+j] = tmp[wav_chmap[j]];
-                }
-            }
-        } else {
-            for(i=0; i<n*ch; i+=ch) {
-                tmp[0] = samples[i+1];
-                samples[i+1] = samples[i+2];
-                samples[i+2] = tmp[0];
-            }
-        }
-    }
-}
-
-static void
-remap_wav_to_a52_float(float *samples, int n, int ch, int acmod)
-{
-    int i, j;
-    float tmp[6];
-
-    if(ch > 2 && acmod != 4 && acmod != 6) {
-        if(ch == 6) {
-            for(i=0; i<n*6; i+=6) {
-                memcpy(tmp, &samples[i], 6*sizeof(float));
-                for(j=0; j<6; j++) {
-                    samples[i+j] = tmp[wav_chmap[j]];
-                }
-            }
-        } else {
-            for(i=0; i<n*ch; i+=ch) {
-                tmp[0] = samples[i+1];
-                samples[i+1] = samples[i+2];
-                samples[i+2] = tmp[0];
-            }
-        }
-    }
-}
-
-static void
-remap_wav_to_a52_double(double *samples, int n, int ch, int acmod)
-{
-    int i, j;
-    double tmp[6];
-
-    if(ch > 2 && acmod != 4 && acmod != 6) {
-        if(ch == 6) {
-            for(i=0; i<n*6; i+=6) {
-                memcpy(tmp, &samples[i], 6*sizeof(double));
-                for(j=0; j<6; j++) {
-                    samples[i+j] = tmp[wav_chmap[j]];
-                }
-            }
-        } else {
-            for(i=0; i<n*ch; i+=ch) {
-                tmp[0] = samples[i+1];
-                samples[i+1] = samples[i+2];
-                samples[i+2] = tmp[0];
-            }
-        }
-    }
-}
+static const int acmod_to_ch[8] = { 2, 1, 2, 3, 3, 4, 4, 5 };
 
 void
 aften_remap_wav_to_a52(void *samples, int n, int ch, A52SampleFormat fmt,
                        int acmod)
 {
+    int lfe;
+
     if(samples == NULL) {
         fprintf(stderr, "NULL parameter passed to aften_remap_wav_to_a52\n");
         return;
     }
 
+    lfe = 0;
+    if(ch > acmod_to_ch[acmod])
+        lfe = 1;
+
     switch(fmt) {
-        case A52_SAMPLE_FMT_U8:  remap_wav_to_a52_u8(samples, n, ch, acmod);
+        case A52_SAMPLE_FMT_U8:  REMAP_WAV_TO_A52_COMMON(uint8_t)
                                  break;
-        case A52_SAMPLE_FMT_S16: remap_wav_to_a52_s16(samples, n, ch, acmod);
+        case A52_SAMPLE_FMT_S16: REMAP_WAV_TO_A52_COMMON(int16_t)
                                  break;
         case A52_SAMPLE_FMT_S20:
         case A52_SAMPLE_FMT_S24:
-        case A52_SAMPLE_FMT_S32: remap_wav_to_a52_s32(samples, n, ch, acmod);
+        case A52_SAMPLE_FMT_S32: REMAP_WAV_TO_A52_COMMON(int32_t)
                                  break;
-        case A52_SAMPLE_FMT_FLT: remap_wav_to_a52_float(samples, n, ch, acmod);
+        case A52_SAMPLE_FMT_FLT: REMAP_WAV_TO_A52_COMMON(float)
                                  break;
-        case A52_SAMPLE_FMT_DBL: remap_wav_to_a52_double(samples, n, ch, acmod);
+        case A52_SAMPLE_FMT_DBL: REMAP_WAV_TO_A52_COMMON(double)
                                  break;
     }
 }
@@ -283,75 +204,17 @@ aften_remap_wav_to_a52(void *samples, int n, int ch, A52SampleFormat fmt,
  * Can be used for multi-channel DTS, MP2, or AAC
  */
 
-static void
-remap_mpeg_to_a52_u8(uint8_t *samples, int n, int ch, int acmod)
-{
-    int i;
-
-    if(ch > 2 && acmod & 1) {
-        for(i=0; i<n*ch; i+=ch) {
-            uint8_t tmp = samples[i];
-            samples[i] = samples[i+1];
-            samples[i+1] = tmp;
-        }
-    }
-}
-
-static void
-remap_mpeg_to_a52_s16(int16_t *samples, int n, int ch, int acmod)
-{
-    int i;
-
-    if(ch > 2 && acmod & 1) {
-        fprintf(stderr, "converting s16 mpeg to s16 ac3\n");
-        for(i=0; i<n*ch; i+=ch) {
-            int16_t tmp = samples[i];
-            samples[i] = samples[i+1];
-            samples[i+1] = tmp;
-        }
-    }
-}
-
-static void
-remap_mpeg_to_a52_s32(int32_t *samples, int n, int ch, int acmod)
-{
-    int i;
-
-    if(ch > 2 && acmod & 1) {
-        for(i=0; i<n*ch; i+=ch) {
-            int32_t tmp = samples[i];
-            samples[i] = samples[i+1];
-            samples[i+1] = tmp;
-        }
-    }
-}
-
-static void
-remap_mpeg_to_a52_float(float *samples, int n, int ch, int acmod)
-{
-    int i;
-
-    if(ch > 2 && acmod & 1) {
-        for(i=0; i<n*ch; i+=ch) {
-            float tmp = samples[i];
-            samples[i] = samples[i+1];
-            samples[i+1] = tmp;
-        }
-    }
-}
-
-static void
-remap_mpeg_to_a52_double(double *samples, int n, int ch, int acmod)
-{
-    int i;
-
-    if(ch > 2 && acmod & 1) {
-        for(i=0; i<n*ch; i+=ch) {
-            double tmp = samples[i];
-            samples[i] = samples[i+1];
-            samples[i+1] = tmp;
-        }
-    }
+#define REMAP_MPEG_TO_A52_COMMON(DATA_TYPE) \
+{ \
+    int i; \
+    DATA_TYPE *smp = samples; \
+    if(acmod > 2 && acmod & 1) { \
+        for(i=0; i<n*ch; i+=ch) { \
+            DATA_TYPE tmp = smp[i]; \
+            smp[i] = smp[i+1]; \
+            smp[i+1] = tmp; \
+        } \
+    } \
 }
 
 void
@@ -364,17 +227,17 @@ aften_remap_mpeg_to_a52(void *samples, int n, int ch, A52SampleFormat fmt,
     }
 
     switch(fmt) {
-        case A52_SAMPLE_FMT_U8:  remap_mpeg_to_a52_u8(samples, n, ch, acmod);
+        case A52_SAMPLE_FMT_U8:  REMAP_MPEG_TO_A52_COMMON(uint8_t)
                                  break;
-        case A52_SAMPLE_FMT_S16: remap_mpeg_to_a52_s16(samples, n, ch, acmod);
+        case A52_SAMPLE_FMT_S16: REMAP_MPEG_TO_A52_COMMON(int16_t)
                                  break;
         case A52_SAMPLE_FMT_S20:
         case A52_SAMPLE_FMT_S24:
-        case A52_SAMPLE_FMT_S32: remap_mpeg_to_a52_s32(samples, n, ch, acmod);
+        case A52_SAMPLE_FMT_S32: REMAP_MPEG_TO_A52_COMMON(int32_t)
                                  break;
-        case A52_SAMPLE_FMT_FLT: remap_mpeg_to_a52_float(samples, n, ch, acmod);
+        case A52_SAMPLE_FMT_FLT: REMAP_MPEG_TO_A52_COMMON(float)
                                  break;
-        case A52_SAMPLE_FMT_DBL: remap_mpeg_to_a52_double(samples, n, ch, acmod);
+        case A52_SAMPLE_FMT_DBL: REMAP_MPEG_TO_A52_COMMON(double)
                                  break;
     }
 }
