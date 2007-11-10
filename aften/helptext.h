@@ -27,7 +27,7 @@
 
 static const char *usage_heading = "usage: aften [options] <input.wav> <output.ac3>\n";
 
-#define HELP_OPTIONS_COUNT 41
+#define HELP_OPTIONS_COUNT 42
 
 static const char *help_options[HELP_OPTIONS_COUNT] = {
 "    [-h]           Print out list of commandline options\n",
@@ -119,6 +119,17 @@ static const char *help_options[HELP_OPTIONS_COUNT] = {
 "    [-lfe #]       Specify use of LFE channel (overrides wav header)\n"
 "                       0 = LFE channel is not present\n"
 "                       1 = LFE channel is present\n",
+
+"    [-chconfig X]  Specify channel configuration (overrides wav header)\n"
+"                       1+1 = (Ch1,Ch2)\n"
+"                       1/0 = (C)\n"
+"                       2/0 = (L,R)\n"
+"                       3/0 = (L,R,C)\n"
+"                       2/1 = (L,R,S)\n"
+"                       3/1 = (L,R,C,S)\n"
+"                       2/2 = (L,R,SL,SR)\n"
+"                       3/2 = (L,R,C,SL,SR)\n"
+"                       adding \"+LFE\" indicates use of the LFE channel\n",
 
 "    [-raw_fmt X]   Raw audio input sample format (default: s16_le)\n"
 "                       One of the pre-defined sample formats:\n"
@@ -389,7 +400,7 @@ static const char *drc_options[DRC_OPTIONS_COUNT] = {
 "                       -31dB.\n"
 };
 
-#define INPUT_OPTIONS_COUNT 8
+#define INPUT_OPTIONS_COUNT 9
 
 static const char input_heading[17] = "INPUT OPTIONS\n";
 static const char *input_options[INPUT_OPTIONS_COUNT] = {
@@ -397,11 +408,11 @@ static const char *input_options[INPUT_OPTIONS_COUNT] = {
 "    configuration and data size, is determined by the input file wav header.\n"
 "    However, the basic WAVE format is limited in that it can only support\n"
 "    up to 4 GB of data and cannot specify all channel layouts possible in the\n"
-"    AC-3 format.  The acmod and lfe options allow the user to explicitly\n"
-"    select the desired channel layout.  This only controls the interpretation\n"
-"    of the input, so no downmixing or upmixing is done.  The readtoeof option\n"
-"    overrides the header and lets the user specify that Aften should keep\n"
-"    reading data until the end-of-file.\n",
+"    AC-3 format.  The acmod, lfe, and chconfig options allow the user to\n"
+"    explicitly select the desired channel layout.  This only controls the\n"
+"    interpretation of the input, so no downmixing or upmixing is done.  The\n"
+"    readtoeof option overrides the header and lets the user specify that Aften\n"
+"    should keep reading data until the end-of-file.\n",
 
 "    [-acmod #]     Audio coding mode (overrides wav header)\n"
 "                       0 = 1+1 (Ch1,Ch2)\n"
@@ -416,6 +427,17 @@ static const char *input_options[INPUT_OPTIONS_COUNT] = {
 "    [-lfe #]       Specify use of LFE channel (overrides wav header)\n"
 "                       0 = LFE channel is not present\n"
 "                       1 = LFE channel is present\n",
+
+"    [-chconfig X]  Specify channel configuration (overrides wav header)\n"
+"                       1+1 = (Ch1,Ch2)\n"
+"                       1/0 = (C)\n"
+"                       2/0 = (L,R)\n"
+"                       3/0 = (L,R,C)\n"
+"                       2/1 = (L,R,S)\n"
+"                       3/1 = (L,R,C,S)\n"
+"                       2/2 = (L,R,SL,SR)\n"
+"                       3/2 = (L,R,C,SL,SR)\n"
+"                       adding \"+LFE\" indicates use of the LFE channel\n",
 
 "    [-raw_fmt X]   Raw audio input sample format (default: s16_le)\n"
 "                       This options specifies the sample format when using\n"

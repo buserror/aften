@@ -488,6 +488,32 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
                     opts->raw_input = 1;
                 } else if(!strncmp(&argv[i][1], "version", 8)) {
                     return 4;
+                } else if(!strncmp(&argv[i][1], "chconfig", 9)) {
+                    i++;
+                    if(i >= argc) return 1;
+                    if(!strncmp(argv[i], "1+1", 4)) {
+                        opts->s->acmod = 0;
+                    } else if(!strncmp(argv[i], "1/0", 3)) {
+                        opts->s->acmod = 1;
+                    } else if(!strncmp(argv[i], "2/0", 3)) {
+                        opts->s->acmod = 2;
+                    } else if(!strncmp(argv[i], "3/0", 3)) {
+                        opts->s->acmod = 3;
+                    } else if(!strncmp(argv[i], "2/1", 3)) {
+                        opts->s->acmod = 4;
+                    } else if(!strncmp(argv[i], "3/1", 3)) {
+                        opts->s->acmod = 5;
+                    } else if(!strncmp(argv[i], "2/2", 3)) {
+                        opts->s->acmod = 6;
+                    } else if(!strncmp(argv[i], "3/2", 3)) {
+                        opts->s->acmod = 7;
+                    } else {
+                        fprintf(stderr, "invalid chconfig: %s\n", argv[i]);
+                        return 1;
+                    }
+                    if(!strncmp(&argv[i][3], "+LFE", 5) || !strncmp(&argv[i][3], "+lfe", 5)) {
+                        opts->s->lfe = 1;
+                    }
                 }
             } else {
                 // single-character arguments
