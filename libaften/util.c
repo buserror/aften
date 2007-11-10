@@ -222,7 +222,7 @@ aften_remap_mpeg_to_a52(void *samples, int n, int ch, A52SampleFormat fmt,
                         int acmod)
 {
     if(samples == NULL) {
-        fprintf(stderr, "NULL parameter passed to aften_remap_wav_to_a52\n");
+        fprintf(stderr, "NULL parameter passed to aften_remap_mpeg_to_a52\n");
         return;
     }
 
