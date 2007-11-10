@@ -61,8 +61,9 @@ print_help(FILE *out)
 {
     int i;
 
-    fprintf(out, "usage: aften [options] <input.wav> <output.ac3>\n"
-                 "options:\n");
+    fprintf(out, "%s", usage_heading);
+    fprintf(out, "options:\n");
+
     for(i=0; i<HELP_OPTIONS_COUNT; i++) {
         fprintf(out, "%s", help_options[i]);
     }
