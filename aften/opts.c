@@ -493,21 +493,15 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
                     if(i >= argc) return 1;
                     if(!strncmp(argv[i], "1+1", 4)) {
                         opts->s->acmod = 0;
-                    } else if(!strncmp(argv[i], "1/0", 3)) {
-                        opts->s->acmod = 1;
-                    } else if(!strncmp(argv[i], "2/0", 3)) {
-                        opts->s->acmod = 2;
-                    } else if(!strncmp(argv[i], "3/0", 3)) {
-                        opts->s->acmod = 3;
-                    } else if(!strncmp(argv[i], "2/1", 3)) {
-                        opts->s->acmod = 4;
-                    } else if(!strncmp(argv[i], "3/1", 3)) {
-                        opts->s->acmod = 5;
-                    } else if(!strncmp(argv[i], "2/2", 3)) {
-                        opts->s->acmod = 6;
-                    } else if(!strncmp(argv[i], "3/2", 3)) {
-                        opts->s->acmod = 7;
+                    } else if(strlen(argv[i]) >= 3 && argv[i][1] == '/') {
+                        int front_ch = argv[i][0] - '0';
+                        int rear_ch = argv[i][2] - '0';
+                        if (front_ch > 3 || front_ch < 1 || rear_ch < 0 || rear_ch > 2 || (front_ch < 2 && rear_ch != 0))
+                            goto invalid_config;
+
+                        opts->s->acmod = front_ch + 2 * rear_ch;
                     } else {
+                    invalid_config:
                         fprintf(stderr, "invalid chconfig: %s\n", argv[i]);
                         return 1;
                     }
