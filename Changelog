@@ -31,6 +31,7 @@ version SVN : current
   with zero samples. Nevertheless, you shouldn't use this option unless
   you need perfect sync, as these first 256 samples can't properly be
   reconstructed.
+- fixed bug in wav to ac3 channel remapping
 
 version 0.08 :
 - fixed piped input from FFmpeg
