@@ -377,64 +377,11 @@ aften_encode_init(AftenContext *s)
         last_quality = ((((ctx->target_bitrate/ctx->n_channels)*35)/24)+95)+(25*ctx->halfratecod);
     }
 
-    // Initialize thread specific contexts
-    ctx->n_threads = (s->system.n_threads > 0) ? s->system.n_threads : get_ncpus();
-    ctx->n_threads = MIN(ctx->n_threads, MAX_NUM_THREADS);
-    s->system.n_threads = ctx->n_threads;
-    tctx = calloc(sizeof(A52ThreadContext), ctx->n_threads);
-    ctx->tctx = tctx;
-
-    for (j=0; j<ctx->n_threads; ++j) {
-        A52ThreadContext *cur_tctx = &ctx->tctx[j];
-        cur_tctx->ctx = ctx;
-        cur_tctx->thread_num = j;
-
-        select_mdct_thread(cur_tctx);
-
-        cur_tctx->bit_cnt = 0;
-        cur_tctx->sample_cnt = 0;
-
-        cur_tctx->last_quality = last_quality;
-
-        if (ctx->n_threads > 1) {
-            cur_tctx->state = START;
-
-            posix_cond_init(&cur_tctx->ts.enter_cond);
-            posix_cond_init(&cur_tctx->ts.confirm_cond);
-            posix_cond_init(&cur_tctx->ts.samples_cond);
-
-            posix_mutex_init(&cur_tctx->ts.enter_mutex);
-            posix_mutex_init(&cur_tctx->ts.confirm_mutex);
-
-            windows_event_init(&cur_tctx->ts.ready_event);
-            windows_event_init(&cur_tctx->ts.enter_event);
-            windows_event_init(&cur_tctx->ts.samples_event);
-
-            posix_mutex_lock(&cur_tctx->ts.enter_mutex);
-            thread_create(&cur_tctx->ts.thread, threaded_encode, cur_tctx);
-            posix_cond_wait(&cur_tctx->ts.enter_cond, &cur_tctx->ts.enter_mutex);
-            posix_mutex_unlock(&cur_tctx->ts.enter_mutex);
-            windows_event_wait(&cur_tctx->ts.ready_event);
-            windows_event_set(&cur_tctx->ts.ready_event);
-        }
-    }
-    for (j=0; j<ctx->n_threads; ++j) {
-#ifdef HAVE_POSIX_THREADS
-        ctx->tctx[j].ts.next_samples_cond = &ctx->tctx[(j + 1) % ctx->n_threads].ts.samples_cond;
-#endif
-#ifdef HAVE_WINDOWS_THREADS
-        ctx->tctx[j].ts.next_samples_event = &ctx->tctx[(j + 1) % ctx->n_threads].ts.samples_event;
-#endif
-    }
-    if (ctx->n_threads > 1) {
-        posix_mutex_init(&ctx->ts.samples_mutex);
-        windows_cs_init(&ctx->ts.samples_cs);
-    }
-
     if(s->params.bwcode < -2 || s->params.bwcode > 60) {
         fprintf(stderr, "invalid bandwidth code\n");
         return -1;
     }
+    fprintf(stderr, "bandwidth code %i\n", ctx->params.bwcode);
     if(ctx->params.bwcode < 0) {
         int cutoff = ((last_quality-120) * 120) + 4000;
         ctx->fixed_bwcode = ((cutoff * 512 / ctx->sample_rate) - 73) / 3;
@@ -532,6 +479,60 @@ aften_encode_init(AftenContext *s)
     // copy initial samples
     if (s->initial_samples)
         ctx->fmt_convert_from_src(ctx->last_samples, s->initial_samples, ctx->n_all_channels, 256);
+
+    // Initialize thread specific contexts
+    ctx->n_threads = (s->system.n_threads > 0) ? s->system.n_threads : get_ncpus();
+    ctx->n_threads = MIN(ctx->n_threads, MAX_NUM_THREADS);
+    s->system.n_threads = ctx->n_threads;
+    tctx = calloc(sizeof(A52ThreadContext), ctx->n_threads);
+    ctx->tctx = tctx;
+
+    for (j=0; j<ctx->n_threads; ++j) {
+        A52ThreadContext *cur_tctx = &ctx->tctx[j];
+        cur_tctx->ctx = ctx;
+        cur_tctx->thread_num = j;
+
+        select_mdct_thread(cur_tctx);
+
+        cur_tctx->bit_cnt = 0;
+        cur_tctx->sample_cnt = 0;
+
+        cur_tctx->last_quality = last_quality;
+
+        if (ctx->n_threads > 1) {
+            cur_tctx->state = START;
+
+            posix_cond_init(&cur_tctx->ts.enter_cond);
+            posix_cond_init(&cur_tctx->ts.confirm_cond);
+            posix_cond_init(&cur_tctx->ts.samples_cond);
+
+            posix_mutex_init(&cur_tctx->ts.enter_mutex);
+            posix_mutex_init(&cur_tctx->ts.confirm_mutex);
+
+            windows_event_init(&cur_tctx->ts.ready_event);
+            windows_event_init(&cur_tctx->ts.enter_event);
+            windows_event_init(&cur_tctx->ts.samples_event);
+
+            posix_mutex_lock(&cur_tctx->ts.enter_mutex);
+            thread_create(&cur_tctx->ts.thread, threaded_encode, cur_tctx);
+            posix_cond_wait(&cur_tctx->ts.enter_cond, &cur_tctx->ts.enter_mutex);
+            posix_mutex_unlock(&cur_tctx->ts.enter_mutex);
+            windows_event_wait(&cur_tctx->ts.ready_event);
+            windows_event_set(&cur_tctx->ts.ready_event);
+        }
+    }
+    for (j=0; j<ctx->n_threads; ++j) {
+#ifdef HAVE_POSIX_THREADS
+        ctx->tctx[j].ts.next_samples_cond = &ctx->tctx[(j + 1) % ctx->n_threads].ts.samples_cond;
+#endif
+#ifdef HAVE_WINDOWS_THREADS
+        ctx->tctx[j].ts.next_samples_event = &ctx->tctx[(j + 1) % ctx->n_threads].ts.samples_event;
+#endif
+    }
+    if (ctx->n_threads > 1) {
+        posix_mutex_init(&ctx->ts.samples_mutex);
+        windows_cs_init(&ctx->ts.samples_cs);
+    }
 
     return 0;
 }
