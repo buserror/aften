@@ -81,6 +81,10 @@ const uint16_t a52_bitratetab[19] = {
 static int threaded_encode(void* vtctx);
 #endif
 
+static void copy_samples(A52ThreadContext *tctx);
+static int convert_samples_from_src(A52ThreadContext *tctx, const void *vsrc, int count);
+
+
 const char *
 aften_get_version(void)
 {
@@ -475,10 +479,6 @@ aften_encode_init(AftenContext *s)
         }
     }
 
-    // copy initial samples
-    if (s->initial_samples)
-        ctx->fmt_convert_from_src(ctx->last_samples, s->initial_samples, ctx->n_all_channels, 256);
-
     // Initialize thread specific contexts
     ctx->n_threads = (s->system.n_threads > 0) ? s->system.n_threads : get_ncpus();
     ctx->n_threads = MIN(ctx->n_threads, MAX_NUM_THREADS);
@@ -531,6 +531,20 @@ aften_encode_init(AftenContext *s)
     if (ctx->n_threads > 1) {
         posix_mutex_init(&ctx->ts.samples_mutex);
         windows_cs_init(&ctx->ts.samples_cs);
+    }
+
+    // copy initial samples
+    if (s->initial_samples) {
+        FLOAT *samples = malloc(A52_SAMPLES_PER_FRAME * ctx->n_all_channels * sizeof(FLOAT));
+        memset(samples, 0, (A52_SAMPLES_PER_FRAME - 256) * ctx->n_all_channels * sizeof(FLOAT));
+        memcpy(samples + (A52_SAMPLES_PER_FRAME - 256) * ctx->n_all_channels, s->initial_samples, 256 * ctx->n_all_channels * sizeof(FLOAT));
+        convert_samples_from_src(&ctx->tctx[0], samples, A52_SAMPLES_PER_FRAME);
+        free(samples);
+        // copy samples with filters applied
+        // HACK: set threads temporarily to 1 to avoid locking
+        ctx->n_threads = 1;
+        copy_samples(&ctx->tctx[0]);
+        ctx->n_threads = s->system.n_threads;
     }
 
     return 0;
