@@ -381,7 +381,6 @@ aften_encode_init(AftenContext *s)
         fprintf(stderr, "invalid bandwidth code\n");
         return -1;
     }
-    fprintf(stderr, "bandwidth code %i\n", ctx->params.bwcode);
     if(ctx->params.bwcode < 0) {
         int cutoff = ((last_quality-120) * 120) + 4000;
         ctx->fixed_bwcode = ((cutoff * 512 / ctx->sample_rate) - 73) / 3;
