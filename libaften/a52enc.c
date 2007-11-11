@@ -1520,11 +1520,12 @@ aften_encode_close(AftenContext *s)
                 }
                 posix_mutex_destroy(&ctx->ts.samples_mutex);
                 windows_cs_destroy(&ctx->ts.samples_cs);
-                /* mdct_close deinits both mdcts */
-                ctx->mdct_ctx_512.mdct_close(ctx);
             }
             free(ctx->tctx);
         }
+        // mdct_close deinits both mdcts
+        ctx->mdct_ctx_512.mdct_close(ctx);
+
         free(ctx);
         s->private_context = NULL;
     }
