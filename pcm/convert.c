@@ -724,3 +724,10 @@ pcmfile_set_source(PcmFile *pf, int fmt, int order)
         pf->samples = (pf->data_size / pf->block_align);
     }
 }
+
+void
+pcmfile_set_read_format(PcmFile *pf, int read_format)
+{
+    pf->read_format = CLIP(read_format, PCM_SAMPLE_FMT_U8, PCM_SAMPLE_FMT_DBL);
+    pcmfile_set_source(pf, pf->source_format, pf->order);
+}

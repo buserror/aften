@@ -123,6 +123,11 @@ extern void pcmfile_close(PcmFile *pf);
 extern void pcmfile_set_source(PcmFile *pf, int fmt, int order);
 
 /**
+ * Sets the requested read format
+ */
+extern void pcmfile_set_read_format(PcmFile *pf, int read_format);
+
+/**
  * Reads audio samples to the output buffer.
  * Output is channel-interleaved, native byte order.
  * Only up to PCM_MAX_READ samples can be read in one call.
