@@ -152,7 +152,7 @@ pcmfile_init_wave(PcmFile *pf)
                 }
 
                 // override block alignment in header
-                    pf->block_align = MAX(1, ((pf->bit_width + 7) >> 3) * pf->channels);
+                pf->block_align = MAX(1, ((pf->bit_width + 7) >> 3) * pf->channels);
 
                 // make up channel mask if not using WAVE_FORMAT_EXTENSIBLE
                 // or if ch_mask is set to zero (unspecified configuration)
