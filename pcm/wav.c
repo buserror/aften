@@ -112,11 +112,6 @@ pcmfile_init_wave(PcmFile *pf)
                     return -1;
                 }
                 pf->internal_fmt = read2le(pf);
-                if(pf->internal_fmt == WAVE_FORMAT_IEEEFLOAT) {
-                    pf->sample_type = PCM_SAMPLE_TYPE_FLOAT;
-                } else {
-                    pf->sample_type = PCM_SAMPLE_TYPE_INT;
-                }
                 pf->channels = read2le(pf);
                 if(pf->channels == 0) {
                     fprintf(stderr, "invalid number of channels in wav header\n");
@@ -142,12 +137,18 @@ pcmfile_init_wave(PcmFile *pf)
                     read4le(pf);    // skip CbSize and ValidBitsPerSample
                     pf->ch_mask = read4le(pf);
                     pf->internal_fmt = read2le(pf);
-                    if(pf->internal_fmt == WAVE_FORMAT_IEEEFLOAT) {
-                        pf->sample_type = PCM_SAMPLE_TYPE_FLOAT;
-                    } else {
-                        pf->sample_type = PCM_SAMPLE_TYPE_INT;
-                    }
                     chunksize -= 10;
+                }
+
+                // set sample type based on wFormatTag
+                if(pf->internal_fmt == WAVE_FORMAT_IEEEFLOAT) {
+                    pf->sample_type = PCM_SAMPLE_TYPE_FLOAT;
+                } else if(pf->internal_fmt == WAVE_FORMAT_PCM) {
+                    pf->sample_type = PCM_SAMPLE_TYPE_INT;
+                } else {
+                    fprintf(stderr, "unsupported wFormatTag: 0x%02X\n",
+                            pf->internal_fmt);
+                    return -1;
                 }
 
                 // override block alignment in header
