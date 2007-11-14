@@ -132,7 +132,7 @@ pcmfile_init_wave(PcmFile *pf)
                 chunksize -= 16;
 
                 // WAVE_FORMAT_EXTENSIBLE data
-                pf->ch_mask = 0;
+                pf->ch_mask = pcm_get_default_ch_mask(pf->channels);
                 if(pf->internal_fmt == WAVE_FORMAT_EXTENSIBLE && chunksize >= 10) {
                     read4le(pf);    // skip CbSize and ValidBitsPerSample
                     pf->ch_mask = read4le(pf);
@@ -153,13 +153,6 @@ pcmfile_init_wave(PcmFile *pf)
 
                 // override block alignment in header
                 pf->block_align = MAX(1, ((pf->bit_width + 7) >> 3) * pf->channels);
-
-                // make up channel mask if not using WAVE_FORMAT_EXTENSIBLE
-                // or if ch_mask is set to zero (unspecified configuration)
-                // TODO: select default configurations for >6 channels
-                if(pf->ch_mask == 0) {
-                    pcm_get_default_ch_mask(pf->channels);
-                }
 
                 // skip any leftover bytes in fmt chunk
                 if(pcmfile_seek_set(pf, pf->filepos + chunksize)) {
