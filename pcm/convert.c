@@ -723,6 +723,15 @@ pcmfile_set_source(PcmFile *pf, int fmt, int order)
 }
 
 void
+pcmfile_set_source_params(PcmFile *pf, int ch, int fmt, int order, int sr)
+{
+    pf->channels = MAX(ch, 1);
+    pf->ch_mask = pcm_get_default_ch_mask(ch);
+    pf->sample_rate = MAX(sr, 1);
+    pcmfile_set_source(pf, fmt, order);
+}
+
+void
 pcmfile_set_read_format(PcmFile *pf, int read_format)
 {
     pf->read_format = CLIP(read_format, PCM_SAMPLE_FMT_U8, PCM_SAMPLE_FMT_DBL);

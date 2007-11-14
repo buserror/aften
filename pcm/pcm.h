@@ -89,6 +89,11 @@ extern void pcmfile_close(PcmFile *pf);
 extern void pcmfile_set_source(PcmFile *pf, int fmt, int order);
 
 /**
+ * Sets source audio information
+ */
+extern void pcmfile_set_source_params(PcmFile *pf, int ch, int fmt, int order, int sr);
+
+/**
  * Sets the requested read format
  */
 extern void pcmfile_set_read_format(PcmFile *pf, int read_format);

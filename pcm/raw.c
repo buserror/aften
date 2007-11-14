@@ -41,11 +41,8 @@ pcmfile_probe_raw(uint8_t *data, int size)
 int
 pcmfile_init_raw(PcmFile *pf)
 {
-    pf->sample_type = PCM_SAMPLE_TYPE_INT;
-    pf->channels = 2;
-    pf->sample_rate = 48000;
-    pf->ch_mask = 0x03;
-    pcmfile_set_source(pf, PCM_SAMPLE_FMT_S16, PCM_BYTE_ORDER_LE);
+    pcmfile_set_source_params(pf, 2, PCM_SAMPLE_FMT_S16, PCM_BYTE_ORDER_LE,
+                              48000);
 
     pf->data_size = 0;
     pf->data_start = 0;

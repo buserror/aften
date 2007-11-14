@@ -158,10 +158,8 @@ main(int argc, char **argv)
     if(opts.read_to_eof)
         pf.read_to_eof = 1;
     if(opts.raw_input) {
-        pf.sample_rate = opts.raw_sr;
-        pf.channels = opts.raw_ch;
-        pf.ch_mask = pcm_get_default_ch_mask(pf.channels);
-        pcmfile_set_source(&pf, opts.raw_fmt, opts.raw_order);
+        pcmfile_set_source_params(&pf, opts.raw_ch, opts.raw_fmt,
+                                  opts.raw_order, opts.raw_sr);
     }
 
     // print wav info to console
