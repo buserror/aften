@@ -123,7 +123,7 @@ pcmfile_init_wave(PcmFile *pf)
                     return -1;
                 }
                 read4le(pf);
-                pf->block_align = read2le(pf);
+                read2le(pf);
                 pf->bit_width = read2le(pf);
                 if(pf->bit_width == 0) {
                     fprintf(stderr, "invalid sample bit width in wav header\n");
