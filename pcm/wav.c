@@ -113,26 +113,15 @@ pcmfile_init_wave(PcmFile *pf)
                 }
                 pf->internal_fmt = read2le(pf);
                 pf->channels = read2le(pf);
-                if(pf->channels == 0) {
-                    fprintf(stderr, "invalid number of channels in wav header\n");
-                    return -1;
-                }
+                pf->ch_mask = pcm_get_default_ch_mask(pf->channels);
                 pf->sample_rate = read4le(pf);
-                if(pf->sample_rate == 0) {
-                    fprintf(stderr, "invalid sample rate in wav header\n");
-                    return -1;
-                }
                 read4le(pf);
                 read2le(pf);
                 pf->bit_width = read2le(pf);
-                if(pf->bit_width == 0) {
-                    fprintf(stderr, "invalid sample bit width in wav header\n");
-                    return -1;
-                }
+                pf->block_align = MAX(1, ((pf->bit_width + 7) >> 3) * pf->channels);
                 chunksize -= 16;
 
                 // WAVE_FORMAT_EXTENSIBLE data
-                pf->ch_mask = pcm_get_default_ch_mask(pf->channels);
                 if(pf->internal_fmt == WAVE_FORMAT_EXTENSIBLE && chunksize >= 10) {
                     read4le(pf);    // skip CbSize and ValidBitsPerSample
                     pf->ch_mask = read4le(pf);
@@ -150,9 +139,19 @@ pcmfile_init_wave(PcmFile *pf)
                             pf->internal_fmt);
                     return -1;
                 }
-
-                // override block alignment in header
-                pf->block_align = MAX(1, ((pf->bit_width + 7) >> 3) * pf->channels);
+                // validate format parameters
+                if(pf->channels == 0) {
+                    fprintf(stderr, "invalid number of channels in wav header\n");
+                    return -1;
+                }
+                if(pf->sample_rate == 0) {
+                    fprintf(stderr, "invalid sample rate in wav header\n");
+                    return -1;
+                }
+                if(pf->bit_width == 0) {
+                    fprintf(stderr, "invalid sample bit width in wav header\n");
+                    return -1;
+                }
 
                 // skip any leftover bytes in fmt chunk
                 if(pcmfile_seek_set(pf, pf->filepos + chunksize)) {
