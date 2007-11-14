@@ -49,6 +49,7 @@ enum PcmSampleType {
 enum PcmSampleFormat {
     PCM_SAMPLE_FMT_UNKNOWN = -1,
     PCM_SAMPLE_FMT_U8 = 0,
+    PCM_SAMPLE_FMT_S8,
     PCM_SAMPLE_FMT_S16,
     PCM_SAMPLE_FMT_S20,
     PCM_SAMPLE_FMT_S24,

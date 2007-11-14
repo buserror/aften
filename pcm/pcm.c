@@ -129,8 +129,8 @@ pcmfile_print(PcmFile *pf, FILE *st)
     fmt = "unknown";
     order = "?-endian";
     if(pf->sample_type == PCM_SAMPLE_TYPE_INT) {
-        if(pf->bit_width > 8) type = "Signed";
-        else type = "Unsigned";
+        if(pf->source_format == PCM_SAMPLE_FMT_U8) type = "Unsigned";
+        else type = "Signed";
     } else if(pf->sample_type == PCM_SAMPLE_TYPE_FLOAT) {
         type = "Floating-point";
     } else {

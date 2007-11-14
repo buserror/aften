@@ -186,6 +186,8 @@ aften_remap_wav_to_a52(void *samples, int n, int ch, A52SampleFormat fmt,
     switch(fmt) {
         case A52_SAMPLE_FMT_U8:  REMAP_WAV_TO_A52_COMMON(uint8_t)
                                  break;
+        case A52_SAMPLE_FMT_S8:  REMAP_WAV_TO_A52_COMMON(int8_t)
+                                 break;
         case A52_SAMPLE_FMT_S16: REMAP_WAV_TO_A52_COMMON(int16_t)
                                  break;
         case A52_SAMPLE_FMT_S20:
@@ -228,6 +230,8 @@ aften_remap_mpeg_to_a52(void *samples, int n, int ch, A52SampleFormat fmt,
 
     switch(fmt) {
         case A52_SAMPLE_FMT_U8:  REMAP_MPEG_TO_A52_COMMON(uint8_t)
+                                 break;
+        case A52_SAMPLE_FMT_S8:  REMAP_MPEG_TO_A52_COMMON(int8_t)
                                  break;
         case A52_SAMPLE_FMT_S16: REMAP_MPEG_TO_A52_COMMON(int16_t)
                                  break;

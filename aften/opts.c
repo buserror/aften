@@ -401,6 +401,9 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
                     if(!strncmp(argv[i], "u8", 3)) {
                         opts->raw_fmt = PCM_SAMPLE_FMT_U8;
                         opts->raw_order = PCM_BYTE_ORDER_LE;
+                    } else if(!strncmp(argv[i], "s8", 3)) {
+                        opts->raw_fmt = PCM_SAMPLE_FMT_S8;
+                        opts->raw_order = PCM_BYTE_ORDER_LE;
                     } else if(!strncmp(argv[i], "s16_", 4)) {
                         opts->raw_fmt = PCM_SAMPLE_FMT_S16;
                         if(!strncmp(&argv[i][4], "le", 3)) {

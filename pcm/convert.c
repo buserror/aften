@@ -37,6 +37,17 @@ fmt_convert_u8_to_u8(void *dest_v, void *src_v, int n)
 }
 
 static void
+fmt_convert_s8_to_u8(void *dest_v, void *src_v, int n)
+{
+    uint8_t *dest = dest_v;
+    int8_t *src = src_v;
+    int i;
+
+    for(i=0; i<n; i++)
+        dest[i] = (int)src[i] + 128;
+}
+
+static void
 fmt_convert_s16_to_u8(void *dest_v, void *src_v, int n)
 {
     uint8_t *dest = dest_v;
@@ -103,6 +114,89 @@ fmt_convert_double_to_u8(void *dest_v, void *src_v, int n)
 }
 
 static void
+fmt_convert_u8_to_s8(void *dest_v, void *src_v, int n)
+{
+    int8_t *dest = dest_v;
+    uint8_t *src = src_v;
+    int i;
+
+    for(i=0; i<n; i++)
+        dest[i] = (int)src[i] - 128;
+}
+
+static void
+fmt_convert_s8_to_s8(void *dest_v, void *src_v, int n)
+{
+    memcpy(dest_v, src_v, n * sizeof(int8_t));
+}
+
+static void
+fmt_convert_s16_to_s8(void *dest_v, void *src_v, int n)
+{
+    int8_t *dest = dest_v;
+    int16_t *src = src_v;
+    int i;
+
+    for(i=0; i<n; i++)
+        dest[i] = src[i] >> 8;
+}
+
+static void
+fmt_convert_s20_to_s8(void *dest_v, void *src_v, int n)
+{
+    int8_t *dest = dest_v;
+    int32_t *src = src_v;
+    int i;
+
+    for(i=0; i<n; i++)
+        dest[i] = src[i] >> 12;
+}
+
+static void
+fmt_convert_s24_to_s8(void *dest_v, void *src_v, int n)
+{
+    int8_t *dest = dest_v;
+    int32_t *src = src_v;
+    int i;
+
+    for(i=0; i<n; i++)
+        dest[i] = src[i] >> 16;
+}
+
+static void
+fmt_convert_s32_to_s8(void *dest_v, void *src_v, int n)
+{
+    int8_t *dest = dest_v;
+    int32_t *src = src_v;
+    int i;
+
+    for(i=0; i<n; i++)
+        dest[i] = src[i] >> 24;
+}
+
+static void
+fmt_convert_float_to_s8(void *dest_v, void *src_v, int n)
+{
+    int8_t *dest = dest_v;
+    float *src = src_v;
+    int i;
+
+    for(i=0; i<n; i++)
+        dest[i] = (int8_t)CLIP((src[i] * 128), -128, 127);
+}
+
+static void
+fmt_convert_double_to_s8(void *dest_v, void *src_v, int n)
+{
+    int8_t *dest = dest_v;
+    double *src = src_v;
+    int i;
+
+    for(i=0; i<n; i++)
+        dest[i] = (int8_t)CLIP((src[i] * 128), -128, 127);
+}
+
+static void
 fmt_convert_u8_to_s16(void *dest_v, void *src_v, int n)
 {
     int16_t *dest = dest_v;
@@ -111,6 +205,17 @@ fmt_convert_u8_to_s16(void *dest_v, void *src_v, int n)
 
     for(i=0; i<n; i++)
         dest[i] = (src[i] - 128) << 8;
+}
+
+static void
+fmt_convert_s8_to_s16(void *dest_v, void *src_v, int n)
+{
+    int16_t *dest = dest_v;
+    int8_t *src = src_v;
+    int i;
+
+    for(i=0; i<n; i++)
+        dest[i] = src[i] << 8;
 }
 
 static void
@@ -186,6 +291,17 @@ fmt_convert_u8_to_s20(void *dest_v, void *src_v, int n)
 }
 
 static void
+fmt_convert_s8_to_s20(void *dest_v, void *src_v, int n)
+{
+    int32_t *dest = dest_v;
+    int8_t *src = src_v;
+    int i;
+
+    for(i=0; i<n; i++)
+        dest[i] = src[i] << 12;
+}
+
+static void
 fmt_convert_s16_to_s20(void *dest_v, void *src_v, int n)
 {
     int32_t *dest = dest_v;
@@ -255,6 +371,17 @@ fmt_convert_u8_to_s24(void *dest_v, void *src_v, int n)
 
     for(i=0; i<n; i++)
         dest[i] = (src[i] - 128) << 16;
+}
+
+static void
+fmt_convert_s8_to_s24(void *dest_v, void *src_v, int n)
+{
+    int32_t *dest = dest_v;
+    int8_t *src = src_v;
+    int i;
+
+    for(i=0; i<n; i++)
+        dest[i] = src[i] << 16;
 }
 
 static void
@@ -330,6 +457,17 @@ fmt_convert_u8_to_s32(void *dest_v, void *src_v, int n)
 }
 
 static void
+fmt_convert_s8_to_s32(void *dest_v, void *src_v, int n)
+{
+    int32_t *dest = dest_v;
+    int8_t *src = src_v;
+    int i;
+
+    for(i=0; i<n; i++)
+        dest[i] = src[i] << 24;
+}
+
+static void
 fmt_convert_s16_to_s32(void *dest_v, void *src_v, int n)
 {
     int32_t *dest = dest_v;
@@ -399,6 +537,17 @@ fmt_convert_u8_to_float(void *dest_v, void *src_v, int n)
 
     for(i=0; i<n; i++)
         dest[i] = (src[i] - FCONST(128.0)) / FCONST(128.0);
+}
+
+static void
+fmt_convert_s8_to_float(void *dest_v, void *src_v, int n)
+{
+    float *dest = dest_v;
+    int8_t *src = src_v;
+    int i;
+
+    for(i=0; i<n; i++)
+        dest[i] = src[i] / FCONST(128.0);
 }
 
 static void
@@ -474,6 +623,17 @@ fmt_convert_u8_to_double(void *dest_v, void *src_v, int n)
 }
 
 static void
+fmt_convert_s8_to_double(void *dest_v, void *src_v, int n)
+{
+    double *dest = dest_v;
+    int8_t *src = src_v;
+    int i;
+
+    for(i=0; i<n; i++)
+        dest[i] = src[i] / FCONST(128.0);
+}
+
+static void
 fmt_convert_s16_to_double(void *dest_v, void *src_v, int n)
 {
     double *dest = dest_v;
@@ -541,6 +701,8 @@ set_fmt_convert_from_u8(PcmFile *pf)
 
     if(fmt == PCM_SAMPLE_FMT_U8)
         pf->fmt_convert = fmt_convert_u8_to_u8;
+    if(fmt == PCM_SAMPLE_FMT_S8)
+        pf->fmt_convert = fmt_convert_u8_to_s8;
     else if(fmt == PCM_SAMPLE_FMT_S16)
         pf->fmt_convert = fmt_convert_u8_to_s16;
     else if(fmt == PCM_SAMPLE_FMT_S20)
@@ -556,12 +718,37 @@ set_fmt_convert_from_u8(PcmFile *pf)
 }
 
 static void
+set_fmt_convert_from_s8(PcmFile *pf)
+{
+    enum PcmSampleFormat fmt = pf->read_format;
+
+    if(fmt == PCM_SAMPLE_FMT_U8)
+        pf->fmt_convert = fmt_convert_s8_to_u8;
+    if(fmt == PCM_SAMPLE_FMT_S8)
+        pf->fmt_convert = fmt_convert_s8_to_s8;
+    else if(fmt == PCM_SAMPLE_FMT_S16)
+        pf->fmt_convert = fmt_convert_s8_to_s16;
+    else if(fmt == PCM_SAMPLE_FMT_S20)
+        pf->fmt_convert = fmt_convert_s8_to_s20;
+    else if(fmt == PCM_SAMPLE_FMT_S24)
+        pf->fmt_convert = fmt_convert_s8_to_s24;
+    else if(fmt == PCM_SAMPLE_FMT_S32)
+        pf->fmt_convert = fmt_convert_s8_to_s32;
+    else if(fmt == PCM_SAMPLE_FMT_FLT)
+        pf->fmt_convert = fmt_convert_s8_to_float;
+    else if(fmt == PCM_SAMPLE_FMT_DBL)
+        pf->fmt_convert = fmt_convert_s8_to_double;
+}
+
+static void
 set_fmt_convert_from_s16(PcmFile *pf)
 {
     enum PcmSampleFormat fmt = pf->read_format;
 
     if(fmt == PCM_SAMPLE_FMT_U8)
         pf->fmt_convert = fmt_convert_s16_to_u8;
+    if(fmt == PCM_SAMPLE_FMT_S8)
+        pf->fmt_convert = fmt_convert_s16_to_s8;
     else if(fmt == PCM_SAMPLE_FMT_S16)
         pf->fmt_convert = fmt_convert_s16_to_s16;
     else if(fmt == PCM_SAMPLE_FMT_S20)
@@ -583,6 +770,8 @@ set_fmt_convert_from_s20(PcmFile *pf)
 
     if(fmt == PCM_SAMPLE_FMT_U8)
         pf->fmt_convert = fmt_convert_s20_to_u8;
+    if(fmt == PCM_SAMPLE_FMT_S8)
+        pf->fmt_convert = fmt_convert_s20_to_s8;
     else if(fmt == PCM_SAMPLE_FMT_S16)
         pf->fmt_convert = fmt_convert_s20_to_s16;
     else if(fmt == PCM_SAMPLE_FMT_S20)
@@ -604,6 +793,8 @@ set_fmt_convert_from_s24(PcmFile *pf)
 
     if(fmt == PCM_SAMPLE_FMT_U8)
         pf->fmt_convert = fmt_convert_s24_to_u8;
+    if(fmt == PCM_SAMPLE_FMT_S8)
+        pf->fmt_convert = fmt_convert_s24_to_s8;
     else if(fmt == PCM_SAMPLE_FMT_S16)
         pf->fmt_convert = fmt_convert_s24_to_s16;
     else if(fmt == PCM_SAMPLE_FMT_S20)
@@ -625,6 +816,8 @@ set_fmt_convert_from_s32(PcmFile *pf)
 
     if(fmt == PCM_SAMPLE_FMT_U8)
         pf->fmt_convert = fmt_convert_s32_to_u8;
+    if(fmt == PCM_SAMPLE_FMT_S8)
+        pf->fmt_convert = fmt_convert_s32_to_s8;
     else if(fmt == PCM_SAMPLE_FMT_S16)
         pf->fmt_convert = fmt_convert_s32_to_s16;
     else if(fmt == PCM_SAMPLE_FMT_S20)
@@ -646,6 +839,8 @@ set_fmt_convert_from_float(PcmFile *pf)
 
     if(fmt == PCM_SAMPLE_FMT_U8)
         pf->fmt_convert = fmt_convert_float_to_u8;
+    if(fmt == PCM_SAMPLE_FMT_S8)
+        pf->fmt_convert = fmt_convert_float_to_s8;
     else if(fmt == PCM_SAMPLE_FMT_S16)
         pf->fmt_convert = fmt_convert_float_to_s16;
     else if(fmt == PCM_SAMPLE_FMT_S20)
@@ -667,6 +862,8 @@ set_fmt_convert_from_double(PcmFile *pf)
 
     if(fmt == PCM_SAMPLE_FMT_U8)
         pf->fmt_convert = fmt_convert_double_to_u8;
+    if(fmt == PCM_SAMPLE_FMT_S8)
+        pf->fmt_convert = fmt_convert_double_to_s8;
     else if(fmt == PCM_SAMPLE_FMT_S16)
         pf->fmt_convert = fmt_convert_double_to_s16;
     else if(fmt == PCM_SAMPLE_FMT_S20)
@@ -688,6 +885,10 @@ pcmfile_set_source_format(PcmFile *pf, int fmt)
     switch(fmt) {
         case PCM_SAMPLE_FMT_U8:
             set_fmt_convert_from_u8(pf);
+            pf->bit_width = 8;
+            break;
+        case PCM_SAMPLE_FMT_S8:
+            set_fmt_convert_from_s8(pf);
             pf->bit_width = 8;
             break;
         case PCM_SAMPLE_FMT_S16:

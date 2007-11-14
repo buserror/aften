@@ -67,7 +67,8 @@ typedef enum {
     A52_SAMPLE_FMT_S24,
     A52_SAMPLE_FMT_S32,
     A52_SAMPLE_FMT_FLT,
-    A52_SAMPLE_FMT_DBL
+    A52_SAMPLE_FMT_DBL,
+    A52_SAMPLE_FMT_S8
 } A52SampleFormat;
 
 /**

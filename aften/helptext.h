@@ -133,7 +133,7 @@ static const char *help_options[HELP_OPTIONS_COUNT] = {
 
 "    [-raw_fmt X]   Raw audio input sample format (default: s16_le)\n"
 "                       One of the pre-defined sample formats:\n"
-"                       u8, s16_le, s16_be, s20_le, s20_be, s24_le, s24_be,\n"
+"                       u8, s8, s16_le, s16_be, s20_le, s20_be, s24_le, s24_be,\n"
 "                       s32_le, s32_be, float_le, float_be, double_le, double_be\n",
 
 "    [-raw_sr #]    Raw audio input sample rate (default: 48000)\n",
@@ -444,7 +444,7 @@ static const char *input_options[INPUT_OPTIONS_COUNT] = {
 "                       raw audio input.  Using this option forces Aften to\n"
 "                       treat the input as raw audio.  The choices for the\n"
 "                       pre-defined sample formats are:\n"
-"                       u8, s16_le, s16_be, s20_le, s20_be, s24_le, s24_be,\n"
+"                       u8, s8, s16_le, s16_be, s20_le, s20_be, s24_le, s24_be,\n"
 "                       s32_le, s32_be, float_le, float_be, double_le, double_be\n",
 
 "    [-raw_sr #]    Raw audio input sample rate (default: 48000)\n"
