@@ -167,3 +167,19 @@ pcmfile_print(PcmFile *pf, FILE *st)
     fprintf(st, "%s %s %d-bit %s %d Hz %s\n", fmt, type, pf->bit_width, order,
             pf->sample_rate, chan);
 }
+
+int
+pcm_get_default_ch_mask(int channels)
+{
+    static const int nch_to_mask[6] = {
+        0x04,   // mono         (1/0)
+        0x03,   // stereo       (2/0)
+        0x103,  // 3.0 surround (2/1)
+        0x107,  // 3/1 surround (3/1)
+        0x37,   // 5.0 surround (3/2)
+        0x3F    // 5.1 surround (3/2+LFE)
+    };
+    if(channels < 1 || channels > 6)
+        return 0;
+    return nch_to_mask[channels-1];
+}

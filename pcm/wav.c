@@ -172,14 +172,7 @@ pcmfile_init_wave(PcmFile *pf)
                 // or if ch_mask is set to zero (unspecified configuration)
                 // TODO: select default configurations for >6 channels
                 if(pf->ch_mask == 0) {
-                    switch(pf->channels) {
-                        case 1: pf->ch_mask = 0x04;  break;
-                        case 2: pf->ch_mask = 0x03;  break;
-                        case 3: pf->ch_mask = 0x07;  break;
-                        case 4: pf->ch_mask = 0x107; break;
-                        case 5: pf->ch_mask = 0x37;  break;
-                        case 6: pf->ch_mask = 0x3F;  break;
-                    }
+                    pcm_get_default_ch_mask(pf->channels);
                 }
 
                 // skip any leftover bytes in fmt chunk

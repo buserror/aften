@@ -99,6 +99,10 @@ extern void pcmfile_set_read_format(PcmFile *pf, int read_format);
  */
 extern void pcmfile_print(PcmFile *pf, FILE *st);
 
+/**
+ * Returns a default channel mask value based on the number of channels
+ */
+extern int pcm_get_default_ch_mask(int channels);
 
 /**
  * File format functions
