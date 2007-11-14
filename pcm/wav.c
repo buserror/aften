@@ -111,8 +111,8 @@ pcmfile_init_wave(PcmFile *pf)
                     fprintf(stderr, "invalid fmt chunk in wav header\n");
                     return -1;
                 }
-                pf->wav_format = read2le(pf);
-                if(pf->wav_format == WAVE_FORMAT_IEEEFLOAT) {
+                pf->internal_fmt = read2le(pf);
+                if(pf->internal_fmt == WAVE_FORMAT_IEEEFLOAT) {
                     pf->sample_type = PCM_SAMPLE_TYPE_FLOAT;
                 } else {
                     pf->sample_type = PCM_SAMPLE_TYPE_INT;
@@ -138,11 +138,11 @@ pcmfile_init_wave(PcmFile *pf)
 
                 // WAVE_FORMAT_EXTENSIBLE data
                 pf->ch_mask = 0;
-                if(pf->wav_format == WAVE_FORMAT_EXTENSIBLE && chunksize >= 10) {
+                if(pf->internal_fmt == WAVE_FORMAT_EXTENSIBLE && chunksize >= 10) {
                     read4le(pf);    // skip CbSize and ValidBitsPerSample
                     pf->ch_mask = read4le(pf);
-                    pf->wav_format = read2le(pf);
-                    if(pf->wav_format == WAVE_FORMAT_IEEEFLOAT) {
+                    pf->internal_fmt = read2le(pf);
+                    if(pf->internal_fmt == WAVE_FORMAT_IEEEFLOAT) {
                         pf->sample_type = PCM_SAMPLE_TYPE_FLOAT;
                     } else {
                         pf->sample_type = PCM_SAMPLE_TYPE_INT;
@@ -151,8 +151,8 @@ pcmfile_init_wave(PcmFile *pf)
                 }
 
                 // override block alignment in header
-                if(pf->wav_format == WAVE_FORMAT_IEEEFLOAT ||
-                        pf->wav_format == WAVE_FORMAT_PCM) {
+                if(pf->internal_fmt == WAVE_FORMAT_IEEEFLOAT ||
+                        pf->internal_fmt == WAVE_FORMAT_PCM) {
                     pf->block_align = MAX(1, ((pf->bit_width + 7) >> 3) * pf->channels);
                 }
 

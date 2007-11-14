@@ -60,7 +60,7 @@ typedef struct PcmFile {
     int source_format;      ///< sample type in the input file
     int read_format;        ///< sample type to convert to when reading
 
-    int wav_format;         ///< WAVE wFormatTag
+    int internal_fmt;       ///< internal format (e.g. WAVE wFormatTag)
 } PcmFile;
 
 /**
