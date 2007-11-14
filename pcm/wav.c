@@ -119,6 +119,7 @@ pcmfile_init_wave(PcmFile *pf)
                 read2le(pf);
                 pf->bit_width = read2le(pf);
                 pf->block_align = MAX(1, ((pf->bit_width + 7) >> 3) * pf->channels);
+                pf->order = PCM_BYTE_ORDER_LE;
                 chunksize -= 16;
 
                 // WAVE_FORMAT_EXTENSIBLE data
@@ -207,7 +208,7 @@ pcmfile_init_wave(PcmFile *pf)
             }
             break;
     }
-    pcmfile_set_source(pf, pf->source_format, PCM_BYTE_ORDER_LE);
+    pcmfile_set_source_format(pf, pf->source_format);
 
     return 0;
 }

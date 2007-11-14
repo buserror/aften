@@ -682,12 +682,9 @@ set_fmt_convert_from_double(PcmFile *pf)
 }
 
 void
-pcmfile_set_source(PcmFile *pf, int fmt, int order)
+pcmfile_set_source_format(PcmFile *pf, int fmt)
 {
-    fmt = CLIP(fmt, PCM_SAMPLE_FMT_U8, PCM_SAMPLE_FMT_DBL);
-    order = CLIP(order, PCM_BYTE_ORDER_LE, PCM_BYTE_ORDER_BE);
-    pf->source_format = fmt;
-    pf->order = order;
+    pf->source_format = CLIP(fmt, PCM_SAMPLE_FMT_U8, PCM_SAMPLE_FMT_DBL);
     switch(fmt) {
         case PCM_SAMPLE_FMT_U8:
             set_fmt_convert_from_u8(pf);
@@ -727,13 +724,14 @@ pcmfile_set_source_params(PcmFile *pf, int ch, int fmt, int order, int sr)
 {
     pf->channels = MAX(ch, 1);
     pf->ch_mask = pcm_get_default_ch_mask(ch);
+    pf->order = CLIP(order, PCM_BYTE_ORDER_LE, PCM_BYTE_ORDER_BE);
     pf->sample_rate = MAX(sr, 1);
-    pcmfile_set_source(pf, fmt, order);
+    pcmfile_set_source_format(pf, fmt);
 }
 
 void
 pcmfile_set_read_format(PcmFile *pf, int read_format)
 {
     pf->read_format = CLIP(read_format, PCM_SAMPLE_FMT_U8, PCM_SAMPLE_FMT_DBL);
-    pcmfile_set_source(pf, pf->source_format, pf->order);
+    pcmfile_set_source_format(pf, pf->source_format);
 }

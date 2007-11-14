@@ -86,7 +86,7 @@ extern void pcmfile_close(PcmFile *pf);
 /**
  * Sets the source sample format
  */
-extern void pcmfile_set_source(PcmFile *pf, int fmt, int order);
+extern void pcmfile_set_source_format(PcmFile *pf, int fmt);
 
 /**
  * Sets source audio information
