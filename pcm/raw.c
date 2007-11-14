@@ -41,19 +41,14 @@ pcmfile_probe_raw(uint8_t *data, int size)
 int
 pcmfile_init_raw(PcmFile *pf)
 {
-    pcmfile_set_source_params(pf, 2, PCM_SAMPLE_FMT_S16, PCM_BYTE_ORDER_LE,
-                              48000);
-
     pf->data_size = 0;
     pf->data_start = 0;
     if(pf->seekable && pf->file_size > 0) {
-        if(pf->data_size > 0)
-            pf->data_size = MIN(pf->data_size, pf->file_size - pf->data_start);
-        else
-            pf->data_size = pf->file_size - pf->data_start;
+        pf->data_size = pf->file_size;
     }
-    pf->samples = (pf->data_size / pf->block_align);
     pf->read_to_eof = 1;
 
+    pcmfile_set_source_params(pf, 2, PCM_SAMPLE_FMT_S16, PCM_BYTE_ORDER_LE,
+                              48000);
     return 0;
 }
