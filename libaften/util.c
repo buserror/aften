@@ -160,7 +160,7 @@ static const int wav_chmap_7[6] = { 0, 2, 1, 4, 5, 3 };
         for(i=0; i<n*ch; i+=ch) { \
             memcpy(tmp, &smp[i], ch*sample_size); \
             for(j=0; j<ch; j++) { \
-                smp[i+j] = tmp[wav_chmap_5[j]]; \
+                smp[i+j] = tmp[wav_chmap[j]]; \
             } \
         } \
     } \
