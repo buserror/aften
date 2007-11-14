@@ -83,7 +83,7 @@ pcmfile_probe_wave(uint8_t *data, int size)
 int
 pcmfile_init_wave(PcmFile *pf)
 {
-    int id, found_data, found_fmt, chunksize;
+    int id, found_data, found_fmt, chunksize, src_fmt;
 
     // read RIFF id. ignore size.
     id = read4le(pf);
@@ -187,28 +187,28 @@ pcmfile_init_wave(PcmFile *pf)
     }
 
     // set audio data format based on bit depth and sample type
-    pf->source_format = PCM_SAMPLE_FMT_UNKNOWN;
+    src_fmt = PCM_SAMPLE_FMT_UNKNOWN;
     switch(pf->bit_width) {
-        case 8:  pf->source_format = PCM_SAMPLE_FMT_U8;  break;
-        case 16: pf->source_format = PCM_SAMPLE_FMT_S16; break;
-        case 20: pf->source_format = PCM_SAMPLE_FMT_S20; break;
-        case 24: pf->source_format = PCM_SAMPLE_FMT_S24; break;
+        case 8:  src_fmt = PCM_SAMPLE_FMT_U8;  break;
+        case 16: src_fmt = PCM_SAMPLE_FMT_S16; break;
+        case 20: src_fmt = PCM_SAMPLE_FMT_S20; break;
+        case 24: src_fmt = PCM_SAMPLE_FMT_S24; break;
         case 32:
             if(pf->sample_type == PCM_SAMPLE_TYPE_FLOAT)
-                pf->source_format = PCM_SAMPLE_FMT_FLT;
+                src_fmt = PCM_SAMPLE_FMT_FLT;
             else if(pf->sample_type == PCM_SAMPLE_TYPE_INT)
-                pf->source_format = PCM_SAMPLE_FMT_S32;
+                src_fmt = PCM_SAMPLE_FMT_S32;
             break;
         case 64:
             if(pf->sample_type == PCM_SAMPLE_TYPE_FLOAT) {
-                pf->source_format = PCM_SAMPLE_FMT_DBL;
+                src_fmt = PCM_SAMPLE_FMT_DBL;
             } else {
                 fprintf(stderr, "64-bit integer samples not supported\n");
                 return -1;
             }
             break;
     }
-    pcmfile_set_source_format(pf, pf->source_format);
+    pcmfile_set_source_format(pf, src_fmt);
 
     return 0;
 }
