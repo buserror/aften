@@ -881,7 +881,8 @@ set_fmt_convert_from_double(PcmFile *pf)
 void
 pcmfile_set_source_format(PcmFile *pf, int fmt)
 {
-    pf->source_format = CLIP(fmt, PCM_SAMPLE_FMT_U8, PCM_SAMPLE_FMT_DBL);
+    fmt = CLIP(fmt, PCM_SAMPLE_FMT_U8, PCM_SAMPLE_FMT_DBL);
+    pf->source_format = fmt;
     switch(fmt) {
         case PCM_SAMPLE_FMT_U8:
             set_fmt_convert_from_u8(pf);
