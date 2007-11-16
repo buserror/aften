@@ -163,7 +163,7 @@ set_converter(A52Context *ctx, A52SampleFormat sample_format)
     switch(sample_format) {
     case A52_SAMPLE_FMT_U8:  ctx->fmt_convert_from_src = fmt_convert_from_u8;
         break;
-    case A52_SAMPLE_FMT_S8:  ctx->fmt_convert_from_src = fmt_convert_from_u8;
+    case A52_SAMPLE_FMT_S8:  ctx->fmt_convert_from_src = fmt_convert_from_s8;
         break;
     case A52_SAMPLE_FMT_S16: ctx->fmt_convert_from_src = fmt_convert_from_s16;
         break;
