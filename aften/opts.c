@@ -511,6 +511,9 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
                     if(!strncmp(&argv[i][3], "+LFE", 5) || !strncmp(&argv[i][3], "+lfe", 5)) {
                         opts->s->lfe = 1;
                     }
+                } else {
+                    fprintf(stderr, "invalid option: %s\n", argv[i]);
+                    return 1;
                 }
             } else {
                 // single-character arguments
@@ -571,6 +574,9 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
                                 opts->s->params.use_block_switching);
                         return 1;
                     }
+                } else {
+                    fprintf(stderr, "invalid option: %s\n", argv[i]);
+                    return 1;
                 }
             }
         } else {
