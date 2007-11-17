@@ -152,7 +152,7 @@ main(int argc, char **argv)
     if(opts.raw_input)
         input_file_format = PCM_FORMAT_RAW;
     if(pcmfile_init(&pf, ifp, read_format, input_file_format)) {
-        fprintf(stderr, "invalid input file: %s\n", argv[1]);
+        fprintf(stderr, "invalid input file: %s\n", opts.infile);
         goto error_end;
     }
     if(opts.read_to_eof)
