@@ -90,6 +90,11 @@ void Utility::RemapMpegToA52(void *samples, int samplesCount, int channels,
     aften_remap_mpeg_to_a52(samples, samplesCount, channels, format, acmod);
 }
 
+const char* Utility::GetVersion()
+{
+    return aften_get_version();
+}
+
 /// Tells whether libaften was configured to use floats or doubles
 FloatType Utility::GetFloatType()
 {

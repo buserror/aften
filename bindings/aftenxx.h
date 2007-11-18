@@ -79,6 +79,9 @@ public:
     static void RemapMpegToA52(void *samples, int samplesCount, int channels,
                                A52SampleFormat format, int acmod);
 
+    /// Gets the libaften version string.
+    static const char* GetVersion();
+
     /// Tells whether libaften was configured to use floats or doubles
     static FloatType GetFloatType();
 };
