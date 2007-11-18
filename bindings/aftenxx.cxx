@@ -38,9 +38,9 @@ FrameEncoder::~FrameEncoder()
 }
 
 /// Encodes PCM samples to an A/52 frame
-int FrameEncoder::Encode(unsigned char *frameBuffer, const void *samples)
+int FrameEncoder::Encode(unsigned char *frameBuffer, const void *samples, int count)
 {
-    return aften_encode_frame(&m_context, frameBuffer, samples);
+    return aften_encode_frame(&m_context, frameBuffer, samples, count);
 }
 
 /// Gets a context with default values
@@ -62,7 +62,7 @@ void Utility::WaveChannelsToAcmod(int channels, unsigned int channelMask, int &a
     int nLfe;
     if (aften_wav_channels_to_acmod(channels, channelMask, &acmod, &nLfe) != 0)
         throw -1;
-    hasLfe = nLfe != 0;
+    hasLfe = (nLfe != 0);
 }
 
 /// overload for convenience
