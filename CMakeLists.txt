@@ -33,6 +33,7 @@ OPTION(DOUBLE "build Aften with doubles instead of floats" OFF)
 IF(DOUBLE)
   ADD_DEFINE(CONFIG_DOUBLE)
 ENDIF(DOUBLE)
+OPTION(BINDINGS_CS "build C# bindings" OFF)
 OPTION(BINDINGS_CXX "build C++ bindings" OFF)
 IF(BINDINGS_CXX)
   SET(SHARED ON CACHE BOOL "build shared Aften library" FORCE)
@@ -304,6 +305,18 @@ IF(BINDINGS_CXX)
   SET(INSTALL_TARGETS ${INSTALL_TARGETS} aftenxx)
   SET(INSTALL_HEADERS ${INSTALL_HEADERS} bindings/aftenxx.h)
 ENDIF(BINDINGS_CXX)
+IF(BINDINGS_CS)
+  MESSAGE("## WARNING: The C# bindings are experimental. ##")
+  FIND_PROGRAM(
+    CSCOMPILER
+    NAMES mcs gmcs)
+  ADD_CUSTOM_TARGET(
+    AftenSharp.dll
+    ALL
+    COMMAND ${CSCOMPILER} AftenTypes.cs FrameEncoder.cs Utility.cs -t:library -out:${Aften_BINARY_DIR}/AftenSharp.dll
+    WORKING_DIRECTORY ${Aften_SOURCE_DIR}/bindings/cs)
+ENDIF(BINDINGS_CS)
+
 
 INSTALL(TARGETS ${INSTALL_TARGETS} aften_exe wavinfo wavrms wavfilter
         RUNTIME DESTINATION bin
