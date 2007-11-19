@@ -32,7 +32,7 @@ namespace Aften
 		private static extern void aften_set_defaults( ref EncodingContext context );
 
 		[DllImport( "aften.dll" )]
-		private static extern void aften_encode_init( ref EncodingContext context );
+		private static extern int aften_encode_init( ref EncodingContext context );
 
 		[DllImport( "aften.dll" )]
 		private static extern void aften_encode_close( ref EncodingContext context );
@@ -71,12 +71,18 @@ namespace Aften
 
 		public int Encode( byte[] frameBuffer, float[] samples, int count )
 		{
-			return aften_encode_frame( ref m_Context, frameBuffer, samples, count );
+			int size = aften_encode_frame( ref m_Context, frameBuffer, samples, count );
+			if (size < 0)
+				throw new InvalidOperationException( "Encoding error");
+
+			return size;
 		}
 
 		public FrameEncoder( ref EncodingContext context )
 		{
-			aften_encode_init( ref context );
+			if ( aften_encode_init( ref context ) != 0 )
+				throw new InvalidOperationException( "Initialization failed" );
+
 			m_Context = context;
 		}
 
