@@ -28,16 +28,16 @@ namespace Aften
 		private EncodingContext m_Context;
 
 
-		[DllImport( "libaften.dll" )]
+		[DllImport( "aften.dll" )]
 		private static extern void aften_set_defaults( ref EncodingContext context );
 
-		[DllImport( "libaften.dll" )]
+		[DllImport( "aften.dll" )]
 		private static extern void aften_encode_init( ref EncodingContext context );
 
-		[DllImport( "libaften.dll" )]
+		[DllImport( "aften.dll" )]
 		private static extern void aften_encode_close( ref EncodingContext context );
 
-		[DllImport( "libaften.dll" )]
+		[DllImport( "aften.dll" )]
 		private static extern int aften_encode_frame(
 			ref EncodingContext context, byte[] frameBuffer, float[] samples, int count );
 

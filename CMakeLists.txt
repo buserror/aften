@@ -309,11 +309,11 @@ IF(BINDINGS_CS)
   MESSAGE("## WARNING: The C# bindings are experimental. ##")
   FIND_PROGRAM(
     CSCOMPILER
-    NAMES mcs gmcs)
+    NAMES csc mcs gmcs)
   ADD_CUSTOM_TARGET(
     AftenSharp.dll
     ALL
-    COMMAND ${CSCOMPILER} AftenTypes.cs FrameEncoder.cs Utility.cs -t:library -out:${Aften_BINARY_DIR}/AftenSharp.dll
+    COMMAND ${CSCOMPILER} -t:library -out:${Aften_BINARY_DIR}/AftenSharp.dll -o+ AftenTypes.cs FrameEncoder.cs Utility.cs 
     WORKING_DIRECTORY ${Aften_SOURCE_DIR}/bindings/cs)
 ENDIF(BINDINGS_CS)
 
