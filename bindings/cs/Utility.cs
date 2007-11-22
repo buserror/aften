@@ -21,52 +21,87 @@ using System.Runtime.InteropServices;
 
 namespace Aften
 {
+	/// <summary>
+	/// Utility functions
+	/// </summary>
 	public static class Utility
 	{
 		[DllImport( "aften.dll" )]
 		private static extern IntPtr aften_get_version(); // returns string not on heap!
-		
+
 		[DllImport( "aften.dll" )]
 		private static extern int aften_wav_channels_to_acmod(
-			int ch, uint chmask, out AudioCodingMode acmod, out bool lfe);
+			int ch, uint chmask, out AudioCodingMode acmod, out bool lfe );
 
 		[DllImport( "aften.dll" )]
 		private static extern int aften_remap_wav_to_a52(
-			float[] samples, int n, int ch, A52SampleFormat fmt, AudioCodingMode acmod);
+			float[] samples, int n, int ch, A52SampleFormat fmt, AudioCodingMode acmod );
 
 		[DllImport( "aften.dll" )]
 		private static extern int aften_remap_mpeg_to_a52(
-			float[] samples, int n, int ch, A52SampleFormat fmt, AudioCodingMode acmod);
+			float[] samples, int n, int ch, A52SampleFormat fmt, AudioCodingMode acmod );
 
 		[DllImport( "aften.dll" )]
 		private static extern FloatType aften_get_float_type();
 
 
+		/// <summary>
+		/// Gets the version.
+		/// </summary>
+		/// <returns></returns>
 		public static string GetVersion()
 		{
 			return Marshal.PtrToStringAuto( aften_get_version() );
 		}
 
-		public static void WaveChannelsToAcmod(
-			int channels, uint channelMask, out AudioCodingMode audioCodingMode, out bool hasLfe)
+		/// <summary>
+		/// Gets the audio coding mode from the specified channels and mask
+		/// </summary>
+		/// <param name="channels">The channels.</param>
+		/// <param name="channelMask">The channel mask.</param>
+		/// <param name="audioCodingMode">The audio coding mode.</param>
+		/// <param name="hasLfe">if set to <c>true</c> has lfe.</param>
+		public static AudioCodingMode GetAudioCodingMode(
+			int channels, uint channelMask, out bool hasLfe )
 		{
-			if(aften_wav_channels_to_acmod(
-				channels, channelMask, out audioCodingMode, out hasLfe ) != 0)
-				throw new InvalidOperationException( "channels or channelMask are not valid");
+			AudioCodingMode audioCodingMode;
+			if ( aften_wav_channels_to_acmod(
+				channels, channelMask, out audioCodingMode, out hasLfe ) != 0 )
+				throw new InvalidOperationException( "channels or channelMask are not valid" );
+
+			return audioCodingMode;
 		}
 
+		/// <summary>
+		/// Remaps the standard wave to a52 order.
+		/// </summary>
+		/// <param name="samples">The samples.</param>
+		/// <param name="channels">The channels.</param>
+		/// <param name="format">The format.</param>
+		/// <param name="audioCodingMode">The audio coding mode.</param>
 		public static void RemapWaveToA52(
-			float[] samples, int samplesCount, int channels, A52SampleFormat format, AudioCodingMode audioCodingMode)
+			float[] samples, int channels, A52SampleFormat format, AudioCodingMode audioCodingMode )
 		{
-			aften_remap_wav_to_a52( samples, samplesCount, channels, format, audioCodingMode );
+			aften_remap_wav_to_a52( samples, samples.Length / channels, channels, format, audioCodingMode );
 		}
 
+		/// <summary>
+		/// Remaps the MPEG to a52 order.
+		/// </summary>
+		/// <param name="samples">The samples.</param>
+		/// <param name="channels">The channels.</param>
+		/// <param name="format">The format.</param>
+		/// <param name="audioCodingMode">The audio coding mode.</param>
 		public static void RemapMpegToA52(
-			float[] samples, int samplesCount, int channels, A52SampleFormat format, AudioCodingMode audioCodingMode)
+			float[] samples, int channels, A52SampleFormat format, AudioCodingMode audioCodingMode )
 		{
-			aften_remap_mpeg_to_a52( samples, samplesCount, channels, format, audioCodingMode );
+			aften_remap_mpeg_to_a52( samples, samples.Length / channels, channels, format, audioCodingMode );
 		}
 
+		/// <summary>
+		/// Gets the float precision of the compiled Aften library
+		/// </summary>
+		/// <returns></returns>
 		public static FloatType GetFloatType()
 		{
 			return aften_get_float_type();
