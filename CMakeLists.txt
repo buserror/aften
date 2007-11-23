@@ -309,7 +309,7 @@ IF(BINDINGS_CS)
   MESSAGE("## WARNING: The C# bindings are experimental. ##")
   FIND_PROGRAM(
     CSCOMPILER
-    NAMES csc mcs gmcs)
+    NAMES csc gmcs)
   ADD_CUSTOM_TARGET(
     AftenSharp.dll
     ALL

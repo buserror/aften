@@ -23,36 +23,20 @@ using System.Runtime.InteropServices;
 namespace Aften
 {
 	/// <summary>
-	/// The Aften AC3 Encoder
+	/// The Aften AC3 Encoder base class
 	/// </summary>
-	public class FrameEncoder : IDisposable
+	public abstract class FrameEncoder : IDisposable
 	{
-		const string _EqualAmountOfSamples = "Each channel must have an equal amount of samples.";
-
-		private readonly byte[] m_FrameBuffer = new byte[A52Sizes.MaximumCodedFrameSize];
-		private readonly byte[] m_StreamBuffer = new byte[sizeof( float )];
-		private readonly float[] m_Samples;
-		private readonly float[] m_StreamSamples;
-		private readonly int m_nTotalSamplesPerFrame;
-		private readonly RemappingDelegate m_Remap;
-
 		private bool m_bDisposed;
-		private EncodingContext m_Context;
-		private int m_nRemainingSamplesCount;
-
 
 		[DllImport( "aften.dll" )]
 		private static extern void aften_set_defaults( ref EncodingContext context );
 
 		[DllImport( "aften.dll" )]
-		private static extern int aften_encode_init( ref EncodingContext context );
+		protected static extern int aften_encode_init( ref EncodingContext context );
 
 		[DllImport( "aften.dll" )]
-		private static extern void aften_encode_close( ref EncodingContext context );
-
-		[DllImport( "aften.dll" )]
-		private static extern int aften_encode_frame(
-			ref EncodingContext context, byte[] frameBuffer, float[] samples, int count );
+		protected static extern void aften_encode_close( ref EncodingContext context );
 
 		/// <summary>
 		/// Releases unmanaged and - optionally - managed resources
@@ -66,11 +50,16 @@ namespace Aften
 					// Dispose managed resources
 				}
 				// Release unmanaged resources
-				aften_encode_close( ref m_Context );
+				DoCloseEncoder();
 
 				m_bDisposed = true;
 			}
 		}
+
+		/// <summary>
+		/// Closes the encoder.
+		/// </summary>
+		protected abstract void DoCloseEncoder();
 
 		/// <summary>
 		/// Gets a default context.
@@ -84,9 +73,6 @@ namespace Aften
 			return context;
 		}
 
-		public delegate void RemappingDelegate(
-			float[] samples, int channels, A52SampleFormat format, AudioCodingMode audioCodingMode );
-
 		/// <summary>
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
 		/// </summary>
@@ -97,11 +83,61 @@ namespace Aften
 		}
 
 		/// <summary>
+		/// Releases unmanaged resources and performs other cleanup operations before the
+		/// <see cref="FrameEncoder"/> is reclaimed by garbage collection.
+		/// </summary>
+		~FrameEncoder()
+		{
+			this.Dispose( false );
+		}
+	}
+
+	/// <summary>
+	/// The Aften AC3 Encoder
+	/// </summary>
+	/// <typeparam name="TSample">The type of the sample.</typeparam>
+	public abstract class FrameEncoder<TSample> : FrameEncoder
+		where TSample : struct
+	{
+		const string _EqualAmountOfSamples = "Each channel must have an equal amount of samples.";
+
+		private readonly byte[] m_FrameBuffer = new byte[A52Sizes.MaximumCodedFrameSize];
+		private readonly byte[] m_StreamBuffer;
+		private readonly TSample[] m_Samples;
+		private readonly TSample[] m_StreamSamples;
+		private readonly int m_nTotalSamplesPerFrame;
+		private readonly int m_nTSampleSize = Marshal.SizeOf( typeof( TSample ) );
+		private readonly RemappingDelegate m_Remap;
+		private readonly EncodeFrameDelegate m_EncodeFrame;
+		private readonly ToTSampleDelegate m_ToTSample;
+
+		private EncodingContext m_Context;
+		private int m_nRemainingSamplesCount;
+
+
+		internal delegate TSample ToTSampleDelegate( byte[] buffer, int startIndex );
+		internal delegate int EncodeFrameDelegate(
+			ref EncodingContext context, byte[] frameBuffer, TSample[] samples, int count );
+		public delegate void RemappingDelegate(
+			TSample[] samples, int channels, AudioCodingMode audioCodingMode );
+
+		/// <summary>
+		/// Closes the encoder.
+		/// </summary>
+		protected override void DoCloseEncoder()
+		{
+			// Context is value type, so I don't want to copy it to the base
+			aften_encode_close( ref m_Context );
+		}
+
+		#region Encoding
+
+		/// <summary>
 		/// Encodes the specified interleaved samples.
 		/// </summary>
 		/// <param name="samples">The samples.</param>
 		/// <returns>MemoryStream containing the encoded frames</returns>
-		public MemoryStream Encode( float[] samples )
+		public MemoryStream Encode( TSample[] samples )
 		{
 			if ( samples.Length % m_Context.Channels != 0 )
 				throw new InvalidOperationException( _EqualAmountOfSamples );
@@ -117,7 +153,7 @@ namespace Aften
 		/// <returns>
 		/// MemoryStream containing the encoded frames
 		/// </returns>
-		public MemoryStream Encode( float[] samples, int samplesPerChannelCount )
+		public MemoryStream Encode( TSample[] samples, int samplesPerChannelCount )
 		{
 			MemoryStream stream = new MemoryStream();
 			this.Encode( samples, samplesPerChannelCount, stream );
@@ -130,7 +166,7 @@ namespace Aften
 		/// </summary>
 		/// <param name="samples">The samples.</param>
 		/// <param name="frames">The frames.</param>
-		public void Encode( float[] samples, Stream frames )
+		public void Encode( TSample[] samples, Stream frames )
 		{
 			if ( samples.Length % m_Context.Channels != 0 )
 				throw new InvalidOperationException( _EqualAmountOfSamples );
@@ -144,7 +180,7 @@ namespace Aften
 		/// <param name="samples">The samples.</param>
 		/// <param name="samplesPerChannelCount">The samples per channel count.</param>
 		/// <param name="frames">The frames.</param>
-		public void Encode( float[] samples, int samplesPerChannelCount, Stream frames )
+		public void Encode( TSample[] samples, int samplesPerChannelCount, Stream frames )
 		{
 			int samplesCount = samplesPerChannelCount * m_Context.Channels;
 			if ( samplesCount > samples.Length )
@@ -154,11 +190,11 @@ namespace Aften
 			int nSamplesNeeded = m_nTotalSamplesPerFrame - nOffset;
 			int nSamplesDone = 0;
 			while ( samplesCount - nSamplesDone >= m_nTotalSamplesPerFrame ) {
-				Buffer.BlockCopy( samples, nSamplesDone * sizeof( float ), m_Samples, nOffset, nSamplesNeeded * sizeof( float ) );
+				Buffer.BlockCopy( samples, nSamplesDone * m_nTSampleSize, m_Samples, nOffset, nSamplesNeeded * m_nTSampleSize );
 				if ( m_Remap != null )
-					m_Remap( m_Samples, m_Context.Channels, m_Context.SampleFormat, m_Context.AudioCodingMode );
+					m_Remap( m_Samples, m_Context.Channels, m_Context.AudioCodingMode );
 
-				int nSize = aften_encode_frame( ref m_Context, m_FrameBuffer, m_Samples, A52Sizes.SamplesPerFrame );
+				int nSize = m_EncodeFrame( ref m_Context, m_FrameBuffer, m_Samples, A52Sizes.SamplesPerFrame );
 				if ( nSize < 0 )
 					throw new InvalidOperationException( "Encoding error" );
 
@@ -169,7 +205,7 @@ namespace Aften
 			}
 			m_nRemainingSamplesCount = samplesCount - nSamplesDone;
 			if ( m_nRemainingSamplesCount > 0 )
-				Buffer.BlockCopy( samples, nSamplesDone * sizeof( float ), m_Samples, 0, m_nRemainingSamplesCount * sizeof( float ) );
+				Buffer.BlockCopy( samples, nSamplesDone * m_nTSampleSize, m_Samples, 0, m_nRemainingSamplesCount * m_nTSampleSize );
 		}
 
 		/// <summary>
@@ -199,8 +235,8 @@ namespace Aften
 
 			int nOffset = 0;
 			int nCurrentRead;
-			while ( (nCurrentRead = samples.Read( m_StreamBuffer, 0, sizeof( float ) )) == sizeof( float ) ) {
-				m_StreamSamples[nOffset] = BitConverter.ToSingle( m_StreamBuffer, 0 );
+			while ( (nCurrentRead = samples.Read( m_StreamBuffer, 0, m_nTSampleSize )) == m_nTSampleSize ) {
+				m_StreamSamples[nOffset] = m_ToTSample( m_StreamBuffer, 0 );
 				++nOffset;
 				if ( nOffset == m_nTotalSamplesPerFrame ) {
 					this.Encode( m_StreamSamples, frames );
@@ -215,6 +251,8 @@ namespace Aften
 
 			this.Flush( frames );
 		}
+
+		#endregion
 
 		/// <summary>
 		/// Flushes the encoder und returns the remaining frames.
@@ -238,9 +276,9 @@ namespace Aften
 			int nSamplesCount = m_nRemainingSamplesCount / m_Context.Channels;
 			do {
 				if ( (nSamplesCount > 0) && (m_Remap != null) )
-					m_Remap( m_Samples, m_Context.Channels, m_Context.SampleFormat, m_Context.AudioCodingMode );
+					m_Remap( m_Samples, m_Context.Channels, m_Context.AudioCodingMode );
 
-				nSize = aften_encode_frame( ref m_Context, m_FrameBuffer, m_Samples, nSamplesCount );
+				nSize = m_EncodeFrame( ref m_Context, m_FrameBuffer, m_Samples, nSamplesCount );
 				if ( nSize < 0 )
 					throw new InvalidOperationException( "Encoding error" );
 
@@ -254,8 +292,16 @@ namespace Aften
 		/// </summary>
 		/// <param name="context">The context.</param>
 		/// <param name="remap">The remapping function.</param>
-		public FrameEncoder( ref EncodingContext context, RemappingDelegate remap )
-			: this( ref context )
+		/// <param name="encodeFrame">The encode frame function.</param>
+		/// <param name="toTSample">The ToTSample function.</param>
+		/// <param name="sampleFormat">The sample format.</param>
+		internal FrameEncoder(
+			ref EncodingContext context,
+			RemappingDelegate remap,
+			EncodeFrameDelegate encodeFrame,
+			ToTSampleDelegate toTSample,
+			A52SampleFormat sampleFormat )
+			: this( ref context, encodeFrame, toTSample, sampleFormat )
 		{
 			m_Remap = remap;
 		}
@@ -264,25 +310,204 @@ namespace Aften
 		/// Initializes a new instance of the <see cref="FrameEncoder"/> class.
 		/// </summary>
 		/// <param name="context">The context.</param>
-		public FrameEncoder( ref EncodingContext context )
+		/// <param name="encodeFrame">The encode frame function.</param>
+		/// <param name="toTSample">The ToTSample function.</param>
+		/// <param name="sampleFormat">The sample format.</param>
+		internal FrameEncoder(
+			ref EncodingContext context,
+			EncodeFrameDelegate encodeFrame,
+			ToTSampleDelegate toTSample,
+			A52SampleFormat sampleFormat )
 		{
 			if ( aften_encode_init( ref context ) != 0 )
 				throw new InvalidOperationException( "Initialization failed" );
 
+			context.SampleFormat = sampleFormat;
 			m_Context = context;
+			m_EncodeFrame = encodeFrame;
+			m_ToTSample = toTSample;
 
 			m_nTotalSamplesPerFrame = A52Sizes.SamplesPerFrame * m_Context.Channels;
-			m_Samples = new float[m_nTotalSamplesPerFrame];
-			m_StreamSamples = new float[m_nTotalSamplesPerFrame];
+			m_Samples = new TSample[m_nTotalSamplesPerFrame];
+			m_StreamSamples = new TSample[m_nTotalSamplesPerFrame];
+
+			m_StreamBuffer = new byte[m_nTSampleSize];
+		}
+	}
+
+	#region Specific FrameEncoder classes
+
+	/// <summary>
+	/// The Aften AC3 Encoder for double precision floating point samples, normalized to [-1, 1]
+	/// </summary>
+	public class FrameEncoderDouble : FrameEncoder<double>
+	{
+		[DllImport( "aften.dll" )]
+		private static extern int aften_encode_frame(
+			ref EncodingContext context, byte[] frameBuffer, double[] samples, int count );
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="FrameEncoderDouble"/> class.
+		/// </summary>
+		/// <param name="context">The context.</param>
+		/// <param name="remap">The remapping function.</param>
+		public FrameEncoderDouble( ref EncodingContext context, RemappingDelegate remap )
+			: base( ref context, remap, aften_encode_frame, BitConverter.ToDouble, A52SampleFormat.Double ) { }
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="FrameEncoderDouble"/> class.
+		/// </summary>
+		/// <param name="context">The context.</param>
+		public FrameEncoderDouble( ref EncodingContext context )
+			: base( ref context, aften_encode_frame, BitConverter.ToDouble, A52SampleFormat.Double ) { }
+	}
+
+	/// <summary>
+	/// The Aften AC3 Encoder for single precision floating point samples, normalized to [-1, 1]
+	/// </summary>
+	public class FrameEncoderFloat : FrameEncoder<float>
+	{
+		[DllImport( "aften.dll" )]
+		private static extern int aften_encode_frame(
+			ref EncodingContext context, byte[] frameBuffer, float[] samples, int count );
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="FrameEncoderFloat"/> class.
+		/// </summary>
+		/// <param name="context">The context.</param>
+		/// <param name="remap">The remapping function.</param>
+		public FrameEncoderFloat( ref EncodingContext context, RemappingDelegate remap )
+			: base( ref context, remap, aften_encode_frame, BitConverter.ToSingle, A52SampleFormat.Float ) { }
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="FrameEncoderFloat"/> class.
+		/// </summary>
+		/// <param name="context">The context.</param>
+		public FrameEncoderFloat( ref EncodingContext context )
+			: base( ref context, aften_encode_frame, BitConverter.ToSingle, A52SampleFormat.Float ) { }
+	}
+
+	/// <summary>
+	/// The Aften AC3 Encoder for 8bit unsigned integer samples
+	/// </summary>
+	public class FrameEncoderUInt8 : FrameEncoder<byte>
+	{
+		[DllImport( "aften.dll" )]
+		private static extern int aften_encode_frame(
+			ref EncodingContext context, byte[] frameBuffer, byte[] samples, int count );
+
+		/// <summary>
+		/// Returns the byte at the startIndex
+		/// </summary>
+		/// <param name="value">The value.</param>
+		/// <param name="startIndex">The start index.</param>
+		/// <returns></returns>
+		private static byte ToUInt8( byte[] value, int startIndex )
+		{
+			return value[startIndex];
 		}
 
 		/// <summary>
-		/// Releases unmanaged resources and performs other cleanup operations before the
-		/// <see cref="FrameEncoder"/> is reclaimed by garbage collection.
+		/// Initializes a new instance of the <see cref="FrameEncoderUInt8"/> class.
 		/// </summary>
-		~FrameEncoder()
-		{
-			this.Dispose( false );
-		}
+		/// <param name="context">The context.</param>
+		/// <param name="remap">The remapping function.</param>
+		public FrameEncoderUInt8( ref EncodingContext context, RemappingDelegate remap )
+			: base( ref context, remap, aften_encode_frame, ToUInt8, A52SampleFormat.UInt8 ) { }
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="FrameEncoderUInt8"/> class.
+		/// </summary>
+		/// <param name="context">The context.</param>
+		public FrameEncoderUInt8( ref EncodingContext context )
+			: base( ref context, aften_encode_frame, ToUInt8, A52SampleFormat.UInt8 ) { }
 	}
+
+	/// <summary>
+	/// The Aften AC3 Encoder for 8bit signed integer samples
+	/// </summary>
+	public class FrameEncoderInt8 : FrameEncoder<sbyte>
+	{
+		[DllImport( "aften.dll" )]
+		private static extern int aften_encode_frame(
+			ref EncodingContext context, byte[] frameBuffer, sbyte[] samples, int count );
+
+		/// <summary>
+		/// Returns the signed byte at the startIndex
+		/// </summary>
+		/// <param name="value">The value.</param>
+		/// <param name="startIndex">The start index.</param>
+		/// <returns></returns>
+		private static sbyte ToInt8( byte[] value, int startIndex )
+		{
+			return (sbyte) value[startIndex];
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="FrameEncoderInt8"/> class.
+		/// </summary>
+		/// <param name="context">The context.</param>
+		/// <param name="remap">The remapping function.</param>
+		public FrameEncoderInt8( ref EncodingContext context, RemappingDelegate remap )
+			: base( ref context, remap, aften_encode_frame, ToInt8, A52SampleFormat.Int8 ) { }
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="FrameEncoderInt8"/> class.
+		/// </summary>
+		/// <param name="context">The context.</param>
+		public FrameEncoderInt8( ref EncodingContext context )
+			: base( ref context, aften_encode_frame, ToInt8, A52SampleFormat.Int8 ) { }
+	}
+
+	/// <summary>
+	/// The Aften AC3 Encoder for 16bit signed integer samples
+	/// </summary>
+	public class FrameEncoderInt16 : FrameEncoder<short>
+	{
+		[DllImport( "aften.dll" )]
+		private static extern int aften_encode_frame(
+			ref EncodingContext context, byte[] frameBuffer, short[] samples, int count );
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="FrameEncoderInt16"/> class.
+		/// </summary>
+		/// <param name="context">The context.</param>
+		/// <param name="remap">The remapping function.</param>
+		public FrameEncoderInt16( ref EncodingContext context, RemappingDelegate remap )
+			: base( ref context, remap, aften_encode_frame, BitConverter.ToInt16, A52SampleFormat.Int16 ) { }
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="FrameEncoderInt16"/> class.
+		/// </summary>
+		/// <param name="context">The context.</param>
+		public FrameEncoderInt16( ref EncodingContext context )
+			: base( ref context, aften_encode_frame, BitConverter.ToInt16, A52SampleFormat.Int16 ) { }
+	}
+
+	/// <summary>
+	/// The Aften AC3 Encoder for 32bit signed integer samples
+	/// </summary>
+	public class FrameEncoderInt32 : FrameEncoder<int>
+	{
+		[DllImport( "aften.dll" )]
+		private static extern int aften_encode_frame(
+			ref EncodingContext context, byte[] frameBuffer, int[] samples, int count );
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="FrameEncoderInt32"/> class.
+		/// </summary>
+		/// <param name="context">The context.</param>
+		/// <param name="remap">The remapping function.</param>
+		public FrameEncoderInt32( ref EncodingContext context, RemappingDelegate remap )
+			: base( ref context, remap, aften_encode_frame, BitConverter.ToInt32, A52SampleFormat.Int32 ) { }
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="FrameEncoderInt32"/> class.
+		/// </summary>
+		/// <param name="context">The context.</param>
+		public FrameEncoderInt32( ref EncodingContext context )
+			: base( ref context, aften_encode_frame, BitConverter.ToInt32, A52SampleFormat.Int32 ) { }
+	}
+
+	#endregion
 }

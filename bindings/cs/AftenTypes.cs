@@ -74,23 +74,23 @@ namespace Aften
 		/// <summary>
 		/// Unsigned bytes
 		/// </summary>
-		Unsigned8 = 0,
+		UInt8 = 0,
 		/// <summary>
 		/// Signed 16bit Words
 		/// </summary>
-		Signed16,
+		Int16,
 		/// <summary>
 		/// Signed 20bit Words
 		/// </summary>
-		Signed20,
+		Int20,
 		/// <summary>
 		/// Signed 24bit Words
 		/// </summary>
-		Signed24,
+		Int24,
 		/// <summary>
 		/// Signed Doublewords
 		/// </summary>
-		Signed32,
+		Int32,
 		/// <summary>
 		/// Single precision floating point, normalized to [-1, 1]
 		/// </summary>
@@ -102,7 +102,7 @@ namespace Aften
 		/// <summary>
 		/// Signed bytes
 		/// </summary>
-		Signed8
+		Int8
 	}
 
 	/// <summary>
@@ -531,9 +531,9 @@ namespace Aften
 
 		/// <summary>
 		/// Audio sample format
-		/// default: A52_SAMPLE_FMT_S16
+		/// default: Int16
 		/// </summary>
-		public A52SampleFormat SampleFormat;
+		internal A52SampleFormat SampleFormat;
 
 		/// <summary>
 		/// Initial samples

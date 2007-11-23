@@ -35,11 +35,51 @@ namespace Aften
 
 		[DllImport( "aften.dll" )]
 		private static extern int aften_remap_wav_to_a52(
+			double[] samples, int n, int ch, A52SampleFormat fmt, AudioCodingMode acmod );
+
+		[DllImport( "aften.dll" )]
+		private static extern int aften_remap_wav_to_a52(
 			float[] samples, int n, int ch, A52SampleFormat fmt, AudioCodingMode acmod );
+
+		[DllImport( "aften.dll" )]
+		private static extern int aften_remap_wav_to_a52(
+			byte[] samples, int n, int ch, A52SampleFormat fmt, AudioCodingMode acmod );
+
+		[DllImport( "aften.dll" )]
+		private static extern int aften_remap_wav_to_a52(
+			sbyte[] samples, int n, int ch, A52SampleFormat fmt, AudioCodingMode acmod );
+
+		[DllImport( "aften.dll" )]
+		private static extern int aften_remap_wav_to_a52(
+			short[] samples, int n, int ch, A52SampleFormat fmt, AudioCodingMode acmod );
+
+		[DllImport( "aften.dll" )]
+		private static extern int aften_remap_wav_to_a52(
+			int[] samples, int n, int ch, A52SampleFormat fmt, AudioCodingMode acmod );
+		
+		[DllImport( "aften.dll" )]
+		private static extern int aften_remap_mpeg_to_a52(
+			double[] samples, int n, int ch, A52SampleFormat fmt, AudioCodingMode acmod );
 
 		[DllImport( "aften.dll" )]
 		private static extern int aften_remap_mpeg_to_a52(
 			float[] samples, int n, int ch, A52SampleFormat fmt, AudioCodingMode acmod );
+
+		[DllImport( "aften.dll" )]
+		private static extern int aften_remap_mpeg_to_a52(
+			byte[] samples, int n, int ch, A52SampleFormat fmt, AudioCodingMode acmod );
+
+		[DllImport( "aften.dll" )]
+		private static extern int aften_remap_mpeg_to_a52(
+			sbyte[] samples, int n, int ch, A52SampleFormat fmt, AudioCodingMode acmod );
+
+		[DllImport( "aften.dll" )]
+		private static extern int aften_remap_mpeg_to_a52(
+			short[] samples, int n, int ch, A52SampleFormat fmt, AudioCodingMode acmod );
+
+		[DllImport( "aften.dll" )]
+		private static extern int aften_remap_mpeg_to_a52(
+			int[] samples, int n, int ch, A52SampleFormat fmt, AudioCodingMode acmod );
 
 		[DllImport( "aften.dll" )]
 		private static extern FloatType aften_get_float_type();
@@ -77,12 +117,71 @@ namespace Aften
 		/// </summary>
 		/// <param name="samples">The samples.</param>
 		/// <param name="channels">The channels.</param>
-		/// <param name="format">The format.</param>
 		/// <param name="audioCodingMode">The audio coding mode.</param>
 		public static void RemapWaveToA52(
-			float[] samples, int channels, A52SampleFormat format, AudioCodingMode audioCodingMode )
+			double[] samples, int channels, AudioCodingMode audioCodingMode )
 		{
-			aften_remap_wav_to_a52( samples, samples.Length / channels, channels, format, audioCodingMode );
+			aften_remap_wav_to_a52( samples, samples.Length / channels, channels, A52SampleFormat.Double, audioCodingMode );
+		}
+
+		/// <summary>
+		/// Remaps the standard wave to a52 order.
+		/// </summary>
+		/// <param name="samples">The samples.</param>
+		/// <param name="channels">The channels.</param>
+		/// <param name="audioCodingMode">The audio coding mode.</param>
+		public static void RemapWaveToA52(
+			float[] samples, int channels, AudioCodingMode audioCodingMode )
+		{
+			aften_remap_wav_to_a52( samples, samples.Length / channels, channels, A52SampleFormat.Float, audioCodingMode );
+		}
+
+		/// <summary>
+		/// Remaps the standard wave to a52 order.
+		/// </summary>
+		/// <param name="samples">The samples.</param>
+		/// <param name="channels">The channels.</param>
+		/// <param name="audioCodingMode">The audio coding mode.</param>
+		public static void RemapWaveToA52(
+			byte[] samples, int channels, AudioCodingMode audioCodingMode )
+		{
+			aften_remap_wav_to_a52( samples, samples.Length / channels, channels, A52SampleFormat.UInt8, audioCodingMode );
+		}
+
+		/// <summary>
+		/// Remaps the standard wave to a52 order.
+		/// </summary>
+		/// <param name="samples">The samples.</param>
+		/// <param name="channels">The channels.</param>
+		/// <param name="audioCodingMode">The audio coding mode.</param>
+		public static void RemapWaveToA52(
+			sbyte[] samples, int channels, AudioCodingMode audioCodingMode )
+		{
+			aften_remap_wav_to_a52( samples, samples.Length / channels, channels, A52SampleFormat.Int8, audioCodingMode );
+		}
+
+		/// <summary>
+		/// Remaps the standard wave to a52 order.
+		/// </summary>
+		/// <param name="samples">The samples.</param>
+		/// <param name="channels">The channels.</param>
+		/// <param name="audioCodingMode">The audio coding mode.</param>
+		public static void RemapWaveToA52(
+			short[] samples, int channels, AudioCodingMode audioCodingMode )
+		{
+			aften_remap_wav_to_a52( samples, samples.Length / channels, channels, A52SampleFormat.Int16, audioCodingMode );
+		}
+
+		/// <summary>
+		/// Remaps the standard wave to a52 order.
+		/// </summary>
+		/// <param name="samples">The samples.</param>
+		/// <param name="channels">The channels.</param>
+		/// <param name="audioCodingMode">The audio coding mode.</param>
+		public static void RemapWaveToA52(
+			int[] samples, int channels, AudioCodingMode audioCodingMode )
+		{
+			aften_remap_wav_to_a52( samples, samples.Length / channels, channels, A52SampleFormat.Int32, audioCodingMode );
 		}
 
 		/// <summary>
@@ -90,12 +189,71 @@ namespace Aften
 		/// </summary>
 		/// <param name="samples">The samples.</param>
 		/// <param name="channels">The channels.</param>
-		/// <param name="format">The format.</param>
 		/// <param name="audioCodingMode">The audio coding mode.</param>
 		public static void RemapMpegToA52(
-			float[] samples, int channels, A52SampleFormat format, AudioCodingMode audioCodingMode )
+			double[] samples, int channels, AudioCodingMode audioCodingMode )
 		{
-			aften_remap_mpeg_to_a52( samples, samples.Length / channels, channels, format, audioCodingMode );
+			aften_remap_mpeg_to_a52( samples, samples.Length / channels, channels, A52SampleFormat.Double, audioCodingMode );
+		}
+
+		/// <summary>
+		/// Remaps the MPEG to a52 order.
+		/// </summary>
+		/// <param name="samples">The samples.</param>
+		/// <param name="channels">The channels.</param>
+		/// <param name="audioCodingMode">The audio coding mode.</param>
+		public static void RemapMpegToA52(
+			float[] samples, int channels, AudioCodingMode audioCodingMode )
+		{
+			aften_remap_mpeg_to_a52( samples, samples.Length / channels, channels, A52SampleFormat.Float, audioCodingMode );
+		}
+
+		/// <summary>
+		/// Remaps the MPEG to a52 order.
+		/// </summary>
+		/// <param name="samples">The samples.</param>
+		/// <param name="channels">The channels.</param>
+		/// <param name="audioCodingMode">The audio coding mode.</param>
+		public static void RemapMpegToA52(
+			byte[] samples, int channels, AudioCodingMode audioCodingMode )
+		{
+			aften_remap_mpeg_to_a52( samples, samples.Length / channels, channels, A52SampleFormat.UInt8, audioCodingMode );
+		}
+
+		/// <summary>
+		/// Remaps the MPEG to a52 order.
+		/// </summary>
+		/// <param name="samples">The samples.</param>
+		/// <param name="channels">The channels.</param>
+		/// <param name="audioCodingMode">The audio coding mode.</param>
+		public static void RemapMpegToA52(
+			sbyte[] samples, int channels, AudioCodingMode audioCodingMode )
+		{
+			aften_remap_mpeg_to_a52( samples, samples.Length / channels, channels, A52SampleFormat.Int8, audioCodingMode );
+		}
+
+		/// <summary>
+		/// Remaps the MPEG to a52 order.
+		/// </summary>
+		/// <param name="samples">The samples.</param>
+		/// <param name="channels">The channels.</param>
+		/// <param name="audioCodingMode">The audio coding mode.</param>
+		public static void RemapMpegToA52(
+			short[] samples, int channels, AudioCodingMode audioCodingMode )
+		{
+			aften_remap_mpeg_to_a52( samples, samples.Length / channels, channels, A52SampleFormat.Int16, audioCodingMode );
+		}
+
+		/// <summary>
+		/// Remaps the MPEG to a52 order.
+		/// </summary>
+		/// <param name="samples">The samples.</param>
+		/// <param name="channels">The channels.</param>
+		/// <param name="audioCodingMode">The audio coding mode.</param>
+		public static void RemapMpegToA52(
+			int[] samples, int channels, AudioCodingMode audioCodingMode )
+		{
+			aften_remap_mpeg_to_a52( samples, samples.Length / channels, channels, A52SampleFormat.Int32, audioCodingMode );
 		}
 
 		/// <summary>
