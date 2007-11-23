@@ -28,11 +28,13 @@ namespace Aften
 	public class FrameEncoder : IDisposable
 	{
 		const string _EqualAmountOfSamples = "Each channel must have an equal amount of samples.";
+
 		private readonly byte[] m_FrameBuffer = new byte[A52Sizes.MaximumCodedFrameSize];
 		private readonly byte[] m_StreamBuffer = new byte[sizeof( float )];
 		private readonly float[] m_Samples;
 		private readonly float[] m_StreamSamples;
 		private readonly int m_nTotalSamplesPerFrame;
+		private readonly RemappingDelegate m_Remap;
 
 		private bool m_bDisposed;
 		private EncodingContext m_Context;
@@ -81,6 +83,9 @@ namespace Aften
 
 			return context;
 		}
+
+		public delegate void RemappingDelegate(
+			float[] samples, int channels, A52SampleFormat format, AudioCodingMode audioCodingMode );
 
 		/// <summary>
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
@@ -150,6 +155,9 @@ namespace Aften
 			int nSamplesDone = 0;
 			while ( samplesCount - nSamplesDone >= m_nTotalSamplesPerFrame ) {
 				Buffer.BlockCopy( samples, nSamplesDone * sizeof( float ), m_Samples, nOffset, nSamplesNeeded * sizeof( float ) );
+				if ( m_Remap != null )
+					m_Remap( m_Samples, m_Context.Channels, m_Context.SampleFormat, m_Context.AudioCodingMode );
+
 				int nSize = aften_encode_frame( ref m_Context, m_FrameBuffer, m_Samples, A52Sizes.SamplesPerFrame );
 				if ( nSize < 0 )
 					throw new InvalidOperationException( "Encoding error" );
@@ -229,6 +237,9 @@ namespace Aften
 			int nSize;
 			int nSamplesCount = m_nRemainingSamplesCount / m_Context.Channels;
 			do {
+				if ( (nSamplesCount > 0) && (m_Remap != null) )
+					m_Remap( m_Samples, m_Context.Channels, m_Context.SampleFormat, m_Context.AudioCodingMode );
+
 				nSize = aften_encode_frame( ref m_Context, m_FrameBuffer, m_Samples, nSamplesCount );
 				if ( nSize < 0 )
 					throw new InvalidOperationException( "Encoding error" );
@@ -236,6 +247,17 @@ namespace Aften
 				frames.Write( m_FrameBuffer, 0, nSize );
 				nSamplesCount = 0;
 			} while ( nSize > 0 );
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="FrameEncoder"/> class.
+		/// </summary>
+		/// <param name="context">The context.</param>
+		/// <param name="remap">The remapping function.</param>
+		public FrameEncoder( ref EncodingContext context, RemappingDelegate remap )
+			: this( ref context )
+		{
+			m_Remap = remap;
 		}
 
 		/// <summary>
