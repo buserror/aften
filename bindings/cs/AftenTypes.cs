@@ -548,6 +548,8 @@ namespace Aften
 		/// Used internally by the encoder. The user should leave this alone.
 		/// It is allocated in aften_encode_init and free'd in aften_encode_close.
 		/// </summary>
+	#pragma warning disable 0169
 		private IntPtr m_Context;
+	#pragma warning restore 0169
 	}
 }
