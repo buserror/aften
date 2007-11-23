@@ -307,14 +307,25 @@ IF(BINDINGS_CXX)
 ENDIF(BINDINGS_CXX)
 IF(BINDINGS_CS)
   MESSAGE("## WARNING: The C# bindings are experimental. ##")
+  SET(AFTENSHARP_SRCS bindings/cs/AftenTypes.cs
+                      bindings/cs/FrameEncoder.cs
+                      bindings/cs/Utility.cs)
+  SET(AFTENSHARP_DLL ${Aften_BINARY_DIR}/AftenSharp.dll)
   FIND_PROGRAM(
     CSCOMPILER
     NAMES csc gmcs)
+  IF(CSCOMPILER MATCHES "NOTFOUND")
+    MESSAGE(SEND_ERROR "Could not locate a supported C# compiler")
+  ENDIF(CSCOMPILER MATCHES "NOTFOUND")
+  ADD_CUSTOM_COMMAND(
+    OUTPUT ${AFTENSHARP_DLL}
+    COMMAND ${CSCOMPILER} -t:library -out:${AFTENSHARP_DLL} -o+ ${AFTENSHARP_SRCS}
+    DEPENDS ${AFTENSHARP_SRCS}
+    WORKING_DIRECTORY ${Aften_SOURCE_DIR})
   ADD_CUSTOM_TARGET(
-    AftenSharp.dll
+    AftenSharp
     ALL
-    COMMAND ${CSCOMPILER} -t:library -out:${Aften_BINARY_DIR}/AftenSharp.dll -o+ AftenTypes.cs FrameEncoder.cs Utility.cs 
-    WORKING_DIRECTORY ${Aften_SOURCE_DIR}/bindings/cs)
+    DEPENDS ${AFTENSHARP_DLL})
 ENDIF(BINDINGS_CS)
 
 
