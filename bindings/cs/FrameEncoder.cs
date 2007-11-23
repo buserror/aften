@@ -150,7 +150,7 @@ namespace Aften
 		public void Flush( Stream stream )
 		{
 			int size;
-			int nSamplesCount = m_nRemainingSamplesCount;
+			int nSamplesCount = m_nRemainingSamplesCount / m_Context.Channels;
 			do {
 				size = aften_encode_frame( ref m_Context, m_FrameBuffer, m_Samples, nSamplesCount );
 				if ( size < 0 )
