@@ -310,6 +310,14 @@ IF(BINDINGS_CS)
   SET(AFTENSHARP_SRCS bindings/cs/AftenTypes.cs
                       bindings/cs/FrameEncoder.cs
                       bindings/cs/Utility.cs)
+  IF(WIN32)
+    SET(WIN_SRCS "")
+    FOREACH(SRC ${AFTENSHARP_SRCS})
+      STRING(REPLACE "/" "\\" WIN_SRC ${SRC})
+      SET(WIN_SRCS ${WIN_SRCS} ${WIN_SRC})
+    ENDFOREACH(SRC ${AFTENSHARP_SRCS})
+    SET(AFTENSHARP_SRCS ${WIN_SRCS})
+  ENDIF(WIN32)
   SET(AFTENSHARP_DLL ${Aften_BINARY_DIR}/AftenSharp.dll)
   FIND_PROGRAM(
     CSCOMPILER
