@@ -47,11 +47,11 @@
 #include "mem.h"
 
 // sign change constants
-static const vec_u32_t vPNNP = (vec_u32_t)
+static const vec_u32_t vPNNP = VEC_U32
     (0x00000000, 0x80000000, 0x80000000, 0x00000000);
-static const vec_u32_t vPNPN = (vec_u32_t)
+static const vec_u32_t vPNPN = VEC_U32
     (0x00000000, 0x80000000, 0x00000000, 0x80000000);
-static const vec_u32_t vNNNN = (vec_u32_t)
+static const vec_u32_t vNNNN = VEC_U32
     (0x80000000, 0x80000000, 0x80000000, 0x80000000);
 
 
@@ -92,7 +92,7 @@ mdct_butterfly_16_altivec(FLOAT *x)
     vec_u8_t perm1036 = VPERMUTE4(1, 0, 3, 6);
     vec_u8_t perm5472 = VPERMUTE4(5, 4, 7, 2);
     vector float zero = (vector float) vec_splat_u32(0);
-    vector float pi2_8 = (vector float)(AFT_PI2_8, AFT_PI2_8, AFT_PI2_8, AFT_PI2_8);
+    vector float pi2_8 = VEC_FLOAT(AFT_PI2_8, AFT_PI2_8, AFT_PI2_8, AFT_PI2_8);
     vector float x0to3, x4to7, x8to11, x12to15;
     vector float v1, v2, v3, v4, v5;
 
@@ -143,7 +143,7 @@ mdct_butterfly_32_altivec(FLOAT *x)
     vec_u8_t perm0022 = VPERMUTE4(0, 0, 2, 2);
     vec_u8_t perm1405 = VPERMUTE4(1, 4, 0, 5);
     vector float zero = (vector float) vec_splat_u32(0);
-    vector float cpi = (vector float) (AFT_PI2_8, AFT_PI2_8, AFT_PI1_8, AFT_PI3_8);
+    vector float cpi = VEC_FLOAT(AFT_PI2_8, AFT_PI2_8, AFT_PI1_8, AFT_PI3_8);
     vec_u32_t vNPNP = vec_sld(vPNPN, vPNPN, 4);
     vector float x0to3, x4to7, x8to11, x12to15, x16to19, x20to23, x24to27, x28to31;
     vector float pi3122, pi1322, pi1313, pi3131;
@@ -395,7 +395,7 @@ mdct_bitreverse_altivec(MDCTContext *mdct, FLOAT *x)
     vec_u8_t perm3636 = vec_add(perm1414, vec_splat_u8(8));
     vec_u8_t perm2266, perm3377;
 
-    vector float point5 = (vector float) (0.5f, 0.5f, 0.5f, 0.5f);
+    vector float point5 = VEC_FLOAT(0.5f, 0.5f, 0.5f, 0.5f);
     vector float zero = (vector float) vec_splat_u32(0);
     vec_u32_t vNPNP = vec_sld(vPNPN, vPNPN, 4);
 

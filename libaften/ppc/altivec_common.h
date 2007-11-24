@@ -28,11 +28,23 @@ typedef vector signed short   vec_s16_t;
 typedef vector unsigned int   vec_u32_t;
 typedef vector signed int     vec_s32_t;
 
+#if defined( __APPLE_CC__ ) && defined( __APPLE_ALTIVEC__ ) /* apple */
+#define VEC_U32(a,b,c,d) (vec_u32_t) (a, b, c, d)
+#define VEC_FLOAT(a,b,c,d) (vector float) (a, b, c, d)
 #define VPERMUTE4(a,b,c,d) (vec_u8_t) \
                              ( (a*4)+0, (a*4)+1, (a*4)+2, (a*4)+3, \
                                (b*4)+0, (b*4)+1, (b*4)+2, (b*4)+3, \
                                (c*4)+0, (c*4)+1, (c*4)+2, (c*4)+3, \
                                (d*4)+0, (d*4)+1, (d*4)+2, (d*4)+3 )
+#else                   /* gnu */
+#define VEC_U32(a,b,c,d) {a, b, c, d}
+#define VEC_FLOAT(a,b,c,d) {a, b, c, d}
+#define VPERMUTE4(a,b,c,d) \
+                             { (a*4)+0, (a*4)+1, (a*4)+2, (a*4)+3, \
+                               (b*4)+0, (b*4)+1, (b*4)+2, (b*4)+3, \
+                               (c*4)+0, (c*4)+1, (c*4)+2, (c*4)+3, \
+                               (d*4)+0, (d*4)+1, (d*4)+2, (d*4)+3 }
+#endif
 
 static inline vector float vec_ld_float(const float *a)
 {
