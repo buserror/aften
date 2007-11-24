@@ -402,7 +402,7 @@ namespace Aften
 		/// <summary> 
 		/// Extended bit stream info 1 exists 
 		/// </summary>
-		public bool HasExtendedBitstreamInfo1;
+		public bool HaveExtendedBitstreamInfo1;
 
 		/// <summary> 
 		/// Preferred downmix mode
@@ -432,7 +432,7 @@ namespace Aften
 		/// <summary>
 		/// Extended bit stream info 2 exists 
 		/// </summary>
-		public bool HasExtendedBitstreamInfo2;
+		public bool HaveExtendedBitstreamInfo2;
 
 		/// <summary> 
 		/// Dolby(R) Surround EX mode 
