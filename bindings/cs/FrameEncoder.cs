@@ -189,8 +189,8 @@ namespace Aften
 			int nOffset = m_nRemainingSamplesCount;
 			int nSamplesNeeded = m_nTotalSamplesPerFrame - nOffset;
 			int nSamplesDone = 0;
-			while ( samplesCount - nSamplesDone >= m_nTotalSamplesPerFrame ) {
-				Buffer.BlockCopy( samples, nSamplesDone * m_nTSampleSize, m_Samples, nOffset, nSamplesNeeded * m_nTSampleSize );
+			while ( samplesCount - nSamplesDone + nOffset >= m_nTotalSamplesPerFrame ) {
+				Buffer.BlockCopy( samples, nSamplesDone * m_nTSampleSize, m_Samples, nOffset * m_nTSampleSize, nSamplesNeeded * m_nTSampleSize );
 				if ( m_Remap != null )
 					m_Remap( m_Samples, m_Context.Channels, m_Context.AudioCodingMode );
 
@@ -199,9 +199,9 @@ namespace Aften
 					throw new InvalidOperationException( "Encoding error" );
 
 				frames.Write( m_FrameBuffer, 0, nSize );
-				nSamplesDone += m_nTotalSamplesPerFrame;
-				nSamplesNeeded = m_nTotalSamplesPerFrame;
+				nSamplesDone += m_nTotalSamplesPerFrame - nOffset;
 				nOffset = 0;
+				nSamplesNeeded = m_nTotalSamplesPerFrame;
 			}
 			m_nRemainingSamplesCount = samplesCount - nSamplesDone;
 			if ( m_nRemainingSamplesCount > 0 )

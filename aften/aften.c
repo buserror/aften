@@ -213,6 +213,7 @@ main(int argc, char **argv)
             goto error_end;
         }
     }
+    fprintf(stderr, "acmod %i\n", s.acmod);
     // set some encoding parameters using wav info
     s.channels = pf.channels;
     s.samplerate = pf.sample_rate;
