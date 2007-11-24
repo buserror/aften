@@ -22,6 +22,7 @@ Aften TODO list
 Aften Changelog
 ---------------
 version SVN : current
+- added C# bindings with simple high level API
 - changed API to simplify its usage
 - added API.txt
 - fixed aften error handling

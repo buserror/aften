@@ -306,7 +306,7 @@ IF(BINDINGS_CXX)
   SET(INSTALL_HEADERS ${INSTALL_HEADERS} bindings/aftenxx.h)
 ENDIF(BINDINGS_CXX)
 IF(BINDINGS_CS)
-  MESSAGE("## WARNING: The C# bindings are experimental. ##")
+  MESSAGE("## WARNING: The C# bindings are not completed, but tested. Mono 1.2.5 seems to compile it, but non-functional. ##")
   SET(AFTENSHARP_SRCS bindings/cs/AftenTypes.cs
                       bindings/cs/FrameEncoder.cs
                       bindings/cs/Utility.cs)
