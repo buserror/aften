@@ -182,14 +182,14 @@ namespace Aften
 		/// <param name="frames">The frames.</param>
 		public void Encode( TSample[] samples, int samplesPerChannelCount, Stream frames )
 		{
-			int samplesCount = samplesPerChannelCount * m_Context.Channels;
-			if ( samplesCount > samples.Length )
+			int nSamplesCount = samplesPerChannelCount * m_Context.Channels;
+			if ( nSamplesCount > samples.Length )
 				throw new InvalidOperationException( "samples contains less data then specified." );
 
 			int nOffset = m_nRemainingSamplesCount;
 			int nSamplesNeeded = m_nTotalSamplesPerFrame - nOffset;
 			int nSamplesDone = 0;
-			while ( samplesCount - nSamplesDone + nOffset >= m_nTotalSamplesPerFrame ) {
+			while ( nSamplesCount - nSamplesDone + nOffset >= m_nTotalSamplesPerFrame ) {
 				Buffer.BlockCopy( samples, nSamplesDone * m_nTSampleSize, m_Samples, nOffset * m_nTSampleSize, nSamplesNeeded * m_nTSampleSize );
 				if ( m_Remap != null )
 					m_Remap( m_Samples, m_Context.Channels, m_Context.AudioCodingMode );
@@ -203,7 +203,7 @@ namespace Aften
 				nOffset = 0;
 				nSamplesNeeded = m_nTotalSamplesPerFrame;
 			}
-			m_nRemainingSamplesCount = samplesCount - nSamplesDone;
+			m_nRemainingSamplesCount = nSamplesCount - nSamplesDone;
 			if ( m_nRemainingSamplesCount > 0 )
 				Buffer.BlockCopy( samples, nSamplesDone * m_nTSampleSize, m_Samples, 0, m_nRemainingSamplesCount * m_nTSampleSize );
 		}
@@ -273,17 +273,17 @@ namespace Aften
 		public void Flush( Stream frames )
 		{
 			int nSize;
-			int nSamplesCount = m_nRemainingSamplesCount / m_Context.Channels;
+			int nSamplesPerChannelCount = m_nRemainingSamplesCount / m_Context.Channels;
 			do {
-				if ( (nSamplesCount > 0) && (m_Remap != null) )
+				if ( (nSamplesPerChannelCount > 0) && (m_Remap != null) )
 					m_Remap( m_Samples, m_Context.Channels, m_Context.AudioCodingMode );
 
-				nSize = m_EncodeFrame( ref m_Context, m_FrameBuffer, m_Samples, nSamplesCount );
+				nSize = m_EncodeFrame( ref m_Context, m_FrameBuffer, m_Samples, nSamplesPerChannelCount );
 				if ( nSize < 0 )
 					throw new InvalidOperationException( "Encoding error" );
 
 				frames.Write( m_FrameBuffer, 0, nSize );
-				nSamplesCount = 0;
+				nSamplesPerChannelCount = 0;
 			} while ( nSize > 0 );
 		}
 
