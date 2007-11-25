@@ -27,6 +27,12 @@ namespace Aften
 	/// </summary>
 	public abstract class FrameEncoder : IDisposable
 	{
+		/// <summary>
+		/// Error message EqualAmountOfSamples
+		/// </summary>
+		protected const string _EqualAmountOfSamples = "Each channel must have an equal amount of samples.";
+
+		private readonly int m_nChannels;
 		private bool m_bDisposed;
 
 		[DllImport( "aften.dll" )]
@@ -57,6 +63,16 @@ namespace Aften
 		}
 
 		/// <summary>
+		/// Checks the length of the samples array.
+		/// </summary>
+		/// <param name="samples">The samples.</param>
+		protected void CheckSamplesLength( Array samples )
+		{
+			if ( samples.Length % m_nChannels != 0 )
+				throw new InvalidOperationException( _EqualAmountOfSamples );
+		}
+
+		/// <summary>
 		/// Closes the encoder.
 		/// </summary>
 		protected abstract void DoCloseEncoder();
@@ -82,6 +98,108 @@ namespace Aften
 			GC.SuppressFinalize( this );
 		}
 
+		#region Encoding
+
+		/// <summary>
+		/// Encodes the specified interleaved samples.
+		/// </summary>
+		/// <param name="samples">The samples.</param>
+		/// <returns>MemoryStream containing the encoded frames</returns>
+		public MemoryStream Encode( Array samples )
+		{
+			this.CheckSamplesLength( samples );
+
+			return this.Encode( samples, samples.Length / m_nChannels );
+		}
+
+
+		/// <summary>
+		/// Encodes the specified interleaved samples.
+		/// </summary>
+		/// <param name="samples">The samples.</param>
+		/// <param name="samplesPerChannelCount">The samples per channel count.</param>
+		/// <returns>
+		/// MemoryStream containing the encoded frames
+		/// </returns>
+		public MemoryStream Encode( Array samples, int samplesPerChannelCount )
+		{
+			MemoryStream stream = new MemoryStream();
+			this.Encode( samples, samplesPerChannelCount, stream );
+
+			return stream;
+		}
+
+		/// <summary>
+		/// Encodes the specified interleaved samples.
+		/// </summary>
+		/// <param name="samples">The samples.</param>
+		/// <param name="frames">The frames.</param>
+		public void Encode( Array samples, Stream frames )
+		{
+			this.CheckSamplesLength( samples );
+
+			this.Encode( samples, samples.Length / m_nChannels, frames );
+		}
+
+		/// <summary>
+		/// Encodes the ssamplesCount of the specified interleaved samples.
+		/// </summary>
+		/// <param name="samples">The samples.</param>
+		/// <param name="samplesPerChannelCount">The samples per channel count.</param>
+		/// <param name="frames">The frames.</param>
+		public abstract void Encode( Array samples, int samplesPerChannelCount, Stream frames );
+
+		/// <summary>
+		/// Encodes the specified interleaved samples.
+		/// </summary>
+		/// <param name="samples">The samples.</param>
+		/// <returns>
+		/// MemoryStream containing the encoded frames
+		/// </returns>
+		public MemoryStream Encode( Stream samples )
+		{
+			MemoryStream stream = new MemoryStream();
+			this.Encode( samples, stream );
+
+			return stream;
+		}
+
+		/// <summary>
+		/// Encodes the specified interleaved samples stream and flushes the encoder.
+		/// </summary>
+		/// <param name="samples">The samples.</param>
+		/// <param name="frames">The frames.</param>
+		public abstract void Encode( Stream samples, Stream frames );
+
+		#endregion
+
+		/// <summary>
+		/// Flushes the encoder und returns the remaining frames.
+		/// </summary>
+		/// <returns>MemoryStream containing the encoded frames</returns>
+		public MemoryStream Flush()
+		{
+			MemoryStream stream = new MemoryStream();
+			this.Flush( stream );
+
+			return stream;
+		}
+
+		/// <summary>
+		/// Flushes the encoder und returns the remaining frames.
+		/// </summary>
+		/// <param name="frames">The frames.</param>
+		public abstract void Flush( Stream frames );
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="FrameEncoder"/> class.
+		/// </summary>
+		/// <param name="channels">The channels.</param>
+		protected FrameEncoder( int channels )
+		{
+			m_nChannels = channels;
+		}
+
 		/// <summary>
 		/// Releases unmanaged resources and performs other cleanup operations before the
 		/// <see cref="FrameEncoder"/> is reclaimed by garbage collection.
@@ -99,8 +217,6 @@ namespace Aften
 	public abstract class FrameEncoder<TSample> : FrameEncoder
 		where TSample : struct
 	{
-		const string _EqualAmountOfSamples = "Each channel must have an equal amount of samples.";
-
 		private readonly byte[] m_FrameBuffer = new byte[A52Sizes.MaximumCodedFrameSize];
 		private readonly byte[] m_StreamBuffer;
 		private readonly TSample[] m_Samples;
@@ -118,6 +234,10 @@ namespace Aften
 		internal delegate TSample ToTSampleDelegate( byte[] buffer, int startIndex );
 		internal delegate int EncodeFrameDelegate(
 			ref EncodingContext context, byte[] frameBuffer, TSample[] samples, int count );
+
+		/// <summary>
+		/// Delegate for a remapping function
+		/// </summary>
 		public delegate void RemappingDelegate(
 			TSample[] samples, int channels, AudioCodingMode audioCodingMode );
 
@@ -133,14 +253,25 @@ namespace Aften
 		#region Encoding
 
 		/// <summary>
+		/// Encodes the ssamplesCount of the specified interleaved samples.
+		/// </summary>
+		/// <param name="samples">The samples.</param>
+		/// <param name="samplesPerChannelCount">The samples per channel count.</param>
+		/// <param name="frames">The frames.</param>
+		public override void Encode( Array samples, int samplesPerChannelCount, Stream frames )
+		{
+			TSample[] typedSamples = (TSample[]) samples;
+			this.Encode( typedSamples, samplesPerChannelCount, frames );
+		}
+
+		/// <summary>
 		/// Encodes the specified interleaved samples.
 		/// </summary>
 		/// <param name="samples">The samples.</param>
 		/// <returns>MemoryStream containing the encoded frames</returns>
 		public MemoryStream Encode( TSample[] samples )
 		{
-			if ( samples.Length % m_Context.Channels != 0 )
-				throw new InvalidOperationException( _EqualAmountOfSamples );
+			this.CheckSamplesLength( samples );
 
 			return this.Encode( samples, samples.Length / m_Context.Channels );
 		}
@@ -168,8 +299,7 @@ namespace Aften
 		/// <param name="frames">The frames.</param>
 		public void Encode( TSample[] samples, Stream frames )
 		{
-			if ( samples.Length % m_Context.Channels != 0 )
-				throw new InvalidOperationException( _EqualAmountOfSamples );
+			this.CheckSamplesLength( samples );
 
 			this.Encode( samples, samples.Length / m_Context.Channels, frames );
 		}
@@ -209,26 +339,11 @@ namespace Aften
 		}
 
 		/// <summary>
-		/// Encodes the specified interleaved samples.
-		/// </summary>
-		/// <param name="samples">The samples.</param>
-		/// <returns>
-		/// MemoryStream containing the encoded frames
-		/// </returns>
-		public MemoryStream Encode( Stream samples )
-		{
-			MemoryStream stream = new MemoryStream();
-			this.Encode( samples, stream );
-
-			return stream;
-		}
-
-		/// <summary>
 		/// Encodes the specified interleaved samples stream and flushes the encoder.
 		/// </summary>
 		/// <param name="samples">The samples.</param>
 		/// <param name="frames">The frames.</param>
-		public void Encode( Stream samples, Stream frames )
+		public override void Encode( Stream samples, Stream frames )
 		{
 			if ( !samples.CanRead )
 				throw new InvalidOperationException( "Samples stream must be readable." );
@@ -257,20 +372,8 @@ namespace Aften
 		/// <summary>
 		/// Flushes the encoder und returns the remaining frames.
 		/// </summary>
-		/// <returns>MemoryStream containing the encoded frames</returns>
-		public MemoryStream Flush()
-		{
-			MemoryStream stream = new MemoryStream();
-			Flush( stream );
-
-			return stream;
-		}
-
-		/// <summary>
-		/// Flushes the encoder und returns the remaining frames.
-		/// </summary>
-		/// <param name="stream">The stream.</param>
-		public void Flush( Stream frames )
+		/// <param name="frames">The frames.</param>
+		public override void Flush( Stream frames )
 		{
 			int nSize;
 			int nSamplesPerChannelCount = m_nRemainingSamplesCount / m_Context.Channels;
@@ -318,6 +421,7 @@ namespace Aften
 			EncodeFrameDelegate encodeFrame,
 			ToTSampleDelegate toTSample,
 			A52SampleFormat sampleFormat )
+			: base( context.Channels )
 		{
 			if ( aften_encode_init( ref context ) != 0 )
 				throw new InvalidOperationException( "Initialization failed" );

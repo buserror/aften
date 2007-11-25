@@ -99,8 +99,8 @@ namespace Aften
 		/// </summary>
 		/// <param name="channels">The channels.</param>
 		/// <param name="channelMask">The channel mask.</param>
-		/// <param name="audioCodingMode">The audio coding mode.</param>
 		/// <param name="hasLfe">if set to <c>true</c> has lfe.</param>
+		/// <returns></returns>
 		public static AudioCodingMode GetAudioCodingMode(
 			int channels, uint channelMask, out bool hasLfe )
 		{
