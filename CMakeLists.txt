@@ -309,6 +309,7 @@ IF(BINDINGS_CS)
   MESSAGE("## WARNING: The C# bindings are not completed, but tested. Mono 1.2.5 seems to compile it, but non-functional. ##")
   SET(AFTENSHARP_SRCS bindings/cs/AftenTypes.cs
                       bindings/cs/FrameEncoder.cs
+                      bindings/cs/FrameEventArgs.cs
                       bindings/cs/Utility.cs)
   IF(WIN32)
     SET(WIN_SRCS "")

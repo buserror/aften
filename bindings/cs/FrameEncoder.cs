@@ -22,6 +22,8 @@ using System.Runtime.InteropServices;
 
 namespace Aften
 {
+	#region FrameEncoder base class
+
 	/// <summary>
 	/// The Aften AC3 Encoder base class
 	/// </summary>
@@ -78,6 +80,22 @@ namespace Aften
 		protected abstract void DoCloseEncoder();
 
 		/// <summary>
+		/// Called when a frame has been encoded.
+		/// </summary>
+		/// <param name="sender">The sender.</param>
+		/// <param name="e">The <see cref="Aften.FrameEventArgs"/> instance containing the event data.</param>
+		protected virtual void OnFrameEncoded( object sender, FrameEventArgs e )
+		{
+			if ( FrameEncoded != null )
+				FrameEncoded( sender, e );
+		}
+
+		/// <summary>
+		/// Raised when a frame has been encoded.
+		/// </summary>
+		public event EventHandler<FrameEventArgs> FrameEncoded;
+
+		/// <summary>
 		/// Gets a default context.
 		/// </summary>
 		/// <returns></returns>
@@ -111,7 +129,6 @@ namespace Aften
 
 			return this.Encode( samples, samples.Length / m_nChannels );
 		}
-
 
 		/// <summary>
 		/// Encodes a part of the specified interleaved samples.
@@ -210,6 +227,10 @@ namespace Aften
 		}
 	}
 
+	#endregion
+
+	#region Strongly typed FrameEncoder class
+
 	/// <summary>
 	/// The Aften AC3 Encoder
 	/// </summary>
@@ -229,6 +250,7 @@ namespace Aften
 
 		private EncodingContext m_Context;
 		private int m_nRemainingSamplesCount;
+		private int m_nFrameNumber;
 
 
 		internal delegate TSample ToTSampleDelegate( byte[] buffer, int startIndex );
@@ -251,6 +273,25 @@ namespace Aften
 		}
 
 		#region Encoding
+
+		/// <summary>
+		/// Encodes the frame.
+		/// </summary>
+		/// <param name="samplesPerChannelCount">The samples per channel count.</param>
+		/// <returns></returns>
+		private int EncodeFrame( int samplesPerChannelCount )
+		{
+			if ( (m_Remap != null) && (samplesPerChannelCount > 0) )
+				m_Remap( m_Samples, m_Context.Channels, m_Context.AudioCodingMode );
+
+			int nSize = m_EncodeFrame( ref m_Context, m_FrameBuffer, m_Samples, samplesPerChannelCount );
+			if ( nSize > 0 )
+				this.OnFrameEncoded( this, new FrameEventArgs( ++m_nFrameNumber, nSize, m_Context.Status ) );
+			else if ( nSize < 0 )
+				throw new InvalidOperationException( "Encoding error" );
+
+			return nSize;
+		}
 
 		/// <summary>
 		/// Encodes a part of the specified interleaved samples.
@@ -321,13 +362,7 @@ namespace Aften
 			int nSamplesDone = 0;
 			while ( nSamplesCount - nSamplesDone + nOffset >= m_nTotalSamplesPerFrame ) {
 				Buffer.BlockCopy( samples, nSamplesDone * m_nTSampleSize, m_Samples, nOffset * m_nTSampleSize, nSamplesNeeded * m_nTSampleSize );
-				if ( m_Remap != null )
-					m_Remap( m_Samples, m_Context.Channels, m_Context.AudioCodingMode );
-
-				int nSize = m_EncodeFrame( ref m_Context, m_FrameBuffer, m_Samples, A52Sizes.SamplesPerFrame );
-				if ( nSize < 0 )
-					throw new InvalidOperationException( "Encoding error" );
-
+				int nSize = this.EncodeFrame( A52Sizes.SamplesPerFrame );
 				frames.Write( m_FrameBuffer, 0, nSize );
 				nSamplesDone += m_nTotalSamplesPerFrame - nOffset;
 				nOffset = 0;
@@ -378,13 +413,7 @@ namespace Aften
 			int nSize;
 			int nSamplesPerChannelCount = m_nRemainingSamplesCount / m_Context.Channels;
 			do {
-				if ( (nSamplesPerChannelCount > 0) && (m_Remap != null) )
-					m_Remap( m_Samples, m_Context.Channels, m_Context.AudioCodingMode );
-
-				nSize = m_EncodeFrame( ref m_Context, m_FrameBuffer, m_Samples, nSamplesPerChannelCount );
-				if ( nSize < 0 )
-					throw new InvalidOperationException( "Encoding error" );
-
+				nSize = this.EncodeFrame( nSamplesPerChannelCount );
 				frames.Write( m_FrameBuffer, 0, nSize );
 				nSamplesPerChannelCount = 0;
 			} while ( nSize > 0 );
@@ -438,6 +467,8 @@ namespace Aften
 			m_StreamBuffer = new byte[m_nTSampleSize];
 		}
 	}
+
+	#endregion
 
 	#region Specific FrameEncoder classes
 
