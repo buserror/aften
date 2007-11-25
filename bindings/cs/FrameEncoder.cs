@@ -253,7 +253,7 @@ namespace Aften
 		#region Encoding
 
 		/// <summary>
-		/// Encodes the ssamplesCount of the specified interleaved samples.
+		/// Encodes samplesCount of the specified interleaved samples.
 		/// </summary>
 		/// <param name="samples">The samples.</param>
 		/// <param name="samplesPerChannelCount">The samples per channel count.</param>
@@ -305,7 +305,7 @@ namespace Aften
 		}
 
 		/// <summary>
-		/// Encodes the ssamplesCount of the specified interleaved samples.
+		/// Encodes samplesCount of the specified interleaved samples.
 		/// </summary>
 		/// <param name="samples">The samples.</param>
 		/// <param name="samplesPerChannelCount">The samples per channel count.</param>
