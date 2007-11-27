@@ -251,6 +251,8 @@ namespace Aften
 		private EncodingContext m_Context;
 		private int m_nRemainingSamplesCount;
 		private int m_nFrameNumber;
+		private bool m_bFedSamples;
+		private bool m_bGotFrames;
 
 
 		internal delegate TSample ToTSampleDelegate( byte[] buffer, int startIndex );
@@ -281,13 +283,17 @@ namespace Aften
 		/// <returns></returns>
 		private int EncodeFrame( int samplesPerChannelCount )
 		{
-			if ( (m_Remap != null) && (samplesPerChannelCount > 0) )
-				m_Remap( m_Samples, m_Context.Channels, m_Context.AudioCodingMode );
+			if ( samplesPerChannelCount > 0 ) {
+				m_bFedSamples = true;
+				if ( (m_Remap != null) )
+					m_Remap( m_Samples, m_Context.Channels, m_Context.AudioCodingMode );
+			}
 
 			int nSize = m_EncodeFrame( ref m_Context, m_FrameBuffer, m_Samples, samplesPerChannelCount );
-			if ( nSize > 0 )
+			if ( nSize > 0 ) {
+				m_bGotFrames = true;
 				this.OnFrameEncoded( this, new FrameEventArgs( ++m_nFrameNumber, nSize, m_Context.Status ) );
-			else if ( nSize < 0 )
+			} else if ( nSize < 0 )
 				throw new InvalidOperationException( "Encoding error" );
 
 			return nSize;
@@ -416,7 +422,7 @@ namespace Aften
 				nSize = this.EncodeFrame( nSamplesPerChannelCount );
 				frames.Write( m_FrameBuffer, 0, nSize );
 				nSamplesPerChannelCount = 0;
-			} while ( nSize > 0 );
+			} while ( nSize > 0 || (m_bFedSamples && !m_bGotFrames) );
 		}
 
 		/// <summary>
