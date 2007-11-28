@@ -59,14 +59,12 @@ namespace AftenTest
 			context.AudioCodingMode = AudioCodingMode.Stereo;
 			context.HasLfe = false;
 			
+			using ( FileStream inputStream = new FileStream( args[0], FileMode.Open ) )
+			using ( FileStream outputStream = new FileStream( args[1], FileMode.Create ) )
 			using ( FrameEncoder encoder = new FrameEncoderInt16( ref context ) ) {
+				inputStream.Seek( 44, SeekOrigin.Begin ); // Skip WAVE header...
 				encoder.FrameEncoded += new EventHandler<FrameEventArgs>( encoder_FrameEncoded );
-	
-				using ( FileStream inputStream = new FileStream( args[0], FileMode.Open ) )
-				using ( FileStream outputStream = new FileStream( args[1], FileMode.Create ) ) {
-					inputStream.Seek( 44, SeekOrigin.Begin ); // Skip WAVE header...
-					encoder.EncodeAndFlush( inputStream, outputStream );
-				}
+				encoder.EncodeAndFlush( inputStream, outputStream );
 			}
 			Console.WriteLine( "Done" );
 			Console.ReadLine();
