@@ -182,11 +182,37 @@ namespace Aften
 		}
 
 		/// <summary>
-		/// Encodes the specified interleaved samples stream and flushes the encoder.
+		/// Encodes the specified interleaved samples stream.
 		/// </summary>
 		/// <param name="samples">The samples.</param>
 		/// <param name="frames">The frames.</param>
 		public abstract void Encode( Stream samples, Stream frames );
+
+		/// <summary>
+		/// Encodes the specified interleaved samples and flushes the encoder.
+		/// </summary>
+		/// <param name="samples">The samples.</param>
+		/// <returns>
+		/// MemoryStream containing the encoded frames
+		/// </returns>
+		public MemoryStream EncodeAndFlush( Stream samples )
+		{
+			MemoryStream stream = new MemoryStream();
+			this.EncodeAndFlush( samples, stream );
+
+			return stream;
+		}
+
+		/// <summary>
+		/// Encodes the specified interleaved samples stream and flushes the encoder.
+		/// </summary>
+		/// <param name="samples">The samples.</param>
+		/// <param name="frames">The frames.</param>
+		public void EncodeAndFlush( Stream samples, Stream frames )
+		{
+			this.Encode( samples, frames );
+			this.Flush( frames );
+		}
 
 		#endregion
 
@@ -404,8 +430,6 @@ namespace Aften
 
 			if ( nOffset > 0 )
 				this.Encode( m_StreamSamples, nOffset / m_Context.Channels, frames );
-
-			this.Flush( frames );
 		}
 
 		#endregion
