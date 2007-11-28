@@ -59,15 +59,15 @@ namespace AftenTest
 			context.AudioCodingMode = AudioCodingMode.Stereo;
 			context.HasLfe = false;
 			
-			FrameEncoder encoder = new FrameEncoderInt16( ref context );
-			encoder.FrameEncoded += new EventHandler<FrameEventArgs>( encoder_FrameEncoded );
-
-			using ( FileStream inputStream = new FileStream( args[0], FileMode.Open ) )
-			using ( FileStream outputStream = new FileStream( args[1], FileMode.Create ) ) {
-				inputStream.Seek( 44, SeekOrigin.Begin ); // Skip WAVE header...
-				encoder.EncodeAndFlush( inputStream, outputStream );
+			using ( FrameEncoder encoder = new FrameEncoderInt16( ref context ) ) {
+				encoder.FrameEncoded += new EventHandler<FrameEventArgs>( encoder_FrameEncoded );
+	
+				using ( FileStream inputStream = new FileStream( args[0], FileMode.Open ) )
+				using ( FileStream outputStream = new FileStream( args[1], FileMode.Create ) ) {
+					inputStream.Seek( 44, SeekOrigin.Begin ); // Skip WAVE header...
+					encoder.EncodeAndFlush( inputStream, outputStream );
+				}
 			}
-
 			Console.WriteLine( "Done" );
 			Console.ReadLine();
 			return 0;
