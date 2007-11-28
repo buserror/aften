@@ -19,6 +19,7 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace Aften
 {
@@ -36,6 +37,7 @@ namespace Aften
 
 		private readonly int m_nChannels;
 		private bool m_bDisposed;
+		private bool m_bEncodingDone;
 
 		[DllImport( "aften.dll" )]
 		private static extern void aften_set_defaults( ref EncodingContext context );
@@ -62,6 +64,16 @@ namespace Aften
 
 				m_bDisposed = true;
 			}
+		}
+
+		/// <summary>
+		/// Gets or sets a value indicating whether encoding is done.
+		/// </summary>
+		/// <value><c>true</c> if encoding is done; otherwise, <c>false</c>.</value>
+		protected bool EncodingDone
+		{
+			get { return m_bEncodingDone; }
+			set { m_bEncodingDone = value; }
 		}
 
 		/// <summary>
@@ -189,7 +201,7 @@ namespace Aften
 		public abstract void Encode( Stream samples, Stream frames );
 
 		/// <summary>
-		/// Encodes the specified interleaved samples and flushes the encoder.
+		/// Encodes the specified interleaved samples and flushes the encoder.  This instance needs to be disposed afterwards.
 		/// </summary>
 		/// <param name="samples">The samples.</param>
 		/// <returns>
@@ -204,20 +216,21 @@ namespace Aften
 		}
 
 		/// <summary>
-		/// Encodes the specified interleaved samples stream and flushes the encoder.
+		/// Encodes the specified interleaved samples stream and flushes the encoder.  This instance needs to be disposed afterwards.
 		/// </summary>
 		/// <param name="samples">The samples.</param>
 		/// <param name="frames">The frames.</param>
 		public void EncodeAndFlush( Stream samples, Stream frames )
 		{
 			this.Encode( samples, frames );
-			this.Flush( frames );
+			if ( !this.EncodingDone )
+				this.Flush( frames );
 		}
 
 		#endregion
 
 		/// <summary>
-		/// Flushes the encoder und returns the remaining frames.
+		/// Flushes the encoder und returns the remaining frames. This instance needs to be disposed afterwards.
 		/// </summary>
 		/// <returns>MemoryStream containing the encoded frames</returns>
 		public MemoryStream Flush()
@@ -229,10 +242,15 @@ namespace Aften
 		}
 
 		/// <summary>
-		/// Flushes the encoder und returns the remaining frames.
+		/// Flushes the encoder und returns the remaining frames.  This instance needs to be disposed afterwards.
 		/// </summary>
 		/// <param name="frames">The frames.</param>
 		public abstract void Flush( Stream frames );
+
+		/// <summary>
+		/// Aborts the encoding. This instance needs to be disposed afterwards.
+		/// </summary>
+		public abstract void Abort();
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="FrameEncoder"/> class.
@@ -279,6 +297,7 @@ namespace Aften
 		private int m_nFrameNumber;
 		private bool m_bFedSamples;
 		private bool m_bGotFrames;
+		private int m_bAbort;
 
 
 		internal delegate TSample ToTSampleDelegate( byte[] buffer, int startIndex );
@@ -290,6 +309,15 @@ namespace Aften
 		/// </summary>
 		public delegate void RemappingDelegate(
 			TSample[] samples, int channels, AudioCodingMode audioCodingMode );
+
+		/// <summary>
+		/// Checks the state of the encoding.
+		/// </summary>
+		private void CheckEncodingState()
+		{
+			if ( this.EncodingDone )
+				throw new InvalidOperationException( "Encoding was already completed. Dispose this object." );
+		}
 
 		/// <summary>
 		/// Closes the encoder.
@@ -385,6 +413,7 @@ namespace Aften
 		/// <param name="frames">The frames.</param>
 		public void Encode( TSample[] samples, int samplesPerChannelCount, Stream frames )
 		{
+			this.CheckEncodingState();
 			int nSamplesCount = samplesPerChannelCount * m_Context.Channels;
 			if ( nSamplesCount > samples.Length )
 				throw new InvalidOperationException( "samples contains less data then specified." );
@@ -393,6 +422,12 @@ namespace Aften
 			int nSamplesNeeded = m_nTotalSamplesPerFrame - nOffset;
 			int nSamplesDone = 0;
 			while ( nSamplesCount - nSamplesDone + nOffset >= m_nTotalSamplesPerFrame ) {
+				if ( Interlocked.Exchange( ref m_bAbort, 0 ) != 0 ) {
+					this.EncodingDone = true;
+
+					return;
+				}
+
 				Buffer.BlockCopy( samples, nSamplesDone * m_nTSampleSize, m_Samples, nOffset * m_nTSampleSize, nSamplesNeeded * m_nTSampleSize );
 				int nSize = this.EncodeFrame( A52Sizes.SamplesPerFrame );
 				frames.Write( m_FrameBuffer, 0, nSize );
@@ -412,6 +447,7 @@ namespace Aften
 		/// <param name="frames">The frames.</param>
 		public override void Encode( Stream samples, Stream frames )
 		{
+			this.CheckEncodingState();
 			if ( !samples.CanRead )
 				throw new InvalidOperationException( "Samples stream must be readable." );
 
@@ -423,6 +459,8 @@ namespace Aften
 				if ( nOffset == m_nTotalSamplesPerFrame ) {
 					this.Encode( m_StreamSamples, frames );
 					nOffset = 0;
+					if ( this.EncodingDone )
+						return;
 				}
 			}
 			if ( (nCurrentRead != 0) || (nOffset % m_Context.Channels != 0) )
@@ -435,11 +473,12 @@ namespace Aften
 		#endregion
 
 		/// <summary>
-		/// Flushes the encoder und returns the remaining frames.
+		/// Flushes the encoder und returns the remaining frames.  This instance needs to be disposed afterwards.
 		/// </summary>
 		/// <param name="frames">The frames.</param>
 		public override void Flush( Stream frames )
 		{
+			this.CheckEncodingState();
 			int nSize;
 			int nSamplesPerChannelCount = m_nRemainingSamplesCount / m_Context.Channels;
 			do {
@@ -447,6 +486,15 @@ namespace Aften
 				frames.Write( m_FrameBuffer, 0, nSize );
 				nSamplesPerChannelCount = 0;
 			} while ( nSize > 0 || (m_bFedSamples && !m_bGotFrames) );
+			this.EncodingDone = true;
+		}
+
+		/// <summary>
+		/// Aborts the encoding. This instance needs to be disposed afterwards.
+		/// </summary>
+		public override void Abort()
+		{
+			Interlocked.Exchange( ref m_bAbort, 1 );
 		}
 
 		/// <summary>
