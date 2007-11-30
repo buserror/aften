@@ -151,15 +151,20 @@ pcmfile_read_samples(PcmFile *pf, void *output, int num_samples)
             int32_t v;
             // last sample could cause invalid mem access for little endians
             // but instead of complex logic use simple solution...
-            for(i=0,j=0; i<(nsmp-1)*bps; i+=bps,j++) {
-                if(pf->order == PCM_NON_NATIVE_BYTE_ORDER) {
+            if(pf->order == PCM_NON_NATIVE_BYTE_ORDER) {
+                for(i=0,j=0; i<(nsmp-1)*bps; i+=bps,j++) {
                     v = read_buffer[i] | (read_buffer[i+1] << 8) | (read_buffer[i+2] << 16);
-                } else {
-                    v = *(int32_t*)(read_buffer + i);
+                    v <<= unused_bits; // clear unused high bits
+                    v >>= unused_bits; // sign extend
+                    input[j] = v;
                 }
-                v <<= unused_bits; // clear unused high bits
-                v >>= unused_bits; // sign extend
-                input[j] = v;
+            } else {
+                for(i=0,j=0; i<(nsmp-1)*bps; i+=bps,j++) {
+                    v = *(int32_t*)(read_buffer + i);
+                    v <<= unused_bits; // clear unused high bits
+                    v >>= unused_bits; // sign extend
+                    input[j] = v;
+                }
             }
             v = read_buffer[i] | (read_buffer[i+1] << 8) | (read_buffer[i+2] << 16);
             v <<= unused_bits; // clear unused high bits
