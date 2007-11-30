@@ -483,26 +483,6 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
                         fprintf(stderr, "invalid raw_fmt: %s\n", argv[i]);
                         return 1;
                     }
-                    /*
-                    if(!strncmp(argv[i], "u8", 3)) {
-                        opts->raw_fmt = PCM_SAMPLE_FMT_U8;
-                    } else if(!strncmp(argv[i], "s8", 3)) {
-                        opts->raw_fmt = PCM_SAMPLE_FMT_S8;
-                    } else if(!strncmp(argv[i], "s16_", 4)) {
-                        opts->raw_fmt = PCM_SAMPLE_FMT_S16;
-                    } else if(!strncmp(argv[i], "s20_", 4)) {
-                        opts->raw_fmt = PCM_SAMPLE_FMT_S20;
-                    } else if(!strncmp(argv[i], "s24_", 4)) {
-                        opts->raw_fmt = PCM_SAMPLE_FMT_S24;
-                    } else if(!strncmp(argv[i], "s32_", 4)) {
-                        opts->raw_fmt = PCM_SAMPLE_FMT_S32;
-                    } else if(!strncmp(argv[i], "float_", 6)) {
-                        opts->raw_fmt = PCM_SAMPLE_FMT_FLT;
-                    } else if(!strncmp(argv[i], "double_", 7)) {
-                        opts->raw_fmt = PCM_SAMPLE_FMT_DBL;
-                    } else {
-                        
-                    }*/
 
                     // parse byte order
                     opts->raw_order = PCM_BYTE_ORDER_LE;
