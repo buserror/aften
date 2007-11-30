@@ -18,7 +18,7 @@
  */
 
 /**
- * @file pcm.c
+ * @file pcmfile.c
  * raw PCM decoder
  */
 
@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "pcm.h"
+#include "pcmfile.h"
 
 int
 pcmfile_init(PcmFile *pf, FILE *fp, enum PcmSampleFormat read_format,

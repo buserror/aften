@@ -18,7 +18,7 @@
  */
 
 /**
- * @file pcm.c
+ * @file pcm_io.c
  * raw PCM file i/o
  */
 
@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "pcm.h"
+#include "pcmfile.h"
 
 int
 pcmfile_seek_set(PcmFile *pf, uint64_t dest)
