@@ -55,7 +55,11 @@ SHARED: Builds aften as a shared lib, as well. The API hasn't been set
 DOUBLE: Builds aften using double precision. Beware that you won't get
         SIMD code, as the SSE code hasn't been ported to SSE2, yet.
 BINDINGS_CXX: Builds C++ bindings for aften. Include aftenxx.h in your
-        C++ project and link to aftenxx.
+        C++ project and link to aftenxx. You will find aften related
+        classes in the namespace Aften.
+BINDINGS_CS: Builds C# bindings for aften. Include a reference to
+        AftenSharp.dll in your C# project. You will find aften related
+        classes in the namespace Aften.
 
 Some tips:
 
