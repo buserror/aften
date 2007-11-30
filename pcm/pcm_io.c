@@ -30,6 +30,12 @@
 
 #include "pcmfile.h"
 
+#ifdef WORDS_BIGENDIAN
+#define PCM_NON_NATIVE_BYTE_ORDER  PCM_BYTE_ORDER_LE
+#else
+#define PCM_NON_NATIVE_BYTE_ORDER  PCM_BYTE_ORDER_BE
+#endif
+
 int
 pcmfile_seek_set(PcmFile *pf, uint64_t dest)
 {
@@ -131,12 +137,7 @@ pcmfile_read_samples(PcmFile *pf, void *output, int num_samples)
     // byte orders.
     switch (bps) {
     case 2:
-#ifdef WORDS_BIGENDIAN
-        if(pf->order == PCM_BYTE_ORDER_LE)
-#else
-        if(pf->order == PCM_BYTE_ORDER_BE)
-#endif
-        {
+        if(pf->order == PCM_NON_NATIVE_BYTE_ORDER) {
             uint16_t *buf16 = (uint16_t *)buffer;
             for(i=0; i<nsmp; i++) {
                 buf16[i] = bswap_16(buf16[i]);
@@ -151,12 +152,7 @@ pcmfile_read_samples(PcmFile *pf, void *output, int num_samples)
             // last sample could cause invalid mem access for little endians
             // but instead of complex logic use simple solution...
             for(i=0,j=0; i<(nsmp-1)*bps; i+=bps,j++) {
-#ifdef WORDS_BIGENDIAN
-                if(pf->order == PCM_BYTE_ORDER_LE)
-#else
-                if(pf->order == PCM_BYTE_ORDER_BE)
-#endif
-                {
+				if(pf->order == PCM_NON_NATIVE_BYTE_ORDER) {
                     v = read_buffer[i] | (read_buffer[i+1] << 8) | (read_buffer[i+2] << 16);
                 } else {
                     v = *(int32_t*)(read_buffer + i);
@@ -172,12 +168,7 @@ pcmfile_read_samples(PcmFile *pf, void *output, int num_samples)
         }
         break;
     case 4:
-#ifdef WORDS_BIGENDIAN
-        if(pf->order == PCM_BYTE_ORDER_LE)
-#else
-        if(pf->order == PCM_BYTE_ORDER_BE)
-#endif
-        {
+		if(pf->order == PCM_NON_NATIVE_BYTE_ORDER) {
             uint32_t *buf32 = (uint32_t *)buffer;
             for(i=0; i<nsmp; i++) {
                 buf32[i] = bswap_32(buf32[i]);
@@ -185,12 +176,7 @@ pcmfile_read_samples(PcmFile *pf, void *output, int num_samples)
         }
         break;
     default:
-#ifdef WORDS_BIGENDIAN
-        if(pf->order == PCM_BYTE_ORDER_LE)
-#else
-        if(pf->order == PCM_BYTE_ORDER_BE)
-#endif
-        {
+		if(pf->order == PCM_NON_NATIVE_BYTE_ORDER) {
             uint64_t *buf64 = (uint64_t *)buffer;
             for(i=0; i<nsmp; i++) {
                 buf64[i] = bswap_64(buf64[i]);
