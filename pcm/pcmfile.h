@@ -39,6 +39,9 @@
 /* maximum single read size: 5 sec at 48kHz */
 #define PCM_MAX_READ 240000
 
+/* maximum number of supported channels */
+#define PCM_MAX_CHANNELS 6
+
 /* supported TWOCC WAVE formats */
 #define WAVE_FORMAT_PCM         0x0001
 #define WAVE_FORMAT_IEEEFLOAT   0x0003
