@@ -646,4 +646,41 @@ static const LongHelpSection long_help_sections[LONG_HELP_SECTIONS_COUNT] = {
         alt_options }
 };
 
+static void
+print_usage(FILE *out)
+{
+    fprintf(out, "%s", usage_heading);
+    fprintf(out, "type 'aften -h' for more details.\n\n");
+}
+
+static void
+print_long_help(FILE *out)
+{
+    int i, j;
+
+    fprintf(out, "%s", usage_heading);
+    fprintf(out, "options:\n\n");
+
+    for(i=0; i<LONG_HELP_SECTIONS_COUNT; i++) {
+        fprintf(out, "%s\n", long_help_sections[i].section_heading);
+        for(j=0; j<long_help_sections[i].section_count; j++) {
+            fprintf(out, "%s\n", long_help_sections[i].section_options[j]);
+        }
+    }
+}
+
+static void
+print_help(FILE *out)
+{
+    int i;
+
+    fprintf(out, "%s", usage_heading);
+    fprintf(out, "options:\n");
+
+    for(i=0; i<HELP_OPTIONS_COUNT; i++) {
+        fprintf(out, "%s", help_options[i]);
+    }
+    fprintf(out, "\n");
+}
+
 #endif /* HELPTEXT_H */

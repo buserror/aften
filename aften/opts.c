@@ -30,45 +30,7 @@
 #include <string.h>
 
 #include "opts.h"
-#include "helptext.h"
 #include "pcm.h"
-
-void
-print_usage(FILE *out)
-{
-    fprintf(out, "%s", usage_heading);
-    fprintf(out, "type 'aften -h' for more details.\n\n");
-}
-
-void
-print_long_help(FILE *out)
-{
-    int i, j;
-
-    fprintf(out, "%s", usage_heading);
-    fprintf(out, "options:\n\n");
-
-    for(i=0; i<LONG_HELP_SECTIONS_COUNT; i++) {
-        fprintf(out, "%s\n", long_help_sections[i].section_heading);
-        for(j=0; j<long_help_sections[i].section_count; j++) {
-            fprintf(out, "%s\n", long_help_sections[i].section_options[j]);
-        }
-    }
-}
-
-void
-print_help(FILE *out)
-{
-    int i;
-
-    fprintf(out, "%s", usage_heading);
-    fprintf(out, "options:\n");
-
-    for(i=0; i<HELP_OPTIONS_COUNT; i++) {
-        fprintf(out, "%s", help_options[i]);
-    }
-    fprintf(out, "\n");
-}
 
 static int
 deactivate_simd(char *simd, AftenSimdInstructions *wanted_simd_instructions)

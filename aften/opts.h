@@ -46,12 +46,6 @@ typedef struct {
     int raw_ch;
 } CommandOptions;
 
-extern void print_usage(FILE *out);
-
-extern void print_long_help(FILE *out);
-
-extern void print_help(FILE *out);
-
 extern int parse_commandline(int argc, char **argv, CommandOptions *opts);
 
 #endif /* OPTS_H */
