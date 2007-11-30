@@ -341,6 +341,6 @@ ENDIF(BINDINGS_CS)
 
 INSTALL(TARGETS ${INSTALL_TARGETS} aften_exe wavinfo wavrms wavfilter
         RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib)
+        LIBRARY DESTINATION lib${LIB_SUFFIX}
+        ARCHIVE DESTINATION lib${LIB_SUFFIX})
 INSTALL(FILES ${INSTALL_HEADERS} libaften/aften.h libaften/aften-types.h DESTINATION include/aften)
