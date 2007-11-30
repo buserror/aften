@@ -105,20 +105,88 @@ deactivate_simd(char *simd, AftenSimdInstructions *wanted_simd_instructions)
     return 0;
 }
 
+/**
+ * Channel bitmask values
+ * Note that the bitmask used here is not the same as the WAVE channel mask.
+ * They are arranged so that any valid channel combination will be in proper
+ * AC3 channel order.
+ */
+#define CHMASK_FL  0x1
+#define CHMASK_FC  0x2
+#define CHMASK_FR  0x4
+#define CHMASK_SL  0x8
+#define CHMASK_S   0x10
+#define CHMASK_SR  0x20
+#define CHMASK_M1  0x40
+#define CHMASK_M2  0x80
+#define CHMASK_LFE 0x100
+
+static int
+validate_input_files(char **infile, int input_mask, int *acmod, int *lfe) {
+    int i, j, l;
+
+    // check for valid configurations
+    l = !!(input_mask & CHMASK_LFE);
+    input_mask &= 0xFF;
+    switch(input_mask) {
+        case (CHMASK_M1 | CHMASK_M2):
+            *acmod = 0;
+            break;
+        case (CHMASK_FC):
+            *acmod = 1;
+            break;
+        case (CHMASK_FL | CHMASK_FR):
+            *acmod = 2;
+            break;
+        case (CHMASK_FL | CHMASK_FC | CHMASK_FR):
+            *acmod = 3;
+            break;
+        case (CHMASK_FL | CHMASK_FR | CHMASK_S):
+            *acmod = 4;
+            break;
+        case (CHMASK_FL | CHMASK_FC | CHMASK_FR | CHMASK_S):
+            *acmod = 5;
+            break;
+        case (CHMASK_FL | CHMASK_FR | CHMASK_SL | CHMASK_SR):
+            *acmod = 6;
+            break;
+        case (CHMASK_FL | CHMASK_FC | CHMASK_FR | CHMASK_SL | CHMASK_SR):
+            *acmod = 7;
+            break;
+        default:
+            return -1;
+    }
+    *lfe = l;
+
+    // shift used channels, filling NULL gaps in infile array
+    for(i=1; i<A52_NUM_SPEAKERS; i++) {
+        for(j=i; j > 0 && infile[j] != NULL && infile[j-1] == NULL; j--) {
+            infile[j-1] = infile[j];
+            infile[j] = NULL;
+        }
+    }
+
+    return 0;
+}
+
 int
 parse_commandline(int argc, char **argv, CommandOptions *opts)
 {
     int i;
-    int found_input = 0;
     int found_output = 0;
+    int single_input = 0;
+    int multi_input = 0;
+    int empty_params = 0;
+    int input_mask = 0;
 
     if(argc < 2) {
         return 1;
     }
 
     opts->chmap = 0;
-    opts->infile = argv[1];
-    opts->outfile = argv[2];
+    opts->num_input_files = 0;
+    memset(opts->infile, 0, A52_NUM_SPEAKERS * sizeof(char *));
+    opts->outfile = NULL;
     opts->pad_start = 1;
     opts->read_to_eof = 0;
     opts->raw_input = 0;
@@ -511,6 +579,34 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
                     if(!strncmp(&argv[i][3], "+LFE", 5) || !strncmp(&argv[i][3], "+lfe", 5)) {
                         opts->s->lfe = 1;
                     }
+                } else if(!strncmp(&argv[i][1], "ch_", 3)) {
+                    static const char chstrs[A52_NUM_SPEAKERS][4] = {
+                        "fl", "fc", "fr", "sl", "s", "sr", "m1", "m2", "lfe" };
+                    char *chstr = &argv[i][4];
+                    int n_chstr, mask_bit;
+
+                    if(single_input) {
+                        fprintf(stderr, "cannot mix single-input syntax and multi-input syntax\n");
+                        return 1;
+                    }
+                    i++;
+                    if(i >= argc) return 1;
+
+                    mask_bit = 1;
+                    for(n_chstr=0; n_chstr<A52_NUM_SPEAKERS; ++n_chstr) {
+                        if(!strncmp(chstr, chstrs[n_chstr], strlen(chstrs[n_chstr])+1)) {
+                            if(input_mask & mask_bit) {
+                                fprintf(stderr, "invalid input channel parameter\n");
+                                return 1;
+                            }
+                            input_mask |= mask_bit;
+                            opts->infile[n_chstr] = argv[i];
+                        }
+                        mask_bit += mask_bit;
+                    }
+
+                    multi_input = 1;
+                    opts->num_input_files++;
                 } else {
                     fprintf(stderr, "invalid option: %s\n", argv[i]);
                     return 1;
@@ -580,25 +676,74 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
                 }
             }
         } else {
-            if(!found_input) {
-                opts->infile = argv[i];
-                found_input = 1;
-            } else {
-                if(found_output) return 1;
+            // empty parameter can be single input file or output file
+            if(i >= argc) return 1;
+            empty_params++;
+            if(empty_params == 1) {
                 opts->outfile = argv[i];
                 found_output = 1;
+            } else if(empty_params == 2) {
+                if(multi_input) {
+                    fprintf(stderr, "cannot mix single-input syntax and multi-input syntax\n");
+                    return 1;
+                }
+                single_input = 1;
+                opts->infile[0] = opts->outfile;
+                opts->outfile = argv[i];
+                opts->num_input_files = 1;
+            } else {
+                fprintf(stderr, "too many empty parameters\n");
+                return 1;
             }
         }
     }
-    if(!found_input || !found_output) {
+
+    // check that proper input file syntax is used
+    if(!(single_input ^ multi_input)) {
+        fprintf(stderr, "cannot mix single-input syntax and multi-input syntax\n");
         return 1;
     }
-    // disallow infile & outfile with same name except with piping
-    if(strncmp(opts->infile, "-", 2) && strncmp(opts->outfile, "-", 2)) {
-        if(!strcmp(opts->infile, opts->outfile)) {
-            fprintf(stderr, "output filename cannot match input filename\n");
+
+    // check that the number of input files is valid
+    if(opts->num_input_files < 1 || opts->num_input_files > 6) {
+        fprintf(stderr, "invalid number of input channels. must be 1 to 6.\n");
+        return 1;
+    }
+
+    // check that an output file has been specified
+    if(!found_output) {
+        fprintf(stderr, "no output file specified.\n");
+        return 1;
+    }
+
+    // check the channel configuration
+    if(multi_input) {
+        if(validate_input_files(opts->infile, input_mask, &opts->s->acmod, &opts->s->lfe)) {
+            fprintf(stderr, "invalid input channel configuration\n");
             return 1;
         }
+        opts->chmap = 1;
     }
+
+    // disallow piped input with multiple files
+    if(opts->num_input_files > 1) {
+        for(i=0; i<opts->num_input_files; i++) {
+            if(!strncmp(opts->infile[i], "-", 2)) {
+                fprintf(stderr, "cannot use piped input with multiple files\n");
+                return 1;
+            }
+        }
+    }
+
+    // disallow infile & outfile with same name except with piping
+    for(i=0; i<opts->num_input_files; i++) {
+        if(strncmp(opts->infile[i], "-", 2) && strncmp(opts->outfile, "-", 2)) {
+            if(!strcmp(opts->infile[i], opts->outfile)) {
+                fprintf(stderr, "output filename cannot match any input filename\n");
+                return 1;
+            }
+        }
+    }
+
     return 0;
 }

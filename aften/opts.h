@@ -29,9 +29,12 @@
 
 #include "aften.h"
 
+#define A52_NUM_SPEAKERS 9
+
 typedef struct {
     int chmap;
-    char *infile;
+    int num_input_files;
+    char *infile[A52_NUM_SPEAKERS];
     char *outfile;
     AftenContext *s;
     int pad_start;

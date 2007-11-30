@@ -88,7 +88,7 @@ main(int argc, char **argv)
     uint8_t *frame = NULL;
     FLOAT *fwav = NULL;
     int nr, fs, err;
-    FILE *ifp = NULL;
+    FILE *ifp[A52_NUM_SPEAKERS];
     FILE *ofp = NULL;
     PcmContext pf;
     CommandOptions opts;
@@ -104,6 +104,7 @@ main(int argc, char **argv)
     clock_t current_clock;
     clock_t last_update_clock = clock() - update_clock_span;
     int ret_val = 0;
+    int i;
 
     opts.s = &s;
     aften_set_defaults(&s);
@@ -128,17 +129,20 @@ main(int argc, char **argv)
         print_intro(stderr);
     }
 
-    if(!strncmp(opts.infile, "-", 2)) {
+    memset(ifp, 0, A52_NUM_SPEAKERS * sizeof(FILE *));
+    for(i=0; i<opts.num_input_files; i++) {
+    if(!strncmp(opts.infile[i], "-", 2)) {
 #ifdef _WIN32
         _setmode(_fileno(stdin), _O_BINARY);
 #endif
-        ifp = stdin;
+        ifp[i] = stdin;
     } else {
-        ifp = fopen(opts.infile, "rb");
-        if(!ifp) {
-            fprintf(stderr, "error opening input file: %s\n", opts.infile);
+        ifp[i] = fopen(opts.infile[i], "rb");
+        if(!ifp[i]) {
+            fprintf(stderr, "error opening input file: %s\n", opts.infile[i]);
             goto error_end;
         }
+    }
     }
 
 #ifdef CONFIG_DOUBLE
@@ -151,8 +155,8 @@ main(int argc, char **argv)
     input_file_format = PCM_FORMAT_UNKNOWN;
     if(opts.raw_input)
         input_file_format = PCM_FORMAT_RAW;
-    if(pcm_init(&pf, 1, &ifp, read_format, input_file_format)) {
-        fprintf(stderr, "invalid input file: %s\n", opts.infile);
+    if(pcm_init(&pf, opts.num_input_files, ifp, read_format, input_file_format)) {
+        fprintf(stderr, "invalid input file(s)\n");
         goto error_end;
     }
     if(opts.read_to_eof)
@@ -165,6 +169,8 @@ main(int argc, char **argv)
     // print wav info to console
     if(s.verbose > 0) {
         fprintf(stderr, "input format: ");
+        if(opts.num_input_files > 1)
+            fprintf(stderr, "\n");
         pcm_print(&pf, stderr);
     }
 
@@ -367,9 +373,11 @@ end:
     if (frame)
         free(frame);
 
-    if (ifp) {
         pcm_close(&pf);
-        fclose(ifp);
+    for(i=0; i<opts.num_input_files; i++) {
+    if (ifp[i]) {
+        fclose(ifp[i]);
+    }
     }
     if (ofp)
         fclose(ofp);
