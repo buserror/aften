@@ -453,7 +453,7 @@ static const char *input_options[INPUT_OPTIONS_COUNT] = {
 "    [-ch_X file]   Add a mono file to the input list as the channel specified\n"
 "                       These parameters are used to specify multiple mono\n"
 "                       source files instead of a single multi-channel source\n"
-"                       file.  Only valid AC-3 combinations are allow.  The\n"
+"                       file.  Only valid AC-3 combinations are allowed.  The\n"
 "                       acmod, lfe, chconfig, and chmap parameters are all\n"
 "                       ignored if multi-mono inputs are used.\n"
 "                       ch_fl  = Front Left\n"
