@@ -27,7 +27,7 @@
 
 static const char *usage_heading = "usage: aften [options] <input.wav> <output.ac3>\n";
 
-#define HELP_OPTIONS_COUNT 42
+#define HELP_OPTIONS_COUNT 43
 
 static const char *help_options[HELP_OPTIONS_COUNT] = {
 "    [-h]           Print out list of commandline options\n",
@@ -130,6 +130,17 @@ static const char *help_options[HELP_OPTIONS_COUNT] = {
 "                       2/2 = (L,R,SL,SR)\n"
 "                       3/2 = (L,R,C,SL,SR)\n"
 "                       adding \"+LFE\" indicates use of the LFE channel\n",
+
+"    [-ch_X file]   Add a mono file to the input list as the channel specified\n"
+"                       ch_fl  = Front Left\n"
+"                       ch_fc  = Front Center\n"
+"                       ch_fr  = Front Right\n"
+"                       ch_sl  = Surround Left\n"
+"                       ch_s   = Surround\n"
+"                       ch_sr  = Surround Right\n"
+"                       ch_m1  = Dual Mono Channel 1\n"
+"                       ch_m2  = Dual Mono Channel 2\n"
+"                       ch_lfe = LFE\n",
 
 "    [-raw_fmt X]   Raw audio input sample format (default: s16_le)\n"
 "                       One of the pre-defined sample formats:\n"
@@ -400,7 +411,7 @@ static const char *drc_options[DRC_OPTIONS_COUNT] = {
 "                       -31dB.\n"
 };
 
-#define INPUT_OPTIONS_COUNT 9
+#define INPUT_OPTIONS_COUNT 10
 
 static const char input_heading[17] = "INPUT OPTIONS\n";
 static const char *input_options[INPUT_OPTIONS_COUNT] = {
@@ -438,6 +449,22 @@ static const char *input_options[INPUT_OPTIONS_COUNT] = {
 "                       2/2 = (L,R,SL,SR)\n"
 "                       3/2 = (L,R,C,SL,SR)\n"
 "                       adding \"+LFE\" indicates use of the LFE channel\n",
+
+"    [-ch_X file]   Add a mono file to the input list as the channel specified\n"
+"                       These parameters are used to specify multiple mono\n"
+"                       source files instead of a single multi-channel source\n"
+"                       file.  Only valid AC-3 combinations are allow.  The\n"
+"                       acmod, lfe, chconfig, and chmap parameters are all\n"
+"                       ignored if multi-mono inputs are used.\n"
+"                       ch_fl  = Front Left\n"
+"                       ch_fc  = Front Center\n"
+"                       ch_fr  = Front Right\n"
+"                       ch_sl  = Surround Left\n"
+"                       ch_s   = Surround\n"
+"                       ch_sr  = Surround Right\n"
+"                       ch_m1  = Dual Mono Channel 1\n"
+"                       ch_m2  = Dual Mono Channel 2\n"
+"                       ch_lfe = LFE\n",
 
 "    [-raw_fmt X]   Raw audio input sample format (default: s16_le)\n"
 "                       This options specifies the sample format when using\n"
