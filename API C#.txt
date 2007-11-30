@@ -29,8 +29,7 @@ otherwise the finalizer would be called sometime in the future which you don't r
 To get some status back while encoding you can subscribe to the FrameEncoded event.
 
 Remember that the C# bindings are still incomplete and will evolve with time, but I'll
-be happy to receive some feedback. Unfortunately current MONO 1.2.5 is buggy and crashes
-when I try to use the bindings, so for the time being you are limited to using MS .NET.
+be happy to receive some feedback.
 
 
 The example program:
