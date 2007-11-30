@@ -152,7 +152,7 @@ pcmfile_read_samples(PcmFile *pf, void *output, int num_samples)
             // last sample could cause invalid mem access for little endians
             // but instead of complex logic use simple solution...
             for(i=0,j=0; i<(nsmp-1)*bps; i+=bps,j++) {
-				if(pf->order == PCM_NON_NATIVE_BYTE_ORDER) {
+                if(pf->order == PCM_NON_NATIVE_BYTE_ORDER) {
                     v = read_buffer[i] | (read_buffer[i+1] << 8) | (read_buffer[i+2] << 16);
                 } else {
                     v = *(int32_t*)(read_buffer + i);
@@ -168,7 +168,7 @@ pcmfile_read_samples(PcmFile *pf, void *output, int num_samples)
         }
         break;
     case 4:
-		if(pf->order == PCM_NON_NATIVE_BYTE_ORDER) {
+        if(pf->order == PCM_NON_NATIVE_BYTE_ORDER) {
             uint32_t *buf32 = (uint32_t *)buffer;
             for(i=0; i<nsmp; i++) {
                 buf32[i] = bswap_32(buf32[i]);
@@ -176,7 +176,7 @@ pcmfile_read_samples(PcmFile *pf, void *output, int num_samples)
         }
         break;
     default:
-		if(pf->order == PCM_NON_NATIVE_BYTE_ORDER) {
+        if(pf->order == PCM_NON_NATIVE_BYTE_ORDER) {
             uint64_t *buf64 = (uint64_t *)buffer;
             for(i=0; i<nsmp; i++) {
                 buf64[i] = bswap_64(buf64[i]);
