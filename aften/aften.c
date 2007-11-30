@@ -35,7 +35,7 @@
 #endif
 
 #include "aften.h"
-#include "pcmfile.h"
+#include "pcm.h"
 #include "opts.h"
 
 static const int acmod_to_ch[8] = { 2, 1, 2, 3, 3, 4, 4, 5 };
@@ -90,7 +90,7 @@ main(int argc, char **argv)
     int nr, fs, err;
     FILE *ifp = NULL;
     FILE *ofp = NULL;
-    PcmFile pf;
+    PcmContext pf;
     CommandOptions opts;
     AftenContext s;
     uint32_t samplecount, bytecount, t0, t1, percent;
@@ -151,21 +151,21 @@ main(int argc, char **argv)
     input_file_format = PCM_FORMAT_UNKNOWN;
     if(opts.raw_input)
         input_file_format = PCM_FORMAT_RAW;
-    if(pcmfile_init(&pf, ifp, read_format, input_file_format)) {
+    if(pcm_init(&pf, 1, &ifp, read_format, input_file_format)) {
         fprintf(stderr, "invalid input file: %s\n", opts.infile);
         goto error_end;
     }
     if(opts.read_to_eof)
-        pf.read_to_eof = 1;
+        pcm_set_read_to_eof(&pf, 1);
     if(opts.raw_input) {
-        pcmfile_set_source_params(&pf, opts.raw_ch, opts.raw_fmt,
+        pcm_set_source_params(&pf, opts.raw_ch, opts.raw_fmt,
                                   opts.raw_order, opts.raw_sr);
     }
 
     // print wav info to console
     if(s.verbose > 0) {
         fprintf(stderr, "input format: ");
-        pcmfile_print(&pf, stderr);
+        pcm_print(&pf, stderr);
     }
 
     // if acmod is given on commandline, determine lfe from number of channels
@@ -267,7 +267,7 @@ main(int argc, char **argv)
     // Don't pad start with zero samples, use input audio instead.
     if(!opts.pad_start) {
         int diff;
-        nr = pcmfile_read_samples(&pf, fwav, 256);
+        nr = pcm_read_samples(&pf, fwav, 256);
         diff = 256 - nr;
         if (diff > 0) {
             memmove(fwav + diff * s.channels, fwav, nr);
@@ -290,7 +290,7 @@ main(int argc, char **argv)
     fprintf(stderr, "Threads: %i\n\n", s.system.n_threads);
 
     do {
-        nr = pcmfile_read_samples(&pf, fwav, A52_SAMPLES_PER_FRAME);
+        nr = pcm_read_samples(&pf, fwav, A52_SAMPLES_PER_FRAME);
         if(aften_remap)
             aften_remap(fwav, nr, s.channels, s.sample_format, s.acmod);
 
@@ -368,7 +368,7 @@ end:
         free(frame);
 
     if (ifp) {
-        pcmfile_close(&pf);
+        pcm_close(&pf);
         fclose(ifp);
     }
     if (ofp)
