@@ -28,6 +28,9 @@ otherwise the finalizer would be called sometime in the future which you don't r
 
 To get some status back while encoding you can subscribe to the FrameEncoded event.
 
+You can abort an encode with the Abort function (from another thread), though you'll have
+to dispose the instance afterwards.
+
 Remember that the C# bindings are still incomplete and will evolve with time, but I'll
 be happy to receive some feedback.
 
