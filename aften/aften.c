@@ -96,7 +96,6 @@ main(int argc, char **argv)
     AftenContext s;
     uint32_t samplecount, bytecount, t0, t1, percent;
     FLOAT kbps, qual, bw;
-    int last_frame;
     int frame_cnt;
     int input_file_format;
     enum PcmSampleFormat read_format;
@@ -261,7 +260,6 @@ main(int argc, char **argv)
 
     samplecount = bytecount = t0 = t1 = percent = 0;
     qual = bw = 0.0;
-    last_frame = 0;
     frame_cnt = 0;
     fs = 0;
     nr = 0;
@@ -346,7 +344,6 @@ main(int argc, char **argv)
                 fwrite(frame, 1, fs, ofp);
                 frame_cnt++;
             }
-            last_frame = nr;
         }
     } while(nr > 0 || fs > 0 || !frame_cnt);
 
