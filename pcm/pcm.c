@@ -164,7 +164,7 @@ static const uint8_t sample_sizes[8] = { 1, 1, 2, 4, 4, 4, 4, 8 };
 { \
     DATA_TYPE *input = (DATA_TYPE *)buf; \
     DATA_TYPE *output = buffer; \
-    int i, j, k; \
+    int j, k; \
 \
     for(i=0,k=0; i<samples_read; i++) { \
         for(j=0; j<pc->num_files; j++,k++) { \
