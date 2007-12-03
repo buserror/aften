@@ -311,7 +311,6 @@ main(int argc, char **argv)
                     bytecount += fs;
                     qual += s.status.quality;
                     bw += s.status.bwcode;
-                }
                 current_clock = clock();
                 /* make sure we write out when finished, i.e. when fs == 0 */
                 if (current_clock - last_update_clock >= update_clock_span || !fs || s.verbose == 2) {
@@ -338,6 +337,7 @@ main(int argc, char **argv)
                                 s.status.bit_rate);
                     }
                     last_update_clock = current_clock;
+                }
                 }
             }
             if (fs) {
