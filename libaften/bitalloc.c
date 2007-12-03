@@ -336,6 +336,7 @@ a52_bit_allocation_prepare(A52BitAllocParams *s,
         mask[bnd] = MAX(excite[bnd], hth[bnd >> s->halfratecod][s->fscod]);
     }
 
+#if 0
     // delta bit allocation
     if(deltbae == 0 || deltbae == 1) {
         int seg, delta;
@@ -353,6 +354,7 @@ a52_bit_allocation_prepare(A52BitAllocParams *s,
             }
         }
     }
+#endif
 }
 
 /**
