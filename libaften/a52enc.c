@@ -608,7 +608,6 @@ frame_init(A52ThreadContext *tctx)
     frame->sgaincod = 1;
     frame->dbkneecod = 2;
     frame->floorcod = 7;
-    frame->fgaincod = 4;
 
     return 0;
 }
@@ -881,12 +880,12 @@ output_audio_blocks(A52ThreadContext *tctx)
         }
 
         // snr offset
-        bitwriter_writebits(bw, 1, baie);
-        if(baie) {
+        bitwriter_writebits(bw, 1, block->write_snr);
+        if(block->write_snr) {
             bitwriter_writebits(bw, 6, frame->csnroffst);
             for(ch=0; ch<ctx->n_all_channels; ch++) {
                 bitwriter_writebits(bw, 4, frame->fsnroffst);
-                bitwriter_writebits(bw, 3, frame->fgaincod);
+                bitwriter_writebits(bw, 3, block->fgaincod[ch]);
             }
         }
 

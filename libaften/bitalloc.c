@@ -256,7 +256,7 @@ psd_combine(int16_t *psd, int bins)
 static void
 a52_bit_allocation_prepare(A52BitAllocParams *s,
                    uint8_t *exp, int16_t *psd, int16_t *mask,
-                   int start, int end)
+                   int fgain, int start, int end)
 //                 int deltbae,int deltnseg, uint8_t *deltoffst,
 //                 uint8_t *deltlen, uint8_t *deltba)
 {
@@ -285,15 +285,15 @@ a52_bit_allocation_prepare(A52BitAllocParams *s,
         // fbw and lfe channels
         lowcomp = 0;
         lowcomp = calc_lowcomp(lowcomp, bndpsd[0], bndpsd[1], 0);
-        excite[0] = bndpsd[0] - s->fgain - lowcomp;
+        excite[0] = bndpsd[0] - fgain - lowcomp;
         lowcomp = calc_lowcomp(lowcomp, bndpsd[1], bndpsd[2], 1);
-        excite[1] = bndpsd[1] - s->fgain - lowcomp;
+        excite[1] = bndpsd[1] - fgain - lowcomp;
         begin = 7;
         for(bnd=2; bnd<7; bnd++) {
             if(bnd+1 < bndend) {
                 lowcomp = calc_lowcomp(lowcomp, bndpsd[bnd], bndpsd[bnd+1], bnd);
             }
-            fastleak = bndpsd[bnd] - s->fgain;
+            fastleak = bndpsd[bnd] - fgain;
             slowleak = bndpsd[bnd] - s->sgain;
             excite[bnd] = fastleak - lowcomp;
             if(bnd+1 < bndend) {
@@ -310,7 +310,7 @@ a52_bit_allocation_prepare(A52BitAllocParams *s,
             if(bnd+1 < bndend) {
                 lowcomp = calc_lowcomp(lowcomp, bndpsd[bnd], bndpsd[bnd+1], bnd);
             }
-            fastleak = MAX(fastleak-s->fdecay, bndpsd[bnd]-s->fgain);
+            fastleak = MAX(fastleak-s->fdecay, bndpsd[bnd]-fgain);
             slowleak = MAX(slowleak-s->sdecay, bndpsd[bnd]-s->sgain);
             excite[bnd] = MAX(slowleak, fastleak-lowcomp);
         }
@@ -323,7 +323,7 @@ a52_bit_allocation_prepare(A52BitAllocParams *s,
     }
 
     for(bnd=begin; bnd<bndend; bnd++) {
-        fastleak = MAX(fastleak-s->fdecay, bndpsd[bnd]-s->fgain);
+        fastleak = MAX(fastleak-s->fdecay, bndpsd[bnd]-fgain);
         slowleak = MAX(slowleak-s->sdecay, bndpsd[bnd]-s->sgain);
         excite[bnd] = MAX(slowleak, fastleak);
     }
@@ -457,6 +457,7 @@ bit_alloc_prepare(A52ThreadContext *tctx)
             if(block->exp_strategy[ch] != EXP_REUSE) {
                 a52_bit_allocation_prepare(&frame->bit_alloc,
                                block->exp[ch], block->psd[ch], block->mask[ch],
+                               frame->bit_alloc.fgain[blk][ch],
                                0, frame->ncoefs[ch]);
 //                             2, 0, NULL, NULL, NULL);
             }
@@ -552,15 +553,15 @@ count_frame_bits(A52ThreadContext *tctx)
         }
         frame_bits++; // baie
         frame_bits++; // snr
+        // csnroffset[6] + nch * (fsnoffset[4] + fgaincod[3])
+        if(block->write_snr)
+            frame_bits += 6 + ctx->n_all_channels * (4 + 3); 
         frame_bits += 2; // delta / skip
     }
     frame_bits++; // cplinu for block 0
 
-    // bit alloc info for block 0
     // sdcycod[2], fdcycod[2], sgaincod[2], dbpbcod[2], floorcod[3]
-    // csnroffset[6]
-    // nch * (fsnoffset[4] + fgaincod[3])
-    frame_bits += 2 + 2 + 2 + 2 + 3 + 6 + ctx->n_all_channels * (4 + 3);
+    frame_bits += 2 + 2 + 2 + 2 + 3;
 
     // auxdatae, crcrsv
     frame_bits += 2;
@@ -735,16 +736,32 @@ start_bit_allocation(A52ThreadContext *tctx)
 {
     A52Context *ctx = tctx->ctx;
     A52Frame *frame = &tctx->frame;
+    A52Block *block;
+    int blk, ch;
 
     // read bit allocation table values
     frame->bit_alloc.fscod = ctx->fscod;
     frame->bit_alloc.halfratecod = ctx->halfratecod;
     frame->bit_alloc.sdecay = sdecaytab[frame->sdecaycod] >> ctx->halfratecod;
     frame->bit_alloc.fdecay = fdecaytab[frame->fdecaycod] >> ctx->halfratecod;
-    frame->bit_alloc.fgain = fgaintab[frame->fgaincod];
     frame->bit_alloc.sgain = sgaintab[frame->sgaincod];
     frame->bit_alloc.dbknee = dbkneetab[frame->dbkneecod];
     frame->bit_alloc.floor = floortab[frame->floorcod];
+
+    // set fast gain based on exponent strategy
+    for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+        block = &frame->blocks[blk];
+        block->write_snr = 0;
+        for(ch=0; ch<ctx->n_all_channels; ch++) {
+            if(block->exp_strategy[ch] != EXP_REUSE) {
+                block->fgaincod[ch] = 4 - block->exp_strategy[ch];
+                block->write_snr |= (block->fgaincod[ch] != frame->blocks[blk-1].fgaincod[ch]);
+            } else {
+                block->fgaincod[ch] = frame->blocks[blk-1].fgaincod[ch];
+            }
+            frame->bit_alloc.fgain[blk][ch] = fgaintab[block->fgaincod[ch]];
+        }
+    }
 
     count_frame_bits(tctx);
 }
