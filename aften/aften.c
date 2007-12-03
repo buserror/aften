@@ -358,10 +358,10 @@ main(int argc, char **argv)
             fprintf(stderr, "\rprogress: 100%% | q: %4.1f | bw: %2.1f | bitrate: %4.1f kbps\n\n",
                     (qual / frame_cnt), (bw / frame_cnt), kbps);
         } else if(s.verbose == 2) {
-        fprintf(stderr, "\n");
-        fprintf(stderr, "average quality:   %4.1f\n", (qual / frame_cnt));
-        fprintf(stderr, "average bandwidth: %2.1f\n", (bw / frame_cnt));
-        fprintf(stderr, "average bitrate:   %4.1f kbps\n\n", kbps);
+            fprintf(stderr, "\n");
+            fprintf(stderr, "average quality:   %4.1f\n", (qual / frame_cnt));
+            fprintf(stderr, "average bandwidth: %2.1f\n", (bw / frame_cnt));
+            fprintf(stderr, "average bitrate:   %4.1f kbps\n\n", kbps);
         }
     }
     goto end;
