@@ -347,19 +347,22 @@ main(int argc, char **argv)
         }
     } while(nr > 0 || fs > 0 || !frame_cnt);
 
-    if(s.verbose == 1) {
-        fprintf(stderr, "\n\n");
-    } else if(s.verbose == 2) {
+    if(s.verbose >= 1) {
         if(samplecount > 0) {
             kbps = (bytecount * FCONST(8.0) * pf.sample_rate) / (FCONST(1000.0) * samplecount);
         } else {
             kbps = 0;
         }
         frame_cnt = MAX(frame_cnt, 1);
+        if(s.verbose == 1) {
+            fprintf(stderr, "\rprogress: 100%% | q: %4.1f | bw: %2.1f | bitrate: %4.1f kbps\n\n",
+                    (qual / frame_cnt), (bw / frame_cnt), kbps);
+        } else if(s.verbose == 2) {
         fprintf(stderr, "\n");
         fprintf(stderr, "average quality:   %4.1f\n", (qual / frame_cnt));
         fprintf(stderr, "average bandwidth: %2.1f\n", (bw / frame_cnt));
         fprintf(stderr, "average bitrate:   %4.1f kbps\n\n", kbps);
+        }
     }
     goto end;
 error_end:
