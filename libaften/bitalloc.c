@@ -256,9 +256,9 @@ psd_combine(int16_t *psd, int bins)
 static void
 a52_bit_allocation_prepare(A52BitAllocParams *s,
                    uint8_t *exp, int16_t *psd, int16_t *mask,
-                   int start, int end,
-                   int deltbae,int deltnseg, uint8_t *deltoffst,
-                   uint8_t *deltlen, uint8_t *deltba)
+                   int start, int end)
+//                 int deltbae,int deltnseg, uint8_t *deltoffst,
+//                 uint8_t *deltlen, uint8_t *deltba)
 {
     int bnd, i, end1, bndstrt, bndend, lowcomp, begin;
     int fastleak, slowleak;
@@ -457,8 +457,8 @@ bit_alloc_prepare(A52ThreadContext *tctx)
             if(block->exp_strategy[ch] != EXP_REUSE) {
                 a52_bit_allocation_prepare(&frame->bit_alloc,
                                block->exp[ch], block->psd[ch], block->mask[ch],
-                               0, frame->ncoefs[ch],
-                               2, 0, NULL, NULL, NULL);
+                               0, frame->ncoefs[ch]);
+//                             2, 0, NULL, NULL, NULL);
             }
         }
     }
