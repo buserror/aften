@@ -691,21 +691,11 @@ vbr_bit_allocation(A52ThreadContext *tctx)
     A52Frame *frame = &tctx->frame;
     int i;
     int frame_size;
-    int quality, snroffst, csnroffst, fsnroffst;
+    int quality;
     int frame_bits, current_bits;
 
     current_bits = frame->frame_bits + frame->exp_bits;
-
-    // convert quality in range 0 to 1023 to csnroffst & fsnroffst
-    // csnroffst has range 0 to 63, fsnroffst has range 0 to 15
     quality = ctx->params.quality;
-    snroffst = (quality - 240);
-    csnroffst = (snroffst / 16) + 15;
-    fsnroffst = (snroffst % 16);
-    while(fsnroffst < 0) {
-        csnroffst--;
-        fsnroffst += 16;
-    }
 
     bit_alloc_prepare(tctx);
     // find an A52 frame size that can hold the data.

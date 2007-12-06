@@ -49,7 +49,7 @@
 #define EXP_D45   3
 
 #define SNROFFST(csnr, fsnr) (((((csnr)-15) << 4) + (fsnr)) << 2)
-#define QUALITY(csnr, fsnr) ((SNROFFST(csnr, fsnr)+960)/4)
+#define QUALITY(csnr, fsnr) (((csnr) << 4) | (fsnr))
 
 /* possible frequencies */
 extern const uint16_t a52_freqs[3];
