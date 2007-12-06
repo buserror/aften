@@ -111,6 +111,12 @@ typedef unsigned __int64 uint64_t;
 #define CDECL
 #endif
 
+#if __GNUC__
+#define UNUSED(x) x __attribute__((unused))
+#else
+#define UNUSED(x) x
+#endif
+
 #ifdef CONFIG_DOUBLE
 typedef double FLOAT;
 #define FCONST(X) (X)

@@ -28,15 +28,91 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stddef.h>
 
 #include "opts.h"
 #include "pcm.h"
 
+typedef struct PrivateOptions {
+    int found_output;
+    int single_input;
+    int multi_input;
+    int empty_params;
+    int input_mask;
+    int arg_index;
+} PrivateOptions;
+
+#define OPTION_FLAGS_NONE           0x0
+#define OPTION_FLAG_NO_PARAM        0x1
+#define OPTION_FLAG_MATCH_PARTIAL   0x2
+
+struct OptionItem;
+
+#define PARSE_PARAMS UNUSED(char *arg), UNUSED(char *param), \
+                     UNUSED(const struct OptionItem *item), \
+                     UNUSED(CommandOptions *opts), UNUSED(PrivateOptions *priv)
+
+typedef struct OptionItem {
+    const char *option_str;
+    int flags;
+    int min;
+    int max;
+    int (*parse)(PARSE_PARAMS);
+    int offset;
+} OptionItem;
+
+static inline int
+parse_integer_value(int val, int min, int max, char *name, int *out)
+{
+    if(val < min || val > max) {
+        fprintf(stderr, "invalid parameter -%s %d. must be %d to %d.\n", name,
+                val, min, max);
+        return 1;
+    }
+    *out = val;
+    return 0;
+}
+
 static int
-deactivate_simd(char *simd, AftenSimdInstructions *wanted_simd_instructions)
+parse_simple_int_s(PARSE_PARAMS)
+{
+    return parse_integer_value(atoi(param), item->min, item->max, arg,
+                               (int *)(((uint8_t *)opts->s) + item->offset));
+}
+
+static int
+parse_simple_int_o(PARSE_PARAMS)
+{
+    return parse_integer_value(atoi(param), item->min, item->max, arg,
+                               (int *)(((uint8_t *)opts) + item->offset));
+}
+
+static int
+parse_h(PARSE_PARAMS)
+{
+    return 2;
+}
+
+static int
+parse_longhelp(PARSE_PARAMS)
+{
+    return 3;
+}
+
+static int
+parse_version(PARSE_PARAMS)
+{
+    return 4;
+}
+
+static int
+parse_nosimd(PARSE_PARAMS)
 {
     int i, j;
     int last = 0;
+    char *simd = param;
+    AftenSimdInstructions *wanted_simd_instructions =
+        &opts->s->system.wanted_simd_instructions;
 
     for (i=0; simd[i]; i=j+1) {
         for (j=i; simd[j]!=','; ++j) {
@@ -63,6 +139,36 @@ deactivate_simd(char *simd, AftenSimdInstructions *wanted_simd_instructions)
         }
         if (last)
             break;
+    }
+    return 0;
+}
+
+static int
+parse_q(PARSE_PARAMS)
+{
+    opts->s->params.encoding_mode = AFTEN_ENC_MODE_VBR;
+    return parse_integer_value(atoi(param), item->min, item->max, arg,
+                               &opts->s->params.quality);
+}
+
+static int
+parse_chconfig(PARSE_PARAMS)
+{
+    if(!strncmp(param, "1+1", 4)) {
+        opts->s->acmod = 0;
+    } else if(strlen(param) >= 3 && param[1] == '/') {
+        int front_ch = param[0] - '0';
+        int rear_ch = param[2] - '0';
+        if (front_ch > 3 || front_ch < 1 || rear_ch < 0 || rear_ch > 2 || (front_ch < 2 && rear_ch != 0))
+            goto invalid_config;
+        opts->s->acmod = front_ch + 2 * rear_ch;
+    } else {
+    invalid_config:
+        fprintf(stderr, "invalid chconfig: %s\n", param);
+        return 1;
+    }
+    if(!strncmp(&param[3], "+LFE", 5) || !strncmp(&param[3], "+lfe", 5)) {
+        opts->s->lfe = 1;
     }
     return 0;
 }
@@ -131,20 +237,158 @@ validate_input_files(char **infile, int input_mask, int *acmod, int *lfe) {
     return 0;
 }
 
+static int
+parse_ch(PARSE_PARAMS)
+{
+    static const char chstrs[A52_NUM_SPEAKERS][4] = {
+        "fl", "fc", "fr", "sl", "s", "sr", "m1", "m2", "lfe" };
+    char *chstr = &arg[3];
+    int n_chstr, mask_bit;
+
+    if(priv->single_input) {
+        fprintf(stderr, "cannot mix single-input syntax and multi-input syntax\n");
+        return 1;
+    }
+
+    mask_bit = 1;
+    for(n_chstr=0; n_chstr<A52_NUM_SPEAKERS; ++n_chstr) {
+        if(!strncmp(chstr, chstrs[n_chstr], strlen(chstrs[n_chstr])+1)) {
+            if(priv->input_mask & mask_bit) {
+                fprintf(stderr, "invalid input channel parameter\n");
+                return 1;
+            }
+            priv->input_mask |= mask_bit;
+            opts->infile[n_chstr] = param;
+        }
+        mask_bit += mask_bit;
+    }
+
+    priv->multi_input = 1;
+    opts->num_input_files++;
+    return 0;
+}
+
+static int
+parse_raw_fmt(PARSE_PARAMS)
+{
+    static const char *raw_fmt_strs[8] = {
+        "u8", "s8", "s16_", "s20_", "s24_", "s32_", "float_",
+        "double_"
+    };
+    int j;
+
+    // parse format
+    for(j=0; j<8; j++) {
+        if(!strncmp(param, raw_fmt_strs[j], strlen(raw_fmt_strs[j]))) {
+            opts->raw_fmt = j;
+            break;
+        }
+    }
+    if(j >= 8) {
+        fprintf(stderr, "invalid raw_fmt: %s\n", param);
+        return 1;
+    }
+
+    // parse byte order
+    opts->raw_order = PCM_BYTE_ORDER_LE;
+    if(strncmp(param, "u8", 3) && strncmp(param, "s8", 3)) {
+        if(!strncmp(&param[4], "be", 3)) {
+            opts->raw_order = PCM_BYTE_ORDER_BE;
+        } else if(strncmp(&param[4], "le", 3)) {
+            fprintf(stderr, "invalid raw_fmt: %s\n", param);
+            return 1;
+        }
+    }
+
+    opts->raw_input = 1;
+    return 0;
+}
+
+static int
+parse_raw_option(PARSE_PARAMS)
+{
+    opts->raw_input = 1;
+    return parse_simple_int_o(arg, param, item, opts, priv);
+}
+
+static int
+parse_xbsi1_opt(PARSE_PARAMS)
+{
+    opts->s->meta.xbsi1e = 1;
+    return parse_simple_int_s(arg, param, item, opts, priv);
+}
+
+static int
+parse_xbsi2_opt(PARSE_PARAMS)
+{
+    opts->s->meta.xbsi2e = 1;
+    return parse_simple_int_s(arg, param, item, opts, priv);
+}
+
+#define OPTION_ITEM_COUNT 43
+
+/**
+ * list of commandline options, in alphabetical order.
+ */
+static const OptionItem options_list[OPTION_ITEM_COUNT] = {
+//     NAME         FLAGS                         MIN             MAX   PARSE FUNCTION      OFFSET
+//    ------       -------                       -----           ----- ----------------    --------
+    { "acmod",      OPTION_FLAGS_NONE,              0,              7,  parse_simple_int_s, offsetof(AftenContext, acmod)                       },
+    { "adconvtyp",  OPTION_FLAGS_NONE,              0,              1,  parse_simple_int_s, offsetof(AftenContext, meta.adconvtyp)              },
+    { "b",          OPTION_FLAGS_NONE,              0,            640,  parse_simple_int_s, offsetof(AftenContext, params.bitrate)              },
+    { "bwfilter",   OPTION_FLAGS_NONE,              0,              1,  parse_simple_int_s, offsetof(AftenContext, params.use_bw_filter)        },
+    { "ch_",        OPTION_FLAG_MATCH_PARTIAL,      0,              0,  parse_ch,           0                                                   },
+    { "chconfig",   OPTION_FLAGS_NONE,              0,              0,  parse_chconfig,     0                                                   },
+    { "chmap",      OPTION_FLAGS_NONE,              0,              2,  parse_simple_int_o, offsetof(CommandOptions, chmap)                     },
+    { "cmix",       OPTION_FLAGS_NONE,              0,              2,  parse_simple_int_s, offsetof(AftenContext, meta.cmixlev)                },
+    { "dcfilter",   OPTION_FLAGS_NONE,              0,              1,  parse_simple_int_s, offsetof(AftenContext, params.use_dc_filter)        },
+    { "dheadphon",  OPTION_FLAGS_NONE,              0,              2,  parse_xbsi2_opt,    offsetof(AftenContext, meta.dheadphonmod)           },
+    { "dmixmod",    OPTION_FLAGS_NONE,              0,              2,  parse_xbsi1_opt,    offsetof(AftenContext, meta.dmixmod)                },
+    { "dnorm",      OPTION_FLAGS_NONE,              0,             31,  parse_simple_int_s, offsetof(AftenContext, meta.dialnorm)               },
+    { "dsur",       OPTION_FLAGS_NONE,              0,              2,  parse_simple_int_s, offsetof(AftenContext, meta.dsurmod)                },
+    { "dsurexmod",  OPTION_FLAGS_NONE,              0,              2,  parse_xbsi2_opt,    offsetof(AftenContext, meta.dsurexmod)              },
+    { "dynrng",     OPTION_FLAGS_NONE,              0,              5,  parse_simple_int_s, offsetof(AftenContext, params.dynrng_profile)       },
+    { "fba",        OPTION_FLAGS_NONE,              0,              1,  parse_simple_int_s, offsetof(AftenContext, params.bitalloc_fast)        },
+    { "fes",        OPTION_FLAGS_NONE,              0,              1,  parse_simple_int_s, offsetof(AftenContext, params.expstr_fast)          },
+    { "h",          OPTION_FLAG_NO_PARAM,           0,              0,  parse_h,            0                                                   },
+    { "lfe",        OPTION_FLAGS_NONE,              0,              1,  parse_simple_int_s, offsetof(AftenContext, lfe)                         },
+    { "lfefilter",  OPTION_FLAGS_NONE,              0,              1,  parse_simple_int_s, offsetof(AftenContext, params.use_lfe_filter)       },
+    { "longhelp",   OPTION_FLAG_NO_PARAM,           0,              0,  parse_longhelp,     0                                                   },
+    { "lorocmix",   OPTION_FLAGS_NONE,              0,              7,  parse_xbsi1_opt,    offsetof(AftenContext, meta.lorocmixlev)            },
+    { "lorosmix",   OPTION_FLAGS_NONE,              0,              7,  parse_xbsi1_opt,    offsetof(AftenContext, meta.lorosmixlev)            },
+    { "ltrtcmix",   OPTION_FLAGS_NONE,              0,              7,  parse_xbsi1_opt,    offsetof(AftenContext, meta.ltrtcmixlev)            },
+    { "ltrtsmix",   OPTION_FLAGS_NONE,              0,              7,  parse_xbsi1_opt,    offsetof(AftenContext, meta.ltrtsmixlev)            },
+    { "m",          OPTION_FLAGS_NONE,              0,              1,  parse_simple_int_s, offsetof(AftenContext, params.use_rematrixing)      },
+    { "nosimd",     OPTION_FLAGS_NONE,              0,              0,  parse_nosimd,       0                                                   },
+    { "pad",        OPTION_FLAGS_NONE,              0,              1,  parse_simple_int_o, offsetof(CommandOptions, pad_start)                 },
+    { "q",          OPTION_FLAGS_NONE,              0,           1023,  parse_q,            0                                                   },
+    { "raw_ch",     OPTION_FLAGS_NONE,              1,              6,  parse_raw_option,   offsetof(CommandOptions, raw_ch)                    },
+    { "raw_fmt",    OPTION_FLAGS_NONE,              0,              0,  parse_raw_fmt,      0                                                   },
+    { "raw_sr",     OPTION_FLAGS_NONE,              1,          48000,  parse_raw_option,   offsetof(CommandOptions, raw_sr)                    },
+    { "readtoeof",  OPTION_FLAGS_NONE,              0,              1,  parse_simple_int_o, offsetof(CommandOptions, read_to_eof)               },
+    { "s",          OPTION_FLAGS_NONE,              0,              1,  parse_simple_int_s, offsetof(AftenContext, params.use_block_switching)  },
+    { "smix",       OPTION_FLAGS_NONE,              0,              2,  parse_simple_int_s, offsetof(AftenContext, meta.surmixlev)              },
+    { "threads",    OPTION_FLAGS_NONE,              0,MAX_NUM_THREADS,  parse_simple_int_s, offsetof(AftenContext, system.n_threads)            },
+    { "v",          OPTION_FLAGS_NONE,              0,              2,  parse_simple_int_s, offsetof(AftenContext, verbose)                     },
+    { "version",    OPTION_FLAG_NO_PARAM,           0,              0,  parse_version,      0                                                   },
+    { "w",          OPTION_FLAGS_NONE,             -2,             60,  parse_simple_int_s, offsetof(AftenContext, params.bwcode)               },
+    { "wmax",       OPTION_FLAGS_NONE,              0,             60,  parse_simple_int_s, offsetof(AftenContext, params.max_bwcode)           },
+    { "wmin",       OPTION_FLAGS_NONE,              0,             60,  parse_simple_int_s, offsetof(AftenContext, params.min_bwcode)           },
+    { "xbsi1",      OPTION_FLAGS_NONE,              0,              1,  parse_simple_int_s, offsetof(AftenContext, meta.xbsi1e)                 },
+    { "xbsi2",      OPTION_FLAGS_NONE,              0,              1,  parse_simple_int_s, offsetof(AftenContext, meta.xbsi2e)                 },
+};
+
 int
 parse_commandline(int argc, char **argv, CommandOptions *opts)
 {
     int i;
-    int found_output = 0;
-    int single_input = 0;
-    int multi_input = 0;
-    int empty_params = 0;
-    int input_mask = 0;
+    PrivateOptions priv;
 
     if(argc < 2) {
         return 1;
     }
 
+    memset(&priv, 0, sizeof(PrivateOptions));
     opts->chmap = 0;
     opts->num_input_files = 0;
     memset(opts->infile, 0, A52_NUM_SPEAKERS * sizeof(char *));
@@ -157,460 +401,47 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
     opts->raw_sr = 48000;
     opts->raw_ch = 2;
 
-    for(i=1; i<argc; i++) {
-        if(argv[i][0] == '-' && argv[i][1] != '\0') {
-            if(argv[i][2] != '\0') {
-                // multi-character arguments
-                if(!strncmp(&argv[i][1], "cmix", 5)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->meta.cmixlev = atoi(argv[i]);
-                    if(opts->s->meta.cmixlev < 0 || opts->s->meta.cmixlev > 2) {
-                        fprintf(stderr, "invalid cmix: %d. must be 0 to 2.\n",
-                                opts->s->meta.cmixlev);
-                        return 1;
+    for(priv.arg_index=1; priv.arg_index<argc; priv.arg_index++) {
+        if(argv[priv.arg_index][0] == '-' && argv[priv.arg_index][1] != '\0') {
+            int j;
+            for(j=0; j<OPTION_ITEM_COUNT; j++) {
+                char *arg = &argv[priv.arg_index][1];
+                const OptionItem *item = &options_list[j];
+                int mc = strlen(item->option_str) + 1;
+                if(item->flags & OPTION_FLAG_MATCH_PARTIAL)
+                    mc--;
+                if(!strncmp(arg, item->option_str, mc)) {
+                    int ret;
+                    char *param = NULL;
+                    if(!(item->flags & OPTION_FLAG_NO_PARAM)) {
+                        priv.arg_index++;
+                        if(priv.arg_index >= argc) return 1;
+                        param = argv[priv.arg_index];
                     }
-                } else if(!strncmp(&argv[i][1], "smix", 5)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->meta.surmixlev = atoi(argv[i]);
-                    if(opts->s->meta.surmixlev < 0 || opts->s->meta.surmixlev > 2) {
-                        fprintf(stderr, "invalid smix: %d. must be 0 to 2.\n",
-                                opts->s->meta.surmixlev);
-                        return 1;
-                    }
-                } else if(!strncmp(&argv[i][1], "dsur", 5)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->meta.dsurmod = atoi(argv[i]);
-                    if(opts->s->meta.dsurmod < 0 || opts->s->meta.dsurmod > 2) {
-                        fprintf(stderr, "invalid dsur: %d. must be 0 to 2.\n",
-                                opts->s->meta.dsurmod);
-                        return 1;
-                    }
-                } else if(!strncmp(&argv[i][1], "dnorm", 6)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->meta.dialnorm = atoi(argv[i]);
-                    if(opts->s->meta.dialnorm < 0 || opts->s->meta.dialnorm > 31) {
-                        fprintf(stderr, "invalid dnorm: %d. must be 0 to 31.\n",
-                                opts->s->meta.dialnorm);
-                        return 1;
-                    }
-                } else if(!strncmp(&argv[i][1], "dynrng", 7)) {
-                    int profile;
-                    i++;
-                    if(i >= argc) return 1;
-                    profile = atoi(argv[i]);
-                    if(profile < 0 || profile > 5) {
-                        fprintf(stderr, "invalid dynrng: %d. must be 0 to 5.\n",
-                                profile);
-                        return 1;
-                    }
-                    opts->s->params.dynrng_profile = (DynRngProfile) profile;
-                } else if(!strncmp(&argv[i][1], "acmod", 6)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->acmod = atoi(argv[i]);
-                    if(opts->s->acmod < 0 || opts->s->acmod > 7) {
-                        fprintf(stderr, "invalid acmod: %d. must be 0 to 7.\n",
-                                opts->s->acmod);
-                        return 1;
-                    }
-                } else if(!strncmp(&argv[i][1], "lfe", 4)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->lfe = atoi(argv[i]);
-                    if(opts->s->lfe < 0 || opts->s->lfe > 1) {
-                        fprintf(stderr, "invalid lfe: %d. must be 0 or 1.\n",
-                                opts->s->lfe);
-                        return 1;
-                    }
-                } else if(!strncmp(&argv[i][1], "bwfilter", 9)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->params.use_bw_filter = atoi(argv[i]);
-                    if(opts->s->params.use_bw_filter < 0 || opts->s->params.use_bw_filter > 1) {
-                        fprintf(stderr, "invalid bwfilter: %d. must be 0 or 1.\n",
-                                opts->s->params.use_bw_filter);
-                        return 1;
-                    }
-                } else if(!strncmp(&argv[i][1], "dcfilter", 9)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->params.use_dc_filter = atoi(argv[i]);
-                    if(opts->s->params.use_dc_filter < 0 || opts->s->params.use_dc_filter > 1) {
-                        fprintf(stderr, "invalid dcfilter: %d. must be 0 or 1.\n",
-                                opts->s->params.use_dc_filter);
-                        return 1;
-                    }
-                } else if(!strncmp(&argv[i][1], "lfefilter", 10)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->params.use_lfe_filter = atoi(argv[i]);
-                    if(opts->s->params.use_lfe_filter < 0 || opts->s->params.use_lfe_filter > 1) {
-                        fprintf(stderr, "invalid lfefilter: %d. must be 0 or 1.\n",
-                                opts->s->params.use_lfe_filter);
-                        return 1;
-                    }
-                } else if(!strncmp(&argv[i][1], "xbsi1", 6)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->meta.xbsi1e = atoi(argv[i]);
-                    if(opts->s->meta.xbsi1e < 0 || opts->s->meta.xbsi1e > 1) {
-                        fprintf(stderr, "invalid xbsi1: %d. must be 0 or 1.\n",
-                                opts->s->meta.xbsi1e);
-                        return 1;
-                    }
-                } else if(!strncmp(&argv[i][1], "dmixmod", 8)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->meta.dmixmod = atoi(argv[i]);
-                    if(opts->s->meta.dmixmod < 0 || opts->s->meta.dmixmod > 2) {
-                        fprintf(stderr, "invalid dmixmod: %d. must be 0 to 2.\n",
-                                opts->s->meta.dmixmod);
-                        return 1;
-                    }
-                } else if(!strncmp(&argv[i][1], "ltrtcmix", 9)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->meta.ltrtcmixlev = atoi(argv[i]);
-                    if(opts->s->meta.ltrtcmixlev < 0 || opts->s->meta.ltrtcmixlev > 7) {
-                        fprintf(stderr, "invalid ltrtcmix: %d. must be 0 to 7.\n",
-                                opts->s->meta.ltrtcmixlev);
-                        return 1;
-                    }
-                } else if(!strncmp(&argv[i][1], "ltrtsmix", 9)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->meta.ltrtsmixlev = atoi(argv[i]);
-                    if(opts->s->meta.ltrtsmixlev < 0 || opts->s->meta.ltrtsmixlev > 7) {
-                        fprintf(stderr, "invalid ltrtsmix: %d. must be 0 to 7.\n",
-                                opts->s->meta.ltrtsmixlev);
-                        return 1;
-                    }
-                } else if(!strncmp(&argv[i][1], "lorocmix", 9)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->meta.lorocmixlev = atoi(argv[i]);
-                    if(opts->s->meta.lorocmixlev < 0 || opts->s->meta.lorocmixlev > 7) {
-                        fprintf(stderr, "invalid lorocmix: %d. must be 0 to 7.\n",
-                                opts->s->meta.lorocmixlev);
-                        return 1;
-                    }
-                } else if(!strncmp(&argv[i][1], "lorosmix", 9)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->meta.lorosmixlev = atoi(argv[i]);
-                    if(opts->s->meta.lorosmixlev < 0 || opts->s->meta.lorosmixlev > 7) {
-                        fprintf(stderr, "invalid lorosmix: %d. must be 0 to 7.\n",
-                                opts->s->meta.lorosmixlev);
-                        return 1;
-                    }
-                    opts->s->meta.xbsi1e = 1;
-                } else if(!strncmp(&argv[i][1], "xbsi2", 6)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->meta.xbsi2e = atoi(argv[i]);
-                    if(opts->s->meta.xbsi2e < 0 || opts->s->meta.xbsi2e > 1) {
-                        fprintf(stderr, "invalid xbsi2: %d. must be 0 or 1.\n",
-                                opts->s->meta.xbsi2e);
-                        return 1;
-                    }
-                } else if(!strncmp(&argv[i][1], "dsurexmod", 10)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->meta.dsurexmod = atoi(argv[i]);
-                    if(opts->s->meta.dsurexmod < 0 || opts->s->meta.dsurexmod > 2) {
-                        fprintf(stderr, "invalid dsurexmod: %d. must be 0 to 2.\n",
-                                opts->s->meta.dsurexmod);
-                        return 1;
-                    }
-                } else if(!strncmp(&argv[i][1], "dheadphon", 10)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->meta.dheadphonmod = atoi(argv[i]);
-                    if(opts->s->meta.dheadphonmod < 0 || opts->s->meta.dheadphonmod > 2) {
-                        fprintf(stderr, "invalid dheadphon: %d. must be 0 to 2.\n",
-                                opts->s->meta.dheadphonmod);
-                        return 1;
-                    }
-                } else if(!strncmp(&argv[i][1], "adconvtyp", 10)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->meta.adconvtyp = atoi(argv[i]);
-                    if(opts->s->meta.adconvtyp < 0 || opts->s->meta.adconvtyp > 1) {
-                        fprintf(stderr, "invalid adconvtyp: %d. must be 0 or 1.\n",
-                                opts->s->meta.adconvtyp);
-                        return 1;
-                    }
-                } else if(!strncmp(&argv[i][1], "fba", 4)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->params.bitalloc_fast = atoi(argv[i]);
-                    if(opts->s->params.bitalloc_fast < 0 || opts->s->params.bitalloc_fast > 1) {
-                        fprintf(stderr, "invalid fba: %d. must be 0 or 1.\n",
-                                opts->s->params.bitalloc_fast);
-                        return 1;
-                    }
-                }  else if(!strncmp(&argv[i][1], "fes", 4)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->params.expstr_fast = atoi(argv[i]);
-                    if(opts->s->params.expstr_fast < 0 || opts->s->params.expstr_fast > 1) {
-                        fprintf(stderr, "invalid fes: %d. must be 0 or 1.\n",
-                                opts->s->params.expstr_fast);
-                        return 1;
-                    }
-                } else if(!strncmp(&argv[i][1], "longhelp", 9)) {
-                    return 3;
-                } else if(!strncmp(&argv[i][1], "chmap", 6)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->chmap = atoi(argv[i]);
-                    if(opts->chmap < 0 || opts->chmap > 2) {
-                        fprintf(stderr, "invalid chmap: %d. must be 0 to 2.\n",
-                                opts->chmap);
-                        return 1;
-                    }
-                } else if(!strncmp(&argv[i][1], "nosimd", 7)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    if (deactivate_simd(argv[i], &opts->s->system.wanted_simd_instructions)) return 1;
-                } else if(!strncmp(&argv[i][1], "pad", 4)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->pad_start = atoi(argv[i]);
-                    if(opts->pad_start < 0 || opts->pad_start > 1) {
-                        fprintf(stderr, "invalid pad: %d. must be 0 or 1.\n",
-                                opts->pad_start);
-                        return 1;
-                    }
-                } else if(!strncmp(&argv[i][1], "readtoeof", 10)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->read_to_eof = atoi(argv[i]);
-                    if(opts->read_to_eof < 0) {
-                        fprintf(stderr, "invalid readtoeof: %d. must 0 or 1.\n",
-                                opts->read_to_eof);
-                        return 1;
-                    }
-                } else if(!strncmp(&argv[i][1], "threads", 8)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->system.n_threads = atoi(argv[i]);
-                    if(opts->s->system.n_threads < 0 ||
-                            opts->s->system.n_threads > MAX_NUM_THREADS) {
-                        fprintf(stderr, "invalid readtoeof: %d. must 0 to %d.\n",
-                                opts->s->system.n_threads, MAX_NUM_THREADS);
-                        return 1;
-                    }
-                } else if(!strncmp(&argv[i][1], "wmin", 5)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->params.min_bwcode = atoi(argv[i]);
-                    if(opts->s->params.min_bwcode < 0 ||
-                            opts->s->params.min_bwcode > 60) {
-                        fprintf(stderr, "invalid wmin: %d. must 0 to 60.\n",
-                                opts->s->params.min_bwcode);
-                        return 1;
-                    }
-                } else if(!strncmp(&argv[i][1], "wmax", 5)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->params.max_bwcode = atoi(argv[i]);
-                    if(opts->s->params.max_bwcode < 0 ||
-                            opts->s->params.max_bwcode > 60) {
-                        fprintf(stderr, "invalid wmax: %d. must 0 to 60.\n",
-                                opts->s->params.max_bwcode);
-                        return 1;
-                    }
-                } else if(!strncmp(&argv[i][1], "raw_fmt", 8)) {
-                    static const char *raw_fmt_strs[8] = {
-                        "u8", "s8", "s16_", "s20_", "s24_", "s32_", "float_",
-                        "double_"
-                    };
-                    int j;
-                    i++;
-                    if(i >= argc) return 1;
-
-                    // parse format
-                    for(j=0; j<8; j++) {
-                        if(!strncmp(argv[i], raw_fmt_strs[j], strlen(raw_fmt_strs[j]))) {
-                            opts->raw_fmt = j;
-                            break;
-                        }
-                    }
-                    if(j >= 8) {
-                        fprintf(stderr, "invalid raw_fmt: %s\n", argv[i]);
-                        return 1;
-                    }
-
-                    // parse byte order
-                    opts->raw_order = PCM_BYTE_ORDER_LE;
-                    if(strncmp(argv[i], "u8", 3) && strncmp(argv[i], "s8", 3)) {
-                        if(!strncmp(&argv[i][4], "be", 3)) {
-                            opts->raw_order = PCM_BYTE_ORDER_BE;
-                        } else if(strncmp(&argv[i][4], "le", 3)) {
-                            fprintf(stderr, "invalid raw_fmt: %s\n", argv[i]);
-                            return 1;
-                        }
-                    }
-
-                    opts->raw_input = 1;
-                } else if(!strncmp(&argv[i][1], "raw_sr", 7)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->raw_sr = atoi(argv[i]);
-                    if(opts->raw_sr <= 0) {
-                        fprintf(stderr, "invalid raw_sr: %d. must be > 0.\n",
-                                opts->raw_sr);
-                        return 1;
-                    }
-                    opts->raw_input = 1;
-                } else if(!strncmp(&argv[i][1], "raw_ch", 7)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->raw_ch = atoi(argv[i]);
-                    if(opts->raw_ch <= 0 || opts->raw_ch > 255) {
-                        fprintf(stderr, "invalid raw_ch: %d. must be 0 to 255.\n",
-                                opts->raw_ch);
-                        return 1;
-                    }
-                    opts->raw_input = 1;
-                } else if(!strncmp(&argv[i][1], "version", 8)) {
-                    return 4;
-                } else if(!strncmp(&argv[i][1], "chconfig", 9)) {
-                    i++;
-                    if(i >= argc) return 1;
-                    if(!strncmp(argv[i], "1+1", 4)) {
-                        opts->s->acmod = 0;
-                    } else if(strlen(argv[i]) >= 3 && argv[i][1] == '/') {
-                        int front_ch = argv[i][0] - '0';
-                        int rear_ch = argv[i][2] - '0';
-                        if (front_ch > 3 || front_ch < 1 || rear_ch < 0 || rear_ch > 2 || (front_ch < 2 && rear_ch != 0))
-                            goto invalid_config;
-
-                        opts->s->acmod = front_ch + 2 * rear_ch;
-                    } else {
-                    invalid_config:
-                        fprintf(stderr, "invalid chconfig: %s\n", argv[i]);
-                        return 1;
-                    }
-                    if(!strncmp(&argv[i][3], "+LFE", 5) || !strncmp(&argv[i][3], "+lfe", 5)) {
-                        opts->s->lfe = 1;
-                    }
-                } else if(!strncmp(&argv[i][1], "ch_", 3)) {
-                    static const char chstrs[A52_NUM_SPEAKERS][4] = {
-                        "fl", "fc", "fr", "sl", "s", "sr", "m1", "m2", "lfe" };
-                    char *chstr = &argv[i][4];
-                    int n_chstr, mask_bit;
-
-                    if(single_input) {
-                        fprintf(stderr, "cannot mix single-input syntax and multi-input syntax\n");
-                        return 1;
-                    }
-                    i++;
-                    if(i >= argc) return 1;
-
-                    mask_bit = 1;
-                    for(n_chstr=0; n_chstr<A52_NUM_SPEAKERS; ++n_chstr) {
-                        if(!strncmp(chstr, chstrs[n_chstr], strlen(chstrs[n_chstr])+1)) {
-                            if(input_mask & mask_bit) {
-                                fprintf(stderr, "invalid input channel parameter\n");
-                                return 1;
-                            }
-                            input_mask |= mask_bit;
-                            opts->infile[n_chstr] = argv[i];
-                        }
-                        mask_bit += mask_bit;
-                    }
-
-                    multi_input = 1;
-                    opts->num_input_files++;
-                } else {
-                    fprintf(stderr, "invalid option: %s\n", argv[i]);
-                    return 1;
+                    ret = item->parse(arg, param, item, opts, &priv);
+                    if(ret) return ret;
+                    break;
                 }
-            } else {
-                // single-character arguments
-                if(argv[i][1] == 'h') {
-                    return 2;
-                } else if(argv[i][1] == 'v') {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->verbose = atoi(argv[i]);
-                    if(opts->s->verbose < 0 || opts->s->verbose > 2) {
-                        fprintf(stderr, "invalid verbosity level: %d. must be 0 to 2.\n",
-                                opts->s->verbose);
-                        return 1;
-                    }
-                } else if(argv[i][1] == 'b') {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->params.bitrate = atoi(argv[i]);
-                    if(opts->s->params.bitrate < 0 || opts->s->params.bitrate > 640) {
-                        fprintf(stderr, "invalid bitrate: %d. must be 0 to 640.\n",
-                                opts->s->params.bitrate);
-                        return 1;
-                    }
-                } else if(argv[i][1] == 'q') {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->params.quality = atoi(argv[i]);
-                    opts->s->params.encoding_mode = AFTEN_ENC_MODE_VBR;
-                    if(opts->s->params.quality < 0 || opts->s->params.quality > 1023) {
-                        fprintf(stderr, "invalid quality: %d. must be 0 to 1023.\n",
-                                opts->s->params.quality);
-                        return 1;
-                    }
-                } else if(argv[i][1] == 'w') {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->params.bwcode = atoi(argv[i]);
-                    if(opts->s->params.bwcode < -2 || opts->s->params.bwcode > 60) {
-                        fprintf(stderr, "invalid bandwidth code: %d. must be 0 to 60.\n",
-                                opts->s->params.bwcode);
-                        return 1;
-                    }
-                } else if(argv[i][1] == 'm') {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->params.use_rematrixing = atoi(argv[i]);
-                    if(opts->s->params.use_rematrixing < 0 || opts->s->params.use_rematrixing > 1) {
-                        fprintf(stderr, "invalid stereo rematrixing: %d. must be 0 or 1.\n",
-                                opts->s->params.use_rematrixing);
-                        return 1;
-                    }
-                } else if(argv[i][1] == 's') {
-                    i++;
-                    if(i >= argc) return 1;
-                    opts->s->params.use_block_switching = atoi(argv[i]);
-                    if(opts->s->params.use_block_switching < 0 || opts->s->params.use_block_switching > 1) {
-                        fprintf(stderr, "invalid block switching: %d. must be 0 or 1.\n",
-                                opts->s->params.use_block_switching);
-                        return 1;
-                    }
-                } else {
-                    fprintf(stderr, "invalid option: %s\n", argv[i]);
-                    return 1;
-                }
+            }
+            if(j >= OPTION_ITEM_COUNT) {
+                fprintf(stderr, "invalid option: %s\n", argv[priv.arg_index]);
+                return 1;
             }
         } else {
             // empty parameter can be single input file or output file
-            if(i >= argc) return 1;
-            empty_params++;
-            if(empty_params == 1) {
-                opts->outfile = argv[i];
-                found_output = 1;
-            } else if(empty_params == 2) {
-                if(multi_input) {
+            if(priv.arg_index >= argc) return 1;
+            priv.empty_params++;
+            if(priv.empty_params == 1) {
+                opts->outfile = argv[priv.arg_index];
+                priv.found_output = 1;
+            } else if(priv.empty_params == 2) {
+                if(priv.multi_input) {
                     fprintf(stderr, "cannot mix single-input syntax and multi-input syntax\n");
                     return 1;
                 }
-                single_input = 1;
+                priv.single_input = 1;
                 opts->infile[0] = opts->outfile;
-                opts->outfile = argv[i];
+                opts->outfile = argv[priv.arg_index];
                 opts->num_input_files = 1;
             } else {
                 fprintf(stderr, "too many empty parameters\n");
@@ -620,7 +451,7 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
     }
 
     // check that proper input file syntax is used
-    if(!(single_input ^ multi_input)) {
+    if(!(priv.single_input ^ priv.multi_input)) {
         fprintf(stderr, "cannot mix single-input syntax and multi-input syntax\n");
         return 1;
     }
@@ -632,14 +463,14 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
     }
 
     // check that an output file has been specified
-    if(!found_output) {
+    if(!priv.found_output) {
         fprintf(stderr, "no output file specified.\n");
         return 1;
     }
 
     // check the channel configuration
-    if(multi_input) {
-        if(validate_input_files(opts->infile, input_mask, &opts->s->acmod, &opts->s->lfe)) {
+    if(priv.multi_input) {
+        if(validate_input_files(opts->infile, priv.input_mask, &opts->s->acmod, &opts->s->lfe)) {
             fprintf(stderr, "invalid input channel configuration\n");
             return 1;
         }
