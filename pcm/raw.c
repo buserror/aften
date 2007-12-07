@@ -31,7 +31,7 @@
 #include "pcm.h"
 
 int
-pcmfile_probe_raw(uint8_t *data, int size)
+raw_probe(uint8_t *data, int size)
 {
     if(data == NULL || size < 0)
         return 0;
@@ -39,7 +39,7 @@ pcmfile_probe_raw(uint8_t *data, int size)
 }
 
 int
-pcmfile_init_raw(PcmFile *pf)
+raw_init(PcmFile *pf)
 {
     pf->data_size = 0;
     pf->data_start = 0;
@@ -52,3 +52,12 @@ pcmfile_init_raw(PcmFile *pf)
                               48000);
     return 0;
 }
+
+PcmFormat raw_format = {
+    "raw",
+    "Raw PCM",
+    PCM_FORMAT_RAW,
+    raw_probe,
+    raw_init,
+    NULL
+};

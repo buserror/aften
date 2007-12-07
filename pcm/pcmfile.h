@@ -30,6 +30,7 @@
 #include <stdio.h>
 
 #include "byteio.h"
+#include "formats.h"
 
 /* "whence" values for seek functions */
 #define PCM_SEEK_SET 0
@@ -95,6 +96,7 @@ typedef struct PcmFile {
 
     int sample_type;        ///< sample type (integer or floating-point)
     int file_format;        ///< file format (raw, wav, etc...)
+    PcmFormat *pcm_format;  ///< functions and descriptions for file format
     int order;              ///< sample byte order
     int channels;           ///< number of channels
     uint32_t ch_mask;       ///< channel mask, indicates speaker locations
@@ -189,16 +191,5 @@ extern uint64_t pcmfile_position(PcmFile *pf);
  * Returns -1 on error.
  */
 extern uint64_t pcmfile_position_time_ms(PcmFile *pf);
-
-
-/**
- * File format functions
- */
-
-extern int pcmfile_probe_raw(uint8_t *data, int size);
-extern int pcmfile_init_raw(PcmFile *pf);
-
-extern int pcmfile_probe_wave(uint8_t *data, int size);
-extern int pcmfile_init_wave(PcmFile *pf);
 
 #endif /* PCMFILE_H */
