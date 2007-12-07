@@ -108,7 +108,7 @@ pcmfile_print(PcmFile *pf, FILE *st)
     type = "?";
     chan = "?-channel";
     fmt = "unknown";
-    order = "?-endian";
+    order = "";
     if(pf->sample_type == PCM_SAMPLE_TYPE_INT) {
         if(pf->source_format == PCM_SAMPLE_FMT_U8) type = "Unsigned";
         else type = "Signed";
@@ -139,9 +139,13 @@ pcmfile_print(PcmFile *pf, FILE *st)
     }
     if(pf->pcm_format)
         fmt = pf->pcm_format->long_name;
+    if(pf->source_format > PCM_SAMPLE_FMT_S8) {
     switch(pf->order) {
         case PCM_BYTE_ORDER_LE: order = "little-endian"; break;
         case PCM_BYTE_ORDER_BE: order = "big-endian"; break;
+    }
+    } else {
+        order = "\b";
     }
     fprintf(st, "%s %s %d-bit %s %d Hz %s\n", fmt, type, pf->bit_width, order,
             pf->sample_rate, chan);
