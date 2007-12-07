@@ -67,15 +67,6 @@ enum PcmSampleFormat {
     PCM_SAMPLE_FMT_DBL
 };
 
-/* supported file formats */
-enum PcmFileFormat {
-    PCM_FORMAT_UNKNOWN = -1,
-    PCM_FORMAT_RAW     =  0,
-    PCM_FORMAT_WAVE    =  1,
-    PCM_FORMAT_AIFF    =  2,
-    PCM_FORMAT_CAFF    =  3
-};
-
 /* byte orders */
 enum PcmByteOrder {
     PCM_BYTE_ORDER_LE = 0,

@@ -32,6 +32,15 @@
 
 #include <stdio.h>
 
+/* supported file formats */
+enum PcmFileFormat {
+    PCM_FORMAT_UNKNOWN = -1,
+    PCM_FORMAT_RAW     =  0,
+    PCM_FORMAT_WAVE    =  1,
+    PCM_FORMAT_AIFF    =  2,
+    PCM_FORMAT_CAFF    =  3
+};
+
 struct PcmFile;
 
 typedef struct PcmFormat {
