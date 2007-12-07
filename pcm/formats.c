@@ -43,6 +43,7 @@ pcmfile_register_all_formats(void)
     REGISTER_FORMAT(raw);
     REGISTER_FORMAT(wave);
     REGISTER_FORMAT(aiff);
+    REGISTER_FORMAT(caff);
 }
 
 PcmFormat *first_format = NULL;

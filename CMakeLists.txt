@@ -76,6 +76,7 @@ SET(AFTEN_SRCS aften/aften.c aften/opts.c)
 
 SET(PCM_SRCS pcm/aiff.c
              pcm/byteio.c
+             pcm/caff.c
              pcm/convert.c
              pcm/formats.c
              pcm/pcm.c
