@@ -5,7 +5,6 @@ Aften TODO list
 - ABR encoding mode
 - 2-pass encoding
 - Frame parser / analyzer
-- AIFF file support for the MAC people
 - CAFF file support
 - Option to downmix/upmix/resample prior to encoding
     - 2-channel surround-matrix downmix
@@ -33,6 +32,7 @@ version SVN : current
   reconstructed.
 - fixed bug in wav to ac3 channel remapping
 - Multiple-file commandline input with channel designation
+- AIFF file support
 
 version 0.08 :
 - fixed piped input from FFmpeg
