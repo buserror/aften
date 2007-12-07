@@ -399,7 +399,7 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
     opts->raw_fmt = PCM_SAMPLE_FMT_S16;
     opts->raw_order = PCM_BYTE_ORDER_LE;
     opts->raw_sr = 48000;
-    opts->raw_ch = 2;
+    opts->raw_ch = 1;
 
     for(priv.arg_index=1; priv.arg_index<argc; priv.arg_index++) {
         if(argv[priv.arg_index][0] == '-' && argv[priv.arg_index][1] != '\0') {

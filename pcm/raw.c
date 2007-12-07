@@ -48,7 +48,7 @@ pcmfile_init_raw(PcmFile *pf)
     }
     pf->read_to_eof = 1;
 
-    pcmfile_set_source_params(pf, 2, PCM_SAMPLE_FMT_S16, PCM_BYTE_ORDER_LE,
+    pcmfile_set_source_params(pf, 1, PCM_SAMPLE_FMT_S16, PCM_BYTE_ORDER_LE,
                               48000);
     return 0;
 }

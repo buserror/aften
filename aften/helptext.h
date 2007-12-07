@@ -149,7 +149,7 @@ static const char *help_options[HELP_OPTIONS_COUNT] = {
 
 "    [-raw_sr #]    Raw audio input sample rate (default: 48000)\n",
 
-"    [-raw_ch #]    Raw audio input channels (default: 2)\n",
+"    [-raw_ch #]    Raw audio input channels (default: 1)\n",
 
 "    [-chmap #]     Channel mapping order of input audio\n"
 "                       0 = WAVE mapping (default)\n"
@@ -478,7 +478,7 @@ static const char *input_options[INPUT_OPTIONS_COUNT] = {
 "                       Using this option forces Aften to treat the input as\n"
 "                       raw audio.\n",
 
-"    [-raw_ch #]    Raw audio input channels (default: 2)\n"
+"    [-raw_ch #]    Raw audio input channels (default: 1)\n"
 "                       Using this option forces Aften to treat the input as\n"
 "                       raw audio.\n",
 
