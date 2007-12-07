@@ -257,11 +257,11 @@ static const char *encoding_options[ENCODING_OPTIONS_COUNT] = {
 "                       CBR mode is selected by default. This option allows for\n"
 "                       setting the fixed bitrate. The default bitrate depends\n"
 "                       on the number of channels (not including LFE).\n"
-"                       1 = 96 kbps\n"
-"                       2 = 192 kbps\n"
-"                       3 = 256 kbps\n"
-"                       4 = 384 kbps\n"
-"                       5 = 448 kbps\n",
+"                       mono      =  96 kbps\n"
+"                       stereo    = 192 kbps\n"
+"                       3-channel = 256 kbps\n"
+"                       4-channel = 384 kbps\n"
+"                       5-channel = 448 kbps\n",
 
 "    [-q #]         VBR quality\n"
 "                       A value 0 to 1023 which corresponds to SNR offset, where\n"
