@@ -74,7 +74,8 @@ SET(LIBAFTEN_ALTIVEC_SRCS libaften/ppc/mdct_altivec.c)
 
 SET(AFTEN_SRCS aften/aften.c aften/opts.c)
 
-SET(PCM_SRCS pcm/byteio.c
+SET(PCM_SRCS pcm/aiff.c
+             pcm/byteio.c
              pcm/convert.c
              pcm/formats.c
              pcm/pcm.c
