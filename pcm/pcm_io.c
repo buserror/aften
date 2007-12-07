@@ -174,7 +174,7 @@ pcmfile_read_samples(PcmFile *pf, void *output, int num_samples)
             }
         }
         break;
-    default:
+    case 8:
         if(pf->order == PCM_NON_NATIVE_BYTE_ORDER) {
             uint64_t *buf64 = (uint64_t *)buffer;
             for(i=0; i<nsmp; i++) {
