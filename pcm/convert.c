@@ -725,30 +725,14 @@ pcmfile_set_source_format(PcmFile *pf, int fmt)
     pf->source_format = fmt;
     pf->bit_width = fmt_bits[fmt];
     switch(fmt) {
-        case PCM_SAMPLE_FMT_U8:
-            SET_FMT_CONVERT_FROM(u8, pf);
-            break;
-        case PCM_SAMPLE_FMT_S8:
-            SET_FMT_CONVERT_FROM(s8, pf);
-            break;
-        case PCM_SAMPLE_FMT_S16:
-            SET_FMT_CONVERT_FROM(s16, pf);
-            break;
-        case PCM_SAMPLE_FMT_S20:
-            SET_FMT_CONVERT_FROM(s20, pf);
-            break;
-        case PCM_SAMPLE_FMT_S24:
-            SET_FMT_CONVERT_FROM(s24, pf);
-            break;
-        case PCM_SAMPLE_FMT_S32:
-            SET_FMT_CONVERT_FROM(s32, pf);
-            break;
-        case PCM_SAMPLE_FMT_FLT:
-            SET_FMT_CONVERT_FROM(float, pf);
-            break;
-        case PCM_SAMPLE_FMT_DBL:
-            SET_FMT_CONVERT_FROM(double, pf);
-            break;
+        case PCM_SAMPLE_FMT_U8:  SET_FMT_CONVERT_FROM(u8, pf);     break;
+        case PCM_SAMPLE_FMT_S8:  SET_FMT_CONVERT_FROM(s8, pf);     break;
+        case PCM_SAMPLE_FMT_S16: SET_FMT_CONVERT_FROM(s16, pf);    break;
+        case PCM_SAMPLE_FMT_S20: SET_FMT_CONVERT_FROM(s20, pf);    break;
+        case PCM_SAMPLE_FMT_S24: SET_FMT_CONVERT_FROM(s24, pf);    break;
+        case PCM_SAMPLE_FMT_S32: SET_FMT_CONVERT_FROM(s32, pf);    break;
+        case PCM_SAMPLE_FMT_FLT: SET_FMT_CONVERT_FROM(float, pf);  break;
+        case PCM_SAMPLE_FMT_DBL: SET_FMT_CONVERT_FROM(double, pf); break;
     }
     if(fmt == PCM_SAMPLE_FMT_FLT || fmt == PCM_SAMPLE_FMT_DBL)
         pf->sample_type = PCM_SAMPLE_TYPE_FLOAT;
