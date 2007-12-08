@@ -49,7 +49,7 @@ ext2dbl(const ExtFloat ext)
         m = (m<<8) + ext.mantissa[i];
     e = (((int)ext.exponent[0]&0x7f)<<8) | ext.exponent[1];
     if (e == 0x7fff && m)
-        return 0.0/0.0;
+        return 0.0; // really should be NaN, but simplifying for portability
     e -= 16383 + 63;        /* In IEEE 80 bits, the whole (i.e. 1.xxxx)
                              * mantissa bit is written as opposed to the
                              * single and double precision formats */
