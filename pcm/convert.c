@@ -719,40 +719,35 @@ fmt_convert_double_to_double(void *dest_v, void *src_v, int n)
 void
 pcmfile_set_source_format(PcmFile *pf, int fmt)
 {
+    static const int fmt_bits[8] = { 8, 8, 16, 20, 24, 32, 32, 64 };
+
     fmt = CLIP(fmt, PCM_SAMPLE_FMT_U8, PCM_SAMPLE_FMT_DBL);
     pf->source_format = fmt;
+    pf->bit_width = fmt_bits[fmt];
     switch(fmt) {
         case PCM_SAMPLE_FMT_U8:
             SET_FMT_CONVERT_FROM(u8, pf);
-            pf->bit_width = 8;
             break;
         case PCM_SAMPLE_FMT_S8:
             SET_FMT_CONVERT_FROM(s8, pf);
-            pf->bit_width = 8;
             break;
         case PCM_SAMPLE_FMT_S16:
             SET_FMT_CONVERT_FROM(s16, pf);
-            pf->bit_width = 16;
             break;
         case PCM_SAMPLE_FMT_S20:
             SET_FMT_CONVERT_FROM(s20, pf);
-            pf->bit_width = 20;
             break;
         case PCM_SAMPLE_FMT_S24:
             SET_FMT_CONVERT_FROM(s24, pf);
-            pf->bit_width = 24;
             break;
         case PCM_SAMPLE_FMT_S32:
             SET_FMT_CONVERT_FROM(s32, pf);
-            pf->bit_width = 32;
             break;
         case PCM_SAMPLE_FMT_FLT:
             SET_FMT_CONVERT_FROM(float, pf);
-            pf->bit_width = 32;
             break;
         case PCM_SAMPLE_FMT_DBL:
             SET_FMT_CONVERT_FROM(double, pf);
-            pf->bit_width = 64;
             break;
     }
     if(fmt == PCM_SAMPLE_FMT_FLT || fmt == PCM_SAMPLE_FMT_DBL)
