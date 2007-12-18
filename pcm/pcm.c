@@ -46,7 +46,7 @@ pcm_init(PcmContext *pc, int num_files, FILE **fp_list, int read_format,
         fprintf(stderr, "invalid read format: %d\n", read_format);
         return -1;
     }
-    if(file_format < PCM_FORMAT_UNKNOWN || file_format > PCM_FORMAT_WAVE) {
+    if(file_format < PCM_FORMAT_UNKNOWN || file_format > PCM_FORMAT_CAFF) {
         fprintf(stderr, "invalid file format: %d\n", file_format);
         return -1;
     }
