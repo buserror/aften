@@ -22,7 +22,7 @@
  */
 
 /**
- * @file aften.h
+ * @file aften-types.h
  * libaften public header for type definitions
  */
 
