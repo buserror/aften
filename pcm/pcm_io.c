@@ -151,7 +151,7 @@ pcmfile_read_samples(PcmFile *pf, void *output, int num_samples)
             int32_t v;
             if(pf->order == PCM_NON_NATIVE_BYTE_ORDER) {
                 for(i=0,j=0; i<nsmp*bps; i+=bps,j++) {
-                    v = bswap_32(*(int32_t*)(read_buffer + i));
+                    v = bswap_32(*(uint32_t*)(read_buffer + i) << 8);
                     v <<= unused_bits; // clear unused high bits
                     v >>= unused_bits; // sign extend
                     input[j] = v;
