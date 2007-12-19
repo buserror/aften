@@ -556,18 +556,11 @@ frame_init(A52ThreadContext *tctx)
     A52Context *ctx = tctx->ctx;
     A52Frame *frame = &tctx->frame;
     A52Block *block;
-    int blk, bnd, ch;
+    int blk, ch;
 
     for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
         block = &frame->blocks[blk];
         block->block_num = blk;
-        block->rematstr = 0;
-        if(blk == 0) {
-            block->rematstr = 1;
-            for(bnd=0; bnd<4; bnd++) {
-                block->rematflg[bnd] = 0;
-            }
-        }
         for(ch=0; ch<ctx->n_channels; ch++) {
             block->blksw[ch] = 0;
             block->dithflag[ch] = 1;
@@ -828,10 +821,11 @@ output_audio_blocks(A52ThreadContext *tctx)
         }
 
         if(ctx->acmod == A52_ACMOD_STEREO) {
-            bitwriter_writebits(bw, 1, block->rematstr);
-            if(block->rematstr) {
+            int rematstr = !blk;
+            bitwriter_writebits(bw, 1, rematstr);
+            if(rematstr) {
                 for(rbnd=0; rbnd<4; rbnd++) {
-                    bitwriter_writebits(bw, 1, block->rematflg[rbnd]);
+                    bitwriter_writebits(bw, 1, frame->rematflg[rbnd]);
                 }
             }
         }
@@ -1147,49 +1141,45 @@ calc_rematrixing(A52ThreadContext *tctx)
     FLOAT lt, rt, ctmp1, ctmp2;
     int blk, bnd, i;
 
+    // initialize flags to zero
+    for(bnd=0; bnd<4; bnd++) {
+        frame->rematflg[bnd] = 0;
+    }
 
+    // if rematrixing is disabled, return
     if(!ctx->params.use_rematrixing) {
-        frame->blocks[0].rematstr = 1;
-        for(bnd=0; bnd<4; bnd++) {
-            frame->blocks[0].rematflg[bnd] = 0;
-        }
-        for(blk=1; blk<A52_NUM_BLOCKS; blk++) {
-            frame->blocks[blk].rematstr = 0;
-        }
         return;
     }
 
-    for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
-        block = &frame->blocks[blk];
-
-        block->rematstr = 0;
-        if(blk == 0) block->rematstr = 1;
-
-        for(bnd=0; bnd<4; bnd++) {
-            block->rematflg[bnd] = 0;
-            sum[bnd][0] = sum[bnd][1] = sum[bnd][2] = sum[bnd][3] = 0;
+    // calculate rematrixing flags and apply rematrixing to coefficients
+    for(bnd=0; bnd<4; bnd++) {
+        // calculate sums for this band for all blocks
+        sum[bnd][0] = sum[bnd][1] = sum[bnd][2] = sum[bnd][3] = 0;
+        for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+            block = &frame->blocks[blk];
             for(i=rematbndtab[bnd][0]; i<=rematbndtab[bnd][1]; i++) {
                 if(i == frame->ncoefs[0]) break;
                 lt = block->mdct_coef[0][i];
                 rt = block->mdct_coef[1][i];
                 sum[bnd][0] += lt * lt;
                 sum[bnd][1] += rt * rt;
-                sum[bnd][2] += (lt + rt) * (lt + rt) / FCONST(4.0);
-                sum[bnd][3] += (lt - rt) * (lt - rt) / FCONST(4.0);
+                sum[bnd][2] += (lt + rt) * (lt + rt) / 4.0;
+                sum[bnd][3] += (lt - rt) * (lt - rt) / 4.0;
             }
-            if(sum[bnd][0]+sum[bnd][1] >= (sum[bnd][2]+sum[bnd][3])/FCONST(2.0)) {
-                block->rematflg[bnd] = 1;
+        }
+        // compare sums to determine if rematrixing is used for this band
+        if(sum[bnd][0]+sum[bnd][1] > (sum[bnd][2]+sum[bnd][3])/2.0) {
+            frame->rematflg[bnd] = 1;
+            // apply rematrixing in this band for all blocks
+            for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+                block = &frame->blocks[blk];
                 for(i=rematbndtab[bnd][0]; i<=rematbndtab[bnd][1]; i++) {
                     if(i == frame->ncoefs[0]) break;
-                    ctmp1 = block->mdct_coef[0][i] * FCONST(0.5);
-                    ctmp2 = block->mdct_coef[1][i] * FCONST(0.5);
+                    ctmp1 = block->mdct_coef[0][i] * 0.5;
+                    ctmp2 = block->mdct_coef[1][i] * 0.5;
                     block->mdct_coef[0][i] = ctmp1 + ctmp2;
                     block->mdct_coef[1][i] = ctmp1 - ctmp2;
                 }
-            }
-            if(blk != 0 && block->rematstr == 0 &&
-                    block->rematflg[bnd] != frame->blocks[blk-1].rematflg[bnd]) {
-                block->rematstr = 1;
             }
         }
     }

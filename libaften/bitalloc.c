@@ -543,7 +543,7 @@ count_frame_bits(A52ThreadContext *tctx)
         frame_bits++; // cplstre
         if(ctx->acmod == 2) {
             frame_bits++; // rematstr
-            if(block->rematstr) frame_bits += 4; // rematflg
+            if(!blk) frame_bits += 4; // rematflg
         }
         frame_bits += 2 * ctx->n_channels; // nch * chexpstr[2]
         if(ctx->lfe) frame_bits++; // lfeexpstr

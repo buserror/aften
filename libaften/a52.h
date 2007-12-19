@@ -87,8 +87,6 @@ typedef struct A52Block {
     uint8_t grp_exp[A52_MAX_CHANNELS][85];
     uint8_t bap[A52_MAX_CHANNELS][256];
     uint16_t qmant[A52_MAX_CHANNELS][256];
-    uint8_t rematstr;
-    uint8_t rematflg[4];
     int fgaincod[A52_MAX_CHANNELS];
     int write_snr;
 } A52Block;
@@ -122,6 +120,7 @@ typedef struct A52Frame {
     int fsnroffst;
     int ncoefs[A52_MAX_CHANNELS];
     int expstr_set[A52_MAX_CHANNELS];
+    uint8_t rematflg[4];
 } A52Frame;
 
 typedef struct A52ThreadContext {
