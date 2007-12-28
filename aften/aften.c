@@ -304,46 +304,41 @@ main(int argc, char **argv)
         if(fs < 0) {
             fprintf(stderr, "Error encoding frame %d\n", frame_cnt);
             break;
-        } else {
+        } else if (fs > 0) {
             if(s.verbose > 0) {
-                if (fs > 0) {
-                    samplecount += A52_SAMPLES_PER_FRAME;
-                    bytecount += fs;
-                    qual += s.status.quality;
-                    bw += s.status.bwcode;
+                samplecount += A52_SAMPLES_PER_FRAME;
+                bytecount += fs;
+                qual += s.status.quality;
+                bw += s.status.bwcode;
+                if(s.verbose == 1) {
                     current_clock = clock();
-                    /* make sure we write out when finished, i.e. when fs == 0 */
-                    if (current_clock - last_update_clock >= update_clock_span || !fs || s.verbose == 2) {
-                        if(s.verbose == 1) {
-                            t1 = samplecount / pf.sample_rate;
-                            if(frame_cnt > 0 && (t1 > t0 || samplecount >= pf.samples)) {
-                                kbps = (bytecount * FCONST(8.0) * pf.sample_rate) /
-                                    (FCONST(1000.0) * samplecount);
-                                percent = 0;
-                                if(pf.samples > 0) {
-                                    percent = (uint32_t)((samplecount * FCONST(100.0)) /
-                                                         pf.samples);
-                                    percent = CLIP(percent, 0, 100);
-                                }
-                                fprintf(stderr, "\rprogress: %3u%% | q: %4.1f | "
-                                        "bw: %2.1f | bitrate: %4.1f kbps ",
-                                        percent, (qual / (frame_cnt+1)),
-                                        (bw / (frame_cnt+1)), kbps);
+                    if (current_clock - last_update_clock >= update_clock_span) {
+                        t1 = samplecount / pf.sample_rate;
+                        if(frame_cnt > 0 && (t1 > t0 || samplecount >= pf.samples)) {
+                            kbps = (bytecount * FCONST(8.0) * pf.sample_rate) /
+                                (FCONST(1000.0) * samplecount);
+                            percent = 0;
+                            if(pf.samples > 0) {
+                                percent = (uint32_t)((samplecount * FCONST(100.0)) /
+                                                        pf.samples);
+                                percent = CLIP(percent, 0, 100);
                             }
-                            t0 = t1;
-                        } else if(s.verbose == 2) {
-                            fprintf(stderr, "frame: %7d | q: %4d | bw: %2d | bitrate: %3d kbps\n",
-                                    frame_cnt, s.status.quality, s.status.bwcode,
-                                    s.status.bit_rate);
+                            fprintf(stderr, "\rprogress: %3u%% | q: %4.1f | "
+                                    "bw: %2.1f | bitrate: %4.1f kbps ",
+                                    percent, (qual / (frame_cnt+1)),
+                                    (bw / (frame_cnt+1)), kbps);
                         }
+                        t0 = t1;
                         last_update_clock = current_clock;
                     }
+                } else if(s.verbose == 2) {
+                    fprintf(stderr, "frame: %7d | q: %4d | bw: %2d | bitrate: %3d kbps\n",
+                            frame_cnt, s.status.quality, s.status.bwcode,
+                            s.status.bit_rate);
                 }
             }
-            if (fs) {
-                fwrite(frame, 1, fs, ofp);
-                frame_cnt++;
-            }
+            fwrite(frame, 1, fs, ofp);
+            frame_cnt++;
         }
     } while(nr > 0 || fs > 0 || !frame_cnt);
 
