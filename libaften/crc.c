@@ -34,6 +34,21 @@
 
 #define CRC16_POLY  0x18005
 
+#ifdef WORDS_BIGENDIAN
+#define LOW_BYTE 1
+#define HIGH_BYTE 0
+#else
+#define LOW_BYTE 0
+#define HIGH_BYTE 1
+#endif
+
+union crc_t
+{
+    uint16_t word;
+    uint8_t bytes[2];
+};
+
+
 static void
 crc_init_table(uint16_t *table, int bits, int poly)
 {
@@ -49,7 +64,7 @@ crc_init_table(uint16_t *table, int bits, int poly)
                 crc <<= 1;
             }
         }
-        table[i] = (crc & ((1<<bits)-1));
+        table[i] = bswap_16(crc & ((1<<bits)-1));
     }
 }
 
@@ -61,29 +76,19 @@ crc_init()
     crc_init_table(crc16tab, 16, CRC16_POLY);
 }
 
-static uint16_t
-calc_crc(const uint16_t *table, int bits, const uint8_t *data, uint32_t len)
-{
-	uint16_t crc, v1, v2;
-
-    crc = 0;
-    while(len--) {
-        v1 = (crc << 8) & ((1 << bits) - 1);
-        v2 = (crc >> (bits - 8)) ^ *data++;
-        crc = v1 ^ table[v2];
-    }
-    return crc;
-}
-
 uint16_t
 calc_crc16(const uint8_t *data, uint32_t len)
 {
-	uint16_t crc;
+    union crc_t crc = {0};
 
     assert(data != NULL);
 
-    crc = calc_crc(crc16tab, 16, data, len);
-    return crc;
+    while(len--) {
+        uint16_t v1 = crc.bytes[HIGH_BYTE];
+        uint16_t v2 = crc.bytes[LOW_BYTE] ^ *data++;
+        crc.word = v1 ^ crc16tab[v2];
+    }
+    return bswap_16(crc.word);
 }
 
 static uint16_t
