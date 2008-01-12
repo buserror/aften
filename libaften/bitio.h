@@ -41,9 +41,9 @@ extern void bitwriter_init(BitWriter *bw, void *buf, int len);
 
 extern void bitwriter_flushbits(BitWriter *bw);
 
-#define bitwriter_writebit(bw, val) bitwriter_writebits(bw, 1, val)
-
 extern void bitwriter_writebits(BitWriter *bw, int bits, uint32_t val);
+
+extern void bitwriter_writebit(BitWriter *bw, uint8_t val);
 
 extern uint32_t bitwriter_bitcount(BitWriter *bw);
 

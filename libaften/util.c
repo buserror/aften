@@ -131,8 +131,9 @@ aften_wav_channels_to_acmod(int ch, unsigned int chmask, int *acmod, int *lfe)
  * note: thanks to Tebasuna for help in getting this order right.
  */
 
-static const int wav_chmap_5[6] = { 0, 2, 1, 4, 3 };
-static const int wav_chmap_6[6] = { 0, 1, 3, 4, 2 };
+static const int wav_chmap_4[4] = { 0, 1, 3, 2 };
+static const int wav_chmap_5[5] = { 0, 2, 1, 4, 3 };
+static const int wav_chmap_6[5] = { 0, 1, 3, 4, 2 };
 static const int wav_chmap_7[6] = { 0, 2, 1, 4, 5, 3 };
 
 #define REMAP_WAV_TO_A52_COMMON(DATA_TYPE) \
@@ -141,7 +142,7 @@ static const int wav_chmap_7[6] = { 0, 2, 1, 4, 5, 3 };
     DATA_TYPE *smp = samples; \
     DATA_TYPE tmp[6]; \
     int sample_size = sizeof(DATA_TYPE); \
-    if(acmod < 3 || acmod == 4 || (acmod == 6 && lfe)) { \
+    if(acmod < 3 || ((acmod == 4 || acmod == 6) && lfe)) { \
         return; \
     } \
     if(acmod == 3 || (acmod == 5 && !lfe) || (acmod == 7 && !lfe)) { \
@@ -153,6 +154,7 @@ static const int wav_chmap_7[6] = { 0, 2, 1, 4, 5, 3 };
     } else { \
         const int *wav_chmap = NULL; \
         switch(acmod) { \
+            case 4: wav_chmap = wav_chmap_4; break; \
             case 5: wav_chmap = wav_chmap_5; break; \
             case 6: wav_chmap = wav_chmap_6; break; \
             case 7: wav_chmap = wav_chmap_7; break; \
