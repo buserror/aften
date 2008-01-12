@@ -212,11 +212,11 @@ aften_remap_wav_to_a52(void *samples, int n, int ch, A52SampleFormat fmt,
 { \
     int i; \
     DATA_TYPE *smp = samples; \
-        for(i=0; i<n*ch; i+=ch) { \
-            DATA_TYPE tmp = smp[i]; \
-            smp[i] = smp[i+1]; \
-            smp[i+1] = tmp; \
-        } \
+    for(i=0; i<n*ch; i+=ch) { \
+        DATA_TYPE tmp = smp[i]; \
+        smp[i] = smp[i+1]; \
+        smp[i+1] = tmp; \
+    } \
 }
 
 void
