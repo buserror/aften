@@ -212,13 +212,11 @@ aften_remap_wav_to_a52(void *samples, int n, int ch, A52SampleFormat fmt,
 { \
     int i; \
     DATA_TYPE *smp = samples; \
-    if(acmod > 2 && acmod & 1) { \
         for(i=0; i<n*ch; i+=ch) { \
             DATA_TYPE tmp = smp[i]; \
             smp[i] = smp[i+1]; \
             smp[i+1] = tmp; \
         } \
-    } \
 }
 
 void
@@ -229,6 +227,9 @@ aften_remap_mpeg_to_a52(void *samples, int n, int ch, A52SampleFormat fmt,
         fprintf(stderr, "NULL parameter passed to aften_remap_mpeg_to_a52\n");
         return;
     }
+
+    if(acmod <= 2 || !(acmod & 1))
+        return;
 
     switch(fmt) {
         case A52_SAMPLE_FMT_U8:  REMAP_MPEG_TO_A52_COMMON(uint8_t)
