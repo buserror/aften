@@ -54,7 +54,7 @@ exponent_init(A52Context *ctx)
         }
     }
 
-    for(i=1; i<6; i++) {
+    for(i=0; i<6; i++) {
         uint16_t *expbits = expstr_set_bits[i];
         for(nc=0; nc<=253; nc++) {
             uint16_t bits = 0;
@@ -184,7 +184,7 @@ compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs)
     uint8_t exponents[A52_NUM_BLOCKS][256];
 
     min_error = 1;
-    for(str=1; str<6; str++) {
+    for(str=0; str<6; str++) {
         // collect exponents
         for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
             memcpy(exponents[blk], exp[blk], 256);

@@ -51,17 +51,15 @@ int nexpgrptab[3][256] = {{0}};
 
 /**
  * Pre-defined sets of exponent strategies. A strategy set is selected for
- * each channel in a frame.  All sets 1 to 5 use the same number of exponent
- * bits.  Set 0 is only used as the reference of optimal accuracy.
- * TODO: more options and other sets which use greater or fewer bits
+ * each channel in a frame.  Set 0 is only used as the reference of optimal accuracy.
  */
 uint8_t str_predef[6][6] = {
-    { EXP_D15,   EXP_D15,   EXP_D15,   EXP_D15,   EXP_D15,   EXP_D15 },
     { EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE, EXP_REUSE, EXP_REUSE },
-    { EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D25, EXP_REUSE, EXP_REUSE },
-    { EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D45, EXP_REUSE,   EXP_D45 },
-    { EXP_D25, EXP_REUSE,   EXP_D45, EXP_REUSE,   EXP_D45, EXP_REUSE },
-    { EXP_D45,   EXP_D45, EXP_REUSE,   EXP_D45, EXP_REUSE,   EXP_D45 }
+    { EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE,   EXP_D25, EXP_REUSE },
+    { EXP_D25, EXP_REUSE,   EXP_D25, EXP_REUSE,   EXP_D25, EXP_REUSE },
+    { EXP_D25, EXP_REUSE,   EXP_D45,   EXP_D25, EXP_REUSE,   EXP_D45 },
+    { EXP_D25, EXP_REUSE,   EXP_D45,   EXP_D45,   EXP_D45,   EXP_D45 },
+    { EXP_D45,   EXP_D45,   EXP_D45,   EXP_D45,   EXP_D45,   EXP_D45 }
 };
 
 static const uint8_t rematbndtab[4][2] = {
