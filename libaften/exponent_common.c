@@ -81,25 +81,19 @@ compute_exponent_strategy(A52ThreadContext *tctx)
     uint8_t *exp[A52_MAX_CHANNELS][A52_NUM_BLOCKS];
     int ch, blk, str;
 
-    if(ctx->params.expstr_fast) {
         for(ch=0; ch<ctx->n_channels; ch++) {
-            for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
-                blocks[blk].exp_strategy[ch] = str_predef[2][blk];
-            }
-            frame->expstr_set[ch] = 2;
-        }
-    } else {
-        for(ch=0; ch<ctx->n_channels; ch++) {
+            str = 2;
+            if(!ctx->params.expstr_fast) {
             for(blk=0; blk<A52_NUM_BLOCKS; blk++)
                 exp[ch][blk] = blocks[blk].exp[ch];
 
             str = compute_expstr_ch(exp[ch], ncoefs[ch]);
+            }
             for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
                 blocks[blk].exp_strategy[ch] = str_predef[str][blk];
             }
             frame->expstr_set[ch] = str;
         }
-    }
 
     // lfe channel
     if(ctx->lfe) {
