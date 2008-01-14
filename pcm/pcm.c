@@ -76,7 +76,7 @@ pcm_init(PcmContext *pc, int num_files, FILE **fp_list, int read_format,
         pc->ch_mask = pc->pcm_file[0].ch_mask;
     } else {
         pc->channels = num_files;
-    pc->ch_mask = pcm_get_default_ch_mask(pc->channels);
+        pc->ch_mask = pcm_get_default_ch_mask(pc->channels);
     }
     pcm_set_sample_rate(pc, pc->pcm_file[0].sample_rate);
 
