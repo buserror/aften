@@ -97,7 +97,7 @@ compute_exponent_strategy(A52ThreadContext *tctx)
     // lfe channel
     if(ctx->lfe) {
         for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
-            blocks[blk].exp_strategy[ctx->lfe_channel] = str_predef[1][blk];
+            blocks[blk].exp_strategy[ctx->lfe_channel] = str_predef[0][blk];
         }
     }
 }
