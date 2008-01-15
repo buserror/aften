@@ -62,9 +62,7 @@ uint8_t str_predef[6][6] = {
     { EXP_D45,   EXP_D45,   EXP_D45,   EXP_D45,   EXP_D45,   EXP_D45 }
 };
 
-static const uint8_t rematbndtab[4][2] = {
-    {13, 24}, {25, 36}, {37, 60}, {61, 252}
-};
+static const uint8_t rematbndtab[5] = { 13, 25, 37, 61, 252 };
 
 /* possible frequencies */
 const uint16_t a52_freqs[3] = { 48000, 44100, 32000 };
@@ -1155,7 +1153,7 @@ calc_rematrixing(A52ThreadContext *tctx)
         sum[bnd][0] = sum[bnd][1] = sum[bnd][2] = sum[bnd][3] = 0;
         for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
             block = &frame->blocks[blk];
-            for(i=rematbndtab[bnd][0]; i<=rematbndtab[bnd][1]; i++) {
+            for(i=rematbndtab[bnd]; i<rematbndtab[bnd+1]; i++) {
                 if(i == frame->ncoefs[0]) break;
                 lt = block->mdct_coef[0][i];
                 rt = block->mdct_coef[1][i];
@@ -1171,7 +1169,7 @@ calc_rematrixing(A52ThreadContext *tctx)
             // apply rematrixing in this band for all blocks
             for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
                 block = &frame->blocks[blk];
-                for(i=rematbndtab[bnd][0]; i<=rematbndtab[bnd][1]; i++) {
+                for(i=rematbndtab[bnd]; i<rematbndtab[bnd+1]; i++) {
                     if(i == frame->ncoefs[0]) break;
                     ctmp1 = block->mdct_coef[0][i] * 0.5;
                     ctmp2 = block->mdct_coef[1][i] * 0.5;
