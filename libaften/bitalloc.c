@@ -581,7 +581,6 @@ cbr_bit_allocation(A52ThreadContext *tctx, int prepare)
 {
     A52Context *ctx = tctx->ctx;
     A52Frame *frame = &tctx->frame;
-    int csnroffst, fsnroffst;
     int current_bits, avail_bits, leftover;
     int snroffst=0;
 
@@ -662,20 +661,11 @@ cbr_bit_allocation(A52ThreadContext *tctx, int prepare)
         return -1;
     }
 
-    // calculate csnroffst and fsnroffst
-    snroffst = (snroffst - 240);
-    csnroffst = (snroffst / 16) + 15;
-    fsnroffst = (snroffst % 16);
-    while(fsnroffst < 0) {
-        csnroffst--;
-        fsnroffst += 16;
-    }
-
     // set encoding parameters
-    frame->csnroffst = csnroffst;
-    frame->fsnroffst = fsnroffst;
-    frame->quality = QUALITY(csnroffst, fsnroffst);
-    tctx->last_quality = frame->quality;
+    frame->csnroffst = snroffst >> 4;
+    frame->fsnroffst = snroffst & 0xF;
+    frame->quality = snroffst;
+    tctx->last_quality = snroffst;
 
     return 0;
 }
