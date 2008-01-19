@@ -203,7 +203,7 @@ void a52_common_init(void);
  * @param[out] psd        signal power for each frequency bin
  * @param[out] band_psd   signal power for each critical band
  */
-void a52_bit_alloc_calc_psd(int8_t *exp, int start, int end, int16_t *psd,
+void a52_bit_alloc_calc_psd(uint8_t *exp, int start, int end, int16_t *psd,
                                int16_t *band_psd);
 
 /**

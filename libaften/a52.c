@@ -58,7 +58,7 @@ static inline int calc_lowcomp(int a, int b0, int b1, int bin)
     }
 }
 
-void a52_bit_alloc_calc_psd(int8_t *exp, int start, int end, int16_t *psd,
+void a52_bit_alloc_calc_psd(uint8_t *exp, int start, int end, int16_t *psd,
                                int16_t *band_psd)
 {
     int bin, i, j, k, end1, v;
