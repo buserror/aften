@@ -278,7 +278,7 @@ aften_encode_init(AftenContext *s)
         fprintf(stderr, "invalid number of channels\n");
         return -1;
     }
-    if(s->acmod < 0 || s->acmod > 7) {
+    if(s->acmod > 7) {
         fprintf(stderr, "invalid acmod\n");
         return -1;
     }
@@ -359,7 +359,7 @@ aften_encode_init(AftenContext *s)
     ctx->frmsizecod = i*2;
     ctx->target_bitrate = a52_bitratetab[i] >> ctx->halfratecod;
 
-    bitalloc_init();
+    a52_common_init();
     crc_init();
     a52_window_init(ctx);
     exponent_init(ctx);

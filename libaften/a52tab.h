@@ -1,6 +1,6 @@
 /**
- * Aften: A/52 audio encoder
- * Copyright (c) 2006 Justin Ruggles
+ * Aften: A/52 audio encoder -  A/52 tables
+ * Copyright (c) 2008 Prakash Punnoor <prakash@punnoor.de>
  *
  * Based on "The simplest AC3 encoder" from FFmpeg
  * Copyright (c) 2000 Fabrice Bellard.
@@ -20,18 +20,24 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-/**
- * @file bitalloc.h
- * A/52 bit allocation header
- */
+#ifndef A52TAB_H
+#define A52TAB_H
 
-#ifndef BITALLOC_H
-#define BITALLOC_H
+#include "common.h"
 
-#include "a52.h"
+extern const uint16_t a52_frame_size_tab[38][3];
+extern const uint8_t  a52_channels_tab[8];
+extern const uint16_t a52_sample_rate_tab[3];
+extern const uint16_t a52_bitrate_tab[19];
+extern const uint8_t  a52_log_add_tab[260];
+extern const uint16_t a52_hearing_threshold_tab[50][3];
+extern const uint8_t  a52_bap_tab[64];
+extern const uint8_t  a52_slow_decay_tab[4];
+extern const uint8_t  a52_fast_decay_tab[4];
+extern const uint16_t a52_slow_gain_tab[4];
+extern const uint16_t a52_db_per_bit_tab[4];
+extern const int16_t  a52_floor_tab[8];
+extern const uint16_t a52_fast_gain_tab[8];
+extern const uint8_t  a52_critical_band_size_tab[50];
 
-extern void vbw_bit_allocation(A52ThreadContext *tctx);
-
-extern int compute_bit_allocation(A52ThreadContext *tctx);
-
-#endif /* BITALLOC_H */
+#endif /* A52TAB_H */

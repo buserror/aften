@@ -29,6 +29,7 @@
 #define A52_H
 
 #include "common.h"
+#include "a52tab.h"
 #include "bitio.h"
 #include "aften.h"
 #include "filter.h"
@@ -48,15 +49,7 @@
 #define EXP_D25   2
 #define EXP_D45   3
 
-#define SNROFFST(csnr, fsnr) (((((csnr)-15) << 4) + (fsnr)) << 2)
 #define QUALITY(csnr, fsnr) (((csnr) << 4) | (fsnr))
-
-/* possible frequencies */
-extern const uint16_t a52_freqs[3];
-
-/* possible bitrates */
-extern const uint16_t a52_bitratetab[19];
-
 
 extern const uint8_t log2tab[256];
 
@@ -70,6 +63,14 @@ log2i(uint32_t v)
 
     return n;
 }
+
+/** Delta bit allocation strategy */
+typedef enum {
+    DBA_REUSE = 0,
+    DBA_NEW,
+    DBA_NONE,
+    DBA_RESERVED
+} AC3DeltaStrategy;
 
 typedef struct A52Block {
     FLOAT *input_samples[A52_MAX_CHANNELS]; /* 512 per ch */
@@ -185,5 +186,67 @@ typedef struct A52Context {
     MDCTContext mdct_ctx_512;
     MDCTContext mdct_ctx_256;
 } A52Context;
+
+void a52_common_init(void);
+
+/**
+ * Calculates the log power-spectral density of the input signal.
+ * This gives a rough estimate of signal power in the frequency domain by using
+ * the spectral envelope (exponents).  The psd is also separately grouped
+ * into critical bands for use in the calculating the masking curve.
+ * 128 units in psd = -6 dB.  The dbknee parameter in AC3BitAllocParameters
+ * determines the reference level.
+ *
+ * @param[in]  exp        frequency coefficient exponents
+ * @param[in]  start      starting bin location
+ * @param[in]  end        ending bin location
+ * @param[out] psd        signal power for each frequency bin
+ * @param[out] band_psd   signal power for each critical band
+ */
+void a52_bit_alloc_calc_psd(int8_t *exp, int start, int end, int16_t *psd,
+                               int16_t *band_psd);
+
+/**
+ * Calculates the masking curve.
+ * First, the excitation is calculated using parameters in \p s and the signal
+ * power in each critical band.  The excitation is compared with a predefined
+ * hearing threshold table to produce the masking curve.  If delta bit
+ * allocation information is provided, it is used for adjusting the masking
+ * curve, usually to give a closer match to a better psychoacoustic model.
+ *
+ * @param[in]  s            adjustable bit allocation parameters
+ * @param[in]  band_psd     signal power for each critical band
+ * @param[in]  start        starting bin location
+ * @param[in]  end          ending bin location
+ * @param[in]  fast_gain    fast gain (estimated signal-to-mask ratio)
+ * @param[in]  dba_mode     delta bit allocation mode (none, reuse, or new)
+ * @param[in]  dba_nsegs    number of delta segments
+ * @param[in]  dba_offsets  location offsets for each segment
+ * @param[in]  dba_lengths  length of each segment
+ * @param[in]  dba_values   delta bit allocation for each segment
+ * @param[out] mask         calculated masking curve
+ */
+void a52_bit_alloc_calc_mask(A52BitAllocParams *s, int16_t *band_psd,
+                                int start, int end, int fast_gain,
+                                int dba_mode, int dba_nsegs, uint8_t *dba_offsets,
+                                uint8_t *dba_lengths, uint8_t *dba_values,
+                                int16_t *mask);
+
+/**
+ * Calculates bit allocation pointers.
+ * The SNR is the difference between the masking curve and the signal.  AC-3
+ * uses this value for each frequency bin to allocate bits.  The \p snroffset
+ * parameter is a global adjustment to the SNR for all bins.
+ *
+ * @param[in]  mask       masking curve
+ * @param[in]  psd        signal power for each frequency bin
+ * @param[in]  start      starting bin location
+ * @param[in]  end        ending bin location
+ * @param[in]  snr_offset SNR adjustment
+ * @param[in]  floor      noise floor
+ * @param[out] bap        bit allocation pointers
+ */
+void a52_bit_alloc_calc_bap(int16_t *mask, int16_t *psd, int start, int end,
+                               int snr_offset, int floor, uint8_t *bap);
 
 #endif /* A52_H */

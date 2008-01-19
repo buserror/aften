@@ -46,6 +46,8 @@ INCLUDE_DIRECTORIES(${Aften_SOURCE_DIR}/aften)
 INCLUDE_DIRECTORIES(${Aften_SOURCE_DIR}/pcm)
 
 SET(LIBAFTEN_SRCS libaften/a52enc.c
+                  libaften/a52.c
+                  libaften/a52tab.c
                   libaften/bitalloc.c
                   libaften/bitio.c
                   libaften/crc.c

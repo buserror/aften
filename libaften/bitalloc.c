@@ -37,217 +37,6 @@
 #include "a52.h"
 #include "aften.h"
 
-/* log addition table */
-static const uint8_t latab[260]= {
-    64, 63, 62, 61, 60, 59, 58, 57, 56, 55,
-    54, 53, 52, 52, 51, 50, 49, 48, 47, 47,
-    46, 45, 44, 44, 43, 42, 41, 41, 40, 39,
-    38, 38, 37, 36, 36, 35, 35, 34, 33, 33,
-    32, 32, 31, 30, 30, 29, 29, 28, 28, 27,
-    27, 26, 26, 25, 25, 24, 24, 23, 23, 22,
-    22, 21, 21, 21, 20, 20, 19, 19, 19, 18,
-    18, 18, 17, 17, 17, 16, 16, 16, 15, 15,
-    15, 14, 14, 14, 13, 13, 13, 13, 12, 12,
-    12, 12, 11, 11, 11, 11, 10, 10, 10, 10,
-    10,  9,  9,  9,  9,  9,  8,  8,  8,  8,
-     8,  8,  7,  7,  7,  7,  7,  7,  6,  6,
-     6,  6,  6,  6,  6,  6,  5,  5,  5,  5,
-     5,  5,  5,  5,  4,  4,  4,  4,  4,  4,
-     4,  4,  4,  4,  4,  3,  3,  3,  3,  3,
-     3,  3,  3,  3,  3,  3,  3,  3,  3,  2,
-     2,  2,  2,  2,  2,  2,  2,  2,  2,  2,
-     2,  2,  2,  2,  2,  2,  2,  2,  1,  1,
-     1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
-     1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
-     1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
-     0,  0,  0,  0,  0,  0,  0,  0,  0,  0
-};
-
-/**
- * absolute hearing threshold table
- * values are in log-psd units (128 psd = -6dB)
- * each table entry corresponds to a critical frequency band
- * each entry has 3 values, 1 for each base sample rate
- * { 48kHz, 44.1kHz, 32kHz }
- */
-static const uint16_t hth[50][3]= {
-    { 1232, 1264, 1408 },
-    { 1232, 1264, 1408 },
-    { 1088, 1120, 1200 },
-    { 1024, 1040, 1104 },
-    {  992,  992, 1056 },
-    {  960,  976, 1008 },
-    {  944,  960,  992 },
-    {  944,  944,  976 },
-    {  928,  944,  960 },
-    {  928,  928,  944 },
-    {  928,  928,  944 },
-    {  928,  928,  944 },
-    {  928,  928,  928 },
-    {  912,  928,  928 },
-    {  912,  912,  928 },
-    {  912,  912,  928 },
-    {  896,  912,  928 },
-    {  896,  896,  928 },
-    {  880,  896,  928 },
-    {  880,  896,  928 },
-    {  864,  880,  912 },
-    {  864,  880,  912 },
-    {  848,  864,  912 },
-    {  848,  864,  912 },
-    {  832,  848,  896 },
-    {  832,  848,  896 },
-    {  816,  832,  896 },
-    {  800,  832,  880 },
-    {  784,  800,  864 },
-    {  768,  784,  848 },
-    {  752,  768,  832 },
-    {  752,  752,  816 },
-    {  752,  752,  800 },
-    {  752,  752,  784 },
-    {  768,  752,  768 },
-    {  784,  768,  752 },
-    {  832,  800,  752 },
-    {  912,  848,  752 },
-    {  992,  912,  768 },
-    { 1056,  992,  784 },
-    { 1120, 1056,  816 },
-    { 1168, 1104,  848 },
-    { 1184, 1184,  960 },
-    { 1120, 1168, 1040 },
-    { 1088, 1120, 1136 },
-    { 1088, 1088, 1184 },
-    { 1312, 1152, 1120 },
-    { 2048, 1584, 1088 },
-    { 2112, 2112, 1104 },
-    { 2112, 2112, 1248 },
-};
-
-/* bit allocation pointer table */
-static const uint8_t baptab[64]= {
-     0,  1,  1,  1,  1,  1,  2,  2,  3,  3,  3,  4,  4,  5,  5,  6,
-     6,  6,  6,  7,  7,  7,  7,  8,  8,  8,  8,  9,  9,  9,  9, 10,
-    10, 10, 10, 11, 11, 11, 11, 12, 12, 12, 12, 13, 13, 13, 13, 14,
-    14, 14, 14, 14, 14, 14, 14, 15, 15, 15, 15, 15, 15, 15, 15, 15
-};
-
-/* slow gain table */
-static const uint16_t sgaintab[4]= {
-    1344, 1240, 1144, 1040,
-};
-
-/* dB per bit table */
-static const uint16_t dbkneetab[4]= {
-    0, 1792, 2304, 2816,
-};
-
-/* floor table */
-static const int16_t floortab[8]= {
-    752, 688, 624, 560, 496, 368, 240, -2048,
-};
-
-/* band size table (number of bins in each band) */
-static const uint8_t bndsz[50]={
-     1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1, 1,
-     1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  3,  3,  3,  3,  3, 3,
-     3,  6,  6,  6,  6,  6,  6, 12, 12, 12, 12, 24, 24, 24, 24, 24
-};
-
-/* slow decay table */
-static const uint8_t sdecaytab[4] = {
-    15, 17, 19, 21
-};
-
-/* fast decay table */
-static const uint8_t fdecaytab[4] = {
-    63, 83, 103, 123
-};
-
-/* fast gain table */
-static const uint16_t fgaintab[8] = {
-    128, 256, 384, 512, 640, 768, 896, 1024
-};
-
-/* power spectral density table */
-static uint16_t psdtab[25];
-
-/* mask table (maps bin# to band#) */
-static uint8_t masktab[253];
-
-/* band table (starting bin for each band) */
-static uint8_t bndtab[51];
-
-/* frame size table */
-static uint16_t frmsizetab[38][3];
-
-void
-bitalloc_init(void)
-{
-    int i, j, k, l, v;
-
-    // compute psdtab
-    for(i=0; i<25; i++) {
-        psdtab[i] = 3072 - (i << 7);
-    }
-
-    // compute bndtab and masktab from bandsz
-    k = l = i = 0;
-    bndtab[i] = l;
-    while(i < 50) {
-        v = bndsz[i];
-        for(j=0; j<v; j++) masktab[k++] = i;
-        l += v;
-        bndtab[++i] = l;
-    }
-
-    // compute frmsizetab (in bits)
-    for(i=0; i<19; i++) {
-        for(j=0; j<3; j++) {
-            v = a52_bitratetab[i] * 96000 / a52_freqs[j];
-            frmsizetab[i*2][j] = frmsizetab[i*2+1][j] = v * 16;
-            if(j == 1) frmsizetab[i*2+1][j] += 16;
-        }
-    }
-}
-
-static inline int
-calc_lowcomp1(int a, int b0, int b1, int c)
-{
-    if((b0 + 256) == b1) {
-        a = c;
-    } else if(b0 > b1) {
-        a = MAX(a - 64, 0);
-    }
-    return a;
-}
-
-static inline int
-calc_lowcomp(int a, int b0, int b1, int bin)
-{
-    if(bin < 7) {
-        return calc_lowcomp1(a, b0, b1, 384);
-    } else if(bin < 20) {
-        return calc_lowcomp1(a, b0, b1, 320);
-    } else {
-        return MAX(a - 128, 0);
-    }
-}
-
-/** combine psd value in multiple bins into a single psd value */
-static int
-psd_combine(int16_t *psd, int bins)
-{
-    int i, adr;
-    int v;
-
-    v = psd[0];
-    for(i=1; i<bins; i++) {
-        adr = MIN((ABS(v-psd[i]) >> 1), 255);
-        v = MAX(v, psd[i]) + latab[adr];
-    }
-    return v;
-}
-
 /**
  * A52 bit allocation preparation to speed up matching left bits.
  * This generates the power-spectral densities and the masking curve based on
@@ -260,101 +49,13 @@ a52_bit_allocation_prepare(A52BitAllocParams *s,
 //                 int deltbae,int deltnseg, uint8_t *deltoffst,
 //                 uint8_t *deltlen, uint8_t *deltba)
 {
-    int bnd, i, end1, bndstrt, bndend, lowcomp, begin;
-    int fastleak, slowleak;
     int16_t bndpsd[50]; // power spectral density for critical bands
-    int16_t excite[50]; // excitation function
 
-    // exponent mapping to PSD
-    for(i=start; i<end; i++) {
-        psd[i] = psdtab[exp[i]];
-    }
+    a52_bit_alloc_calc_psd(exp, start, end, psd, bndpsd);
 
-    // use log addition to combine PSD for each critical band
-    bndstrt = masktab[start];
-    bndend = masktab[end-1] + 1;
-    i = start;
-    for(bnd=bndstrt; bnd<bndend; bnd++) {
-        int bins = MIN(bndtab[bnd+1], end) - i;
-        bndpsd[bnd] = psd_combine(&psd[i], bins);
-        i += bins;
-    }
-
-    // excitation function
-    if(bndstrt == 0) {
-        // fbw and lfe channels
-        lowcomp = 0;
-        lowcomp = calc_lowcomp(lowcomp, bndpsd[0], bndpsd[1], 0);
-        excite[0] = bndpsd[0] - fgain - lowcomp;
-        lowcomp = calc_lowcomp(lowcomp, bndpsd[1], bndpsd[2], 1);
-        excite[1] = bndpsd[1] - fgain - lowcomp;
-        begin = 7;
-        for(bnd=2; bnd<7; bnd++) {
-            if(bnd+1 < bndend) {
-                lowcomp = calc_lowcomp(lowcomp, bndpsd[bnd], bndpsd[bnd+1], bnd);
-            }
-            fastleak = bndpsd[bnd] - fgain;
-            slowleak = bndpsd[bnd] - s->sgain;
-            excite[bnd] = fastleak - lowcomp;
-            if(bnd+1 < bndend) {
-                if(bndpsd[bnd] <= bndpsd[bnd+1]) {
-                    begin = bnd + 1;
-                    break;
-                }
-            }
-        }
-
-        end1 = MIN(bndend, 22);
-
-        for(bnd=begin; bnd<end1; bnd++) {
-            if(bnd+1 < bndend) {
-                lowcomp = calc_lowcomp(lowcomp, bndpsd[bnd], bndpsd[bnd+1], bnd);
-            }
-            fastleak = MAX(fastleak-s->fdecay, bndpsd[bnd]-fgain);
-            slowleak = MAX(slowleak-s->sdecay, bndpsd[bnd]-s->sgain);
-            excite[bnd] = MAX(slowleak, fastleak-lowcomp);
-        }
-        begin = 22;
-    } else {
-        // coupling channel
-        begin = bndstrt;
-        fastleak = (s->cplfleak << 8) + 768;
-        slowleak = (s->cplsleak << 8) + 768;
-    }
-
-    for(bnd=begin; bnd<bndend; bnd++) {
-        fastleak = MAX(fastleak-s->fdecay, bndpsd[bnd]-fgain);
-        slowleak = MAX(slowleak-s->sdecay, bndpsd[bnd]-s->sgain);
-        excite[bnd] = MAX(slowleak, fastleak);
-    }
-
-    // compute masking curve from excitation function and hearing threshold
-    for(bnd=bndstrt; bnd<bndend; bnd++) {
-        if(bndpsd[bnd] < s->dbknee) {
-            excite[bnd] += (s->dbknee - bndpsd[bnd]) >> 2;
-        }
-        mask[bnd] = MAX(excite[bnd], hth[bnd >> s->halfratecod][s->fscod]);
-    }
-
-#if 0
-    // delta bit allocation
-    if(deltbae == 0 || deltbae == 1) {
-        int seg, delta;
-        bnd = 0;
-        for(seg=0; seg<deltnseg; seg++) {
-            bnd += deltoffst[seg];
-            if(deltba[seg] >= 4) {
-                delta = (deltba[seg] - 3) << 7;
-            } else {
-                delta = (deltba[seg] - 4) << 7;
-            }
-            for(i=0; i<deltlen[seg]; i++) {
-                mask[bnd] += delta;
-                bnd++;
-            }
-        }
-    }
-#endif
+    a52_bit_alloc_calc_mask(s, bndpsd, start, end, fgain,
+                            -1, -1, NULL, NULL, NULL,/* delta bit allocation not used */
+                            mask);
 }
 
 /**
@@ -365,6 +66,7 @@ a52_bit_allocation_prepare(A52BitAllocParams *s,
  * step.  They are used along with the given snroffset and floor values to
  * calculate each bap value.
  */
+#if 0
 static void
 a52_bit_allocation(uint8_t *bap, int16_t *psd, int16_t *mask,
                    int start, int end, int snroffset, int floor)
@@ -382,11 +84,11 @@ a52_bit_allocation(uint8_t *bap, int16_t *psd, int16_t *mask,
     offset = snroffset + floor;
     for (i = start, j = masktab[start]; end > bndtab[j]; ++j) {
         v = (MAX(mask[j] - offset, 0) & 0x1FE0) + floor;
-        endj = MIN(bndtab[j] + bndsz[j], end);
+        endj = MIN(bndtab[j] + a52_critical_band_size_tab[j], end);
         if ((endj-i) & 1) {
             address1 = (psd[i] - v) >> 5;
             address1 = CLIP(address1, 0, 63);
-            bap[i] = baptab[address1];
+            bap[i] = a52_bap_tab[address1];
             ++i;
         }
         while (i < endj) {
@@ -394,13 +96,13 @@ a52_bit_allocation(uint8_t *bap, int16_t *psd, int16_t *mask,
             address2 = (psd[i+1] - v) >> 5;
             address1 = CLIP(address1, 0, 63);
             address2 = CLIP(address2, 0, 63);
-            bap[i  ] = baptab[address1];
-            bap[i+1] = baptab[address2];
+            bap[i  ] = a52_bap_tab[address1];
+            bap[i+1] = a52_bap_tab[address2];
             i+=2;
         }
     }
 }
-
+#endif
 /**
  * Calculate the size in bits taken by the mantissas.
  * This is determined solely by the bit allocation pointers.
@@ -498,9 +200,8 @@ bit_alloc(A52ThreadContext *tctx, int snroffst)
             if(block->exp_strategy[ch] == EXP_REUSE) {
                 memcpy(block->bap[ch], frame->blocks[blk-1].bap[ch], 256);
             } else {
-                a52_bit_allocation(block->bap[ch], block->psd[ch], block->mask[ch],
-                                   0, frame->ncoefs[ch], snroffst,
-                                   frame->bit_alloc.floor);
+                a52_bit_alloc_calc_bap(block->mask[ch], block->psd[ch], 0, frame->ncoefs[ch],
+                                       snroffst, frame->bit_alloc.floor, block->bap[ch]);
             }
             bits += compute_mantissa_size(mant_cnt, block->bap[ch], frame->ncoefs[ch]);
 
@@ -555,7 +256,7 @@ count_frame_bits(A52ThreadContext *tctx)
         frame_bits++; // snr
         // csnroffset[6] + nch * (fsnoffset[4] + fgaincod[3])
         if(block->write_snr)
-            frame_bits += 6 + ctx->n_all_channels * (4 + 3); 
+            frame_bits += 6 + ctx->n_all_channels * (4 + 3);
         frame_bits += 2; // delta / skip
     }
     frame_bits++; // cplinu for block 0
@@ -692,11 +393,11 @@ vbr_bit_allocation(A52ThreadContext *tctx)
     frame_size = 0;
     frame_bits = current_bits + bit_alloc(tctx, quality);
     for(i=0; i<=ctx->frmsizecod; i++) {
-        frame_size = frmsizetab[i][ctx->fscod];
+        frame_size = a52_frame_size_tab[i][ctx->fscod];
         if(frame_size >= frame_bits) break;
     }
     i = MIN(i, ctx->frmsizecod);
-    frame->bit_rate = a52_bitratetab[i/2] >> ctx->halfratecod;
+    frame->bit_rate = a52_bitrate_tab[i/2] >> ctx->halfratecod;
 
     frame->frmsizecod = i;
     frame->frame_size = frame_size / 16;
@@ -722,11 +423,11 @@ start_bit_allocation(A52ThreadContext *tctx)
     // read bit allocation table values
     frame->bit_alloc.fscod = ctx->fscod;
     frame->bit_alloc.halfratecod = ctx->halfratecod;
-    frame->bit_alloc.sdecay = sdecaytab[frame->sdecaycod] >> ctx->halfratecod;
-    frame->bit_alloc.fdecay = fdecaytab[frame->fdecaycod] >> ctx->halfratecod;
-    frame->bit_alloc.sgain = sgaintab[frame->sgaincod];
-    frame->bit_alloc.dbknee = dbkneetab[frame->dbkneecod];
-    frame->bit_alloc.floor = floortab[frame->floorcod];
+    frame->bit_alloc.sdecay = a52_slow_decay_tab[frame->sdecaycod] >> ctx->halfratecod;
+    frame->bit_alloc.fdecay = a52_fast_decay_tab[frame->fdecaycod] >> ctx->halfratecod;
+    frame->bit_alloc.sgain = a52_slow_gain_tab[frame->sgaincod];
+    frame->bit_alloc.dbknee = a52_db_per_bit_tab[frame->dbkneecod];
+    frame->bit_alloc.floor = a52_floor_tab[frame->floorcod];
 
     // set fast gain based on exponent strategy
     for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
@@ -739,7 +440,7 @@ start_bit_allocation(A52ThreadContext *tctx)
             } else {
                 block->fgaincod[ch] = frame->blocks[blk-1].fgaincod[ch];
             }
-            frame->bit_alloc.fgain[blk][ch] = fgaintab[block->fgaincod[ch]];
+            frame->bit_alloc.fgain[blk][ch] = a52_fast_gain_tab[block->fgaincod[ch]];
         }
     }
 
