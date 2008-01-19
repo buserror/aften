@@ -59,51 +59,6 @@ a52_bit_allocation_prepare(A52BitAllocParams *s,
 }
 
 /**
- * A52 bit allocation
- * Generate bit allocation pointers for each mantissa, which determines the
- * number of bits allocated for each mantissa.  The fine-grain power-spectral
- * densities and the masking curve have been pre-generated in the preparation
- * step.  They are used along with the given snroffset and floor values to
- * calculate each bap value.
- */
-#if 0
-static void
-a52_bit_allocation(uint8_t *bap, int16_t *psd, int16_t *mask,
-                   int start, int end, int snroffset, int floor)
-{
-    int i, j, endj;
-    int v, address1, address2, offset;
-
-    // csnroffst=0 & fsnroffst=0 is a special-case scenario in which all baps
-    // are set to zero and the core bit allocation is skipped.
-    if(snroffset == SNROFFST(0, 0)) {
-        memset(&bap[start], 0, end-start);
-        return;
-    }
-
-    offset = snroffset + floor;
-    for (i = start, j = masktab[start]; end > bndtab[j]; ++j) {
-        v = (MAX(mask[j] - offset, 0) & 0x1FE0) + floor;
-        endj = MIN(bndtab[j] + a52_critical_band_size_tab[j], end);
-        if ((endj-i) & 1) {
-            address1 = (psd[i] - v) >> 5;
-            address1 = CLIP(address1, 0, 63);
-            bap[i] = a52_bap_tab[address1];
-            ++i;
-        }
-        while (i < endj) {
-            address1 = (psd[i  ] - v) >> 5;
-            address2 = (psd[i+1] - v) >> 5;
-            address1 = CLIP(address1, 0, 63);
-            address2 = CLIP(address2, 0, 63);
-            bap[i  ] = a52_bap_tab[address1];
-            bap[i+1] = a52_bap_tab[address2];
-            i+=2;
-        }
-    }
-}
-#endif
-/**
  * Calculate the size in bits taken by the mantissas.
  * This is determined solely by the bit allocation pointers.
  */
