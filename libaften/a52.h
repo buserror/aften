@@ -22,7 +22,7 @@
 
 /**
  * @file a52.h
- * A/52 encoder header
+ * A/52 common header
  */
 
 #ifndef A52_H
@@ -30,11 +30,7 @@
 
 #include "common.h"
 #include "a52tab.h"
-#include "bitio.h"
-#include "aften.h"
-#include "filter.h"
-#include "mdct.h"
-#include "threading.h"
+#include "aften-types.h"
 
 #define AFTEN_VERSION "SVN"
 
@@ -123,69 +119,6 @@ typedef struct A52Frame {
     int expstr_set[A52_MAX_CHANNELS];
     uint8_t rematflg[4];
 } A52Frame;
-
-typedef struct A52ThreadContext {
-    struct A52Context *ctx;
-#ifndef NO_THREADS
-    A52ThreadSync ts;
-#endif
-    ThreadState state;
-    int thread_num;
-    int framesize;
-
-    AftenStatus status;
-    A52Frame frame;
-    BitWriter bw;
-    uint8_t frame_buffer[A52_MAX_CODED_FRAME_SIZE];
-
-    uint32_t bit_cnt;
-    uint32_t sample_cnt;
-
-    int last_quality;
-
-    MDCTThreadContext mdct_tctx_512;
-    MDCTThreadContext mdct_tctx_256;
-} A52ThreadContext;
-
-typedef struct A52Context {
-    A52ThreadContext *tctx;
-#ifndef NO_THREADS
-    A52GlobalThreadSync ts;
-#endif
-    AftenEncParams params;
-    AftenMetadata meta;
-    void (*fmt_convert_from_src)(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
-          const void *vsrc, int nch, int n);
-    void (*apply_a52_window)(FLOAT *samples);
-    void (*process_exponents)(A52ThreadContext *tctx);
-
-    int n_threads;
-    int last_samples_count;
-    int n_channels;
-    int n_all_channels;
-    int acmod;
-    int lfe;
-    int lfe_channel;
-    int sample_rate;
-    int halfratecod;
-    int bsid;
-    int fscod;
-    int bsmod;
-    int target_bitrate;
-    int frmsizecod;
-    int fixed_bwcode;
-
-    FilterContext bs_filter[A52_MAX_CHANNELS];
-    FilterContext dc_filter[A52_MAX_CHANNELS];
-    FilterContext bw_filter[A52_MAX_CHANNELS];
-    FilterContext lfe_filter;
-
-    FLOAT last_samples[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME]; // 256 would be enough, but want to use converting functions
-    FLOAT last_transient_samples[A52_MAX_CHANNELS][256];
-
-    MDCTContext mdct_ctx_512;
-    MDCTContext mdct_ctx_256;
-} A52Context;
 
 void a52_common_init(void);
 

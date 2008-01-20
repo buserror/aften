@@ -33,7 +33,7 @@
 #include <string.h>
 #include <assert.h>
 
-#include "a52.h"
+#include "a52enc.h"
 #include "bitalloc.h"
 #include "crc.h"
 #include "mdct.h"

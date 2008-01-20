@@ -28,5 +28,7 @@
 
 #include "common.h"
 
+struct A52Context;
+
 void
 set_converter(A52Context *ctx, A52SampleFormat sample_format);

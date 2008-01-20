@@ -32,10 +32,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "a52enc.h"
 #include "bitalloc.h"
 #include "exponent.h"
-#include "a52.h"
-#include "aften.h"
 
 /**
  * A52 bit allocation preparation to speed up matching left bits.

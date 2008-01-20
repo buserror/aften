@@ -29,6 +29,7 @@
 #include <string.h>
 #include <assert.h>
 
+#include "a52enc.h"
 #include "window.h"
 #include "cpu_caps.h"
 

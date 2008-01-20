@@ -26,8 +26,8 @@
  * converts external format to internal format
  */
 
-#include "common.h"
-#include "a52.h"
+#include "a52enc.h"
+#include "convert.h"
 
 static void
 fmt_convert_from_u8(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],

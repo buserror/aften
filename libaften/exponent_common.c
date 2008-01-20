@@ -31,8 +31,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "a52enc.h"
 #include "exponent.h"
-#include "a52.h"
 
 /**
  * LUT for number of exponent groups present.

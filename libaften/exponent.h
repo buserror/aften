@@ -28,7 +28,8 @@
 #ifndef EXPONENT_H
 #define EXPONENT_H
 
-#include "a52.h"
+struct A52Context;
+struct A52ThreadContext;
 
 extern uint16_t expstr_set_bits[6][256];
 

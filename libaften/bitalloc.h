@@ -28,7 +28,7 @@
 #ifndef BITALLOC_H
 #define BITALLOC_H
 
-#include "a52.h"
+struct A52ThreadContext;
 
 extern void vbw_bit_allocation(A52ThreadContext *tctx);
 

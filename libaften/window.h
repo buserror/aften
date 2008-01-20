@@ -26,7 +26,8 @@
 #define WINDOW_H
 
 #include "common.h"
-#include "a52.h"
+
+struct A52Context;
 
 extern FLOAT a52_window[512];
 
