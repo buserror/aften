@@ -32,7 +32,7 @@
 #include <mmintrin.h>
 
 #ifdef _MSC_VER
-	#pragma warning (disable: 4799)
+    #pragma warning (disable: 4799)
 #endif
 
 /* set exp[i] to min(exp[i], exp1[i]) */

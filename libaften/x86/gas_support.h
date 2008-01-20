@@ -20,36 +20,36 @@
 #ifndef GAS_SUPPORT_H
 #define GAS_SUPPORT_H
 
-#define _st(x)		#x"\n\t"
-#define __st(x,y)	#x","#y"\n\t"
+#define _st(x)      #x"\n\t"
+#define __st(x,y)   #x","#y"\n\t"
 
-#define _mov(x, y)	__st(mov x, y)
-#define _xor(x, y)	__st(xor x, y)
-#define _test(x, y)	__st(test x, y)
+#define _mov(x, y)  __st(mov x, y)
+#define _xor(x, y)  __st(xor x, y)
+#define _test(x, y) __st(test x, y)
 
-#define _(x)		$##x
-#define _l(x)		#x":\n\t"
+#define _(x)        $##x
+#define _l(x)       #x":\n\t"
 
-#define _eax		%%eax
-#define _ebx		%%ebx
-#define _ecx		%%ecx
-#define _edx		%%edx
-#define _esi		%%esi
+#define _eax        %%eax
+#define _ebx        %%ebx
+#define _ecx        %%ecx
+#define _edx        %%edx
+#define _esi        %%esi
 
 #include "asm_common.h"
 
 #ifdef __LP64__
-#define _a			%%rax
-#define _b			%%rbx
-#define _c			%%rcx
-#define _d			%%rdx
-#define _s			%%rsi
+#define _a          %%rax
+#define _b          %%rbx
+#define _c          %%rcx
+#define _d          %%rdx
+#define _s          %%rsi
 #else
-#define _a			_eax
-#define _b			_ebx
-#define _c			_ecx
-#define _d			_edx
-#define _s			_esi
+#define _a          _eax
+#define _b          _ebx
+#define _c          _ecx
+#define _d          _edx
+#define _s          _esi
 #endif
 
 #endif /* GAS_SUPPORT_H */
