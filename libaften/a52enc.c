@@ -1483,6 +1483,7 @@ aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, const void *samples, 
 int
 aften_encode_close(AftenContext *s)
 {
+    int ch;
     int ret_val = 0;
 
     if(s != NULL && s->private_context != NULL) {
@@ -1523,6 +1524,14 @@ aften_encode_close(AftenContext *s)
         }
         // mdct_close deinits both mdcts
         ctx->mdct_ctx_512.mdct_close(ctx);
+
+        // close input filters
+        filter_close(&ctx->lfe_filter);
+        for(ch=0; ch<A52_MAX_CHANNELS; ch++) {
+            filter_close(&ctx->bs_filter[ch]);
+            filter_close(&ctx->dc_filter[ch]);
+            filter_close(&ctx->bw_filter[ch]);
+        }
 
         free(ctx);
         s->private_context = NULL;
