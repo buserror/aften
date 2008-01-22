@@ -390,7 +390,7 @@ start_bit_allocation(A52ThreadContext *tctx)
         for(ch=0; ch<ctx->n_all_channels; ch++) {
             if(block->exp_strategy[ch] != EXP_REUSE) {
                 block->fgaincod[ch] = 4 - block->exp_strategy[ch];
-                block->write_snr |= (block->fgaincod[ch] != frame->blocks[blk-1].fgaincod[ch]);
+                block->write_snr |= !blk || (block->fgaincod[ch] != frame->blocks[blk-1].fgaincod[ch]);
             } else {
                 block->fgaincod[ch] = frame->blocks[blk-1].fgaincod[ch];
             }
