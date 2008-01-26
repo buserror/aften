@@ -1503,19 +1503,19 @@ aften_encode_close(AftenContext *s)
             else {
                 int i;
                 for (i=0; i<ctx->n_threads; ++i) {
-                    A52ThreadContext cur_tctx = ctx->tctx[i];
-                    thread_join(cur_tctx.ts.thread);
-                    cur_tctx.mdct_tctx_512.mdct_thread_close(&cur_tctx);
-                    posix_cond_destroy(&cur_tctx.ts.enter_cond);
-                    posix_cond_destroy(&cur_tctx.ts.confirm_cond);
-                    posix_cond_destroy(&cur_tctx.ts.samples_cond);
+                    A52ThreadContext *cur_tctx = ctx->tctx + i;
+                    thread_join(cur_tctx->ts.thread);
+                    cur_tctx->mdct_tctx_512.mdct_thread_close(cur_tctx);
+                    posix_cond_destroy(&cur_tctx->ts.enter_cond);
+                    posix_cond_destroy(&cur_tctx->ts.confirm_cond);
+                    posix_cond_destroy(&cur_tctx->ts.samples_cond);
 
-                    posix_mutex_destroy(&cur_tctx.ts.enter_mutex);
-                    posix_mutex_destroy(&cur_tctx.ts.confirm_mutex);
+                    posix_mutex_destroy(&cur_tctx->ts.enter_mutex);
+                    posix_mutex_destroy(&cur_tctx->ts.confirm_mutex);
 
-                    windows_event_destroy(&cur_tctx.ts.ready_event);
-                    windows_event_destroy(&cur_tctx.ts.enter_event);
-                    windows_event_destroy(&cur_tctx.ts.samples_event);
+                    windows_event_destroy(&cur_tctx->ts.ready_event);
+                    windows_event_destroy(&cur_tctx->ts.enter_event);
+                    windows_event_destroy(&cur_tctx->ts.samples_event);
                 }
                 posix_mutex_destroy(&ctx->ts.samples_mutex);
                 windows_cs_destroy(&ctx->ts.samples_cs);
