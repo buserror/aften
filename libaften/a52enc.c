@@ -73,13 +73,30 @@ const uint16_t a52_bitratetab[19] = {
     160, 192, 224, 256, 320, 384, 448, 512, 576, 640
 };
 
-#ifndef NO_THREADS
-static int threaded_worker(void* vtctx);
-#endif
-
 static void copy_samples(A52ThreadContext *tctx);
 static int convert_samples_from_src(A52ThreadContext *tctx, const void *vsrc, int count);
 
+static int encode_frame(A52ThreadContext *tctx, uint8_t *frame_buffer);
+
+#ifndef NO_THREADS
+static int threaded_worker(void* vtctx);
+
+static int
+prepare_encode(A52ThreadContext *tctx, const void *samples, int count, UNUSED(int *info))
+{
+	A52Context *ctx = tctx->ctx;
+    // append extra silent frame if final frame is > 1280 samples, to flush 256 samples in mdct
+	if (ctx->last_samples_count <= (A52_SAMPLES_PER_FRAME - 256) && ctx->last_samples_count != -1) {
+		tctx->state = END;
+		--ctx->ts.threads_running;
+	} else {// convert sample format and de-interleave channels
+		convert_samples_from_src(tctx, samples, count);
+		ctx->last_samples_count = count;
+	}
+
+	return 0;
+}
+#endif
 
 const char *
 aften_get_version(void)
@@ -528,6 +545,10 @@ aften_encode_init(AftenContext *s)
         posix_mutex_init(&ctx->ts.samples_mutex);
         windows_cs_init(&ctx->ts.samples_cs);
     }
+#ifndef NO_THREADS
+    ctx->prepare_work = prepare_encode;
+    ctx->process_frame = encode_frame;
+#endif
 
     // copy initial samples
     if (s->initial_samples) {
@@ -1353,7 +1374,7 @@ threaded_worker(void* vtctx)
             tctx->framesize = -1;
             break;
         }
-        if (encode_frame(tctx, tctx->frame_buffer))
+        if (tctx->ctx->process_frame(tctx, tctx->frame_buffer))
             tctx->state = ABORT;
     }
     posix_mutex_unlock(&tctx->ts.enter_mutex);
@@ -1374,7 +1395,7 @@ threaded_worker(void* vtctx)
 }
 
 static int
-process_frame_parallel(AftenContext *s, uint8_t *frame_buffer, const void *samples, int count)
+process_frame_parallel(AftenContext *s, uint8_t *frame_buffer, const void *samples, int count, int *info)
 {
     A52Context *ctx = s->private_context;
     int framesize = 0;
@@ -1397,6 +1418,12 @@ process_frame_parallel(AftenContext *s, uint8_t *frame_buffer, const void *sampl
             --ctx->ts.threads_to_abort;
             --ctx->ts.threads_running;
         } else {
+            if (ctx->prepare_work(tctx, samples, count, info)) {
+                // need more data
+                posix_mutex_unlock(&tctx->ts.enter_mutex);
+
+                return -1;
+            }
             if (tctx->state == START) {
                 tctx->state = WORK;
             } else {
@@ -1411,15 +1438,6 @@ process_frame_parallel(AftenContext *s, uint8_t *frame_buffer, const void *sampl
                     posix_mutex_unlock(&tctx->ts.enter_mutex);
                     goto end;
                 }
-            }
-            // append extra silent frame if final frame is > 1280 samples, to flush 256 samples in mdct
-            if (ctx->last_samples_count <= (A52_SAMPLES_PER_FRAME - 256) && ctx->last_samples_count != -1) {
-                tctx->state = END;
-                --ctx->ts.threads_running;
-            } else {
-                // convert sample format and de-interleave channels
-                convert_samples_from_src(tctx, samples, count);
-                ctx->last_samples_count = count;
             }
         }
         posix_mutex_lock(&tctx->ts.confirm_mutex);
@@ -1459,8 +1477,11 @@ aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, const void *samples, 
         return -1;
     }
 #ifndef NO_THREADS
-    if (ctx->n_threads > 1)
-        return process_frame_parallel(s, frame_buffer, samples, count);
+    if (ctx->n_threads > 1) {
+        int info;
+
+        return process_frame_parallel(s, frame_buffer, samples, count, &info);
+    }
 #endif
     // append extra silent frame if final frame is > 1280 samples, to flush 256 samples in mdct
     if (ctx->last_samples_count <= (A52_SAMPLES_PER_FRAME - 256) && ctx->last_samples_count != -1)
@@ -1492,8 +1513,9 @@ aften_encode_close(AftenContext *s)
 #ifndef NO_THREADS
         while (ctx->ts.threads_running) {
             uint8_t frame_buffer[A52_MAX_CODED_FRAME_SIZE];
+            int info;
 
-            process_frame_parallel(s, frame_buffer, NULL, 0);
+            process_frame_parallel(s, frame_buffer, NULL, 0, &info);
             ret_val = -1;
         }
 #endif

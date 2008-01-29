@@ -63,6 +63,8 @@ typedef struct A52Context {
     A52ThreadContext *tctx;
 #ifndef NO_THREADS
     A52GlobalThreadSync ts;
+    int (*prepare_work)(A52ThreadContext *tctx, const void *input_buffer, int count, int *info);
+    int (*process_frame)(A52ThreadContext *tctx, uint8_t *output_buffer);
 #endif
     AftenEncParams params;
     AftenMetadata meta;
