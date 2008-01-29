@@ -74,7 +74,7 @@ const uint16_t a52_bitratetab[19] = {
 };
 
 #ifndef NO_THREADS
-static int threaded_encode(void* vtctx);
+static int threaded_worker(void* vtctx);
 #endif
 
 static void copy_samples(A52ThreadContext *tctx);
@@ -509,7 +509,7 @@ aften_encode_init(AftenContext *s)
             windows_event_init(&cur_tctx->ts.samples_event);
 
             posix_mutex_lock(&cur_tctx->ts.enter_mutex);
-            thread_create(&cur_tctx->ts.thread, threaded_encode, cur_tctx);
+            thread_create(&cur_tctx->ts.thread, threaded_worker, cur_tctx);
             posix_cond_wait(&cur_tctx->ts.enter_cond, &cur_tctx->ts.enter_mutex);
             posix_mutex_unlock(&cur_tctx->ts.enter_mutex);
             windows_event_wait(&cur_tctx->ts.ready_event);
@@ -1316,7 +1316,7 @@ convert_samples_from_src(A52ThreadContext *tctx, const void *vsrc, int count)
 
 #ifndef NO_THREADS
 static int
-threaded_encode(void* vtctx)
+threaded_worker(void* vtctx)
 {
     A52ThreadContext *tctx;
 
@@ -1374,7 +1374,7 @@ threaded_encode(void* vtctx)
 }
 
 static int
-encode_frame_parallel(AftenContext *s, uint8_t *frame_buffer, const void *samples, int count)
+process_frame_parallel(AftenContext *s, uint8_t *frame_buffer, const void *samples, int count)
 {
     A52Context *ctx = s->private_context;
     int framesize = 0;
@@ -1460,7 +1460,7 @@ aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, const void *samples, 
     }
 #ifndef NO_THREADS
     if (ctx->n_threads > 1)
-        return encode_frame_parallel(s, frame_buffer, samples, count);
+        return process_frame_parallel(s, frame_buffer, samples, count);
 #endif
     // append extra silent frame if final frame is > 1280 samples, to flush 256 samples in mdct
     if (ctx->last_samples_count <= (A52_SAMPLES_PER_FRAME - 256) && ctx->last_samples_count != -1)
@@ -1493,7 +1493,7 @@ aften_encode_close(AftenContext *s)
         while (ctx->ts.threads_running) {
             uint8_t frame_buffer[A52_MAX_CODED_FRAME_SIZE];
 
-            encode_frame_parallel(s, frame_buffer, NULL, 0);
+            process_frame_parallel(s, frame_buffer, NULL, 0);
             ret_val = -1;
         }
 #endif
