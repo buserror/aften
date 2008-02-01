@@ -84,17 +84,17 @@ static int threaded_worker(void* vtctx);
 static int
 prepare_encode(A52ThreadContext *tctx, const void *samples, int count, UNUSED(int *info))
 {
-	A52Context *ctx = tctx->ctx;
+    A52Context *ctx = tctx->ctx;
     // append extra silent frame if final frame is > 1280 samples, to flush 256 samples in mdct
-	if (ctx->last_samples_count <= (A52_SAMPLES_PER_FRAME - 256) && ctx->last_samples_count != -1) {
-		tctx->state = END;
-		--ctx->ts.threads_running;
-	} else {// convert sample format and de-interleave channels
-		convert_samples_from_src(tctx, samples, count);
-		ctx->last_samples_count = count;
-	}
+    if (ctx->last_samples_count <= (A52_SAMPLES_PER_FRAME - 256) && ctx->last_samples_count != -1) {
+        tctx->state = END;
+        --ctx->ts.threads_running;
+    } else {// convert sample format and de-interleave channels
+        convert_samples_from_src(tctx, samples, count);
+        ctx->last_samples_count = count;
+    }
 
-	return 0;
+    return 0;
 }
 #endif
 
