@@ -34,10 +34,12 @@
 #include "filter.h"
 #include "mdct.h"
 #include "threading.h"
+#include "a52dec.h"
 
 
 typedef struct A52ThreadContext {
     struct A52Context *ctx;
+    A52DecodeContext *dctx;
 #ifndef NO_THREADS
     A52ThreadSync ts;
 #endif

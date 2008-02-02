@@ -42,6 +42,14 @@ enum {
 };
 
 /**
+ * Aften's mode of operation
+ */
+typedef enum {
+    AFTEN_ENCODE,
+    AFTEN_TRANSCODE
+} AftenOperationMode;
+
+/**
  * Aften Encoding Mode
  */
 typedef enum {
@@ -333,6 +341,8 @@ typedef struct {
     AftenMetadata meta;
     AftenStatus status;
     AftenSystemParams system;
+
+    AftenOperationMode mode;
 
     /**
      * Verbosity level.

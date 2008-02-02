@@ -69,6 +69,33 @@ static void copy_samples(A52ThreadContext *tctx);
 static int convert_samples_from_src(A52ThreadContext *tctx, const void *vsrc, int count);
 
 static int begin_encode_frame(A52ThreadContext *tctx);
+static int begin_transcode_frame(A52ThreadContext *tctx);
+
+static int
+prepare_transcode_common(A52ThreadContext *tctx, const void *input_frame_buffer, int input_frame_buffer_size, int *want_bytes)
+{
+    int frame_size;
+
+    if (input_frame_buffer_size < 6) {
+        *want_bytes = 6;
+
+        return -1;
+    }
+    memcpy(tctx->dctx->input_frame_buffer, input_frame_buffer, 6);
+    frame_size = a52_get_frame_size(tctx->dctx);
+    *want_bytes = -1;
+    if (frame_size > 0) {
+        memcpy(
+                (uint8_t*)tctx->dctx->input_frame_buffer + 6,
+                (uint8_t*)input_frame_buffer + 6,
+                frame_size - 6);
+
+        *want_bytes = frame_size;
+        tctx->dctx->input_frame_buffer_size = frame_size;
+    }
+
+    return -(input_frame_buffer_size < frame_size);
+}
 
 #ifndef NO_THREADS
 static int threaded_worker(void* vtctx);
@@ -87,6 +114,20 @@ prepare_encode(A52ThreadContext *tctx, const void *samples, int count, UNUSED(in
     }
 
     return 0;
+}
+
+static int
+prepare_transcode(A52ThreadContext *tctx, const void *input_frame_buffer, int input_frame_buffer_size, int *want_bytes)
+{
+    if (!input_frame_buffer_size) {
+        tctx->state = END;
+        --tctx->ctx->ts.threads_running;
+        *want_bytes = 0;
+
+        return 0;
+    }
+
+    return prepare_transcode_common(tctx, input_frame_buffer, input_frame_buffer_size, want_bytes);
 }
 #endif
 
@@ -165,6 +206,7 @@ aften_set_defaults(AftenContext *s)
     s->samplerate = -1;
     s->acmod = -1;
     s->lfe = -1;
+    s->mode = AFTEN_ENCODE;
 
     s->sample_format = A52_SAMPLE_FMT_S16;
     s->private_context = NULL;
@@ -283,6 +325,51 @@ aften_encode_init(AftenContext *s)
 
     a52_common_init();
 
+    switch(s->mode) {
+    case AFTEN_TRANSCODE: {
+        A52ThreadContext *tctx;
+        fprintf(stderr, "Sorry, trancoding support is not complete, yet.");
+        return -1;
+
+        if (!s->initial_samples) {
+            fprintf(stderr, "At least one initial frame must be provided via initial_samples when transcoding.");
+            return -1;
+        }//FIXME: must specify amount of bytes
+        ctx->halfratecod = 0;
+        tctx = calloc(sizeof(A52ThreadContext), 1);
+        ctx->tctx = tctx;
+        ctx->tctx->ctx = ctx;
+        tctx->dctx = calloc(sizeof(A52DecodeContext), 1);
+        select_mdct_thread(ctx->tctx);
+
+        a52_decode_init();
+        a52_decode_init_thread(ctx->tctx);
+        memcpy(tctx->dctx->input_frame_buffer, s->initial_samples, A52_MAX_CODED_FRAME_SIZE);
+        tctx->dctx->input_frame_buffer_size = A52_MAX_CODED_FRAME_SIZE;
+        a52_decode_frame(ctx->tctx);
+        ctx->tctx->mdct_tctx_512.mdct_thread_close(ctx->tctx);
+
+        ctx->acmod = tctx->dctx->channel_mode;
+        ctx->lfe = tctx->dctx->lfe_on;
+        ctx->n_channels = tctx->dctx->fbw_channels;
+        ctx->n_all_channels = ctx->n_channels + ctx->lfe;
+        ctx->lfe_channel = s->lfe ? ctx->n_channels : -1;
+
+        ctx->sample_rate = tctx->dctx->sample_rate;
+        ctx->fscod =  tctx->dctx->bit_alloc_params.fscod;
+        ctx->halfratecod =  tctx->dctx->bit_alloc_params.halfratecod;
+        ctx->bsid = tctx->dctx->bsid;
+        ctx->bsmod = tctx->dctx->bsmod;
+
+        ctx->meta.cmixlev = tctx->dctx->cmixlev;
+        ctx->meta.surmixlev = tctx->dctx->surmixlev;
+        ctx->meta.dsurmod = tctx->dctx->dsurmod;
+        a52_decode_deinit_thread(tctx);
+        free(tctx->dctx);
+        free(ctx->tctx);
+        break;
+    }
+    case AFTEN_ENCODE:
     set_converter(ctx, s->sample_format);
 
     // channel configuration
@@ -331,6 +418,12 @@ found:
         ctx->bsid = 8;
     }
     ctx->bsmod = 0;
+        break;
+    default:
+        fprintf(stderr, "Unknown opertion mode specified.\n");
+        return -1;
+    }
+
     ctx->last_samples_count = -1;
 
     // bitrate & frame size
@@ -405,6 +498,7 @@ found:
         ctx->fixed_bwcode = ctx->params.bwcode;
     }
 
+    if (s->mode == AFTEN_ENCODE) {
     // can't do block switching with low sample rate due to the high-pass filter
     if(ctx->sample_rate <= 16000) {
         ctx->params.use_block_switching = 0;
@@ -482,6 +576,7 @@ found:
             return -1;
         }
     }
+    }
 
     // Initialize thread specific contexts
     ctx->n_threads = (s->system.n_threads > 0) ? s->system.n_threads : get_ncpus();
@@ -535,6 +630,9 @@ found:
         posix_mutex_init(&ctx->ts.samples_mutex);
         windows_cs_init(&ctx->ts.samples_cs);
     }
+
+    switch(s->mode) {
+    case AFTEN_ENCODE:
 #ifndef NO_THREADS
     ctx->prepare_work = prepare_encode;
 #endif
@@ -551,6 +649,19 @@ found:
         ctx->n_threads = 1;
         copy_samples(&ctx->tctx[0]);
         ctx->n_threads = s->system.n_threads;
+    }
+        break;
+    case AFTEN_TRANSCODE:
+#ifndef NO_THREADS
+        ctx->prepare_work = prepare_transcode;
+#endif
+        ctx->begin_process_frame = begin_transcode_frame;
+        for (j=0; j<ctx->n_threads; ++j) {
+            A52ThreadContext *tctx = ctx->tctx + j;
+            tctx->dctx = calloc(sizeof(A52DecodeContext), 1);
+            a52_decode_init_thread(tctx);
+        }
+        break;
     }
 
     return 0;
@@ -1251,6 +1362,12 @@ calculate_dynrng(A52ThreadContext *tctx)
 }
 
 static int
+begin_transcode_frame(A52ThreadContext *tctx)
+{
+    return -(a52_decode_frame(tctx) <= 0);
+}
+
+static int
 begin_encode_frame(A52ThreadContext *tctx)
 {
     copy_samples(tctx);
@@ -1455,6 +1572,34 @@ end:
 #endif
 
 int
+aften_transcode_frame(AftenContext *s, uint8_t *input_frame_buffer, int input_frame_buffer_size, uint8_t *output_frame_buffer, int* want_bytes)
+{
+    A52Context *ctx;
+    A52ThreadContext *tctx;
+
+    ctx = s->private_context;
+#ifndef NO_THREADS
+    if (ctx->n_threads > 1)
+        return process_frame_parallel(s, output_frame_buffer, input_frame_buffer, input_frame_buffer_size, want_bytes);
+#endif
+    if (!input_frame_buffer_size)
+        return 0;
+
+    tctx = ctx->tctx;
+    if (prepare_transcode_common(tctx, input_frame_buffer, input_frame_buffer_size, want_bytes))
+        return -1;
+
+    process_frame(tctx, output_frame_buffer);
+
+    s->status.quality   = tctx->status.quality;
+    s->status.bit_rate  = tctx->status.bit_rate;
+    s->status.bwcode    = tctx->status.bwcode;
+
+    return tctx->framesize;
+}
+
+
+int
 aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, const void *samples, int count)
 {
     A52Context *ctx;
@@ -1539,6 +1684,14 @@ aften_encode_close(AftenContext *s)
                 }
                 posix_mutex_destroy(&ctx->ts.samples_mutex);
                 windows_cs_destroy(&ctx->ts.samples_cs);
+            }
+            if (s->mode == AFTEN_TRANSCODE) {
+                int i;
+                for (i=0; i<ctx->n_threads; ++i) {
+                    A52ThreadContext *cur_tctx = ctx->tctx + i;
+                    a52_decode_deinit_thread(cur_tctx);
+                    free(cur_tctx->dctx);
+                }
             }
             free(ctx->tctx);
         }
