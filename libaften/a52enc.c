@@ -64,14 +64,6 @@ uint8_t str_predef[6][6] = {
 
 static const uint8_t rematbndtab[5] = { 13, 25, 37, 61, 252 };
 
-/* possible frequencies */
-const uint16_t a52_freqs[3] = { 48000, 44100, 32000 };
-
-/* possible bitrates */
-const uint16_t a52_bitratetab[19] = {
-    32, 40, 48, 56, 64, 80, 96, 112, 128,
-    160, 192, 224, 256, 320, 384, 448, 512, 576, 640
-};
 
 static void copy_samples(A52ThreadContext *tctx);
 static int convert_samples_from_src(A52ThreadContext *tctx, const void *vsrc, int count);
@@ -319,7 +311,7 @@ aften_encode_init(AftenContext *s)
     // frequency
     for(i=0;i<3;i++) {
         for(j=0;j<3;j++)
-            if((a52_freqs[j] >> i) == s->samplerate)
+            if((a52_sample_rate_tab[j] >> i) == s->samplerate)
                 goto found;
     }
     fprintf(stderr, "invalid sample rate\n");
@@ -363,7 +355,7 @@ aften_encode_init(AftenContext *s)
     }
 
     for(i=0; i<19; i++) {
-        if((a52_bitratetab[i] >> ctx->halfratecod) == brate)
+        if((a52_bitrate_tab[i] >> ctx->halfratecod) == brate)
             break;
     }
     if(i == 19) {
@@ -374,7 +366,7 @@ aften_encode_init(AftenContext *s)
         i = 18;
     }
     ctx->frmsizecod = i*2;
-    ctx->target_bitrate = a52_bitratetab[i] >> ctx->halfratecod;
+    ctx->target_bitrate = a52_bitrate_tab[i] >> ctx->halfratecod;
 
     a52_common_init();
     crc_init();
