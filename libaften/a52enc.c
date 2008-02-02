@@ -261,7 +261,6 @@ int
 aften_encode_init(AftenContext *s)
 {
     A52Context *ctx;
-    A52ThreadContext *tctx;
     int i, j, brate;
     int last_quality;
 
@@ -488,8 +487,7 @@ aften_encode_init(AftenContext *s)
     ctx->n_threads = (s->system.n_threads > 0) ? s->system.n_threads : get_ncpus();
     ctx->n_threads = MIN(ctx->n_threads, MAX_NUM_THREADS);
     s->system.n_threads = ctx->n_threads;
-    tctx = calloc(sizeof(A52ThreadContext), ctx->n_threads);
-    ctx->tctx = tctx;
+    ctx->tctx = calloc(sizeof(A52ThreadContext), ctx->n_threads);
 
     for (j=0; j<ctx->n_threads; ++j) {
         A52ThreadContext *cur_tctx = &ctx->tctx[j];
