@@ -86,9 +86,9 @@ prepare_transcode_common(A52ThreadContext *tctx, const void *input_frame_buffer,
     *want_bytes = -1;
     if (frame_size > 0) {
         memcpy(
-                (uint8_t*)tctx->dctx->input_frame_buffer + 6,
-                (uint8_t*)input_frame_buffer + 6,
-                frame_size - 6);
+            (uint8_t*)tctx->dctx->input_frame_buffer + 6,
+            (uint8_t*)input_frame_buffer + 6,
+            frame_size - 6);
 
         *want_bytes = frame_size;
         tctx->dctx->input_frame_buffer_size = frame_size;
@@ -370,54 +370,54 @@ aften_encode_init(AftenContext *s)
         break;
     }
     case AFTEN_ENCODE:
-    set_converter(ctx, s->sample_format);
+        set_converter(ctx, s->sample_format);
 
     // channel configuration
-    if(s->channels < 1 || s->channels > 6) {
-        fprintf(stderr, "invalid number of channels\n");
-        return -1;
-    }
-    if(s->acmod < 0 || s->acmod > 7) {
-        fprintf(stderr, "invalid acmod\n");
-        return -1;
-    }
-    if(s->channels == 6 && !s->lfe) {
-        fprintf(stderr, "6-channel audio must have LFE channel\n");
-        return -1;
-    }
-    if(s->channels == 1 && s->lfe) {
-        fprintf(stderr, "cannot encode stand-alone LFE channel\n");
-        return -1;
-    }
-    ctx->acmod = s->acmod;
-    ctx->lfe = s->lfe;
-    ctx->n_all_channels = s->channels;
-    ctx->n_channels = s->channels - s->lfe;
-    ctx->lfe_channel = s->lfe ? (s->channels - 1) : -1;
+        if(s->channels < 1 || s->channels > 6) {
+            fprintf(stderr, "invalid number of channels\n");
+            return -1;
+        }
+        if(s->acmod < 0 || s->acmod > 7) {
+            fprintf(stderr, "invalid acmod\n");
+            return -1;
+        }
+        if(s->channels == 6 && !s->lfe) {
+            fprintf(stderr, "6-channel audio must have LFE channel\n");
+            return -1;
+        }
+        if(s->channels == 1 && s->lfe) {
+            fprintf(stderr, "cannot encode stand-alone LFE channel\n");
+            return -1;
+        }
+        ctx->acmod = s->acmod;
+        ctx->lfe = s->lfe;
+        ctx->n_all_channels = s->channels;
+        ctx->n_channels = s->channels - s->lfe;
+        ctx->lfe_channel = s->lfe ? (s->channels - 1) : -1;
 
-    // frequency
-    for(i=0;i<3;i++) {
-        for(j=0;j<3;j++)
-            if((a52_sample_rate_tab[j] >> i) == s->samplerate)
-                goto found;
-    }
-    fprintf(stderr, "invalid sample rate\n");
-    return -1;
+        // frequency
+        for(i=0;i<3;i++) {
+            for(j=0;j<3;j++)
+                if((a52_sample_rate_tab[j] >> i) == s->samplerate)
+                    goto found;
+        }
+        fprintf(stderr, "invalid sample rate\n");
+        return -1;
 found:
-    ctx->sample_rate = s->samplerate;
-    ctx->halfratecod = i;
-    ctx->fscod = j;
-    if(ctx->halfratecod) {
-        // DolbyNet
-        ctx->bsid = 8 + ctx->halfratecod;
-    } else if(ctx->meta.xbsi1e || ctx->meta.xbsi2e) {
-        // alternate bit stream syntax
-        ctx->bsid = 6;
-    } else {
-        // normal AC-3
-        ctx->bsid = 8;
-    }
-    ctx->bsmod = 0;
+        ctx->sample_rate = s->samplerate;
+        ctx->halfratecod = i;
+        ctx->fscod = j;
+        if(ctx->halfratecod) {
+            // DolbyNet
+            ctx->bsid = 8 + ctx->halfratecod;
+        } else if(ctx->meta.xbsi1e || ctx->meta.xbsi2e) {
+            // alternate bit stream syntax
+            ctx->bsid = 6;
+        } else {
+            // normal AC-3
+            ctx->bsid = 8;
+        }
+        ctx->bsmod = 0;
         break;
     default:
         fprintf(stderr, "Unknown opertion mode specified.\n");
@@ -499,83 +499,83 @@ found:
     }
 
     if (s->mode == AFTEN_ENCODE) {
-    // can't do block switching with low sample rate due to the high-pass filter
-    if(ctx->sample_rate <= 16000) {
-        ctx->params.use_block_switching = 0;
-    }
-
-    // initialize transient-detect filters (one for each channel)
-    // cascaded biquad direct form I high-pass w/ cutoff of 8 kHz
-    if(ctx->params.use_block_switching) {
-        for(i=0; i<ctx->n_all_channels; i++) {
-            ctx->bs_filter[i].type = FILTER_TYPE_HIGHPASS;
-            ctx->bs_filter[i].cascaded = 1;
-            ctx->bs_filter[i].cutoff = 8000;
-            ctx->bs_filter[i].samplerate = (FLOAT)ctx->sample_rate;
-            if(filter_init(&ctx->bs_filter[i], FILTER_ID_BIQUAD_I)) {
-                fprintf(stderr, "error initializing transient-detect filter\n");
-                return -1;
-            }
+        // can't do block switching with low sample rate due to the high-pass filter
+        if(ctx->sample_rate <= 16000) {
+            ctx->params.use_block_switching = 0;
         }
-    }
 
-    // initialize DC filters (one for each channel)
-    // one-pole high-pass w/ cutoff of 3 Hz
-    if(ctx->params.use_dc_filter) {
-        for(i=0; i<ctx->n_all_channels; i++) {
-            ctx->dc_filter[i].type = FILTER_TYPE_HIGHPASS;
-            ctx->dc_filter[i].cascaded = 0;
-            ctx->dc_filter[i].cutoff = 3;
-            ctx->dc_filter[i].samplerate = (FLOAT)ctx->sample_rate;
-            if(filter_init(&ctx->dc_filter[i], FILTER_ID_ONEPOLE)) {
-                fprintf(stderr, "error initializing dc filter\n");
-                return -1;
-            }
-        }
-    }
-
-    // initialize bandwidth filters (one for each channel)
-    // butterworth 2nd order cascaded direct form II low-pass
-    if(ctx->params.use_bw_filter) {
-        int cutoff;
-        if(ctx->params.bwcode == -2) {
-            fprintf(stderr, "cannot use bandwidth filter with variable bandwidth\n");
-            return -1;
-        }
-        cutoff = (((ctx->fixed_bwcode * 3) + 73) * ctx->sample_rate) / 512;
-        if(cutoff < 4000) {
-            // disable bandwidth filter if cutoff is below 4000 Hz
-            ctx->params.use_bw_filter = 0;
-        } else {
-            for(i=0; i<ctx->n_channels; i++) {
-                ctx->bw_filter[i].type = FILTER_TYPE_LOWPASS;
-                ctx->bw_filter[i].cascaded = 1;
-                ctx->bw_filter[i].cutoff = (FLOAT)cutoff;
-                ctx->bw_filter[i].samplerate = (FLOAT)ctx->sample_rate;
-                if(filter_init(&ctx->bw_filter[i], FILTER_ID_BUTTERWORTH_II)) {
-                    fprintf(stderr, "error initializing bandwidth filter\n");
+        // initialize transient-detect filters (one for each channel)
+        // cascaded biquad direct form I high-pass w/ cutoff of 8 kHz
+        if(ctx->params.use_block_switching) {
+            for(i=0; i<ctx->n_all_channels; i++) {
+                ctx->bs_filter[i].type = FILTER_TYPE_HIGHPASS;
+                ctx->bs_filter[i].cascaded = 1;
+                ctx->bs_filter[i].cutoff = 8000;
+                ctx->bs_filter[i].samplerate = (FLOAT)ctx->sample_rate;
+                if(filter_init(&ctx->bs_filter[i], FILTER_ID_BIQUAD_I)) {
+                    fprintf(stderr, "error initializing transient-detect filter\n");
                     return -1;
                 }
             }
         }
-    }
 
-    // initialize LFE filter
-    // butterworth 2nd order cascaded direct form II low-pass w/ cutoff of 120 Hz
-    if(ctx->params.use_lfe_filter) {
-        if(!ctx->lfe) {
-            fprintf(stderr, "cannot use lfe filter. no lfe channel\n");
-            return -1;
+        // initialize DC filters (one for each channel)
+        // one-pole high-pass w/ cutoff of 3 Hz
+        if(ctx->params.use_dc_filter) {
+            for(i=0; i<ctx->n_all_channels; i++) {
+                ctx->dc_filter[i].type = FILTER_TYPE_HIGHPASS;
+                ctx->dc_filter[i].cascaded = 0;
+                ctx->dc_filter[i].cutoff = 3;
+                ctx->dc_filter[i].samplerate = (FLOAT)ctx->sample_rate;
+                if(filter_init(&ctx->dc_filter[i], FILTER_ID_ONEPOLE)) {
+                    fprintf(stderr, "error initializing dc filter\n");
+                    return -1;
+                }
+            }
         }
-        ctx->lfe_filter.type = FILTER_TYPE_LOWPASS;
-        ctx->lfe_filter.cascaded = 1;
-        ctx->lfe_filter.cutoff = 120;
-        ctx->lfe_filter.samplerate = (FLOAT)ctx->sample_rate;
-        if(filter_init(&ctx->lfe_filter, FILTER_ID_BUTTERWORTH_II)) {
-            fprintf(stderr, "error initializing lfe filter\n");
-            return -1;
+
+        // initialize bandwidth filters (one for each channel)
+        // butterworth 2nd order cascaded direct form II low-pass
+        if(ctx->params.use_bw_filter) {
+            int cutoff;
+            if(ctx->params.bwcode == -2) {
+                fprintf(stderr, "cannot use bandwidth filter with variable bandwidth\n");
+                return -1;
+            }
+            cutoff = (((ctx->fixed_bwcode * 3) + 73) * ctx->sample_rate) / 512;
+            if(cutoff < 4000) {
+                // disable bandwidth filter if cutoff is below 4000 Hz
+                ctx->params.use_bw_filter = 0;
+            } else {
+                for(i=0; i<ctx->n_channels; i++) {
+                    ctx->bw_filter[i].type = FILTER_TYPE_LOWPASS;
+                    ctx->bw_filter[i].cascaded = 1;
+                    ctx->bw_filter[i].cutoff = (FLOAT)cutoff;
+                    ctx->bw_filter[i].samplerate = (FLOAT)ctx->sample_rate;
+                    if(filter_init(&ctx->bw_filter[i], FILTER_ID_BUTTERWORTH_II)) {
+                        fprintf(stderr, "error initializing bandwidth filter\n");
+                        return -1;
+                    }
+                }
+            }
         }
-    }
+
+        // initialize LFE filter
+        // butterworth 2nd order cascaded direct form II low-pass w/ cutoff of 120 Hz
+        if(ctx->params.use_lfe_filter) {
+            if(!ctx->lfe) {
+                fprintf(stderr, "cannot use lfe filter. no lfe channel\n");
+                return -1;
+            }
+            ctx->lfe_filter.type = FILTER_TYPE_LOWPASS;
+            ctx->lfe_filter.cascaded = 1;
+            ctx->lfe_filter.cutoff = 120;
+            ctx->lfe_filter.samplerate = (FLOAT)ctx->sample_rate;
+            if(filter_init(&ctx->lfe_filter, FILTER_ID_BUTTERWORTH_II)) {
+                fprintf(stderr, "error initializing lfe filter\n");
+                return -1;
+            }
+        }
     }
 
     // Initialize thread specific contexts
@@ -634,22 +634,22 @@ found:
     switch(s->mode) {
     case AFTEN_ENCODE:
 #ifndef NO_THREADS
-    ctx->prepare_work = prepare_encode;
+        ctx->prepare_work = prepare_encode;
 #endif
-    ctx->begin_process_frame = begin_encode_frame;
-    // copy initial samples
-    if (s->initial_samples) {
-        FLOAT *samples = malloc(A52_SAMPLES_PER_FRAME * ctx->n_all_channels * sizeof(FLOAT));
-        memset(samples, 0, (A52_SAMPLES_PER_FRAME - 256) * ctx->n_all_channels * sizeof(FLOAT));
-        memcpy(samples + (A52_SAMPLES_PER_FRAME - 256) * ctx->n_all_channels, s->initial_samples, 256 * ctx->n_all_channels * sizeof(FLOAT));
-        convert_samples_from_src(&ctx->tctx[0], samples, A52_SAMPLES_PER_FRAME);
-        free(samples);
-        // copy samples with filters applied
-        // HACK: set threads temporarily to 1 to avoid locking
-        ctx->n_threads = 1;
-        copy_samples(&ctx->tctx[0]);
-        ctx->n_threads = s->system.n_threads;
-    }
+        ctx->begin_process_frame = begin_encode_frame;
+        // copy initial samples
+        if (s->initial_samples) {
+            FLOAT *samples = malloc(A52_SAMPLES_PER_FRAME * ctx->n_all_channels * sizeof(FLOAT));
+            memset(samples, 0, (A52_SAMPLES_PER_FRAME - 256) * ctx->n_all_channels * sizeof(FLOAT));
+            memcpy(samples + (A52_SAMPLES_PER_FRAME - 256) * ctx->n_all_channels, s->initial_samples, 256 * ctx->n_all_channels * sizeof(FLOAT));
+            convert_samples_from_src(&ctx->tctx[0], samples, A52_SAMPLES_PER_FRAME);
+            free(samples);
+            // copy samples with filters applied
+            // HACK: set threads temporarily to 1 to avoid locking
+            ctx->n_threads = 1;
+            copy_samples(&ctx->tctx[0]);
+            ctx->n_threads = s->system.n_threads;
+        }
         break;
     case AFTEN_TRANSCODE:
 #ifndef NO_THREADS
