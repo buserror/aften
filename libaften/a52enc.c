@@ -68,7 +68,7 @@ static const uint8_t rematbndtab[5] = { 13, 25, 37, 61, 252 };
 static void copy_samples(A52ThreadContext *tctx);
 static int convert_samples_from_src(A52ThreadContext *tctx, const void *vsrc, int count);
 
-static int encode_frame(A52ThreadContext *tctx, uint8_t *frame_buffer);
+static int begin_encode_frame(A52ThreadContext *tctx);
 
 #ifndef NO_THREADS
 static int threaded_worker(void* vtctx);
@@ -537,9 +537,8 @@ found:
     }
 #ifndef NO_THREADS
     ctx->prepare_work = prepare_encode;
-    ctx->process_frame = encode_frame;
 #endif
-
+    ctx->begin_process_frame = begin_encode_frame;
     // copy initial samples
     if (s->initial_samples) {
         FLOAT *samples = malloc(A52_SAMPLES_PER_FRAME * ctx->n_all_channels * sizeof(FLOAT));
@@ -1252,7 +1251,19 @@ calculate_dynrng(A52ThreadContext *tctx)
 }
 
 static int
-encode_frame(A52ThreadContext *tctx, uint8_t *frame_buffer)
+begin_encode_frame(A52ThreadContext *tctx)
+{
+    copy_samples(tctx);
+
+    calculate_dynrng(tctx);
+
+    generate_coefs(tctx);
+
+    return 0;
+}
+
+static int
+process_frame(A52ThreadContext *tctx, uint8_t *output_frame_buffer)
 {
     A52Context *ctx = tctx->ctx;
     A52Frame *frame = &tctx->frame;
@@ -1262,11 +1273,8 @@ encode_frame(A52ThreadContext *tctx, uint8_t *frame_buffer)
         return -1;
     }
 
-    copy_samples(tctx);
-
-    calculate_dynrng(tctx);
-
-    generate_coefs(tctx);
+    if (ctx->begin_process_frame(tctx))
+        return -1;
 
     compute_dither_strategy(tctx);
 
@@ -1305,7 +1313,7 @@ encode_frame(A52ThreadContext *tctx, uint8_t *frame_buffer)
     tctx->status.bit_rate = frame->bit_rate;
     tctx->status.bwcode = frame->bwcode;
 
-    output_frame_header(tctx, frame_buffer);
+    output_frame_header(tctx, output_frame_buffer);
     output_audio_blocks(tctx);
     tctx->framesize = output_frame_end(tctx);
 
@@ -1364,7 +1372,7 @@ threaded_worker(void* vtctx)
             tctx->framesize = -1;
             break;
         }
-        if (tctx->ctx->process_frame(tctx, tctx->frame_buffer))
+        if (process_frame(tctx, tctx->frame_buffer))
             tctx->state = ABORT;
     }
     posix_mutex_unlock(&tctx->ts.enter_mutex);
@@ -1481,7 +1489,7 @@ aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, const void *samples, 
     frame = &tctx->frame;
     convert_samples_from_src(tctx, samples, count);
 
-    encode_frame(tctx, frame_buffer);
+    process_frame(tctx, frame_buffer);
     ctx->last_samples_count = count;
 
     s->status.quality   = tctx->status.quality;
