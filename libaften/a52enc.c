@@ -278,6 +278,10 @@ aften_encode_init(AftenContext *s)
     }
     select_mdct(ctx);
     s->private_context = ctx;
+    ctx->params = s->params;
+    ctx->meta = s->meta;
+
+    a52_common_init();
 
     set_converter(ctx, s->sample_format);
 
@@ -304,9 +308,6 @@ aften_encode_init(AftenContext *s)
     ctx->n_channels = s->channels - s->lfe;
     ctx->lfe_channel = s->lfe ? (s->channels - 1) : -1;
 
-    ctx->params = s->params;
-    ctx->meta = s->meta;
-
     // frequency
     for(i=0;i<3;i++) {
         for(j=0;j<3;j++)
@@ -315,7 +316,7 @@ aften_encode_init(AftenContext *s)
     }
     fprintf(stderr, "invalid sample rate\n");
     return -1;
- found:
+found:
     ctx->sample_rate = s->samplerate;
     ctx->halfratecod = i;
     ctx->fscod = j;
@@ -367,16 +368,10 @@ aften_encode_init(AftenContext *s)
     ctx->frmsizecod = i*2;
     ctx->target_bitrate = a52_bitrate_tab[i] >> ctx->halfratecod;
 
-    a52_common_init();
     crc_init();
     a52_window_init(ctx);
     exponent_init(ctx);
     dynrng_init();
-
-    // can't do block switching with low sample rate due to the high-pass filter
-    if(ctx->sample_rate <= 16000) {
-        ctx->params.use_block_switching = 0;
-    }
 
     last_quality = 240;
     if(ctx->params.encoding_mode == AFTEN_ENC_MODE_VBR) {
@@ -408,6 +403,11 @@ aften_encode_init(AftenContext *s)
                                  ctx->params.max_bwcode);
     } else {
         ctx->fixed_bwcode = ctx->params.bwcode;
+    }
+
+    // can't do block switching with low sample rate due to the high-pass filter
+    if(ctx->sample_rate <= 16000) {
+        ctx->params.use_block_switching = 0;
     }
 
     // initialize transient-detect filters (one for each channel)
