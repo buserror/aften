@@ -37,6 +37,15 @@ namespace Aften
 	}
 
 	/// <summary>
+	/// Aften's mode of operation
+	/// </summary>
+	internal enum AftenOperationMode
+	{
+		AFTEN_ENCODE,
+		AFTEN_TRANSCODE
+	}
+
+	/// <summary>
 	/// Aften Encoding Mode
 	/// </summary>
 	public enum EncodingMode
@@ -497,6 +506,11 @@ namespace Aften
 		/// SystemParameters
 		/// </summary>
 		public SystemParameters SystemParameters;
+
+		/// <summary>
+		/// Aften's mode of operation
+		/// </summary>
+		internal AftenOperationMode Mode;
 
 		/// <summary>
 		/// Verbosity level.
