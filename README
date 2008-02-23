@@ -23,6 +23,11 @@ otherwise authorized.
 Building Aften with CMake
 ==========================
 
+Note: Avoid gcc-3 if you care for fast vector code.
+gcc-4.2 generates slow MMX code. Try using gcc-4.1 instead. If
+your CPU supports SSE2 though, this is not an issue, as the SSE2 code
+replaces the MMX code and the former is unaffected by the gcc bug.
+
 The aim of using CMake is making portable development easier, as CMake
 contains generators for various build systems. On e.g. *nix Makefiles
 will be built, and on Windows MS VC++ project files, if you wish. You
