@@ -12,9 +12,6 @@ FFmpeg, Copyright (c) 2000-2007 Fabrice Bellard, et al.
 http://ffmpeg.mplayerhq.hu/
 -------------------------------------------------------------------------------
 
-Trademark Notice: Aften is not associated in any way with Dolby 
-Laboratories, nor is it a licensee of any Dolby Laboratories trademarks.  
-
 
 Building Aften with CMake
 ==========================
