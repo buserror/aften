@@ -26,6 +26,7 @@
 #include "ppc_cpu_caps.h"
 #else
 static inline void cpu_caps_detect(void){}
+static inline void apply_simd_restrictions(AftenSimdInstructions *simd_instructions){}
 #endif
 
 #endif /* CPU_CAPS_H */
