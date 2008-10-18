@@ -40,25 +40,26 @@ wav_filter(FLOAT *samples, int ch, int n, FilterContext *f)
     FLOAT *tmp = malloc(n * sizeof(FLOAT));
     int j, i, c;
 
-    for (i=0, j=0; i<ch; i++,j+=n)
-      samples2[i] = samples2_buffer + j;
+    for (i = 0, j = 0; i < ch; i++, j += n)
+        samples2[i] = samples2_buffer + j;
 
-    for(i=0,j=0; i<n; i++) {
-        for(c=0; c<ch; c++,j++) {
+    for (i = 0, j = 0; i < n; i++) {
+        for (c = 0; c < ch; c++, j++)
             samples2[c][i] = samples[j];
-        }
     }
 
-    for(c=0; c<ch; c++) {
+    for (c = 0; c < ch; c++) {
         memcpy(tmp, samples2[c], n * sizeof(FLOAT));
         filter_run(&f[c], samples2[c], tmp, n);
     }
 
-    for(i=0,j=0; i<n; i++) {
-        for(c=0; c<ch; c++,j++) {
+    for (i = 0, j = 0; i < n; i++) {
+        for (c = 0; c < ch; c++, j++) {
             samples[j] = samples2[c][i];
-            if(samples[j] > 1.0) samples[j] = 1.0;
-            if(samples[j] < -1.0) samples[j] = -1.0;
+            if (samples[j] > 1.0)
+                samples[j] = 1.0;
+            if (samples[j] < -1.0)
+                samples[j] = -1.0;
         }
     }
     free(tmp);
@@ -106,7 +107,7 @@ output_wav_data(FILE *ofp, FLOAT *samples, int ch, int n)
     uint16_t *u16 = (uint16_t *)s16;
     int i;
 
-    for(i=0; i<n*ch; i++) {
+    for (i = 0; i < n*ch; i++) {
         s16[0] = (int16_t)(samples[i] * 32767.0);
         write2le(*u16, ofp);
     }
@@ -127,14 +128,14 @@ main(int argc, char **argv)
     int ftype=0;
     int read_format;
 
-    if(argc != 5) {
+    if (argc != 5) {
         fprintf(stderr, "\n%s\n\n", usage);
         exit(1);
     }
 
-    if(!strncmp(argv[1], "lp", 3)) {
+    if (!strncmp(argv[1], "lp", 3)) {
         ftype = FILTER_TYPE_LOWPASS;
-    } else if(!strncmp(argv[1], "hp", 3)) {
+    } else if (!strncmp(argv[1], "hp", 3)) {
         ftype = FILTER_TYPE_HIGHPASS;
     } else {
         fprintf(stderr, "\n%s\n\n", usage);
@@ -142,12 +143,12 @@ main(int argc, char **argv)
     }
 
     ifp = fopen(argv[3], "rb");
-    if(!ifp) {
+    if (!ifp) {
         fprintf(stderr, "cannot open input file\n");
         exit(1);
     }
     ofp = fopen(argv[4], "wb");
-    if(!ofp) {
+    if (!ofp) {
         fprintf(stderr, "cannot open output file\n");
         exit(1);
     }
@@ -158,20 +159,20 @@ main(int argc, char **argv)
     read_format = PCM_SAMPLE_FMT_FLT;
 #endif
 
-    if(pcmfile_init(&pf, ifp, read_format, PCM_FORMAT_WAVE)) {
+    if (pcmfile_init(&pf, ifp, read_format, PCM_FORMAT_WAVE)) {
         fprintf(stderr, "error initializing wav reader\n\n");
         exit(1);
     }
     output_wav_header(ofp, &pf);
 
-    for(i=0; i<pf.channels; i++) {
+    for (i = 0; i < pf.channels; i++) {
         int cutoff;
         f[i].type = (enum FilterType)ftype;
         f[i].cascaded = 1;
         cutoff = atoi(argv[2]);
         f[i].cutoff = (FLOAT)cutoff;
         f[i].samplerate = (FLOAT)pf.sample_rate;
-        if(filter_init(&f[i], FILTER_ID_BUTTERWORTH_II)) {
+        if (filter_init(&f[i], FILTER_ID_BUTTERWORTH_II)) {
             fprintf(stderr, "error initializing filter\n");
             exit(1);
         }
@@ -181,15 +182,14 @@ main(int argc, char **argv)
     buf = calloc(frame_size * pf.channels, sizeof(FLOAT));
 
     nr = pcmfile_read_samples(&pf, buf, frame_size);
-    while(nr > 0) {
+    while (nr > 0) {
         wav_filter(buf, pf.channels, nr, f);
         output_wav_data(ofp, buf, pf.channels, nr);
         nr = pcmfile_read_samples(&pf, buf, frame_size);
     }
 
-    for(i=0; i<pf.channels; i++) {
+    for (i = 0; i < pf.channels; i++)
         filter_close(&f[i]);
-    }
 
     free(buf);
     pcmfile_close(&pf);

@@ -38,8 +38,9 @@
 static char *
 get_format_name(int id)
 {
-    if(id < 0x0000 || id > 0xFFFF) return NULL;
-    switch(id) {
+    if (id < 0x0000 || id > 0xFFFF)
+        return NULL;
+    switch (id) {
         case 0x0000: return "Microsoft Unknown Wave Format";
         case 0x0001: return "Microsoft PCM";
         case 0x0002: return "Microsoft ADPCM";
@@ -310,13 +311,13 @@ wavinfo_print(WavInfo *wi)
     printf("\n=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n");
     printf("File:\n");
     printf("   Name:          %s\n", wi->fname);
-    if(wf->seekable) {
+    if (wf->seekable) {
         printf("   File Size:     %"PRIu64"\n", wf->file_size);
     } else {
         printf("   File Size:     unknown\n");
     }
     printf("Format:\n");
-    if(type == NULL) {
+    if (type == NULL) {
         printf("   Type:          unknown - 0x%04X\n", wf->internal_fmt);
     } else {
         printf("   Type:          %s\n", type);
@@ -326,23 +327,23 @@ wavinfo_print(WavInfo *wi)
     printf("   Avg bytes/sec: %d\n", wf->block_align * wf->sample_rate);
     printf("   Block Align:   %d bytes\n", wf->block_align);
     printf("   Bit Width:     %d\n", wf->bit_width);
-    if(wf->ch_mask > 0) {
+    if (wf->ch_mask > 0) {
         printf("   Channel Mask:  0x%03"PRIX32"\n", wf->ch_mask);
     }
     printf("Data:\n");
     printf("   Start:         %"PRIu64"\n", wf->data_start);
     printf("   Data Size:     %"PRIu64"\n", wf->data_size);
     leftover = ((int64_t)(wf->file_size)) - wf->data_size - wf->data_start;
-    if(leftover < 0) {
-        if(!wf->seekable) {
+    if (leftover < 0) {
+        if (!wf->seekable) {
             printf("   [ warning! unable to verify true data size ]\n");
         } else {
             printf("   [ warning! reported data size is larger than file size ]\n");
         }
-    } else if(leftover > 0) {
+    } else if (leftover > 0) {
         printf("   Leftover:  %"PRId64" bytes\n", leftover);
     }
-    if(wf->internal_fmt == 0x0001 || wf->internal_fmt == 0x0003) {
+    if (wf->internal_fmt == 0x0001 || wf->internal_fmt == 0x0003) {
         playtime = (float)wf->samples / (float)wf->sample_rate;
         printf("   Samples:       %"PRIu64"\n", wf->samples);
         printf("   Playing Time:  %0.2f sec\n", playtime);
@@ -356,7 +357,7 @@ wavinfo_print(WavInfo *wi)
 static void
 wavfile_error(char *msg)
 {
-    if(msg != NULL) {
+    if (msg != NULL) {
         fprintf(stderr, "%s\n", msg);
     }
     exit(1);
@@ -373,10 +374,10 @@ main(int argc, char **argv)
     memset(&wi, 0, sizeof(WavInfo));
 
     /* open file */
-    if(argc > 2) {
+    if (argc > 2) {
         wavfile_error("\nusage: wavinfo [test.wav]\n");
     }
-    if(argc == 2) {
+    if (argc == 2) {
         wi.fname = argv[1];
         fp = fopen(wi.fname, "rb");
     } else {
@@ -386,7 +387,8 @@ main(int argc, char **argv)
 #endif
         fp = stdin;
     }
-    if(!fp) wavfile_error("cannot open file");
+    if (!fp)
+        wavfile_error("cannot open file");
 
     pcmfile_init(pf, fp, PCM_SAMPLE_FMT_UNKNOWN, PCM_FORMAT_WAVE);
 

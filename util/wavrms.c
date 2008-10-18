@@ -44,15 +44,15 @@ calculate_rms(FLOAT *samples, int ch, int n)
     int i;
 
     // Calculate RMS values
-    if(ch == 1) {
+    if (ch == 1) {
         rms_all = 0.0;
-        for(i=0; i<n; i++) {
+        for (i = 0; i < n; i++) {
             rms_all += (samples[i] * samples[i]);
         }
         rms_all /= n;
     } else {
         rms_left = rms_right = 0.0;
-        for(i=0; i<n*ch; i+=ch) {
+        for (i = 0; i < n*ch; i += ch) {
             rms_left  += (samples[i  ] * samples[i  ]);
             rms_right += (samples[i+1] * samples[i+1]);
         }
@@ -95,29 +95,29 @@ main(int argc, char **argv)
     int read_format;
 
     /* open file */
-    if(argc < 2 || argc > 4) {
+    if (argc < 2 || argc > 4) {
         print_intro(stderr);
         print_usage(stderr);
         exit(1);
     }
     print_intro(stdout);
-    if(argc == 2 && !strncmp(argv[1], "-h", 3)) {
+    if (argc == 2 && !strncmp(argv[1], "-h", 3)) {
         print_usage(stdout);
         return 0;
     }
     start_sec = 0;
     end_sec = UINT32_MAX;
-    if(argc == 3 || argc == 4) {
+    if (argc == 3 || argc == 4) {
         start_sec = MAX(atoi(argv[2]), 0);
-        if(argc == 4) {
+        if (argc == 4) {
             end_sec = MAX(atoi(argv[3]), 0);
         }
-        if(end_sec <= start_sec) {
+        if (end_sec <= start_sec) {
             fprintf(stderr, "invalid time range\n");
             exit(1);
         }
     }
-    if(!strncmp(argv[1], "-", 2)) {
+    if (!strncmp(argv[1], "-", 2)) {
 #ifdef _WIN32
         _setmode(_fileno(stdin), _O_BINARY);
 #endif
@@ -125,7 +125,7 @@ main(int argc, char **argv)
     } else {
         fp = fopen(argv[1], "rb");
     }
-    if(!fp) {
+    if (!fp) {
         fprintf(stderr, "cannot open file\n");
         exit(1);
     }
@@ -136,7 +136,7 @@ main(int argc, char **argv)
     read_format = PCM_SAMPLE_FMT_FLT;
 #endif
 
-    if(pcmfile_init(&pf, fp, read_format, PCM_FORMAT_WAVE)) {
+    if (pcmfile_init(&pf, fp, read_format, PCM_FORMAT_WAVE)) {
         fprintf(stderr, "error initializing wav reader\n\n");
         exit(1);
     }
@@ -150,9 +150,9 @@ main(int argc, char **argv)
     avg_cnt = 1;
     time_ms = pcmfile_position_time_ms(&pf);
     nr = pcmfile_read_samples(&pf, buf, frame_size);
-    while(nr > 0) {
+    while (nr > 0) {
         // check for end of time range
-        if(time_ms > (end_sec*1000)) {
+        if (time_ms > (end_sec*1000)) {
             break;
         }
 
