@@ -131,18 +131,18 @@ main(int argc, char **argv)
 
     memset(ifp, 0, A52_NUM_SPEAKERS * sizeof(FILE *));
     for (i = 0; i < opts.num_input_files; i++) {
-    if (!strncmp(opts.infile[i], "-", 2)) {
+        if (!strncmp(opts.infile[i], "-", 2)) {
 #ifdef _WIN32
-        _setmode(_fileno(stdin), _O_BINARY);
+            _setmode(_fileno(stdin), _O_BINARY);
 #endif
-        ifp[i] = stdin;
-    } else {
-        ifp[i] = fopen(opts.infile[i], "rb");
-        if (!ifp[i]) {
-            fprintf(stderr, "error opening input file: %s\n", opts.infile[i]);
-            goto error_end;
+            ifp[i] = stdin;
+        } else {
+            ifp[i] = fopen(opts.infile[i], "rb");
+            if (!ifp[i]) {
+                fprintf(stderr, "error opening input file: %s\n", opts.infile[i]);
+                goto error_end;
+            }
         }
-    }
     }
 
 #ifdef CONFIG_DOUBLE
@@ -371,9 +371,8 @@ end:
 
         pcm_close(&pf);
     for (i = 0; i < opts.num_input_files; i++) {
-    if (ifp[i]) {
-        fclose(ifp[i]);
-    }
+        if (ifp[i])
+            fclose(ifp[i]);
     }
     if (ofp)
         fclose(ofp);
