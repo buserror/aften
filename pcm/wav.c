@@ -43,7 +43,7 @@ static inline uint32_t
 read4le(PcmFile *pf)
 {
     uint32_t x;
-    if(byteio_read(&x, 4, &pf->io) != 4)
+    if (byteio_read(&x, 4, &pf->io) != 4)
         return 0;
     pf->filepos += 4;
     return le2me_32(x);
@@ -56,7 +56,7 @@ static inline uint16_t
 read2le(PcmFile *pf)
 {
     uint16_t x;
-    if(byteio_read(&x, 2, &pf->io) != 2)
+    if (byteio_read(&x, 2, &pf->io) != 2)
         return 0;
     pf->filepos += 2;
     return le2me_16(x);
@@ -67,16 +67,14 @@ wave_probe(uint8_t *data, int size)
 {
     int id;
 
-    if(!data || size < 12)
+    if (!data || size < 12)
         return 0;
     id = data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
-    if(id != RIFF_ID) {
+    if (id != RIFF_ID)
         return 0;
-    }
     id = data[8] | (data[9] << 8) | (data[10] << 16) | (data[11] << 24);
-    if(id != WAVE_ID) {
+    if(id != WAVE_ID)
         return 0;
-    }
     return 100;
 }
 
@@ -87,7 +85,7 @@ wave_init(PcmFile *pf)
 
     // read RIFF id. ignore size.
     id = read4le(pf);
-    if(id != RIFF_ID) {
+    if (id != RIFF_ID) {
         fprintf(stderr, "invalid RIFF id in wav header\n");
         return -1;
     }
@@ -95,19 +93,19 @@ wave_init(PcmFile *pf)
 
     // read WAVE id. ignore size.
     id = read4le(pf);
-    if(id != WAVE_ID) {
+    if (id != WAVE_ID) {
         fprintf(stderr, "invalid WAVE id in wav header\n");
         return -1;
     }
 
     // read all header chunks. skip unknown chunks.
     found_data = found_fmt = 0;
-    while(!found_data) {
+    while (!found_data) {
         id = read4le(pf);
         chunksize = read4le(pf);
-        switch(id) {
+        switch (id) {
             case FMT__ID:
-                if(chunksize < 16) {
+                if (chunksize < 16) {
                     fprintf(stderr, "invalid fmt chunk in wav header\n");
                     return -1;
                 }
@@ -123,7 +121,7 @@ wave_init(PcmFile *pf)
                 chunksize -= 16;
 
                 // WAVE_FORMAT_EXTENSIBLE data
-                if(pf->internal_fmt == WAVE_FORMAT_EXTENSIBLE && chunksize >= 10) {
+                if (pf->internal_fmt == WAVE_FORMAT_EXTENSIBLE && chunksize >= 10) {
                     read4le(pf);    // skip CbSize and ValidBitsPerSample
                     pf->ch_mask = read4le(pf);
                     pf->internal_fmt = read2le(pf);
@@ -131,9 +129,9 @@ wave_init(PcmFile *pf)
                 }
 
                 // set sample type based on wFormatTag
-                if(pf->internal_fmt == WAVE_FORMAT_IEEEFLOAT) {
+                if (pf->internal_fmt == WAVE_FORMAT_IEEEFLOAT) {
                     pf->sample_type = PCM_SAMPLE_TYPE_FLOAT;
-                } else if(pf->internal_fmt == WAVE_FORMAT_PCM) {
+                } else if (pf->internal_fmt == WAVE_FORMAT_PCM) {
                     pf->sample_type = PCM_SAMPLE_TYPE_INT;
                 } else {
                     fprintf(stderr, "unsupported wFormatTag: 0x%02X\n",
@@ -141,35 +139,36 @@ wave_init(PcmFile *pf)
                     return -1;
                 }
                 // validate format parameters
-                if(pf->channels == 0) {
+                if (pf->channels == 0) {
                     fprintf(stderr, "invalid number of channels in wav header\n");
                     return -1;
                 }
-                if(pf->sample_rate == 0) {
+                if (pf->sample_rate == 0) {
                     fprintf(stderr, "invalid sample rate in wav header\n");
                     return -1;
                 }
-                if(pf->bit_width == 0) {
+                if (pf->bit_width == 0) {
                     fprintf(stderr, "invalid sample bit width in wav header\n");
                     return -1;
                 }
 
                 // skip any leftover bytes in fmt chunk
-                if(pcmfile_seek_set(pf, pf->filepos + chunksize)) {
+                if (pcmfile_seek_set(pf, pf->filepos + chunksize)) {
                     fprintf(stderr, "error seeking in wav file\n");
                     return -1;
                 }
                 found_fmt = 1;
                 break;
             case DATA_ID:
-                if(!found_fmt) return -1;
-                if(chunksize == 0)
+                if (!found_fmt)
+                    return -1;
+                if (chunksize == 0)
                     pf->read_to_eof = 1;
                 pf->data_size = chunksize;
                 pf->data_start = pf->filepos;
-                if(pf->seekable && pf->file_size > 0) {
+                if (pf->seekable && pf->file_size > 0) {
                     // limit data size to end-of-file
-                    if(pf->data_size > 0)
+                    if (pf->data_size > 0)
                         pf->data_size = MIN(pf->data_size, pf->file_size - pf->data_start);
                     else
                         pf->data_size = pf->file_size - pf->data_start;
@@ -179,7 +178,7 @@ wave_init(PcmFile *pf)
                 break;
             default:
                 // skip unknown chunk
-                if(chunksize > 0 && pcmfile_seek_set(pf, pf->filepos + chunksize)) {
+                if (chunksize > 0 && pcmfile_seek_set(pf, pf->filepos + chunksize)) {
                     fprintf(stderr, "error seeking in wav file\n");
                     return -1;
                 }
@@ -188,19 +187,19 @@ wave_init(PcmFile *pf)
 
     // set audio data format based on bit depth and sample type
     src_fmt = PCM_SAMPLE_FMT_UNKNOWN;
-    switch(pf->bit_width) {
+    switch (pf->bit_width) {
         case 8:  src_fmt = PCM_SAMPLE_FMT_U8;  break;
         case 16: src_fmt = PCM_SAMPLE_FMT_S16; break;
         case 20: src_fmt = PCM_SAMPLE_FMT_S20; break;
         case 24: src_fmt = PCM_SAMPLE_FMT_S24; break;
         case 32:
-            if(pf->sample_type == PCM_SAMPLE_TYPE_FLOAT)
+            if (pf->sample_type == PCM_SAMPLE_TYPE_FLOAT)
                 src_fmt = PCM_SAMPLE_FMT_FLT;
-            else if(pf->sample_type == PCM_SAMPLE_TYPE_INT)
+            else if (pf->sample_type == PCM_SAMPLE_TYPE_INT)
                 src_fmt = PCM_SAMPLE_FMT_S32;
             break;
         case 64:
-            if(pf->sample_type == PCM_SAMPLE_TYPE_FLOAT) {
+            if (pf->sample_type == PCM_SAMPLE_TYPE_FLOAT) {
                 src_fmt = PCM_SAMPLE_FMT_DBL;
             } else {
                 fprintf(stderr, "64-bit integer samples not supported\n");

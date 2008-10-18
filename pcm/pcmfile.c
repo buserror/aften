@@ -34,7 +34,7 @@ int
 pcmfile_init(PcmFile *pf, FILE *fp, enum PcmSampleFormat read_format,
              int file_format)
 {
-    if(pf == NULL || fp == NULL) {
+    if (pf == NULL || fp == NULL) {
         fprintf(stderr, "null input to pcmfile_init()\n");
         return -1;
     }
@@ -48,17 +48,16 @@ pcmfile_init(PcmFile *pf, FILE *fp, enum PcmSampleFormat read_format,
     pf->seekable = 0;
 #ifdef _WIN32
     // in Windows, don't try to detect seeking support for stdin
-    if(fp != stdin) {
+    if (fp != stdin)
         pf->seekable = !fseek(fp, 0, SEEK_END);
-    }
 #else
     pf->seekable = !fseek(fp, 0, SEEK_END);
 #endif
-    if(pf->seekable) {
+    if (pf->seekable) {
         // TODO: portable 64-bit ftell
         long fs = ftell(fp);
         // ftell should return an error if value cannot fit in return type
-        if(fs < 0) {
+        if (fs < 0) {
             fprintf(stderr, "Warning, unsupported file size.\n");
             pf->file_size = 0;
         } else {
@@ -67,14 +66,14 @@ pcmfile_init(PcmFile *pf, FILE *fp, enum PcmSampleFormat read_format,
         fseek(fp, 0, SEEK_SET);
     }
     pf->filepos = 0;
-    if(byteio_init(&pf->io, fp)) {
+    if (byteio_init(&pf->io, fp)) {
         fprintf(stderr, "error initializing byte buffer\n");
         return -1;
     }
 
     // detect file format if not specified by the user
     pcmfile_register_all_formats();
-    if(pf->file_format == PCM_FORMAT_UNKNOWN) {
+    if (pf->file_format == PCM_FORMAT_UNKNOWN) {
         uint8_t probe_data[12];
         byteio_peek(probe_data, 12, &pf->io);
         pf->pcm_format = pcmfile_probe_format(probe_data, 12);
@@ -82,13 +81,13 @@ pcmfile_init(PcmFile *pf, FILE *fp, enum PcmSampleFormat read_format,
     } else {
         pf->pcm_format = pcmfile_find_format(pf->file_format);
     }
-    if(pf->pcm_format == NULL) {
+    if (pf->pcm_format == NULL) {
         fprintf(stderr, "unable to detect file format\n");
         return -1;
     }
 
     // initialize format
-    if(pf->pcm_format->init && pf->pcm_format->init(pf))
+    if (pf->pcm_format->init && pf->pcm_format->init(pf))
         return -1;
 
     return 0;
@@ -104,45 +103,48 @@ void
 pcmfile_print(PcmFile *pf, FILE *st)
 {
     const char *type, *chan, *fmt, *order;
-    if(st == NULL || pf == NULL) return;
+    if (st == NULL || pf == NULL)
+        return;
     type = "?";
     chan = "?-channel";
     fmt = "unknown";
     order = "";
-    if(pf->sample_type == PCM_SAMPLE_TYPE_INT) {
-        if(pf->source_format == PCM_SAMPLE_FMT_U8) type = "Unsigned";
-        else type = "Signed";
-    } else if(pf->sample_type == PCM_SAMPLE_TYPE_FLOAT) {
+    if (pf->sample_type == PCM_SAMPLE_TYPE_INT) {
+        if (pf->source_format == PCM_SAMPLE_FMT_U8)
+            type = "Unsigned";
+        else
+            type = "Signed";
+    } else if (pf->sample_type == PCM_SAMPLE_TYPE_FLOAT) {
         type = "Floating-point";
     } else {
         type = "[unsupported type]";
     }
-    if(pf->ch_mask & 0x08) {
-        switch(pf->channels-1) {
-            case 1: chan = "1.1-channel"; break;
-            case 2: chan = "2.1-channel"; break;
-            case 3: chan = "3.1-channel"; break;
-            case 4: chan = "4.1-channel"; break;
-            case 5: chan = "5.1-channel"; break;
-            default: chan = "multi-channel with LFE"; break;
+    if (pf->ch_mask & 0x08) {
+        switch (pf->channels-1) {
+            case 1:  chan = "1.1-channel";              break;
+            case 2:  chan = "2.1-channel";              break;
+            case 3:  chan = "3.1-channel";              break;
+            case 4:  chan = "4.1-channel";              break;
+            case 5:  chan = "5.1-channel";              break;
+            default: chan = "multi-channel with LFE";   break;
         }
     } else {
-        switch(pf->channels) {
-            case 1: chan = "mono"; break;
-            case 2: chan = "stereo"; break;
-            case 3: chan = "3-channel"; break;
-            case 4: chan = "4-channel"; break;
-            case 5: chan = "5-channel"; break;
-            case 6: chan = "6-channel"; break;
-            default: chan = "multi-channel"; break;
+        switch (pf->channels) {
+            case 1:  chan = "mono";             break;
+            case 2:  chan = "stereo";           break;
+            case 3:  chan = "3-channel";        break;
+            case 4:  chan = "4-channel";        break;
+            case 5:  chan = "5-channel";        break;
+            case 6:  chan = "6-channel";        break;
+            default: chan = "multi-channel";    break;
         }
     }
-    if(pf->pcm_format)
+    if (pf->pcm_format)
         fmt = pf->pcm_format->long_name;
-    if(pf->source_format > PCM_SAMPLE_FMT_S8) {
-        switch(pf->order) {
-            case PCM_BYTE_ORDER_LE: order = "little-endian"; break;
-            case PCM_BYTE_ORDER_BE: order = "big-endian"; break;
+    if (pf->source_format > PCM_SAMPLE_FMT_S8) {
+        switch (pf->order) {
+            case PCM_BYTE_ORDER_LE: order = "little-endian";    break;
+            case PCM_BYTE_ORDER_BE: order = "big-endian";       break;
         }
     } else {
         order = "\b";
@@ -162,7 +164,7 @@ pcm_get_default_ch_mask(int channels)
         0x37,   // 5.0 surround (3/2)
         0x3F    // 5.1 surround (3/2+LFE)
     };
-    if(channels < 1 || channels > 6)
+    if (channels < 1 || channels > 6)
         return 0;
     return nch_to_mask[channels-1];
 }

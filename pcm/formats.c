@@ -36,7 +36,7 @@ pcmfile_register_all_formats(void)
 {
     static int inited;
 
-    if(inited)
+    if (inited)
         return;
     inited = 1;
 
@@ -53,7 +53,8 @@ pcmfile_register_format(PcmFormat *format)
 {
     PcmFormat **p;
     p = &first_format;
-    while(*p != NULL) p = &(*p)->next;
+    while (*p != NULL)
+        p = &(*p)->next;
     *p = format;
     format->next = NULL;
 }
@@ -62,8 +63,8 @@ PcmFormat *
 pcmfile_find_format(int format)
 {
     PcmFormat *fmt;
-    for(fmt=first_format; fmt!=NULL; fmt=fmt->next) {
-        if(fmt->format == format)
+    for (fmt = first_format; fmt != NULL; fmt = fmt->next) {
+        if (fmt->format == format)
             return fmt;
     }
     return NULL;
@@ -77,11 +78,11 @@ pcmfile_probe_format(uint8_t *data, int size)
 
     score_max = 0;
     fmt = NULL;
-    for(fmt1=first_format; fmt1!=NULL; fmt1=fmt1->next) {
+    for (fmt1 = first_format; fmt1 != NULL; fmt1 = fmt1->next) {
         score = 0;
-        if(fmt1->probe)
+        if (fmt1->probe)
             score = fmt1->probe(data, size);
-        if(score > score_max) {
+        if (score > score_max) {
             score_max = score;
             fmt = fmt1;
         }

@@ -34,7 +34,7 @@ int
 byteio_init(ByteIOContext *ctx, FILE *fp)
 {
     ctx->buffer = calloc(BYTEIO_BUFFER_SIZE, 1);
-    if(!ctx->buffer)
+    if (!ctx->buffer)
         return -1;
     ctx->fp = fp;
     ctx->index = 0;
@@ -66,14 +66,14 @@ byteio_read(void *ptr, int n, ByteIOContext *ctx)
     uint8_t *ptr8 = ptr;
     int count = 0;
 
-    while(n > ctx->size) {
+    while (n > ctx->size) {
         memcpy(&ptr8[count], &ctx->buffer[ctx->index], ctx->size);
         count += ctx->size;
         n -= ctx->size;
-        if(byteio_flush(ctx) == 0)
+        if (byteio_flush(ctx) == 0)
             break;
     }
-    if(ctx->size >= n && n > 0) {
+    if (ctx->size >= n && n > 0) {
         memcpy(&ptr8[count], &ctx->buffer[ctx->index], n);
         count += n;
         ctx->size -= n;
@@ -87,7 +87,7 @@ byteio_peek(void *ptr, int n, ByteIOContext *ctx)
 {
     int nr;
 
-    if(n > ctx->size)
+    if (n > ctx->size)
         byteio_align(ctx);
     nr = MIN(n, ctx->size);
     memcpy(ptr, &ctx->buffer[ctx->index], nr);
@@ -97,9 +97,9 @@ byteio_peek(void *ptr, int n, ByteIOContext *ctx)
 void
 byteio_close(ByteIOContext *ctx)
 {
-    if(ctx) {
+    if (ctx) {
         ctx->fp = NULL;
-        if(ctx->buffer)
+        if (ctx->buffer)
             free(ctx->buffer);
         ctx->index = 0;
         ctx->size = 0;

@@ -42,18 +42,20 @@ pcmfile_seek_set(PcmFile *pf, uint64_t dest)
     FILE *fp = pf->io.fp;
     int slow_seek = !(pf->seekable);
 
-    if(pf->seekable) {
-        if(dest <= INT32_MAX) {
+    if (pf->seekable) {
+        if (dest <= INT32_MAX) {
             // destination is within first 2GB
-            if(fseek(fp, (long)dest, SEEK_SET)) return -1;
+            if (fseek(fp, (long)dest, SEEK_SET))
+                return -1;
         } else {
             int64_t offset = (int64_t)dest - (int64_t)pf->filepos;
-            if(offset >= INT32_MIN && offset <= INT32_MAX) {
+            if (offset >= INT32_MIN && offset <= INT32_MAX) {
                 // offset is within +/- 2GB of file start
-                if(fseek(fp, (long)offset, SEEK_CUR)) return -1;
+                if (fseek(fp, (long)offset, SEEK_CUR))
+                    return -1;
             } else {
                 // absolute offset is more than 2GB
-                if(offset < 0) {
+                if (offset < 0) {
                     fprintf(stderr, "error: backward seeking is limited to 2GB\n");
                     return -1;
                 } else {
@@ -64,15 +66,15 @@ pcmfile_seek_set(PcmFile *pf, uint64_t dest)
         }
         byteio_flush(&pf->io);
     }
-    if(slow_seek) {
+    if (slow_seek) {
         // do forward-only seek by reading data to temp buffer
         uint64_t offset;
         uint8_t buf[1024];
 
-        if(dest < pf->filepos)
+        if (dest < pf->filepos)
             return -1;
 
-        for(offset = dest - pf->filepos; offset > 1024; offset -= 1024)
+        for (offset = dest - pf->filepos; offset > 1024; offset -= 1024)
             byteio_read(buf, 1024, &pf->io);
 
         byteio_read(buf, (int)offset, &pf->io);
@@ -91,11 +93,11 @@ pcmfile_read_samples(PcmFile *pf, void *output, int num_samples)
     int nr, i, j, bps, nsmp;
 
     // check input and limit number of samples
-    if(pf == NULL || pf->io.fp == NULL || output == NULL || pf->fmt_convert == NULL) {
+    if (pf == NULL || pf->io.fp == NULL || output == NULL || pf->fmt_convert == NULL) {
         fprintf(stderr, "null input to pcmfile_read_samples()\n");
         return -1;
     }
-    if(pf->block_align <= 0) {
+    if (pf->block_align <= 0) {
         fprintf(stderr, "invalid block_align\n");
         return -1;
     }
@@ -104,19 +106,20 @@ pcmfile_read_samples(PcmFile *pf, void *output, int num_samples)
     // calculate number of bytes to read, being careful not to read past
     // the end of the data chunk
     bytes_needed = pf->block_align * num_samples;
-    if(!pf->read_to_eof) {
-        if((pf->filepos + bytes_needed) >= (pf->data_start + pf->data_size)) {
+    if (!pf->read_to_eof) {
+        if ((pf->filepos + bytes_needed) >= (pf->data_start + pf->data_size)) {
             bytes_needed = (uint32_t)((pf->data_start + pf->data_size) - pf->filepos);
             num_samples = bytes_needed / pf->block_align;
         }
     }
-    if(num_samples <= 0) return 0;
+    if (num_samples <= 0)
+        return 0;
 
     // allocate temporary buffer for raw input data
     bps = pf->block_align / pf->channels;
     buffer_size = (bps != 3) ? bytes_needed : num_samples * sizeof(int32_t) * pf->channels;
     buffer = calloc(buffer_size + 1, 1);
-    if(!buffer) {
+    if (!buffer) {
         fprintf(stderr, "error allocating read buffer\n");
         return -1;
     }
@@ -137,11 +140,10 @@ pcmfile_read_samples(PcmFile *pf, void *output, int num_samples)
     // byte orders.
     switch (bps) {
     case 2:
-        if(pf->order == PCM_NON_NATIVE_BYTE_ORDER) {
+        if (pf->order == PCM_NON_NATIVE_BYTE_ORDER) {
             uint16_t *buf16 = (uint16_t *)buffer;
-            for(i=0; i<nsmp; i++) {
+            for (i = 0; i < nsmp; i++)
                 buf16[i] = bswap_16(buf16[i]);
-            }
         }
         break;
     case 3:
@@ -149,15 +151,15 @@ pcmfile_read_samples(PcmFile *pf, void *output, int num_samples)
             int32_t *input = (int32_t*)buffer;
             int unused_bits = 32 - pf->bit_width;
             int32_t v;
-            if(pf->order == PCM_NON_NATIVE_BYTE_ORDER) {
-                for(i=0,j=0; i<nsmp*bps; i+=bps,j++) {
+            if (pf->order == PCM_NON_NATIVE_BYTE_ORDER) {
+                for (i = 0, j = 0; i < nsmp*bps; i += bps, j++) {
                     v = bswap_32(*(uint32_t*)(read_buffer + i) << 8);
                     v <<= unused_bits; // clear unused high bits
                     v >>= unused_bits; // sign extend
                     input[j] = v;
                 }
             } else {
-                for(i=0,j=0; i<nsmp*bps; i+=bps,j++) {
+                for (i = 0, j = 0; i < nsmp*bps; i += bps, j++) {
                     v = *(int32_t*)(read_buffer + i);
                     v <<= unused_bits; // clear unused high bits
                     v >>= unused_bits; // sign extend
@@ -167,19 +169,17 @@ pcmfile_read_samples(PcmFile *pf, void *output, int num_samples)
         }
         break;
     case 4:
-        if(pf->order == PCM_NON_NATIVE_BYTE_ORDER) {
+        if (pf->order == PCM_NON_NATIVE_BYTE_ORDER) {
             uint32_t *buf32 = (uint32_t *)buffer;
-            for(i=0; i<nsmp; i++) {
+            for (i = 0; i < nsmp; i++)
                 buf32[i] = bswap_32(buf32[i]);
-            }
         }
         break;
     case 8:
-        if(pf->order == PCM_NON_NATIVE_BYTE_ORDER) {
+        if (pf->order == PCM_NON_NATIVE_BYTE_ORDER) {
             uint64_t *buf64 = (uint64_t *)buffer;
-            for(i=0; i<nsmp; i++) {
+            for (i = 0; i < nsmp; i++)
                 buf64[i] = bswap_64(buf64[i]);
-            }
         }
         break;
     }
@@ -197,10 +197,14 @@ pcmfile_seek_samples(PcmFile *pf, int64_t offset, int whence)
     int64_t byte_offset;
     uint64_t newpos, fpos, dst, dsz;
 
-    if(pf == NULL || pf->io.fp == NULL) return -1;
-    if(pf->block_align <= 0) return -1;
-    if(pf->filepos < pf->data_start) return -1;
-    if(pf->data_size == 0) return 0;
+    if (pf == NULL || pf->io.fp == NULL)
+        return -1;
+    if (pf->block_align <= 0)
+        return -1;
+    if (pf->filepos < pf->data_start)
+        return -1;
+    if (pf->data_size == 0)
+        return 0;
 
     fpos = pf->filepos;
     dst = pf->data_start;
@@ -209,7 +213,7 @@ pcmfile_seek_samples(PcmFile *pf, int64_t offset, int whence)
     byte_offset *= pf->block_align;
 
     // calculate new destination within file
-    switch(whence) {
+    switch (whence) {
         case PCM_SEEK_SET:
             newpos = dst + CLIP(byte_offset, 0, (int64_t)dsz);
             break;
@@ -224,7 +228,8 @@ pcmfile_seek_samples(PcmFile *pf, int64_t offset, int whence)
     }
 
     // seek to the destination point
-    if(pcmfile_seek_set(pf, newpos)) return -1;
+    if (pcmfile_seek_set(pf, newpos))
+        return -1;
 
     return 0;
 }
@@ -233,7 +238,8 @@ int
 pcmfile_seek_time_ms(PcmFile *pf, int64_t offset, int whence)
 {
     int64_t samples;
-    if(pf == NULL) return -1;
+    if (pf == NULL)
+        return -1;
     samples = offset * pf->sample_rate / 1000;
     return pcmfile_seek_samples(pf, samples, whence);
 }
@@ -243,9 +249,12 @@ pcmfile_position(PcmFile *pf)
 {
     uint64_t cur;
 
-    if(pf == NULL) return -1;
-    if(pf->block_align <= 0) return -1;
-    if(pf->data_start == 0 || pf->data_size == 0) return 0;
+    if (pf == NULL)
+        return -1;
+    if (pf->block_align <= 0)
+        return -1;
+    if (pf->data_start == 0 || pf->data_size == 0)
+        return 0;
 
     cur = (pf->filepos - pf->data_start) / pf->block_align;
     return cur;

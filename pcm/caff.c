@@ -46,7 +46,7 @@ static inline uint64_t
 read8be(PcmFile *pf)
 {
     uint64_t x;
-    if(byteio_read(&x, 8, &pf->io) != 8)
+    if (byteio_read(&x, 8, &pf->io) != 8)
         return 0;
     pf->filepos += 8;
     return be2me_64(x);
@@ -73,7 +73,7 @@ static inline uint32_t
 read4be(PcmFile *pf)
 {
     uint32_t x;
-    if(byteio_read(&x, 4, &pf->io) != 4)
+    if (byteio_read(&x, 4, &pf->io) != 4)
         return 0;
     pf->filepos += 4;
     return be2me_32(x);
@@ -86,7 +86,7 @@ static inline uint16_t
 read2be(PcmFile *pf)
 {
     uint16_t x;
-    if(byteio_read(&x, 2, &pf->io) != 2)
+    if (byteio_read(&x, 2, &pf->io) != 2)
         return 0;
     pf->filepos += 2;
     return be2me_16(x);
@@ -97,10 +97,10 @@ caff_probe(uint8_t *data, int size)
 {
     int id;
 
-    if(!data || size < 6)
+    if (!data || size < 6)
         return 0;
     id = data[3] | (data[2] << 8) | (data[1] << 16) | (data[0] << 24);
-    if(id == CAFF_ID && data[4] == 0 && data[5] == 1)
+    if (id == CAFF_ID && data[4] == 0 && data[5] == 1)
         return 100;
 
     return 0;
@@ -113,13 +113,13 @@ caff_init(PcmFile *pf)
     uint64_t chunksize;
 
     // read "caff" id
-    if(read4be(pf) != CAFF_ID) {
+    if (read4be(pf) != CAFF_ID) {
         fprintf(stderr, "CAFF: file type check failed\n");
         return -1;
     }
 
     // check file version
-    if(read2be(pf) != 1) {
+    if (read2be(pf) != 1) {
         fprintf(stderr, "CAFF: file version check failed\n");
         return -1;
     }
@@ -128,12 +128,12 @@ caff_init(PcmFile *pf)
     read2be(pf);
 
     // audio description chunk
-    if(read4be(pf) != DESC_ID) {
+    if (read4be(pf) != DESC_ID) {
         fprintf(stderr, "CAFF: 'desc' chunk not present\n");
         return -1;
     }
     chunksize = read8be(pf);
-    if(chunksize != 32) {
+    if (chunksize != 32) {
         fprintf(stderr, "CAFF: invalid 'desc' chunk size\n");
         return -1;
     }
@@ -149,38 +149,38 @@ caff_init(PcmFile *pf)
     pf->bit_width = read4be(pf);
 
     // validate some parameters
-    if(pf->sample_rate < 1) {
+    if (pf->sample_rate < 1) {
         fprintf(stderr, "CAFF: Invalid sample rate: %d\n", pf->sample_rate);
         return -1;
     }
-    if(pf->block_align < 1) {
+    if (pf->block_align < 1) {
         fprintf(stderr, "CAFF: Invalid block align: %d\n", pf->block_align);
         return -1;
     }
-    if(pf->channels < 1 || pf->channels > PCM_MAX_CHANNELS) {
+    if (pf->channels < 1 || pf->channels > PCM_MAX_CHANNELS) {
         fprintf(stderr, "CAFF: Invalid number of channels: %d\n", pf->channels);
         return -1;
     }
-    if(pf->internal_fmt != LPCM_TAG) {
+    if (pf->internal_fmt != LPCM_TAG) {
         fprintf(stderr, "CAFF: Unsupported codec: 0x%04X\n", pf->internal_fmt);
         return -1;
     }
 
     // set audio data format based on bit depth and sample type
     src_fmt = PCM_SAMPLE_FMT_UNKNOWN;
-    switch(pf->bit_width) {
+    switch (pf->bit_width) {
         case 8:  src_fmt = PCM_SAMPLE_FMT_S8;  break;
         case 16: src_fmt = PCM_SAMPLE_FMT_S16; break;
         case 20: src_fmt = PCM_SAMPLE_FMT_S20; break;
         case 24: src_fmt = PCM_SAMPLE_FMT_S24; break;
         case 32:
-            if(pf->sample_type == PCM_SAMPLE_TYPE_FLOAT)
+            if (pf->sample_type == PCM_SAMPLE_TYPE_FLOAT)
                 src_fmt = PCM_SAMPLE_FMT_FLT;
-            else if(pf->sample_type == PCM_SAMPLE_TYPE_INT)
+            else if (pf->sample_type == PCM_SAMPLE_TYPE_INT)
                 src_fmt = PCM_SAMPLE_FMT_S32;
             break;
         case 64:
-            if(pf->sample_type == PCM_SAMPLE_TYPE_FLOAT) {
+            if (pf->sample_type == PCM_SAMPLE_TYPE_FLOAT) {
                 src_fmt = PCM_SAMPLE_FMT_DBL;
             } else {
                 fprintf(stderr, "64-bit integer samples not supported\n");
@@ -192,17 +192,17 @@ caff_init(PcmFile *pf)
 
     // read all header chunks. skip unknown chunks.
     found_data = 0;
-    while(!found_data) {
+    while (!found_data) {
         id = read4be(pf);
         chunksize = read8be(pf);
-        switch(id) {
+        switch (id) {
             case DATA_ID:
                 read4be(pf);
                 pf->data_size = chunksize - 4;
                 pf->data_start = pf->filepos;
-                if(pf->seekable && pf->file_size > 0) {
+                if (pf->seekable && pf->file_size > 0) {
                     // limit data size to end-of-file
-                    if(pf->data_size > 0)
+                    if (pf->data_size > 0)
                         pf->data_size = MIN(pf->data_size, pf->file_size - pf->data_start);
                     else
                         pf->data_size = pf->file_size - pf->data_start;
@@ -212,7 +212,7 @@ caff_init(PcmFile *pf)
                 break;
             default:
                 // skip unknown chunk
-                if(chunksize > 0 && pcmfile_seek_set(pf, pf->filepos + chunksize)) {
+                if (chunksize > 0 && pcmfile_seek_set(pf, pf->filepos + chunksize)) {
                     fprintf(stderr, "error seeking in CAFF file\n");
                     return -1;
                 }

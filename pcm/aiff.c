@@ -55,9 +55,9 @@ ext2dbl(const ExtFloat ext)
                              * single and double precision formats */
     if (ext.exponent[0]&0x80)
         m= -m;
-    if(e > 0)
+    if (e > 0)
         m <<= e;
-    else if(e < 0)
+    else if (e < 0)
         m >>= -e;
     return m;
 }
@@ -75,7 +75,7 @@ static inline ExtFloat
 readext(PcmFile *pf)
 {
     ExtFloat x;
-    if(byteio_read(&x, 10, &pf->io) != 10) {
+    if (byteio_read(&x, 10, &pf->io) != 10) {
         memset(&x, 0, sizeof(x));
         return x;
     }
@@ -90,7 +90,7 @@ static inline uint32_t
 read4be(PcmFile *pf)
 {
     uint32_t x;
-    if(byteio_read(&x, 4, &pf->io) != 4)
+    if (byteio_read(&x, 4, &pf->io) != 4)
         return 0;
     pf->filepos += 4;
     return be2me_32(x);
@@ -103,7 +103,7 @@ static inline uint16_t
 read2be(PcmFile *pf)
 {
     uint16_t x;
-    if(byteio_read(&x, 2, &pf->io) != 2)
+    if (byteio_read(&x, 2, &pf->io) != 2)
         return 0;
     pf->filepos += 2;
     return be2me_16(x);
@@ -114,16 +114,14 @@ aiff_probe(uint8_t *data, int size)
 {
     int id;
 
-    if(!data || size < 12)
+    if (!data || size < 12)
         return 0;
     id = data[3] | (data[2] << 8) | (data[1] << 16) | (data[0] << 24);
-    if(id != FORM_ID) {
+    if (id != FORM_ID)
         return 0;
-    }
     id = data[11] | (data[10] << 8) | (data[9] << 16) | (data[8] << 24);
-    if(id != AIFF_ID) {
+    if (id != AIFF_ID)
         return 0;
-    }
     return 100;
 }
 
@@ -136,7 +134,7 @@ aiff_init(PcmFile *pf)
 
     // read FORM id. ignore size.
     id = read4be(pf);
-    if(id != FORM_ID) {
+    if (id != FORM_ID) {
         fprintf(stderr, "invalid FORM id in aiff header\n");
         return -1;
     }
@@ -144,19 +142,19 @@ aiff_init(PcmFile *pf)
 
     // read AIFF id. ignore size.
     id = read4be(pf);
-    if(id != AIFF_ID) {
+    if (id != AIFF_ID) {
         fprintf(stderr, "invalid AIFF id in aiff header\n");
         return -1;
     }
 
     // read all header chunks. skip unknown chunks.
     found_ssnd = found_comm = 0;
-    while(!found_ssnd) {
+    while (!found_ssnd) {
         id = read4be(pf);
         chunksize = read4be(pf);
-        switch(id) {
+        switch (id) {
             case COMM_ID:
-                if(chunksize < 18) {
+                if (chunksize < 18) {
                     fprintf(stderr, "invalid COMM chunk in aiff header\n");
                     return -1;
                 }
@@ -170,41 +168,41 @@ aiff_init(PcmFile *pf)
 
                 chunksize -= 18;
 
-                if(channels == 0) {
+                if (channels == 0) {
                     fprintf(stderr, "invalid number of channels in aiff header\n");
                     return -1;
                 }
-                if(sample_rate <= 0) {
+                if (sample_rate <= 0) {
                     fprintf(stderr, "invalid sample rate in aiff header\n");
                     return -1;
                 }
-                if(bits == 0) {
+                if (bits == 0) {
                     fprintf(stderr, "invalid sample bit width in aiff header\n");
                     return -1;
                 }
 
                 // skip any leftover bytes in fmt chunk
                 chunksize += chunksize & 1;
-                if(pcmfile_seek_set(pf, pf->filepos + chunksize)) {
+                if (pcmfile_seek_set(pf, pf->filepos + chunksize)) {
                     fprintf(stderr, "error seeking in aiff file\n");
                     return -1;
                 }
                 found_comm = 1;
                 break;
             case SSND_ID:
-                if(!found_comm) {
+                if (!found_comm) {
                     fprintf(stderr, "COMM after SSND in aiff is not supported\n");
                     return -1;
                 }
                 offset = read4be(pf);
                 read4be(pf);
-                if(pcmfile_seek_set(pf, pf->filepos + offset)) {
+                if (pcmfile_seek_set(pf, pf->filepos + offset)) {
                     fprintf(stderr, "error seeking in aiff file\n");
                     return -1;
                 }
                 pf->data_size = block_align * pf->samples;
                 pf->data_start = pf->filepos;
-                if(pf->seekable && pf->file_size > 0) {
+                if (pf->seekable && pf->file_size > 0) {
                     // limit data size to end-of-file
                     pf->data_size = MIN(pf->data_size, pf->file_size - pf->data_start);
                     pf->samples = pf->data_size / block_align;
@@ -214,7 +212,7 @@ aiff_init(PcmFile *pf)
             default:
                 // skip unknown chunk
                 chunksize += chunksize & 1;
-                if(chunksize > 0 && pcmfile_seek_set(pf, pf->filepos + chunksize)) {
+                if (chunksize > 0 && pcmfile_seek_set(pf, pf->filepos + chunksize)) {
                     fprintf(stderr, "error seeking in aiff file\n");
                     return -1;
                 }
@@ -223,7 +221,7 @@ aiff_init(PcmFile *pf)
 
     // set audio data format based on bit depth and sample type
     fmt = PCM_SAMPLE_FMT_UNKNOWN;
-    switch(bits) {
+    switch (bits) {
         case  8: fmt = PCM_SAMPLE_FMT_S8;  break;
         case 16: fmt = PCM_SAMPLE_FMT_S16; break;
         case 20: fmt = PCM_SAMPLE_FMT_S20; break;

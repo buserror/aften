@@ -33,7 +33,7 @@
 int
 raw_probe(uint8_t *data, int size)
 {
-    if(data == NULL || size < 0)
+    if (data == NULL || size < 0)
         return 0;
     return 1;
 }
@@ -43,7 +43,7 @@ raw_init(PcmFile *pf)
 {
     pf->data_size = 0;
     pf->data_start = 0;
-    if(pf->seekable && pf->file_size > 0) {
+    if (pf->seekable && pf->file_size > 0) {
         pf->data_size = pf->file_size;
     }
     pf->read_to_eof = 1;
