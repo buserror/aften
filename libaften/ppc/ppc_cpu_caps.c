@@ -57,8 +57,7 @@ void cpu_caps_detect(void)
 #else
 void cpu_caps_detect(void)
 {
-    if (g_is_altivec_present == -1L)
-    {
+    if (g_is_altivec_present == -1L) {
         sig_t oldhandler;
         sigset_t signame;
         struct sigaction sa_new, sa_old;
@@ -79,8 +78,7 @@ void cpu_caps_detect(void)
         sigaction(SIGILL, &sa_new, &sa_old);
 
         //Attempt to use AltiVec
-        if(!sigsetjmp(g_env, 0))
-        {
+        if(!sigsetjmp(g_env, 0)) {
             asm volatile ( "vor v0, v0, v0" );
         }
 

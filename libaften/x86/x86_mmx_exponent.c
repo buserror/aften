@@ -41,7 +41,7 @@ exponent_min(uint8_t *exp, uint8_t *exp1, int n)
 {
     int i;
 
-    for(i=0; i<(n & ~7); i+=8) {
+    for (i = 0; i < (n & ~7); i += 8) {
         __m64 vexp = *(__m64*)&exp[i];
         __m64 vexp1 = *(__m64*)&exp1[i];
         __m64 vmask = _mm_cmpgt_pi8(vexp, vexp1);
@@ -50,7 +50,7 @@ exponent_min(uint8_t *exp, uint8_t *exp1, int n)
         vexp = _mm_or_si64(vexp, vexp1);
         *(__m64*)&exp[i] = vexp;
     }
-    switch(n & 7) {
+    switch (n & 7) {
     case 7:
         exp[i] = MIN(exp[i], exp1[i]);
         ++i;
@@ -99,9 +99,9 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
 
         // Decrease the delta between each groups to within 2
         // so that they can be differentially encoded
-        for(i=1; i<=ngrps; i++)
+        for (i = 1; i <= ngrps; i++)
             exp[i] = MIN(exp[i], exp[i-1]+2);
-        for(i=ngrps-1; i>=0; i--)
+        for (i = ngrps-1; i >= 0; i--)
             exp[i] = MIN(exp[i], exp[i+1]+2);
 
         return;
@@ -111,8 +111,8 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
         ALIGN16(uint16_t) exp1[256];
         ALIGN16(const union __m64ui) vmask = {{0x00ff00ff, 0x00ff00ff}};
 
-        i=0;k=1;
-        for(; i<(ngrps & ~3); i+=4, k+=8) {
+        i=0; k=1;
+        for (; i < (ngrps & ~3); i += 4, k += 8) {
             __m64 v1 = *(__m64*)&exp[k];
             __m64 v2 = _mm_srli_si64(v1, 8);
             __m64 vcmask;
@@ -144,15 +144,15 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
         // Decrease the delta between each groups to within 2
         // so that they can be differentially encoded
         exp1[0] = MIN(exp1[0], (uint16_t)exp[0]+2);
-        for(i=1; i<ngrps; i++)
+        for (i = 1; i < ngrps; i++)
             exp1[i] = MIN(exp1[i], exp1[i-1]+2);
-        for(i=ngrps-2; i>=0; i--)
+        for(i = ngrps-2; i >= 0; i--)
             exp1[i] = MIN(exp1[i], exp1[i+1]+2);
        // now we have the exponent values the decoder will see
         exp[0] = MIN(exp[0], exp1[0]+2); // DC exponent is handled separately
 
-        i=0;k=1;
-        for(; i<(ngrps & ~3); i+=4, k+=8) {
+        i=0; k=1;
+        for(; i < (ngrps & ~3); i += 4, k += 8) {
             __m64 v1 = *(__m64*)&exp1[i];
             __m64 v2 = _mm_slli_si64(v1, 8);
             v1 = _mm_or_si64(v1, v2);
@@ -185,7 +185,7 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
         ALIGN16(const union __m64ui) vmask2 = {{0x000000ff, 0x000000ff}};
 
         i=0;k=1;
-        for(; i<(ngrps & ~1); i+=2, k+=8) {
+        for (; i < (ngrps & ~1); i += 2, k += 8) {
             __m64 v1 = *(__m64*)&exp[k];
             __m64 v2 = _mm_srli_si64(v1, 8);
             //v1 = _mm_min_pi8(v1, v2);
@@ -204,7 +204,7 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
             v1 = _mm_and_si64(v1, vmask2.v);
             *(__m64*)&exp1[i] = v1;
         }
-        if(ngrps & 1) {
+        if (ngrps & 1) {
             exp_min1 = MIN(exp[k  ], exp[k+1]);
             exp_min2 = MIN(exp[k+2], exp[k+3]);
             exp1[i]  = MIN(exp_min1, exp_min2);
@@ -214,15 +214,15 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
         // Decrease the delta between each groups to within 2
         // so that they can be differentially encoded
         exp1[0] = MIN(exp1[0], (uint32_t)exp[0]+2);
-        for(i=1; i<ngrps; i++)
+        for (i = 1; i < ngrps; i++)
             exp1[i] = MIN(exp1[i], exp1[i-1]+2);
-        for(i=ngrps-2; i>=0; i--)
+        for (i = ngrps-2; i >= 0; i--)
             exp1[i] = MIN(exp1[i], exp1[i+1]+2);
        // now we have the exponent values the decoder will see
         exp[0] = MIN(exp[0], exp1[0]+2); // DC exponent is handled separately
 
-        i=0;k=1;
-        for(; i<(ngrps & ~1); i+=2, k+=8) {
+        i=0; k=1;
+        for (; i < (ngrps & ~1); i += 2, k += 8) {
             __m64 v1 = *(__m64*)&exp1[i];
             __m64 v2 = _mm_slli_si64(v1, 8);
             v1 = _mm_or_si64(v1, v2);
@@ -230,7 +230,7 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
             v1 = _mm_or_si64(v1, v2);
             *(__m64*)&exp[k] = v1;
         }
-        if(ngrps & 1) {
+        if (ngrps & 1) {
             v = exp1[i];
             exp[k] = v;
             exp[k+1] = v;
@@ -257,32 +257,30 @@ compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs, int search_size)
     int err;
 
     min_error = 0;
-    for(s=0; s<search_size; s++) {
+    for (s = 0; s < search_size; s++) {
         str = str_predef_priority[s];
 
         // collect exponents
-        for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+        for (blk = 0; blk < A52_NUM_BLOCKS; blk++)
             memcpy(exponents[blk], exp[blk], 256);
-        }
 
         // encode exponents
         i = 0;
-        while(i < A52_NUM_BLOCKS) {
+        while (i < A52_NUM_BLOCKS) {
             j = i + 1;
-            while(j < A52_NUM_BLOCKS && str_predef[str][j]==EXP_REUSE) {
+            while (j < A52_NUM_BLOCKS && str_predef[str][j]==EXP_REUSE) {
                 exponent_min(exponents[i], exponents[j], ncoefs);
                 j++;
             }
             encode_exp_blk_ch(exponents[i], ncoefs, str_predef[str][i]);
-            for(k=i+1; k<j; k++) {
+            for (k = i+1; k < j; k++)
                 memcpy(exponents[k], exponents[i], 256);
-            }
             i = j;
         }
 
         // select strategy based on minimum error from unencoded exponents
         exp_error[str] = 0;
-        for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+        for (blk = 0; blk < A52_NUM_BLOCKS; blk++) {
             uint8_t *exp_blk = exp[blk];
             uint8_t *exponents_blk = exponents[blk];
             union {
@@ -292,7 +290,7 @@ compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs, int search_size)
             __m64 vzero = _mm_setzero_si64();
             __m64 vres = vzero;
 
-            for(i=0; i<(ncoefs & ~7); i+=8) {
+            for (i = 0; i < (ncoefs & ~7); i += 8) {
                 __m64 vexp = *(__m64*)&exp_blk[i];
                 __m64 vexp2 = *(__m64*)&exponents_blk[i];
 #if 0
@@ -316,7 +314,7 @@ compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs, int search_size)
             }
             ures.v = vres;
             exp_error[str] += ures.res[0]+ures.res[1];
-            switch(ncoefs & 7) {
+            switch (ncoefs & 7) {
             case 7:
                 err = exp_blk[i] - exponents_blk[i];
                 exp_error[str] += (err * err);
@@ -348,9 +346,8 @@ compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs, int search_size)
                 ;
             }
         }
-        if(exp_error[str] < exp_error[min_error]) {
+        if (exp_error[str] < exp_error[min_error])
             min_error = str;
-        }
     }
     return min_error;
 }

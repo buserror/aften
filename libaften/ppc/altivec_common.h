@@ -48,7 +48,7 @@ typedef vector signed int     vec_s32_t;
 
 static inline vector float vec_ld_float(const float *a)
 {
-    switch((int)a & 0xc) {
+    switch ((int)a & 0xc) {
         case 4:  return vec_splat(vec_lde(0, a), 1);
         case 8:  return vec_splat(vec_lde(0, a), 2);
         case 12: return vec_splat(vec_lde(0, a), 3);

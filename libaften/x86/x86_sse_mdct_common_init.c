@@ -72,13 +72,13 @@ sse_mdct_ctx_init(MDCTContext *mdct, int n)
     mdct->bitrev = bitrev;
 
     // trig lookups
-    for(i=0;i<n/4;i++){
+    for (i = 0; i < n/4; i++) {
         trig[i*2]      =  AFT_COS((AFT_PI/n)*(4*i));
         trig[i*2+1]    = -AFT_SIN((AFT_PI/n)*(4*i));
         trig[n2+i*2]   =  AFT_COS((AFT_PI/(2*n))*(2*i+1));
         trig[n2+i*2+1] =  AFT_SIN((AFT_PI/(2*n))*(2*i+1));
     }
-    for(i=0;i<n/8;i++){
+    for (i = 0; i < n/8; i++) {
         trig[n+i*2]    =  AFT_COS((AFT_PI/n)*(4*i+2))*0.5f;
         trig[n+i*2+1]  = -AFT_SIN((AFT_PI/n)*(4*i+2))*0.5f;
     }
@@ -88,12 +88,11 @@ sse_mdct_ctx_init(MDCTContext *mdct, int n)
         int j, acc;
         int mask = (1 << (log2n-1)) - 1;
         int msb = (1 << (log2n-2));
-        for(i=0; i<n/8; i++) {
+        for (i = 0; i < n/8; i++) {
             acc = 0;
-            for(j=0; msb>>j; j++) {
-                if((msb>>j)&i) {
+            for (j = 0; msb>>j; j++) {
+                if ((msb>>j)&i)
                     acc |= (1 << j);
-                }
             }
             bitrev[i*2]= ((~acc) & mask) - 1;
             bitrev[i*2+1] = acc;
@@ -114,8 +113,7 @@ sse_mdct_ctx_init(MDCTContext *mdct, int n)
         T    = aligned_malloc(sizeof(*T)*n2);
         mdct->trig_bitreverse    = T;
         S    = mdct->trig+n;
-        for(i=0;i<n4;i+=8)
-        {
+        for (i = 0; i < n4; i += 8) {
             __m128  XMM0     = _mm_load_ps(S+i   );
             __m128  XMM1     = _mm_load_ps(S+i+ 4);
             __m128  XMM2     = XMM0;
@@ -135,8 +133,7 @@ sse_mdct_ctx_init(MDCTContext *mdct, int n)
         T    = aligned_malloc(sizeof(*T)*(n*2));
         mdct->trig_forward   = T;
         S    = mdct->trig;
-        for(i=0,j=n2-4;i<n8;i+=4,j-=4)
-        {
+        for (i = 0, j = n2-4; i < n8; i += 4, j -= 4) {
             __m128 XMM0 = _mm_load_ps(S+i);
             __m128 XMM2 = _mm_load_ps(S+j);
             __m128 XMM1 = _mm_shuffle_ps(XMM2, XMM0, _MM_SHUFFLE(1,0,3,2));
@@ -152,8 +149,7 @@ sse_mdct_ctx_init(MDCTContext *mdct, int n)
             _mm_store_ps(T+i*4+ 8, XMM2);
             _mm_store_ps(T+i*4+12, XMM3);
         }
-        for(;i<n4;i+=4,j-=4)
-        {
+        for (; i < n4; i += 4, j -= 4) {
             __m128 XMM0 = _mm_load_ps(S+i);
             __m128 XMM2 = _mm_load_ps(S+j);
             __m128 XMM1 = _mm_shuffle_ps(XMM2, XMM0, _MM_SHUFFLE(1,0,3,2));
@@ -174,7 +170,7 @@ sse_mdct_ctx_init(MDCTContext *mdct, int n)
         */
         T    = mdct->trig_forward+n;
         S    = mdct->trig+n2;
-        for(i=0;i<n4;i+=4){
+        for (i = 0; i < n4; i += 4) {
             __m128  XMM0, XMM1, XMM2;
             XMM0     = _mm_load_ps(S+4);
             XMM2     = _mm_load_ps(S  );
@@ -198,8 +194,7 @@ sse_mdct_ctx_init(MDCTContext *mdct, int n)
         S    = mdct->trig;
         T    = aligned_malloc(sizeof(*T)*n*2);
         mdct->trig_butterfly_first   = T;
-        for(i=0;i<n4;i+=4)
-        {
+        for (i = 0; i < n4; i += 4) {
             __m128  XMM0, XMM1, XMM2, XMM3, XMM4, XMM5;
             XMM2     = _mm_load_ps(S   );
             XMM0     = _mm_load_ps(S+ 4);
@@ -234,8 +229,7 @@ sse_mdct_ctx_init(MDCTContext *mdct, int n)
         S    = mdct->trig;
         T    = aligned_malloc(sizeof(*T)*n2);
         mdct->trig_butterfly_generic8    = T;
-        for(i=0;i<n;i+=32)
-        {
+        for (i = 0; i < n; i += 32) {
             __m128  XMM0, XMM1, XMM2, XMM3, XMM4, XMM5;
 
             XMM0     = _mm_load_ps(S+ 24);
@@ -263,8 +257,7 @@ sse_mdct_ctx_init(MDCTContext *mdct, int n)
         S    = mdct->trig;
         T    = aligned_malloc(sizeof(*T)*n4);
         mdct->trig_butterfly_generic16   = T;
-        for(i=0;i<n;i+=64)
-        {
+        for (i = 0; i < n; i += 64) {
             __m128  XMM0, XMM1, XMM2, XMM3, XMM4, XMM5;
 
             XMM0     = _mm_load_ps(S+ 48);
@@ -289,15 +282,13 @@ sse_mdct_ctx_init(MDCTContext *mdct, int n)
         /*
             for mdct_butterfly_generic(trigint=32)
         */
-        if(n<128)
+        if (n < 128) {
             mdct->trig_butterfly_generic32   = NULL;
-        else
-        {
+        } else {
             S    = mdct->trig;
             T    = aligned_malloc(sizeof(*T)*n8);
             mdct->trig_butterfly_generic32   = T;
-            for(i=0;i<n;i+=128)
-            {
+            for (i = 0; i < n; i += 128) {
                 __m128  XMM0, XMM1, XMM2, XMM3, XMM4, XMM5;
 
                 XMM0     = _mm_load_ps(S+ 96);
@@ -323,15 +314,13 @@ sse_mdct_ctx_init(MDCTContext *mdct, int n)
         /*
             for mdct_butterfly_generic(trigint=64)
         */
-        if(n<256)
+        if (n < 256) {
             mdct->trig_butterfly_generic64   = NULL;
-        else
-        {
+        } else {
             S    = mdct->trig;
             T    = aligned_malloc(sizeof(*T)*(n8>>1));
             mdct->trig_butterfly_generic64   = T;
-            for(i=0;i<n;i+=256)
-            {
+            for (i = 0; i < n; i += 256) {
                 __m128  XMM0, XMM1, XMM2, XMM3, XMM4, XMM5;
 
                 XMM0     = _mm_load_ps(S+192);
@@ -360,16 +349,25 @@ sse_mdct_ctx_init(MDCTContext *mdct, int n)
 void
 sse_mdct_ctx_close(MDCTContext *mdct)
 {
-    if(mdct) {
-        if(mdct->trig)   aligned_free(mdct->trig);
-        if(mdct->bitrev) aligned_free(mdct->bitrev);
-        if(mdct->trig_bitreverse) aligned_free(mdct->trig_bitreverse);
-        if(mdct->trig_forward) aligned_free(mdct->trig_forward);
-        if(mdct->trig_butterfly_first) aligned_free(mdct->trig_butterfly_first);
-        if(mdct->trig_butterfly_generic8) aligned_free(mdct->trig_butterfly_generic8);
-        if(mdct->trig_butterfly_generic16) aligned_free(mdct->trig_butterfly_generic16);
-        if(mdct->trig_butterfly_generic32) aligned_free(mdct->trig_butterfly_generic32);
-        if(mdct->trig_butterfly_generic64) aligned_free(mdct->trig_butterfly_generic64);
+    if (mdct) {
+        if (mdct->trig)
+            aligned_free(mdct->trig);
+        if (mdct->bitrev)
+            aligned_free(mdct->bitrev);
+        if (mdct->trig_bitreverse)
+            aligned_free(mdct->trig_bitreverse);
+        if (mdct->trig_forward)
+            aligned_free(mdct->trig_forward);
+        if (mdct->trig_butterfly_first)
+            aligned_free(mdct->trig_butterfly_first);
+        if (mdct->trig_butterfly_generic8)
+            aligned_free(mdct->trig_butterfly_generic8);
+        if (mdct->trig_butterfly_generic16)
+            aligned_free(mdct->trig_butterfly_generic16);
+        if (mdct->trig_butterfly_generic32)
+            aligned_free(mdct->trig_butterfly_generic32);
+        if (mdct->trig_butterfly_generic64)
+            aligned_free(mdct->trig_butterfly_generic64);
         memset(mdct, 0, sizeof(MDCTContext));
     }
 }
@@ -378,15 +376,17 @@ void
 sse_mdct_tctx_init(MDCTThreadContext *tmdct, int n)
 {
     // internal mdct buffers
-    tmdct->buffer = aligned_malloc((n+2) * sizeof(FLOAT));/* +2 to prevent illegal read in bitreverse*/
-    tmdct->buffer1 = aligned_malloc(n * sizeof(FLOAT));
+    tmdct->buffer  = aligned_malloc((n+2) * sizeof(FLOAT));/* +2 to prevent illegal read in bitreverse*/
+    tmdct->buffer1 = aligned_malloc( n    * sizeof(FLOAT));
 }
 
 void
 sse_mdct_tctx_close(MDCTThreadContext *tmdct)
 {
-    if(tmdct) {
-        if(tmdct->buffer) aligned_free(tmdct->buffer);
-        if(tmdct->buffer1) aligned_free(tmdct->buffer1);
+    if (tmdct) {
+        if (tmdct->buffer)
+            aligned_free(tmdct->buffer);
+        if (tmdct->buffer1)
+            aligned_free(tmdct->buffer1);
     }
 }

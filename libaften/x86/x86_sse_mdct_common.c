@@ -222,7 +222,7 @@ mdct_butterfly_first(FLOAT *trig, FLOAT *x, int points)
     float   *X1  = x +  points - 8;
     float   *X2  = x + (points>>1) - 8;
 
-    do{
+    do {
         __m128  XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7;
         XMM0     = _mm_load_ps(X1+4);
         XMM1     = _mm_load_ps(X1  );
@@ -266,7 +266,7 @@ mdct_butterfly_first(FLOAT *trig, FLOAT *x, int points)
         X1  -= 8;
         X2  -= 8;
         trig+= 16;
-    }while(X2>=x);
+    } while (X2 >= x);
 }
 
 /* N/stage point generic N stage butterfly (in place, 2 register) */
@@ -276,12 +276,10 @@ mdct_butterfly_generic(MDCTContext *mdct, FLOAT *x, int points, int trigint)
     float *T;
     float *x1    = x +  points     - 8;
     float *x2    = x + (points>>1) - 8;
-    switch(trigint)
-    {
+    switch (trigint) {
     default :
         T    = mdct->trig;
-        do
-        {
+        do {
             __m128  XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6;
             XMM0     = _mm_load_ps(x1  );
             XMM1     = _mm_load_ps(x2  );
@@ -331,8 +329,7 @@ mdct_butterfly_generic(MDCTContext *mdct, FLOAT *x, int points, int trigint)
             T   += trigint*4;
             x1  -= 8;
             x2  -= 8;
-        }
-        while(x2>=x);
+        } while (x2>=x);
         return;
     case  8:
         T    = mdct->trig_butterfly_generic8;
@@ -348,8 +345,7 @@ mdct_butterfly_generic(MDCTContext *mdct, FLOAT *x, int points, int trigint)
         break;
     }
     _mm_prefetch((char*)T   , _MM_HINT_NTA);
-    do
-    {
+    do {
         __m128  XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7;
         _mm_prefetch((char*)(T+16), _MM_HINT_NTA);
         XMM0     = _mm_load_ps(x1  );
@@ -394,8 +390,7 @@ mdct_butterfly_generic(MDCTContext *mdct, FLOAT *x, int points, int trigint)
         T   += 16;
         x1  -= 8;
         x2  -= 8;
-    }
-    while(x2>=x);
+    } while (x2 >= x);
 }
 
 static inline void
@@ -405,16 +400,14 @@ mdct_butterflies(MDCTContext *mdct, FLOAT *x, int points)
     int stages = mdct->log2n-5;
     int i, j;
 
-    if(--stages > 0) {
+    if (--stages > 0)
         mdct_butterfly_first(trig, x, points);
-    }
 
-    for(i=1; --stages>0; i++) {
-        for(j=0; j<(1<<i); j++)
+    for (i = 1; --stages > 0; i++)
+        for (j = 0; j < (1<<i); j++)
             mdct_butterfly_generic(mdct, x+(points>>i)*j, points>>i, 4<<i);
-    }
 
-    for(j=0; j<points; j+=32)
+    for (j = 0; j < points; j += 32)
         mdct_butterfly_32(x+j);
 }
 
@@ -427,8 +420,7 @@ mdct_bitreverse(MDCTContext *mdct, FLOAT *x)
     float *w1      = x = w0+(n>>1);
     float *T       = mdct->trig_bitreverse;
 
-    do
-    {
+    do {
         float *x0    = x+bit[0];
         float *x1    = x+bit[1];
         float *x2    = x+bit[2];
@@ -488,8 +480,7 @@ mdct_bitreverse(MDCTContext *mdct, FLOAT *x)
         T       += 8;
         bit     += 4;
         w0      += 4;
-    }
-    while(w0<w1);
+    } while (w0 < w1);
 }
 
 static void
@@ -511,8 +502,7 @@ mdct(MDCTThreadContext *tmdct, FLOAT *out, FLOAT *in)
 #ifdef __INTEL_COMPILER
 #pragma warning(disable : 592)
 #endif
-    for(i=0,j=n2-2;i<n8;i+=4,j-=4)
-    {
+    for (i = 0, j = n2-2; i < n8; i += 4, j -= 4) {
         __m128  XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7;
         XMM0     = _mm_load_ps(x0    + 4);
         XMM4     = _mm_load_ps(x0       );
@@ -549,8 +539,7 @@ mdct(MDCTThreadContext *tmdct, FLOAT *out, FLOAT *in)
     x0   = in;
     x1   = in+n2-8;
 
-    for(;i<n4;i+=4,j-=4)
-    {
+    for (; i < n4; i += 4, j -= 4) {
         __m128  XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7;
         XMM1     = _mm_load_ps(x1+4);
         XMM5     = _mm_load_ps(x1  );
@@ -596,8 +585,7 @@ mdct(MDCTThreadContext *tmdct, FLOAT *out, FLOAT *in)
     T    = mdct->trig_forward+n;
     x0    =out +n2;
 
-    for(i=0;i<n4;i+=4)
-    {
+    for (i = 0; i < n4; i += 4) {
         __m128  XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7;
         x0  -= 4;
         XMM0     = _mm_load_ps(w+4);
@@ -644,7 +632,7 @@ mdct_256(A52ThreadContext *tctx, FLOAT *out, FLOAT *in)
 
     memcpy(xx, in+64, 192 * sizeof(FLOAT));
     xx += 192;
-    for(i=0; i<64; i+=4) {
+    for (i = 0; i < 64; i += 4) {
         __m128 XMM0 = _mm_load_ps(in + i);
         XMM0 = _mm_xor_ps(XMM0, PCS_RRRR.v);
         _mm_store_ps(xx + i, XMM0);
@@ -654,7 +642,7 @@ mdct_256(A52ThreadContext *tctx, FLOAT *out, FLOAT *in)
     mdct(&tctx->mdct_tctx_256, coef_a, xx);
 
     in += 256 + 192;
-    for(i=0; i<64; i+=4) {
+    for (i = 0; i < 64; i += 4) {
         __m128 XMM0 = _mm_load_ps(in + i);
         XMM0 = _mm_xor_ps(XMM0, PCS_RRRR.v);
         _mm_store_ps(xx + i, XMM0);
@@ -664,7 +652,7 @@ mdct_256(A52ThreadContext *tctx, FLOAT *out, FLOAT *in)
     memcpy(xx+64, in+256, 128 * sizeof(FLOAT));
     xx += 192;
     in += 256 + 128;
-    for(i=0; i<64; i+=4) {
+    for (i = 0; i < 64; i += 4) {
         __m128 XMM0 = _mm_load_ps(in + i);
         XMM0 = _mm_xor_ps(XMM0, PCS_RRRR.v);
         _mm_store_ps(xx + i, XMM0);
@@ -674,7 +662,7 @@ mdct_256(A52ThreadContext *tctx, FLOAT *out, FLOAT *in)
 
     mdct(&tctx->mdct_tctx_256, coef_b, xx);
 
-    for(i=0, j=0; i<128; i+=4, j+=8) {
+    for (i = 0, j = 0; i < 128; i += 4, j += 8) {
         __m128 XMM0 = _mm_load_ps(coef_a + i);
         __m128 XMM1 = _mm_load_ps(coef_b + i);
         __m128 XMM2 = _mm_unpacklo_ps(XMM0, XMM1);

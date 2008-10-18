@@ -343,7 +343,7 @@ mdct_butterfly_generic_altivec(float *trig, float *x, int points, int trigint)
 
         x1 -= 8;
         x2 -= 8;
-    } while(x2>=x);
+    } while (x2>=x);
 }
 
 static inline void
@@ -353,17 +353,17 @@ mdct_butterflies_altivec(MDCTContext *mdct, FLOAT *x, int points)
     int stages = mdct->log2n-5;
     int i, j;
 
-    if(--stages > 0){
+    if (--stages > 0){
         mdct_butterfly_first_altivec(trig,x,points);
         //mdct_butterfly_generic_altivec(trig,x,points,4);
     }
 
-    for(i=1; --stages>0; i++){
-        for(j=0; j<(1<<i); j++)
+    for (i = 1; --stages > 0; i++){
+        for (j = 0; j < (1<<i); j++)
             mdct_butterfly_generic_altivec(trig, x+(points>>i)*j, points>>i, 4<<i);
     }
 
-    for(j=0; j<points; j+=32)
+    for (j = 0; j < points; j += 32)
         mdct_butterfly_32_altivec(x+j);
 }
 
@@ -518,7 +518,7 @@ mdct_altivec(MDCTThreadContext *tmdct, FLOAT *out, FLOAT *in)
     perm4602 = vec_perm(perm6420, perm6420, perm3210);
     perm4602 = vec_perm(perm4602, perm4602, perm2301);
 
-    for(i=0; i<n8; i+=4) {
+    for (i = 0; i < n8; i += 4) {
         x0 -= 8;
         trig -= 4;
 
@@ -548,7 +548,7 @@ mdct_altivec(MDCTThreadContext *tmdct, FLOAT *out, FLOAT *in)
     }
 
     x1 = in;
-    for(; i<n2-n8; i+=4) {
+    for (; i < n2-n8; i += 4) {
         x0 -= 8;
         trig -= 4;
 
@@ -578,7 +578,7 @@ mdct_altivec(MDCTThreadContext *tmdct, FLOAT *out, FLOAT *in)
     }
 
     x0 = in+n;
-    for(; i<n2; i+=4) {
+    for (; i < n2; i += 4) {
         trig -= 4;
         x0 -= 8;
 
@@ -613,7 +613,7 @@ mdct_altivec(MDCTThreadContext *tmdct, FLOAT *out, FLOAT *in)
 
     trig = mdct->trig+n2;
     x0 = out+n2;
-    for(i=0; i<n4; i+=4) {
+    for (i = 0; i < n4; i += 4) {
         x0-=4;
 
         w0to3 = vec_ld(0x00, w);
@@ -663,7 +663,7 @@ mdct_256_altivec(A52ThreadContext *tctx, FLOAT *out, FLOAT *in)
     vector float v0, v1, v_coef_a, v_coef_b;
 
     memcpy(xx, in+64, 192 * sizeof(FLOAT));
-    for(i=0; i<64; i+=4) {
+    for (i = 0; i < 64; i += 4) {
         v0 = vec_ld(0, in+i);
         v0 = vec_xor(v0, (vector float) vNNNN);
         vec_st(v0, 0, xx+i+192);
@@ -671,14 +671,14 @@ mdct_256_altivec(A52ThreadContext *tctx, FLOAT *out, FLOAT *in)
 
     mdct_altivec(&tctx->mdct_tctx_256, coef_a, xx);
 
-    for(i=0; i<64; i+=4) {
+    for (i = 0; i < 64; i += 4) {
         v0 = vec_ld(0, in+i+256+192);
         v0 = vec_xor(v0, (vector float) vNNNN);
         vec_st(v0, 0, xx+i);
     }
 
     memcpy(xx+64, in+256, 128 * sizeof(FLOAT));
-    for(i=0; i<64; i+=4) {
+    for (i = 0; i < 64; i += 4) {
         v0 = vec_ld(0, in+i+256+128);
         v0 = vec_xor(v0, (vector float) vNNNN);
         vec_st(v0, 0, xx+i+192);
@@ -686,7 +686,7 @@ mdct_256_altivec(A52ThreadContext *tctx, FLOAT *out, FLOAT *in)
 
     mdct_altivec(&tctx->mdct_tctx_256, coef_b, xx);
 
-    for(i=0; i<128; i+=4) {
+    for (i = 0; i < 128; i += 4) {
         v_coef_a = vec_ld(0, coef_a+i);
         v_coef_b = vec_ld(0, coef_b+i);
         v0 = vec_mergeh(v_coef_a, v_coef_b);
@@ -716,9 +716,11 @@ mdct_tctx_init_altivec(MDCTThreadContext *tmdct, int n)
 static void
 mdct_tctx_close_altivec(MDCTThreadContext *tmdct)
 {
-    if(tmdct) {
-        if(tmdct->buffer) aligned_free(tmdct->buffer);
-        if(tmdct->buffer1) aligned_free(tmdct->buffer1);
+    if (tmdct) {
+        if (tmdct->buffer)
+            aligned_free(tmdct->buffer);
+        if (tmdct->buffer1)
+            aligned_free(tmdct->buffer1);
     }
 }
 

@@ -27,7 +27,7 @@ sse_apply_a52_window(FLOAT *samples)
 {
     int i;
 
-    for(i=0; i<512; i+=4) {
+    for (i=0; i < 512; i += 4) {
         __m128 input = _mm_load_ps(samples+i);
         __m128 window = _mm_load_ps(a52_window+i);
         input = _mm_mul_ps(input, window);
