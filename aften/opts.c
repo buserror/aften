@@ -64,7 +64,7 @@ typedef struct OptionItem {
 static inline int
 parse_integer_value(int val, int min, int max, char *name, int *out)
 {
-    if(val < min || val > max) {
+    if (val < min || val > max) {
         fprintf(stderr, "invalid parameter -%s %d. must be %d to %d.\n", name,
                 val, min, max);
         return 1;
@@ -114,8 +114,8 @@ parse_nosimd(PARSE_PARAMS)
     AftenSimdInstructions *wanted_simd_instructions =
         &opts->s->system.wanted_simd_instructions;
 
-    for (i=0; simd[i]; i=j+1) {
-        for (j=i; simd[j]!=','; ++j) {
+    for (i = 0; simd[i]; i = j+1) {
+        for (j = i; simd[j] != ','; ++j) {
             if (!simd[j]) {
                 last = 1;
                 break;
@@ -154,9 +154,9 @@ parse_q(PARSE_PARAMS)
 static int
 parse_chconfig(PARSE_PARAMS)
 {
-    if(!strncmp(param, "1+1", 4)) {
+    if (!strncmp(param, "1+1", 4)) {
         opts->s->acmod = 0;
-    } else if(strlen(param) >= 3 && param[1] == '/') {
+    } else if (strlen(param) >= 3 && param[1] == '/') {
         int front_ch = param[0] - '0';
         int rear_ch = param[2] - '0';
         if (front_ch > 3 || front_ch < 1 || rear_ch < 0 || rear_ch > 2 || (front_ch < 2 && rear_ch != 0))
@@ -167,7 +167,7 @@ parse_chconfig(PARSE_PARAMS)
         fprintf(stderr, "invalid chconfig: %s\n", param);
         return 1;
     }
-    if(!strncmp(&param[3], "+LFE", 5) || !strncmp(&param[3], "+lfe", 5)) {
+    if (!strncmp(&param[3], "+LFE", 5) || !strncmp(&param[3], "+lfe", 5)) {
         opts->s->lfe = 1;
     }
     return 0;
@@ -196,7 +196,7 @@ validate_input_files(char **infile, int input_mask, int *acmod, int *lfe) {
     // check for valid configurations
     l = !!(input_mask & CHMASK_LFE);
     input_mask &= 0xFF;
-    switch(input_mask) {
+    switch (input_mask) {
         case (CHMASK_M1 | CHMASK_M2):
             *acmod = 0;
             break;
@@ -227,8 +227,8 @@ validate_input_files(char **infile, int input_mask, int *acmod, int *lfe) {
     *lfe = l;
 
     // shift used channels, filling NULL gaps in infile array
-    for(i=1; i<A52_NUM_SPEAKERS; i++) {
-        for(j=i; j > 0 && infile[j] != NULL && infile[j-1] == NULL; j--) {
+    for (i = 1; i < A52_NUM_SPEAKERS; i++) {
+        for (j = i; j > 0 && infile[j] != NULL && infile[j-1] == NULL; j--) {
             infile[j-1] = infile[j];
             infile[j] = NULL;
         }
@@ -245,15 +245,15 @@ parse_ch(PARSE_PARAMS)
     char *chstr = &arg[3];
     int n_chstr, mask_bit;
 
-    if(priv->single_input) {
+    if (priv->single_input) {
         fprintf(stderr, "cannot mix single-input syntax and multi-input syntax\n");
         return 1;
     }
 
     mask_bit = 1;
-    for(n_chstr=0; n_chstr<A52_NUM_SPEAKERS; ++n_chstr) {
-        if(!strncmp(chstr, chstrs[n_chstr], strlen(chstrs[n_chstr])+1)) {
-            if(priv->input_mask & mask_bit) {
+    for (n_chstr=0; n_chstr<A52_NUM_SPEAKERS; ++n_chstr) {
+        if (!strncmp(chstr, chstrs[n_chstr], strlen(chstrs[n_chstr])+1)) {
+            if (priv->input_mask & mask_bit) {
                 fprintf(stderr, "invalid input channel parameter\n");
                 return 1;
             }
@@ -278,23 +278,23 @@ parse_raw_fmt(PARSE_PARAMS)
     int j;
 
     // parse format
-    for(j=0; j<8; j++) {
-        if(!strncmp(param, raw_fmt_strs[j], strlen(raw_fmt_strs[j]))) {
+    for (j = 0; j < 8; j++) {
+        if (!strncmp(param, raw_fmt_strs[j], strlen(raw_fmt_strs[j]))) {
             opts->raw_fmt = j;
             break;
         }
     }
-    if(j >= 8) {
+    if (j >= 8) {
         fprintf(stderr, "invalid raw_fmt: %s\n", param);
         return 1;
     }
 
     // parse byte order
     opts->raw_order = PCM_BYTE_ORDER_LE;
-    if(strncmp(param, "u8", 3) && strncmp(param, "s8", 3)) {
-        if(!strncmp(&param[4], "be", 3)) {
+    if (strncmp(param, "u8", 3) && strncmp(param, "s8", 3)) {
+        if (!strncmp(&param[4], "be", 3)) {
             opts->raw_order = PCM_BYTE_ORDER_BE;
-        } else if(strncmp(&param[4], "le", 3)) {
+        } else if (strncmp(&param[4], "le", 3)) {
             fprintf(stderr, "invalid raw_fmt: %s\n", param);
             return 1;
         }
@@ -384,7 +384,7 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
     int i;
     PrivateOptions priv;
 
-    if(argc < 2) {
+    if (argc < 2) {
         return 1;
     }
 
@@ -401,41 +401,41 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
     opts->raw_sr = 48000;
     opts->raw_ch = 1;
 
-    for(priv.arg_index=1; priv.arg_index<argc; priv.arg_index++) {
-        if(argv[priv.arg_index][0] == '-' && argv[priv.arg_index][1] != '\0') {
+    for (priv.arg_index = 1; priv.arg_index < argc; priv.arg_index++) {
+        if (argv[priv.arg_index][0] == '-' && argv[priv.arg_index][1] != '\0') {
             int j;
-            for(j=0; j<OPTION_ITEM_COUNT; j++) {
+            for (j = 0; j < OPTION_ITEM_COUNT; j++) {
                 char *arg = &argv[priv.arg_index][1];
                 const OptionItem *item = &options_list[j];
                 int mc = strlen(item->option_str) + 1;
-                if(item->flags & OPTION_FLAG_MATCH_PARTIAL)
+                if (item->flags & OPTION_FLAG_MATCH_PARTIAL)
                     mc--;
-                if(!strncmp(arg, item->option_str, mc)) {
+                if (!strncmp(arg, item->option_str, mc)) {
                     int ret;
                     char *param = NULL;
-                    if(!(item->flags & OPTION_FLAG_NO_PARAM)) {
+                    if (!(item->flags & OPTION_FLAG_NO_PARAM)) {
                         priv.arg_index++;
-                        if(priv.arg_index >= argc) return 1;
+                        if (priv.arg_index >= argc) return 1;
                         param = argv[priv.arg_index];
                     }
                     ret = item->parse(arg, param, item, opts, &priv);
-                    if(ret) return ret;
+                    if (ret) return ret;
                     break;
                 }
             }
-            if(j >= OPTION_ITEM_COUNT) {
+            if (j >= OPTION_ITEM_COUNT) {
                 fprintf(stderr, "invalid option: %s\n", argv[priv.arg_index]);
                 return 1;
             }
         } else {
             // empty parameter can be single input file or output file
-            if(priv.arg_index >= argc) return 1;
+            if (priv.arg_index >= argc) return 1;
             priv.empty_params++;
-            if(priv.empty_params == 1) {
+            if (priv.empty_params == 1) {
                 opts->outfile = argv[priv.arg_index];
                 priv.found_output = 1;
-            } else if(priv.empty_params == 2) {
-                if(priv.multi_input) {
+            } else if (priv.empty_params == 2) {
+                if (priv.multi_input) {
                     fprintf(stderr, "cannot mix single-input syntax and multi-input syntax\n");
                     return 1;
                 }
@@ -451,26 +451,26 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
     }
 
     // check that proper input file syntax is used
-    if(!(priv.single_input ^ priv.multi_input)) {
+    if (!(priv.single_input ^ priv.multi_input)) {
         fprintf(stderr, "cannot mix single-input syntax and multi-input syntax\n");
         return 1;
     }
 
     // check that the number of input files is valid
-    if(opts->num_input_files < 1 || opts->num_input_files > 6) {
+    if (opts->num_input_files < 1 || opts->num_input_files > 6) {
         fprintf(stderr, "invalid number of input channels. must be 1 to 6.\n");
         return 1;
     }
 
     // check that an output file has been specified
-    if(!priv.found_output) {
+    if (!priv.found_output) {
         fprintf(stderr, "no output file specified.\n");
         return 1;
     }
 
     // check the channel configuration
-    if(priv.multi_input) {
-        if(validate_input_files(opts->infile, priv.input_mask, &opts->s->acmod, &opts->s->lfe)) {
+    if (priv.multi_input) {
+        if (validate_input_files(opts->infile, priv.input_mask, &opts->s->acmod, &opts->s->lfe)) {
             fprintf(stderr, "invalid input channel configuration\n");
             return 1;
         }
@@ -478,9 +478,9 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
     }
 
     // disallow piped input with multiple files
-    if(opts->num_input_files > 1) {
-        for(i=0; i<opts->num_input_files; i++) {
-            if(!strncmp(opts->infile[i], "-", 2)) {
+    if (opts->num_input_files > 1) {
+        for (i = 0; i < opts->num_input_files; i++) {
+            if (!strncmp(opts->infile[i], "-", 2)) {
                 fprintf(stderr, "cannot use piped input with multiple files\n");
                 return 1;
             }
@@ -488,9 +488,9 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
     }
 
     // disallow infile & outfile with same name except with piping
-    for(i=0; i<opts->num_input_files; i++) {
-        if(strncmp(opts->infile[i], "-", 2) && strncmp(opts->outfile, "-", 2)) {
-            if(!strcmp(opts->infile[i], opts->outfile)) {
+    for (i = 0; i < opts->num_input_files; i++) {
+        if (strncmp(opts->infile[i], "-", 2) && strncmp(opts->outfile, "-", 2)) {
+            if (!strcmp(opts->infile[i], opts->outfile)) {
                 fprintf(stderr, "output filename cannot match any input filename\n");
                 return 1;
             }

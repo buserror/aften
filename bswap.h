@@ -34,11 +34,13 @@
 #include <byteswap.h>
 #else
 
-static inline uint16_t bswap_16(uint16_t x){
+static inline uint16_t bswap_16(uint16_t x)
+{
     return (x>>8) | (x<<8);
 }
 
-static inline uint32_t bswap_32(uint32_t x){
+static inline uint32_t bswap_32(uint32_t x)
+{
     x= ((x<<8)&0xFF00FF00) | ((x>>8)&0x00FF00FF);
     return (x>>16) | (x<<16);
 }
