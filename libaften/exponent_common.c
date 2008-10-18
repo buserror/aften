@@ -42,11 +42,50 @@ extern int nexpgrptab[3][256];
 
 /**
  * Pre-defined sets of exponent strategies. A strategy set is selected for
- * each channel in a frame.  All sets 1 to 5 use the same number of exponent
- * bits.  Set 0 is only used as the reference of optimal accuracy.
- * TODO: more options and other sets which use greater or fewer bits
+ * each channel in a frame.
  */
-extern uint8_t str_predef[6][6];
+static const uint8_t str_predef[A52_EXPSTR_SETS][6] = {
+    { EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE, EXP_REUSE, EXP_REUSE },
+    { EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE, EXP_REUSE,   EXP_D45 },
+    { EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE,   EXP_D25, EXP_REUSE },
+    { EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE,   EXP_D45,   EXP_D45 },
+    { EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D25, EXP_REUSE, EXP_REUSE },
+    { EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D25, EXP_REUSE,   EXP_D45 },
+    { EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D45,   EXP_D25, EXP_REUSE },
+    { EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D45,   EXP_D45,   EXP_D45 },
+    { EXP_D25, EXP_REUSE,   EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE },
+    { EXP_D25, EXP_REUSE,   EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D45 },
+    { EXP_D25, EXP_REUSE,   EXP_D25, EXP_REUSE,   EXP_D25, EXP_REUSE },
+    { EXP_D25, EXP_REUSE,   EXP_D25, EXP_REUSE,   EXP_D45,   EXP_D45 },
+    { EXP_D25, EXP_REUSE,   EXP_D45,   EXP_D25, EXP_REUSE, EXP_REUSE },
+    { EXP_D25, EXP_REUSE,   EXP_D45,   EXP_D25, EXP_REUSE,   EXP_D45 },
+    { EXP_D25, EXP_REUSE,   EXP_D45,   EXP_D45,   EXP_D25, EXP_REUSE },
+    { EXP_D25, EXP_REUSE,   EXP_D45,   EXP_D45,   EXP_D45,   EXP_D45 },
+    { EXP_D45,   EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE, EXP_REUSE },
+    { EXP_D45,   EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE,   EXP_D45 },
+    { EXP_D45,   EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D25, EXP_REUSE },
+    { EXP_D45,   EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D45,   EXP_D45 },
+    { EXP_D45,   EXP_D25, EXP_REUSE,   EXP_D25, EXP_REUSE, EXP_REUSE },
+    { EXP_D45,   EXP_D25, EXP_REUSE,   EXP_D25, EXP_REUSE,   EXP_D45 },
+    { EXP_D45,   EXP_D25, EXP_REUSE,   EXP_D45,   EXP_D25, EXP_REUSE },
+    { EXP_D45,   EXP_D25, EXP_REUSE,   EXP_D45,   EXP_D45,   EXP_D45 },
+    { EXP_D45,   EXP_D45,   EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE },
+    { EXP_D45,   EXP_D45,   EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D45 },
+    { EXP_D45,   EXP_D45,   EXP_D25, EXP_REUSE,   EXP_D25, EXP_REUSE },
+    { EXP_D45,   EXP_D45,   EXP_D25, EXP_REUSE,   EXP_D45,   EXP_D45 },
+    { EXP_D45,   EXP_D45,   EXP_D45,   EXP_D25, EXP_REUSE, EXP_REUSE },
+    { EXP_D45,   EXP_D45,   EXP_D45,   EXP_D25, EXP_REUSE,   EXP_D45 },
+    { EXP_D45,   EXP_D45,   EXP_D45,   EXP_D45,   EXP_D25, EXP_REUSE },
+    { EXP_D45,   EXP_D45,   EXP_D45,   EXP_D45,   EXP_D45,   EXP_D45 }
+};
+
+/**
+ * Pre-defined strategy set indices, sorted most to least common.
+ */
+static const uint8_t str_predef_priority[A52_EXPSTR_SETS] = {
+     2,  8, 10, 17, 24,  3, 14, 13, 22, 21, 26, 11, 30, 15, 23, 31,
+    29,  0, 27, 16,  1,  6, 12, 28, 20,  7,  5,  9, 18, 25, 19,  4
+};
 
 /* set exp[i] to min(exp[i], exp1[i]) */
 static void
@@ -66,7 +105,7 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy);
  * and the most accurate strategy set (all blocks EXP_D15).
  */
 static int
-compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs);
+compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs, int search_size);
 
 /**
  * Runs the per-channel exponent strategy decision function for all channels
@@ -82,11 +121,11 @@ compute_exponent_strategy(A52ThreadContext *tctx)
     int ch, blk, str;
 
     for(ch=0; ch<ctx->n_channels; ch++) {
-        str = 2;
-        if(!ctx->params.expstr_fast) {
+        str = str_predef_priority[0];
+        if (ctx->params.expstr_search > 1) {
             for(blk=0; blk<A52_NUM_BLOCKS; blk++)
                 exp[ch][blk] = blocks[blk].exp[ch];
-            str = compute_expstr_ch(exp[ch], ncoefs[ch]);
+            str = compute_expstr_ch(exp[ch], ncoefs[ch], ctx->params.expstr_search);
         }
         for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
             blocks[blk].exp_strategy[ch] = str_predef[str][blk];

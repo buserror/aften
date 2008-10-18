@@ -279,15 +279,17 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
  * and the most accurate strategy set (all blocks EXP_D15).
  */
 static int
-compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs)
+compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs, int search_size)
 {
     ALIGN16(uint8_t) exponents[A52_NUM_BLOCKS][256];
-    int blk, str, i, j, k;
-    int min_error, exp_error[6];
+    int blk, s, str, i, j, k;
+    int min_error, exp_error[A52_EXPSTR_SETS];
     int err;
 
     min_error = 0;
-    for(str=0; str<6; str++) {
+    for(s=0; s<search_size; s++) {
+        str = str_predef_priority[s];
+
         // collect exponents
         for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
             memcpy(exponents[blk], exp[blk], 256);

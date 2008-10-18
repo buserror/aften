@@ -31,7 +31,9 @@
 struct A52Context;
 struct A52ThreadContext;
 
-extern uint16_t expstr_set_bits[6][256];
+#define A52_EXPSTR_SETS 32
+
+extern uint16_t expstr_set_bits[A52_EXPSTR_SETS][256];
 
 extern void exponent_init(A52Context *ctx);
 

@@ -236,12 +236,14 @@ typedef struct {
     int bitalloc_fast;
 
     /**
-     * Exponent Strategy speed/quality
-     * This determines whether to use a fixed or adaptive exponent strategy.
-     * Set to 0 for adaptive strategy (better quality, slower)
-     * Set to 1 for fixed strategy (lower quality, faster)
+     * Exponent Strategy search size
+     * This determines how many exponent strategy sets to search through to
+     * find the best combination.
+     * minimum is 1 (fixed strategy, lower quality, faster encoding)
+     * maximum is 32 (higher quality, slower encoding)
+     * default is 8
      */
-    int expstr_fast;
+    int expstr_search;
 
     /**
      * Dynamic Range Compression profile

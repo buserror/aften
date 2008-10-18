@@ -56,9 +56,8 @@ static const char *help_options[HELP_OPTIONS_COUNT] = {
 "                       0 = more accurate encoding\n"
 "                       1 = faster encoding\n",
 
-"    [-fes #]       Fast exponent strategy decision (default: 0)\n"
-"                       0 = higher quality encoding\n"
-"                       1 = faster encoding\n",
+"    [-exps #]      Exponent strategy search size (default: 8)\n"
+"                       1 to 32 (lower is faster, higher is better quality)\n",
 
 "    [-pad #]       Start-of-stream padding\n"
 "                       0 = no padding\n"
@@ -277,14 +276,13 @@ static const char *encoding_options[ENCODING_OPTIONS_COUNT] = {
 "                       may not give the same results each time when using\n"
 "                       parallel encoding.\n",
 
-"    [-fes #]      Fast exponent strategy decision\n"
-"                       By default, the exponent strategy for each channel\n"
-"                       in a frame is decided by finding the best choice out of\n"
-"                       5 pre-defined sets of strategies.  When this fast\n"
-"                       option is turned on, the same set is always used\n"
-"                       for every channel in every frame, which leads to\n"
-"                       generally lower quality but gives a significant speed\n"
-"                       increase.\n",
+"    [-exps #]     Exponent strategy search size\n"
+"                       The encoder determines the best combination of\n"
+"                       exponent strategies for a frame by searching through\n"
+"                       a list of pre-defined exponent strategies.  This option\n"
+"                       controls the size of the list to be searched.  The\n"
+"                       value can range from 1 (lower quality but faster) to\n"
+"                       32 (higher quality but slower).  The default value is 8.\n",
 
 "    [-pad #]      Start-of-stream padding\n"
 "                       The AC-3 format uses an overlap/add cycle for encoding\n"

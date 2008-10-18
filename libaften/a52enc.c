@@ -49,19 +49,6 @@
  */
 int nexpgrptab[3][256] = {{0}};
 
-/**
- * Pre-defined sets of exponent strategies. A strategy set is selected for
- * each channel in a frame.  Set 0 is only used as the reference of optimal accuracy.
- */
-uint8_t str_predef[6][6] = {
-    { EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE, EXP_REUSE, EXP_REUSE },
-    { EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE,   EXP_D25, EXP_REUSE },
-    { EXP_D25, EXP_REUSE,   EXP_D25, EXP_REUSE,   EXP_D25, EXP_REUSE },
-    { EXP_D25, EXP_REUSE,   EXP_D45,   EXP_D25, EXP_REUSE,   EXP_D45 },
-    { EXP_D25, EXP_REUSE,   EXP_D45,   EXP_D45,   EXP_D45,   EXP_D45 },
-    { EXP_D45,   EXP_D45,   EXP_D45,   EXP_D45,   EXP_D45,   EXP_D45 }
-};
-
 static const uint8_t rematbndtab[5] = { 13, 25, 37, 61, 252 };
 
 
@@ -220,7 +207,7 @@ aften_set_defaults(AftenContext *s)
     s->params.use_dc_filter = 0;
     s->params.use_lfe_filter = 0;
     s->params.bitalloc_fast = 0;
-    s->params.expstr_fast = 0;
+    s->params.expstr_search = 8;
     s->params.dynrng_profile = DYNRNG_PROFILE_NONE;
     s->params.min_bwcode = 0;
     s->params.max_bwcode = 60;
@@ -460,6 +447,12 @@ found:
     }
     ctx->frmsizecod = i*2;
     ctx->target_bitrate = a52_bitrate_tab[i] >> ctx->halfratecod;
+
+    if (ctx->params.expstr_search < 1 || ctx->params.expstr_search > 32) {
+        fprintf(stderr, "invalid exponent strategy search size: %d\n",
+                ctx->params.expstr_search);
+        return -1;
+    }
 
     crc_init();
     a52_window_init(ctx);
