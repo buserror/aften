@@ -99,71 +99,54 @@ exponent_min(uint8_t *exp, uint8_t *exp1, int n)
 static void
 encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
 {
-    int grpsize, ngrps, i, k, exp_min1, exp_min2;
-    uint8_t exp1[256];
-    uint8_t v;
+    int i, k;
+    int ngrps;
+    int exp_min1, exp_min2;
 
     ngrps = nexpgrptab[exp_strategy-1][ncoefs] * 3;
-    grpsize = exp_strategy + (exp_strategy == EXP_D45);
-
-    // for D15 strategy, there is no need to group/ungroup exponents
-    if (grpsize == 1) {
-        // constraint for DC exponent
-        exp[0] = MIN(exp[0], 15);
-
-        // Decrease the delta between each groups to within 2
-        // so that they can be differentially encoded
-        for (i = 1; i <= ngrps; i++)
-            exp[i] = MIN(exp[i], exp[i-1]+2);
-        for (i = ngrps-1; i >= 0; i--)
-            exp[i] = MIN(exp[i], exp[i+1]+2);
-
-        return;
-    }
-
-    // for each group, compute the minimum exponent
-    if (grpsize == 2) {
-        for (i = 0, k = 1; i < ngrps; i++) {
-            exp1[i] = MIN(exp[k], exp[k+1]);
-            k += 2;
-        }
-    } else {
-        for (i = 0, k = 1; i < ngrps; i++) {
-            exp_min1 = MIN(exp[k  ], exp[k+1]);
-            exp_min2 = MIN(exp[k+2], exp[k+3]);
-            exp1[i]  = MIN(exp_min1, exp_min2);
-            k += 4;
-        }
-    }
 
     // constraint for DC exponent
     exp[0] = MIN(exp[0], 15);
-    // Decrease the delta between each groups to within 2
-    // so that they can be differentially encoded
-    exp1[0] = MIN(exp1[0], exp[0]+2);
-    for (i = 1; i < ngrps; i++)
-        exp1[i] = MIN(exp1[i], exp1[i-1]+2);
-    for (i = ngrps-2; i >= 0; i--)
-        exp1[i] = MIN(exp1[i], exp1[i+1]+2);
-    // now we have the exponent values the decoder will see
-    exp[0] = MIN(exp[0], exp1[0]+2); // DC exponent is handled separately
 
-    if (grpsize == 2) {
-        for (i = 0, k = 1; i < ngrps; i++) {
-            v = exp1[i];
-            exp[k] = v;
-            exp[k+1] = v;
+    // for each group, compute the minimum exponent
+    switch (exp_strategy) {
+    case EXP_D25:
+        for (i = 1, k = 1; i <= ngrps; i++) {
+            exp[i] = MIN(exp[k], exp[k+1]);
             k += 2;
         }
-    } else {
-        for (i = 0, k = 1; i < ngrps; i++) {
-            v = exp1[i];
-            exp[k] = v;
-            exp[k+1] = v;
-            exp[k+2] = v;
-            exp[k+3] = v;
+        break;
+    case EXP_D45:
+        for (i = 1, k = 1; i < ngrps; i++) {
+            exp_min1 = MIN(exp[k  ], exp[k+1]);
+            exp_min2 = MIN(exp[k+2], exp[k+3]);
+            exp[i]   = MIN(exp_min1, exp_min2);
             k += 4;
         }
+        break;
+    }
+
+    // Decrease the delta between each groups to within 2
+    // so that they can be differentially encoded
+    for (i = 1; i <= ngrps; i++)
+        exp[i] = MIN(exp[i], exp[i-1]+2);
+    for (i = ngrps-1; i >= 0; i--)
+        exp[i] = MIN(exp[i], exp[i+1]+2);
+
+    // expand exponent groups to generate final set of exponents
+    switch (exp_strategy) {
+    case EXP_D25:
+        for (i = ngrps, k = ngrps*2; i > 0; i--) {
+            exp[k] = exp[k-1] = exp[i];
+            k -= 2;
+        }
+        break;
+    case EXP_D45:
+        for (i = ngrps, k = ngrps*4; i > 0; i--) {
+            exp[k] = exp[k-1] = exp[k-2] = exp[k-3] = exp[i];
+            k -= 4;
+        }
+        break;
     }
 }
 
