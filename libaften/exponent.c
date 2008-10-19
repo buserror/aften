@@ -115,7 +115,7 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
         }
         break;
     case EXP_D45:
-        for (i = 1, k = 1; i < ngrps; i++) {
+        for (i = 1, k = 1; i <= ngrps; i++) {
             exp_min1 = MIN(exp[k  ], exp[k+1]);
             exp_min2 = MIN(exp[k+2], exp[k+3]);
             exp[i]   = MIN(exp_min1, exp_min2);
