@@ -66,19 +66,17 @@ exponent_init(A52Context *ctx)
         }
     }
 
-#ifdef HAVE_SSE2
-    if (cpu_caps_have_sse2()) {
-        ctx->process_exponents = sse2_process_exponents;
-        return;
-    }
-#endif /* HAVE_SSE2 */
+    ctx->process_exponents = process_exponents;
 #ifdef HAVE_MMX
     if (cpu_caps_have_mmx()) {
         ctx->process_exponents = mmx_process_exponents;
-        return;
     }
 #endif /* HAVE_MMX */
-    ctx->process_exponents = process_exponents;
+#ifdef HAVE_SSE2
+    if (cpu_caps_have_sse2()) {
+        ctx->process_exponents = sse2_process_exponents;
+    }
+#endif /* HAVE_SSE2 */
 }
 
 /** Set exp[i] to min(exp[i], exp1[i]) */
