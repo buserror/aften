@@ -64,7 +64,7 @@ void a52_bit_alloc_calc_psd(uint8_t *exp, int start, int end, int16_t *psd,
     int bin, i, j, k, end1, v;
 
     /* exponent mapping to PSD */
-    for(bin=start;bin<end;bin++)
+    for (bin = start; bin < end; bin++)
         psd[bin] = psdtab[exp[bin]];
 
     /* PSD integration */
@@ -74,7 +74,7 @@ void a52_bit_alloc_calc_psd(uint8_t *exp, int start, int end, int16_t *psd,
         v=psd[j];
         j++;
         end1 = MIN(band_start_tab[k+1], end);
-        for(i=j;i<end1;i++) {// logadd
+        for (i = j; i < end1; i++) { // logadd
             int adr = MIN(ABS(v - psd[j]) >> 1, 255);
             v = MAX(v, psd[j]) + a52_log_add_tab[adr];
             j++;
@@ -85,10 +85,10 @@ void a52_bit_alloc_calc_psd(uint8_t *exp, int start, int end, int16_t *psd,
 }
 
 void a52_bit_alloc_calc_mask(A52BitAllocParams *s, int16_t *band_psd,
-                                int start, int end, int fast_gain,
-                                int dba_mode, int dba_nsegs, uint8_t *dba_offsets,
-                                uint8_t *dba_lengths, uint8_t *dba_values,
-                                int16_t *mask)
+                             int start, int end, int fast_gain,
+                             int dba_mode, int dba_nsegs, uint8_t *dba_offsets,
+                             uint8_t *dba_lengths, uint8_t *dba_values,
+                             int16_t *mask)
 {
     int16_t excite[50]; /* excitation */
     int bin, k;
@@ -182,12 +182,12 @@ void a52_bit_alloc_calc_mask(A52BitAllocParams *s, int16_t *band_psd,
  * calculate each bap value.
  */
 void a52_bit_alloc_calc_bap(int16_t *mask, int16_t *psd, int start, int end,
-                               int snr_offset, int floor, uint8_t *bap)
+                            int snr_offset, int floor, uint8_t *bap)
 {
     int i, j;
 
     // special case, if snr offset is -960, set all bap's to zero
-    if(snr_offset == -960) {
+    if (snr_offset == -960) {
         memset(bap, 0, end-start);
         return;
     }
@@ -220,16 +220,17 @@ void a52_common_init(void)
    int i, j, k, l, v;
 
     // compute psdtab
-    for(i=0; i<25; i++)
+    for (i = 0; i < 25; i++)
         psdtab[i] = 3072 - (i << 7);
 
     // compute bndtab and masktab from bandsz
     k = 0;
     l = 0;
-    for(i=0;i<50;i++) {
+    for (i = 0; i < 50; i++) {
         band_start_tab[i] = l;
         v = a52_critical_band_size_tab[i];
-        for(j=0;j<v;j++) bin_to_band_tab[k++]=i;
+        for (j = 0; j < v; j++)
+            bin_to_band_tab[k++]=i;
         l += v;
     }
     band_start_tab[50] = l;

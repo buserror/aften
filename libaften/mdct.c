@@ -65,13 +65,13 @@ ctx_init(MDCTContext *mdct, int n)
     mdct->bitrev = bitrev;
 
     // trig lookups
-    for(i=0;i<n/4;i++){
+    for (i = 0; i < n/4; i++) {
         trig[i*2]      =  AFT_COS((AFT_PI/n)*(4*i));
         trig[i*2+1]    = -AFT_SIN((AFT_PI/n)*(4*i));
         trig[n2+i*2]   =  AFT_COS((AFT_PI/(2*n))*(2*i+1));
         trig[n2+i*2+1] =  AFT_SIN((AFT_PI/(2*n))*(2*i+1));
     }
-    for(i=0;i<n/8;i++){
+    for (i = 0; i < n/8; i++) {
         trig[n+i*2]    =  AFT_COS((AFT_PI/n)*(4*i+2))*FCONST(0.5);
         trig[n+i*2+1]  = -AFT_SIN((AFT_PI/n)*(4*i+2))*FCONST(0.5);
     }
@@ -81,12 +81,11 @@ ctx_init(MDCTContext *mdct, int n)
         int j, acc;
         int mask = (1 << (log2n-1)) - 1;
         int msb = (1 << (log2n-2));
-        for(i=0; i<n/8; i++) {
+        for (i = 0; i < n/8; i++) {
             acc = 0;
-            for(j=0; msb>>j; j++) {
-                if((msb>>j)&i) {
+            for (j = 0; msb>>j; j++) {
+                if ((msb>>j) & i)
                     acc |= (1 << j);
-                }
             }
             bitrev[i*2]= ((~acc) & mask) - 1;
             bitrev[i*2+1] = acc;
@@ -101,9 +100,11 @@ ctx_init(MDCTContext *mdct, int n)
 static void
 ctx_close(MDCTContext *mdct)
 {
-    if(mdct) {
-        if(mdct->trig)    free(mdct->trig);
-        if(mdct->bitrev)  free(mdct->bitrev);
+    if (mdct) {
+        if (mdct->trig)
+            free(mdct->trig);
+        if (mdct->bitrev)
+            free(mdct->bitrev);
         memset(mdct, 0, sizeof(MDCTContext));
     }
 }
@@ -113,7 +114,7 @@ static void
 tctx_init(MDCTThreadContext *tmdct, int n)
 {
      // internal mdct buffers
-    tmdct->buffer = calloc(n, sizeof(FLOAT));
+    tmdct->buffer  = calloc(n, sizeof(FLOAT));
     tmdct->buffer1 = calloc(n, sizeof(FLOAT));
 }
 
@@ -121,9 +122,11 @@ tctx_init(MDCTThreadContext *tmdct, int n)
 static void
 tctx_close(MDCTThreadContext *tmdct)
 {
-    if(tmdct) {
-        if(tmdct->buffer)  free(tmdct->buffer);
-        if(tmdct->buffer1) free(tmdct->buffer1);
+    if (tmdct) {
+        if(tmdct->buffer)
+            free(tmdct->buffer);
+        if(tmdct->buffer1)
+            free(tmdct->buffer1);
     }
 }
 
@@ -292,7 +295,7 @@ mdct_butterfly_first(FLOAT *trig, FLOAT *x, int points)
         x1 -= 8;
         x2 -= 8;
         trig += 16;
-    } while(x2 >= x);
+    } while (x2 >= x);
 }
 
 /** N/stage point generic N stage butterfly (in place, 2 register) */
@@ -342,7 +345,7 @@ mdct_butterfly_generic(FLOAT *trig, FLOAT *x, int points, int trigint)
         trig += trigint;
         x1 -= 8;
         x2 -= 8;
-    } while(x2 >= x);
+    } while (x2 >= x);
 }
 
 static inline void
@@ -352,16 +355,14 @@ mdct_butterflies(MDCTContext *mdct, FLOAT *x, int points)
     int stages = mdct->log2n-5;
     int i, j;
 
-    if(--stages > 0) {
+    if (--stages > 0)
         mdct_butterfly_first(trig, x, points);
-    }
 
-    for(i=1; --stages>0; i++) {
-        for(j=0; j<(1<<i); j++)
+    for (i = 1; --stages > 0; i++)
+        for (j = 0; j < (1<<i); j++)
             mdct_butterfly_generic(trig, x+(points>>i)*j, points>>i, 4<<i);
-    }
 
-    for(j=0; j<points; j+=32)
+    for (j = 0; j < points; j += 32)
         mdct_butterfly_32(x+j);
 }
 
@@ -374,7 +375,7 @@ mdct_bitreverse(MDCTContext *mdct, FLOAT *x)
     FLOAT *w1 = x = w0+(n>>1);
     FLOAT *trig = mdct->trig+n;
 
-    do{
+    do {
         FLOAT *x0 = x+bit[0];
         FLOAT *x1 = x+bit[1];
 
@@ -412,7 +413,7 @@ mdct_bitreverse(MDCTContext *mdct, FLOAT *x)
         trig += 4;
         bit += 4;
         w0 += 4;
-    } while(w0 < w1);
+    } while (w0 < w1);
 }
 
 static void
@@ -432,7 +433,7 @@ mdct(MDCTThreadContext *tmdct, FLOAT *out, FLOAT *in)
     FLOAT r1;
     int i;
 
-    for(i=0; i<n8; i+=2) {
+    for (i = 0; i < n8; i += 2) {
         x0 -= 4;
         trig -= 2;
         r0 = x0[2] + x1[0];
@@ -443,7 +444,7 @@ mdct(MDCTThreadContext *tmdct, FLOAT *out, FLOAT *in)
     }
 
     x1 = in+1;
-    for(; i<n2-n8; i+=2) {
+    for (; i < n2-n8; i += 2) {
         trig -= 2;
         x0 -= 4;
         r0 = x0[2] - x1[0];
@@ -454,7 +455,7 @@ mdct(MDCTThreadContext *tmdct, FLOAT *out, FLOAT *in)
     }
 
     x0 = in+n;
-    for(; i<n2; i+=2) {
+    for (; i < n2; i += 2) {
         trig -= 2;
         x0 -= 4;
         r0 = -x0[2] - x1[0];
@@ -469,7 +470,7 @@ mdct(MDCTThreadContext *tmdct, FLOAT *out, FLOAT *in)
 
     trig = mdct->trig+n2;
     x0 = out+n2;
-    for(i=0; i<n4; i++) {
+    for (i = 0; i < n4; i++) {
         x0--;
         out[i] = ((w[0]*trig[0]+w[1]*trig[1])*mdct->scale);
         x0[0]  = ((w[0]*trig[1]-w[1]*trig[0])*mdct->scale);
@@ -493,17 +494,17 @@ mdct_256(A52Context *ctx, FLOAT *out, FLOAT *in)
     FLOAT pi_128 = AFT_PI / 128.0;
     FLOAT half = 0.5;
 
-    for(k=0; k<128; k++) {
+    for (k = 0; k < 128; k++) {
         s = 0;
-        for(n=0; n<256; n++) {
+        for (n = 0; n < 256; n++) {
             a = pi_128 * (n+half) * (k+half);
             s += in[n] * AFT_COS(a);
         }
         out[k*2] = s / -128.0;
     }
-    for(k=0; k<128; k++) {
+    for (k = 0; k < 128; k++) {
         s = 0;
-        for(n=0; n<256; n++) {
+        for (n = 0; n < 256; n++) {
             a = pi_128 * (n+half) * (k+half) + AFT_PI * (k+half);
             s += in[n+256] * AFT_COS(a);
         }
@@ -520,21 +521,21 @@ mdct_256(A52ThreadContext *tctx, FLOAT *out, FLOAT *in)
     int i;
 
     memcpy(xx, in+64, 192 * sizeof(FLOAT));
-    for(i=0; i<64; i++)
+    for (i = 0; i < 64; i++)
         xx[i+192] = -in[i];
 
     mdct(&tctx->mdct_tctx_256, coef_a, xx);
 
-    for(i=0; i<64; i++)
+    for (i = 0; i < 64; i++)
         xx[i] = -in[i+256+192];
 
     memcpy(xx+64, in+256, 128 * sizeof(FLOAT));
-    for(i=0; i<64; i++)
+    for (i = 0; i < 64; i++)
         xx[i+192] = -in[i+256+128];
 
     mdct(&tctx->mdct_tctx_256, coef_b, xx);
 
-    for(i=0; i<128; i++) {
+    for (i = 0; i < 128; i++) {
         out[2*i  ] = coef_a[i];
         out[2*i+1] = coef_b[i];
     }
@@ -549,7 +550,7 @@ alloc_block_buffers(A52ThreadContext *tctx)
 
     // we alloced one continous block and
     // now interleave in and out buffers
-    for (i=0; i<A52_NUM_BLOCKS; ++i) {
+    for (i = 0; i < A52_NUM_BLOCKS; i++) {
         if (i) {
             frame->blocks[i].input_samples[0] =
                 frame->blocks[i-1].input_samples[A52_MAX_CHANNELS-1] + 512 + 256;
@@ -557,7 +558,7 @@ alloc_block_buffers(A52ThreadContext *tctx)
         frame->blocks[i].mdct_coef[0] =
             frame->blocks[i].input_samples[0] + 512;
 
-        for (j=1; j<A52_MAX_CHANNELS; ++j) {
+        for (j = 1; j < A52_MAX_CHANNELS; j++) {
             frame->blocks[i].input_samples[j] =
                 frame->blocks[i].input_samples[j-1] + 512 + 256;
             frame->blocks[i].mdct_coef[j] =

@@ -55,14 +55,13 @@ crc_init_table(uint16_t *table, int bits, int poly)
     int i, j, crc;
 
     poly = (poly + (1<<bits));
-    for(i=0; i<256; i++) {
+    for (i = 0; i < 256; i++) {
         crc = i;
-        for(j=0; j<bits; j++) {
-            if(crc & (1<<(bits-1))) {
+        for (j = 0; j < bits; j++) {
+            if (crc & (1<<(bits-1)))
                 crc = (crc << 1) ^ poly;
-            } else {
+            else
                 crc <<= 1;
-            }
         }
         table[i] = bswap_16(crc & ((1<<bits)-1));
     }
@@ -83,7 +82,7 @@ calc_crc16(const uint8_t *data, uint32_t len)
 
     assert(data != NULL);
 
-    while(len--) {
+    while (len--) {
         uint16_t v1 = crc.bytes[HIGH_BYTE];
         uint16_t v2 = crc.bytes[LOW_BYTE] ^ *data++;
         crc.word = v1 ^ crc16tab[v2];
@@ -95,12 +94,12 @@ static uint16_t
 mul_poly(uint32_t a, uint32_t b)
 {
     uint32_t c = 0;
-    while(a) {
-        if(a & 1)
+    while (a) {
+        if (a & 1)
             c ^= b;
         a = a >> 1;
         b = b << 1;
-        if(b & (1 << 16))
+        if (b & (1 << 16))
             b ^= CRC16_POLY;
     }
     return c;
@@ -111,8 +110,8 @@ pow_poly(uint32_t n)
 {
     uint32_t a = (CRC16_POLY >> 1);
     uint32_t r = 1;
-    while(n) {
-        if(n & 1)
+    while (n) {
+        if (n & 1)
             r = mul_poly(r, a);
         a = mul_poly(a, a);
         n >>= 1;

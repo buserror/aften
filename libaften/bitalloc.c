@@ -67,12 +67,12 @@ compute_mantissa_size(int mant_cnt[5], uint8_t *bap, int ncoefs)
     int bits, b, i;
 
     bits = 0;
-    for(i=0; i<ncoefs; i++) {
+    for (i = 0; i < ncoefs; i++) {
         b = bap[i];
-        if(b <= 4) {
+        if (b <= 4) {
             // bap=1 to bap=4 will be counted in compute_mantissa_size_final
             ++mant_cnt[b];
-        } else if(b <= 13) {
+        } else if (b <= 13) {
             // bap=5 to bap=13 use (bap-1) bits
             bits += b-1;
         } else {
@@ -106,11 +106,11 @@ bit_alloc_prepare(A52ThreadContext *tctx)
     A52Block *block;
     int blk, ch;
 
-    for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+    for (blk = 0; blk < A52_NUM_BLOCKS; blk++) {
         block = &frame->blocks[blk];
-        for(ch=0; ch<ctx->n_all_channels; ch++) {
+        for (ch = 0; ch < ctx->n_all_channels; ch++) {
             // We don't have to run the bit allocation when reusing exponents
-            if(block->exp_strategy[ch] != EXP_REUSE) {
+            if (block->exp_strategy[ch] != EXP_REUSE) {
                 a52_bit_allocation_prepare(&frame->bit_alloc,
                                block->exp[ch], block->psd[ch], block->mask[ch],
                                frame->bit_alloc.fgain[blk][ch],
@@ -138,7 +138,7 @@ bit_alloc(A52ThreadContext *tctx, int snroffst)
     bits = 0;
     snroffst = (snroffst << 2) - 960;
 
-    for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+    for (blk = 0; blk < A52_NUM_BLOCKS; blk++) {
         block = &frame->blocks[blk];
         // initialize grouped mantissa counts. these are set so that they are
         // padded to the next whole group size when bits are counted in
@@ -146,12 +146,12 @@ bit_alloc(A52ThreadContext *tctx, int snroffst)
         mant_cnt[0] = mant_cnt[3] = 0;
         mant_cnt[1] = mant_cnt[2] = 2;
         mant_cnt[4] = 1;
-        for(ch=0; ch<ctx->n_all_channels; ch++) {
+        for (ch = 0; ch < ctx->n_all_channels; ch++) {
             // Currently the encoder is setup so that the only bit allocation
             // parameter which varies across blocks within a frame is the
             // exponent values.  We can take advantage of that by reusing the
             // bit allocation pointers whenever we reuse exponents.
-            if(block->exp_strategy[ch] == EXP_REUSE) {
+            if (block->exp_strategy[ch] == EXP_REUSE) {
                 memcpy(block->bap[ch], frame->blocks[blk-1].bap[ch], 256);
             } else {
                 a52_bit_alloc_calc_bap(block->mask[ch], block->psd[ch], 0, frame->ncoefs[ch],
@@ -182,34 +182,40 @@ count_frame_bits(A52ThreadContext *tctx)
     // header size
     frame_bits += 65;
     frame_bits += frame_bits_inc[ctx->acmod];
-    if(ctx->meta.xbsi1e) frame_bits += 14;
-    if(ctx->meta.xbsi2e) frame_bits += 14;
+    if (ctx->meta.xbsi1e)
+        frame_bits += 14;
+    if (ctx->meta.xbsi2e)
+        frame_bits += 14;
 
     // audio blocks
-    for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+    for (blk = 0; blk < A52_NUM_BLOCKS; blk++) {
         block = &frame->blocks[blk];
         frame_bits += ctx->n_channels * 2; // nch * (blksw[1] + dithflg[1])
         frame_bits++; // dynrnge
-        if(ctx->acmod == 0) frame_bits++; // dynrng2e
-        if(ctx->params.dynrng_profile != DYNRNG_PROFILE_NONE) {
+        if (ctx->acmod == 0)
+            frame_bits++; // dynrng2e
+        if (ctx->params.dynrng_profile != DYNRNG_PROFILE_NONE) {
             frame_bits += 8; // dynrng
-            if(ctx->acmod == 0) frame_bits += 8; // dynrng2
+            if (ctx->acmod == 0)
+                frame_bits += 8; // dynrng2
         }
         frame_bits++; // cplstre
-        if(ctx->acmod == 2) {
+        if (ctx->acmod == 2) {
             frame_bits++; // rematstr
-            if(!blk) frame_bits += 4; // rematflg
+            if (!blk)
+                frame_bits += 4; // rematflg
         }
         frame_bits += 2 * ctx->n_channels; // nch * chexpstr[2]
-        if(ctx->lfe) frame_bits++; // lfeexpstr
-        for(ch=0; ch<ctx->n_channels; ch++) {
-            if(block->exp_strategy[ch] != EXP_REUSE)
+        if (ctx->lfe)
+            frame_bits++; // lfeexpstr
+        for (ch = 0; ch < ctx->n_channels; ch++) {
+            if (block->exp_strategy[ch] != EXP_REUSE)
                 frame_bits += 6 + 2; // chbwcod[6], gainrng[2]
         }
         frame_bits++; // baie
         frame_bits++; // snr
         // csnroffset[6] + nch * (fsnoffset[4] + fgaincod[3])
-        if(block->write_snr)
+        if (block->write_snr)
             frame_bits += 6 + ctx->n_all_channels * (4 + 3);
         frame_bits += 2; // delta / skip
     }
@@ -242,32 +248,31 @@ cbr_bit_allocation(A52ThreadContext *tctx, int prepare)
     current_bits = frame->frame_bits + frame->exp_bits;
     avail_bits = (16 * frame->frame_size) - current_bits;
 
-    if(prepare)
+    if (prepare)
         bit_alloc_prepare(tctx);
 
     // starting point
-    if(ctx->params.encoding_mode == AFTEN_ENC_MODE_VBR) {
+    if (ctx->params.encoding_mode == AFTEN_ENC_MODE_VBR)
         snroffst = ctx->params.quality;
-    } else if(ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
+    else if (ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR)
         snroffst = tctx->last_quality;
-    }
     leftover = avail_bits - bit_alloc(tctx, snroffst);
 
-    if(ctx->params.bitalloc_fast) {
+    if (ctx->params.bitalloc_fast) {
         // fast bit allocation
         int leftover0, leftover1, snr0, snr1;
         snr0 = snr1 = snroffst;
         leftover0 = leftover1 = leftover;
-        if(leftover != 0) {
-            if(leftover > 0) {
-                while(leftover1 > 0 && snr1+16 <= 1023) {
+        if (leftover != 0) {
+            if (leftover > 0) {
+                while (leftover1 > 0 && snr1+16 <= 1023) {
                     snr0 = snr1;
                     leftover0 = leftover1;
                     snr1 += 16;
                     leftover1 = avail_bits - bit_alloc(tctx, snr1);
                 }
             } else {
-                while(leftover0 < 0 && snr0-16 >= 0) {
+                while (leftover0 < 0 && snr0-16 >= 0) {
                     snr1 = snr0;
                     leftover1 = leftover0;
                     snr0 -= 16;
@@ -275,28 +280,28 @@ cbr_bit_allocation(A52ThreadContext *tctx, int prepare)
                 }
             }
         }
-        if(snr0 != snr1) {
+        if (snr0 != snr1) {
             snroffst = snr0;
             leftover = avail_bits - bit_alloc(tctx, snroffst);
         }
     } else {
         // take up to 3 jumps based on estimated distance from optimal
-        if(leftover < -400) {
+        if (leftover < -400) {
             snroffst += (leftover / (16 * ctx->n_channels));
             leftover = avail_bits - bit_alloc(tctx, snroffst);
         }
-        if(leftover > 400) {
+        if (leftover > 400) {
             snroffst += (leftover / (24 * ctx->n_channels));
             leftover = avail_bits - bit_alloc(tctx, snroffst);
         }
-        if(leftover < -200) {
+        if (leftover < -200) {
             snroffst += (leftover / (40 * ctx->n_channels));
             leftover = avail_bits - bit_alloc(tctx, snroffst);
         }
         // adjust snroffst until leftover <= -100
-        while(leftover > -100) {
+        while (leftover > -100) {
             snroffst += (10 / ctx->n_channels);
-            if(snroffst > 1023) {
+            if (snroffst > 1023) {
                 snroffst = 1023;
                 leftover = avail_bits - bit_alloc(tctx, snroffst);
                 break;
@@ -304,14 +309,14 @@ cbr_bit_allocation(A52ThreadContext *tctx, int prepare)
             leftover = avail_bits - bit_alloc(tctx, snroffst);
         }
         // adjust snroffst until leftover is positive
-        while(leftover < 0 && snroffst > 0) {
+        while (leftover < 0 && snroffst > 0) {
             snroffst--;
             leftover = avail_bits - bit_alloc(tctx, snroffst);
         }
     }
 
     frame->mant_bits = avail_bits - leftover;
-    if(leftover < 0) {
+    if (leftover < 0) {
         fprintf(stderr, "bitrate: %d kbps too small\n", frame->bit_rate);
         return -1;
     }
@@ -346,9 +351,10 @@ vbr_bit_allocation(A52ThreadContext *tctx)
     // find an A52 frame size that can hold the data.
     frame_size = 0;
     frame_bits = current_bits + bit_alloc(tctx, quality);
-    for(i=0; i<=ctx->frmsizecod; i++) {
+    for (i = 0; i <= ctx->frmsizecod; i++) {
         frame_size = a52_frame_size_tab[i][ctx->fscod];
-        if(frame_size >= frame_bits) break;
+        if (frame_size >= frame_bits)
+            break;
     }
     i = MIN(i, ctx->frmsizecod);
     frame->bit_rate = a52_bitrate_tab[i/2] >> ctx->halfratecod;
@@ -384,11 +390,11 @@ start_bit_allocation(A52ThreadContext *tctx)
     frame->bit_alloc.floor = a52_floor_tab[frame->floorcod];
 
     // set fast gain based on exponent strategy
-    for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+    for (blk = 0; blk < A52_NUM_BLOCKS; blk++) {
         block = &frame->blocks[blk];
         block->write_snr = 0;
-        for(ch=0; ch<ctx->n_all_channels; ch++) {
-            if(block->exp_strategy[ch] != EXP_REUSE) {
+        for (ch = 0; ch < ctx->n_all_channels; ch++) {
+            if (block->exp_strategy[ch] != EXP_REUSE) {
                 block->fgaincod[ch] = 4 - block->exp_strategy[ch];
                 block->write_snr |= !blk || (block->fgaincod[ch] != frame->blocks[blk-1].fgaincod[ch]);
             } else {
@@ -434,15 +440,14 @@ vbw_bit_allocation(A52ThreadContext *tctx)
     bit_alloc(tctx, 240);
 
     // deduct any LFE exponent and mantissa bits
-    if(ctx->lfe) {
+    if (ctx->lfe) {
         FLOAT lfe_bits = FCONST(0.0);
         ch = ctx->lfe_channel;
         lfe_bits += expstr_set_bits[frame->expstr_set[ch]][7];
-        for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+        for (blk = 0; blk < A52_NUM_BLOCKS; blk++) {
             uint8_t *bap = frame->blocks[blk].bap[ch];
-            for(nc=0; nc<7; nc++) {
+            for (nc = 0; nc < 7; nc++)
                 lfe_bits += mant_est_tab[bap[nc]];
-            }
         }
         avail_bits -= (int)lfe_bits;
     }
@@ -455,37 +460,33 @@ vbw_bit_allocation(A52ThreadContext *tctx)
 
     // sum up mantissa bits up to bin 72
     mant_bits = FCONST(0.0);
-    for(ch=0; ch<ctx->n_channels; ch++) {
-        for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+    for (ch = 0; ch < ctx->n_channels; ch++) {
+        for (blk = 0; blk < A52_NUM_BLOCKS; blk++) {
             uint8_t *bap = frame->blocks[blk].bap[ch];
-            for(nc=0; nc<ncmin; nc++) {
+            for (nc = 0; nc < ncmin; nc++)
                 mant_bits += mant_est_tab[bap[nc]];
-            }
         }
     }
 
     // add bins while estimated bits fit in the frame
-    for(nc=ncmin; nc<=ncmax; nc++) {
+    for (nc = ncmin; nc <= ncmax; nc++) {
         bw = (nc - 73) / 3;
         bits = 0;
-        for(ch=0; ch<ctx->n_channels; ch++) {
+        for (ch = 0; ch < ctx->n_channels; ch++) {
             bits += expstr_set_bits[frame->expstr_set[ch]][nc];
-            for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+            for (blk = 0; blk < A52_NUM_BLOCKS; blk++)
                 mant_bits += mant_est_tab[frame->blocks[blk].bap[ch][nc]];
-            }
         }
-        if((bits + (int)mant_bits) > avail_bits) {
+        if ((bits + (int)mant_bits) > avail_bits)
             break;
-        }
     }
 
     // set frame bandwidth parameters
     bw = CLIP((nc - 73) / 3, 0, 60);
     nc = bw * 3 + 73;
     frame->bwcode = bw;
-    for(ch=0; ch<ctx->n_channels; ch++) {
+    for (ch = 0; ch < ctx->n_channels; ch++)
         frame->ncoefs[ch] = nc;
-    }
 }
 
 /**
@@ -499,14 +500,12 @@ compute_bit_allocation(A52ThreadContext *tctx)
     A52Context *ctx = tctx->ctx;
 
     start_bit_allocation(tctx);
-    if(ctx->params.encoding_mode == AFTEN_ENC_MODE_VBR) {
-        if(vbr_bit_allocation(tctx)) {
+    if (ctx->params.encoding_mode == AFTEN_ENC_MODE_VBR) {
+        if (vbr_bit_allocation(tctx))
             return -1;
-        }
     } else if(ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
-        if(cbr_bit_allocation(tctx, 1)) {
+        if (cbr_bit_allocation(tctx, 1))
             return -1;
-        }
     } else {
         return -1;
     }

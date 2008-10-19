@@ -53,19 +53,20 @@ static const uint8_t rematbndtab[5] = { 13, 25, 37, 61, 252 };
 
 
 static void copy_samples(A52ThreadContext *tctx);
-static int convert_samples_from_src(A52ThreadContext *tctx, const void *vsrc, int count);
+static int convert_samples_from_src(A52ThreadContext *tctx, const void *vsrc,
+                                    int count);
 
 static int begin_encode_frame(A52ThreadContext *tctx);
 static int begin_transcode_frame(A52ThreadContext *tctx);
 
 static int
-prepare_transcode_common(A52ThreadContext *tctx, const void *input_frame_buffer, int input_frame_buffer_size, int *want_bytes)
+prepare_transcode_common(A52ThreadContext *tctx, const void *input_frame_buffer,
+                         int input_frame_buffer_size, int *want_bytes)
 {
     int frame_size;
 
     if (input_frame_buffer_size < 6) {
         *want_bytes = 6;
-
         return -1;
     }
     memcpy(tctx->dctx->input_frame_buffer, input_frame_buffer, 6);
@@ -95,7 +96,7 @@ prepare_encode(A52ThreadContext *tctx, const void *samples, int count, UNUSED(in
     if (ctx->last_samples_count <= (A52_SAMPLES_PER_FRAME - 256) && ctx->last_samples_count != -1) {
         tctx->state = END;
         --ctx->ts.threads_running;
-    } else {// convert sample format and de-interleave channels
+    } else { // convert sample format and de-interleave channels
         convert_samples_from_src(tctx, samples, count);
         ctx->last_samples_count = count;
     }
@@ -172,7 +173,7 @@ set_available_simd_instructions(AftenSimdInstructions *simd_instructions)
 void
 aften_set_defaults(AftenContext *s)
 {
-    if(s == NULL) {
+    if (s == NULL) {
         fprintf(stderr, "NULL parameter passed to aften_set_defaults\n");
         return;
     }
@@ -293,7 +294,7 @@ aften_encode_init(AftenContext *s)
     int i, j, brate;
     int last_quality;
 
-    if(s == NULL) {
+    if (s == NULL) {
         fprintf(stderr, "NULL parameter passed to aften_encode_init\n");
         return -1;
     }
@@ -301,7 +302,7 @@ aften_encode_init(AftenContext *s)
     apply_simd_restrictions(&s->system.wanted_simd_instructions);
 
     ctx = calloc(sizeof(A52Context), 1);
-    if(!ctx) {
+    if (!ctx) {
         fprintf(stderr, "error allocating memory for A52Context\n");
         return -1;
     }
@@ -312,7 +313,7 @@ aften_encode_init(AftenContext *s)
 
     a52_common_init();
 
-    switch(s->mode) {
+    switch (s->mode) {
     case AFTEN_TRANSCODE: {
         A52ThreadContext *tctx;
         fprintf(stderr, "Sorry, trancoding support is not complete, yet.");
@@ -360,19 +361,19 @@ aften_encode_init(AftenContext *s)
         set_converter(ctx, s->sample_format);
 
     // channel configuration
-        if(s->channels < 1 || s->channels > 6) {
+        if (s->channels < 1 || s->channels > 6) {
             fprintf(stderr, "invalid number of channels\n");
             return -1;
         }
-        if(s->acmod < 0 || s->acmod > 7) {
+        if (s->acmod < 0 || s->acmod > 7) {
             fprintf(stderr, "invalid acmod\n");
             return -1;
         }
-        if(s->channels == 6 && !s->lfe) {
+        if (s->channels == 6 && !s->lfe) {
             fprintf(stderr, "6-channel audio must have LFE channel\n");
             return -1;
         }
-        if(s->channels == 1 && s->lfe) {
+        if (s->channels == 1 && s->lfe) {
             fprintf(stderr, "cannot encode stand-alone LFE channel\n");
             return -1;
         }
@@ -383,9 +384,9 @@ aften_encode_init(AftenContext *s)
         ctx->lfe_channel = s->lfe ? (s->channels - 1) : -1;
 
         // frequency
-        for(i=0;i<3;i++) {
-            for(j=0;j<3;j++)
-                if((a52_sample_rate_tab[j] >> i) == s->samplerate)
+        for (i=0;i<3;i++) {
+            for (j=0;j<3;j++)
+                if ((a52_sample_rate_tab[j] >> i) == s->samplerate)
                     goto found;
         }
         fprintf(stderr, "invalid sample rate\n");
@@ -394,10 +395,10 @@ found:
         ctx->sample_rate = s->samplerate;
         ctx->halfratecod = i;
         ctx->fscod = j;
-        if(ctx->halfratecod) {
+        if (ctx->halfratecod) {
             // DolbyNet
             ctx->bsid = 8 + ctx->halfratecod;
-        } else if(ctx->meta.xbsi1e || ctx->meta.xbsi2e) {
+        } else if (ctx->meta.xbsi1e || ctx->meta.xbsi2e) {
             // alternate bit stream syntax
             ctx->bsid = 6;
         } else {
@@ -415,9 +416,9 @@ found:
 
     // bitrate & frame size
     brate = s->params.bitrate;
-    if(ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
-        if(brate == 0) {
-            switch(ctx->n_channels) {
+    if (ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
+        if (brate == 0) {
+            switch (ctx->n_channels) {
                 case 1: brate =  96; break;
                 case 2: brate = 192; break;
                 case 3: brate = 256; break;
@@ -425,8 +426,8 @@ found:
                 case 5: brate = 448; break;
             }
         }
-    } else if(ctx->params.encoding_mode == AFTEN_ENC_MODE_VBR) {
-        if(s->params.quality < 0 || s->params.quality > 1023) {
+    } else if (ctx->params.encoding_mode == AFTEN_ENC_MODE_VBR) {
+        if (s->params.quality < 0 || s->params.quality > 1023) {
             fprintf(stderr, "invalid quality setting\n");
             return -1;
         }
@@ -434,12 +435,12 @@ found:
         return -1;
     }
 
-    for(i=0; i<19; i++) {
-        if((a52_bitrate_tab[i] >> ctx->halfratecod) == brate)
+    for (i = 0; i < 19; i++) {
+        if ((a52_bitrate_tab[i] >> ctx->halfratecod) == brate)
             break;
     }
-    if(i == 19) {
-        if(ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
+    if (i == 19) {
+        if (ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
             fprintf(stderr, "invalid bitrate\n");
             return -1;
         }
@@ -460,27 +461,26 @@ found:
     dynrng_init();
 
     last_quality = 240;
-    if(ctx->params.encoding_mode == AFTEN_ENC_MODE_VBR) {
+    if (ctx->params.encoding_mode == AFTEN_ENC_MODE_VBR)
         last_quality = ctx->params.quality;
-    } else if(ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
+    else if (ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR)
         last_quality = ((((ctx->target_bitrate/ctx->n_channels)*35)/24)+95)+(25*ctx->halfratecod);
-    }
 
-    if(s->params.bwcode < -2 || s->params.bwcode > 60) {
+    if (s->params.bwcode < -2 || s->params.bwcode > 60) {
         fprintf(stderr, "invalid bandwidth code\n");
         return -1;
     }
-    if(ctx->params.bwcode < 0) {
+    if (ctx->params.bwcode < 0) {
         int cutoff = ((last_quality-120) * 120) + 4000;
         ctx->fixed_bwcode = ((cutoff * 512 / ctx->sample_rate) - 73) / 3;
-        if(ctx->params.bwcode == -2) {
-            if(ctx->params.min_bwcode < 0 || ctx->params.min_bwcode > 60 ||
+        if (ctx->params.bwcode == -2) {
+            if (ctx->params.min_bwcode < 0 || ctx->params.min_bwcode > 60 ||
                ctx->params.max_bwcode < 0 || ctx->params.max_bwcode > 60 ||
                ctx->params.min_bwcode > ctx->params.max_bwcode) {
                 fprintf(stderr, "invalid min/max bandwidth code\n");
                 return -1;
             }
-            if(ctx->params.encoding_mode == AFTEN_ENC_MODE_VBR) {
+            if (ctx->params.encoding_mode == AFTEN_ENC_MODE_VBR) {
                 fprintf(stderr, "variable bandwidth mode cannot be used with variable bitrate mode\n");
                 return -1;
             }
@@ -493,19 +493,18 @@ found:
 
     if (s->mode == AFTEN_ENCODE) {
         // can't do block switching with low sample rate due to the high-pass filter
-        if(ctx->sample_rate <= 16000) {
+        if (ctx->sample_rate <= 16000)
             ctx->params.use_block_switching = 0;
-        }
 
         // initialize transient-detect filters (one for each channel)
         // cascaded biquad direct form I high-pass w/ cutoff of 8 kHz
-        if(ctx->params.use_block_switching) {
-            for(i=0; i<ctx->n_all_channels; i++) {
+        if (ctx->params.use_block_switching) {
+            for (i = 0; i < ctx->n_all_channels; i++) {
                 ctx->bs_filter[i].type = FILTER_TYPE_HIGHPASS;
                 ctx->bs_filter[i].cascaded = 1;
                 ctx->bs_filter[i].cutoff = 8000;
                 ctx->bs_filter[i].samplerate = (FLOAT)ctx->sample_rate;
-                if(filter_init(&ctx->bs_filter[i], FILTER_ID_BIQUAD_I)) {
+                if (filter_init(&ctx->bs_filter[i], FILTER_ID_BIQUAD_I)) {
                     fprintf(stderr, "error initializing transient-detect filter\n");
                     return -1;
                 }
@@ -514,13 +513,13 @@ found:
 
         // initialize DC filters (one for each channel)
         // one-pole high-pass w/ cutoff of 3 Hz
-        if(ctx->params.use_dc_filter) {
-            for(i=0; i<ctx->n_all_channels; i++) {
+        if (ctx->params.use_dc_filter) {
+            for (i = 0; i < ctx->n_all_channels; i++) {
                 ctx->dc_filter[i].type = FILTER_TYPE_HIGHPASS;
                 ctx->dc_filter[i].cascaded = 0;
                 ctx->dc_filter[i].cutoff = 3;
                 ctx->dc_filter[i].samplerate = (FLOAT)ctx->sample_rate;
-                if(filter_init(&ctx->dc_filter[i], FILTER_ID_ONEPOLE)) {
+                if (filter_init(&ctx->dc_filter[i], FILTER_ID_ONEPOLE)) {
                     fprintf(stderr, "error initializing dc filter\n");
                     return -1;
                 }
@@ -529,23 +528,23 @@ found:
 
         // initialize bandwidth filters (one for each channel)
         // butterworth 2nd order cascaded direct form II low-pass
-        if(ctx->params.use_bw_filter) {
+        if (ctx->params.use_bw_filter) {
             int cutoff;
-            if(ctx->params.bwcode == -2) {
+            if (ctx->params.bwcode == -2) {
                 fprintf(stderr, "cannot use bandwidth filter with variable bandwidth\n");
                 return -1;
             }
             cutoff = (((ctx->fixed_bwcode * 3) + 73) * ctx->sample_rate) / 512;
-            if(cutoff < 4000) {
+            if (cutoff < 4000) {
                 // disable bandwidth filter if cutoff is below 4000 Hz
                 ctx->params.use_bw_filter = 0;
             } else {
-                for(i=0; i<ctx->n_channels; i++) {
+                for (i = 0; i < ctx->n_channels; i++) {
                     ctx->bw_filter[i].type = FILTER_TYPE_LOWPASS;
                     ctx->bw_filter[i].cascaded = 1;
                     ctx->bw_filter[i].cutoff = (FLOAT)cutoff;
                     ctx->bw_filter[i].samplerate = (FLOAT)ctx->sample_rate;
-                    if(filter_init(&ctx->bw_filter[i], FILTER_ID_BUTTERWORTH_II)) {
+                    if (filter_init(&ctx->bw_filter[i], FILTER_ID_BUTTERWORTH_II)) {
                         fprintf(stderr, "error initializing bandwidth filter\n");
                         return -1;
                     }
@@ -555,8 +554,8 @@ found:
 
         // initialize LFE filter
         // butterworth 2nd order cascaded direct form II low-pass w/ cutoff of 120 Hz
-        if(ctx->params.use_lfe_filter) {
-            if(!ctx->lfe) {
+        if (ctx->params.use_lfe_filter) {
+            if (!ctx->lfe) {
                 fprintf(stderr, "cannot use lfe filter. no lfe channel\n");
                 return -1;
             }
@@ -564,7 +563,7 @@ found:
             ctx->lfe_filter.cascaded = 1;
             ctx->lfe_filter.cutoff = 120;
             ctx->lfe_filter.samplerate = (FLOAT)ctx->sample_rate;
-            if(filter_init(&ctx->lfe_filter, FILTER_ID_BUTTERWORTH_II)) {
+            if (filter_init(&ctx->lfe_filter, FILTER_ID_BUTTERWORTH_II)) {
                 fprintf(stderr, "error initializing lfe filter\n");
                 return -1;
             }
@@ -577,7 +576,7 @@ found:
     s->system.n_threads = ctx->n_threads;
     ctx->tctx = calloc(sizeof(A52ThreadContext), ctx->n_threads);
 
-    for (j=0; j<ctx->n_threads; ++j) {
+    for (j = 0; j < ctx->n_threads; j++) {
         A52ThreadContext *cur_tctx = &ctx->tctx[j];
         cur_tctx->ctx = ctx;
         cur_tctx->thread_num = j;
@@ -611,7 +610,7 @@ found:
             windows_event_set(&cur_tctx->ts.ready_event);
         }
     }
-    for (j=0; j<ctx->n_threads; ++j) {
+    for (j = 0; j < ctx->n_threads; j++) {
 #ifdef HAVE_POSIX_THREADS
         ctx->tctx[j].ts.next_samples_cond = &ctx->tctx[(j + 1) % ctx->n_threads].ts.samples_cond;
 #endif
@@ -649,7 +648,7 @@ found:
         ctx->prepare_work = prepare_transcode;
 #endif
         ctx->begin_process_frame = begin_transcode_frame;
-        for (j=0; j<ctx->n_threads; ++j) {
+        for (j = 0; j < ctx->n_threads; j++) {
             A52ThreadContext *tctx = ctx->tctx + j;
             tctx->dctx = calloc(sizeof(A52DecodeContext), 1);
             a52_decode_init_thread(tctx);
@@ -668,38 +667,34 @@ frame_init(A52ThreadContext *tctx)
     A52Block *block;
     int blk, ch;
 
-    for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+    for (blk = 0; blk < A52_NUM_BLOCKS; blk++) {
         block = &frame->blocks[blk];
         block->block_num = blk;
-        for(ch=0; ch<ctx->n_channels; ch++) {
+        for (ch = 0; ch < ctx->n_channels; ch++) {
             block->blksw[ch] = 0;
             block->dithflag[ch] = 1;
 
             // input_samples will be null if context is not initialized
-            if(block->input_samples[ch] == NULL) {
+            if (block->input_samples[ch] == NULL)
                 return -1;
-            }
         }
     }
 
-    if(ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
+    if (ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
         frame->bit_rate = ctx->target_bitrate;
         frame->frmsizecod = ctx->frmsizecod;
         frame->frame_size_min = frame->bit_rate * 96000 / ctx->sample_rate;
         frame->frame_size = frame->frame_size_min;
     }
 
-    if(ctx->params.bwcode == -2) {
+    if (ctx->params.bwcode == -2)
         frame->bwcode = 60;
-    } else {
+    else
         frame->bwcode = ctx->fixed_bwcode;
-    }
-    for(ch=0; ch<ctx->n_channels; ch++) {
+    for (ch = 0; ch < ctx->n_channels; ch++)
         frame->ncoefs[ch] = (frame->bwcode * 3) + 73;
-    }
-    if(ctx->lfe) {
+    if (ctx->lfe)
         frame->ncoefs[ctx->lfe_channel] = 7;
-    }
 
     frame->frame_bits = 0;
     frame->exp_bits = 0;
@@ -733,18 +728,18 @@ output_frame_header(A52ThreadContext *tctx, uint8_t *frame_buffer)
     bitwriter_writebits(bw, 5, ctx->bsid);
     bitwriter_writebits(bw, 3, ctx->bsmod);
     bitwriter_writebits(bw, 3, ctx->acmod);
-    if((ctx->acmod & 0x01) && (ctx->acmod != A52_ACMOD_MONO))
+    if ((ctx->acmod & 0x01) && (ctx->acmod != A52_ACMOD_MONO))
         bitwriter_writebits(bw, 2, ctx->meta.cmixlev);
-    if(ctx->acmod & 0x04)
+    if (ctx->acmod & 0x04)
         bitwriter_writebits(bw, 2, ctx->meta.surmixlev);
-    if(ctx->acmod == A52_ACMOD_STEREO)
+    if (ctx->acmod == A52_ACMOD_STEREO)
         bitwriter_writebits(bw, 2, ctx->meta.dsurmod);
     bitwriter_writebits(bw, 1, ctx->lfe);
     bitwriter_writebits(bw, 5, ctx->meta.dialnorm);
     bitwriter_writebits(bw, 1, 0); /* no compression control word */
     bitwriter_writebits(bw, 1, 0); /* no lang code */
     bitwriter_writebits(bw, 1, 0); /* no audio production info */
-    if(ctx->acmod == A52_ACMOD_DUAL_MONO) {
+    if (ctx->acmod == A52_ACMOD_DUAL_MONO) {
         bitwriter_writebits(bw, 5, ctx->meta.dialnorm);
         bitwriter_writebits(bw, 1, 0); /* no compression control word 2 */
         bitwriter_writebits(bw, 1, 0); /* no lang code 2 */
@@ -752,10 +747,10 @@ output_frame_header(A52ThreadContext *tctx, uint8_t *frame_buffer)
     }
     bitwriter_writebits(bw, 1, 0); /* no copyright */
     bitwriter_writebits(bw, 1, 1); /* original bitstream */
-    if(ctx->bsid == 6) {
+    if (ctx->bsid == 6) {
         // alternate bit stream syntax
         bitwriter_writebits(bw, 1, ctx->meta.xbsi1e);
-        if(ctx->meta.xbsi1e) {
+        if (ctx->meta.xbsi1e) {
             bitwriter_writebits(bw, 2, ctx->meta.dmixmod);
             bitwriter_writebits(bw, 3, ctx->meta.ltrtcmixlev);
             bitwriter_writebits(bw, 3, ctx->meta.ltrtsmixlev);
@@ -763,7 +758,7 @@ output_frame_header(A52ThreadContext *tctx, uint8_t *frame_buffer)
             bitwriter_writebits(bw, 3, ctx->meta.lorosmixlev);
         }
         bitwriter_writebits(bw, 1, ctx->meta.xbsi2e);
-        if(ctx->meta.xbsi2e) {
+        if (ctx->meta.xbsi2e) {
             bitwriter_writebits(bw, 2, ctx->meta.dsurexmod);
             bitwriter_writebits(bw, 2, ctx->meta.dheadphonmod);
             bitwriter_writebits(bw, 1, ctx->meta.adconvtyp);
@@ -787,8 +782,10 @@ asym_quant(int c, int e, int qbits)
     int lshift, m, v;
 
     lshift = e + (qbits-1) - 24;
-    if(lshift >= 0) v = c << lshift;
-    else v = c >> (-lshift);
+    if (lshift >= 0)
+        v = c << lshift;
+    else
+        v = c >> (-lshift);
 
     m = (1 << (qbits-1));
     v = CLIP(v, -m, m-1);
@@ -802,20 +799,20 @@ quant_mant_ch(FLOAT *mdct_coef, uint8_t *exp, uint8_t *bap, uint16_t *qmant,
 {
     int i, c, e, b, v;
 
-    for(i=0; i<ncoefs; i++) {
+    for (i = 0; i < ncoefs; i++) {
         c = (int)(mdct_coef[i] * (1 << 24));
         e = exp[i];
         b = bap[i];
-        switch(b) {
+        switch (b) {
             case 0:
                 v = 0;
                 break;
             case 1:
                 v = sym_quant(c, e, 3);
-                if(mant_cnt[0] == 0) {
+                if (mant_cnt[0] == 0) {
                     qmant_ptr[0] = &qmant[i];
                     v = 9 * v;
-                } else if(mant_cnt[0] == 1) {
+                } else if (mant_cnt[0] == 1) {
                     *qmant_ptr[0] += 3 * v;
                     v = 128;
                 } else {
@@ -826,10 +823,10 @@ quant_mant_ch(FLOAT *mdct_coef, uint8_t *exp, uint8_t *bap, uint16_t *qmant,
                 break;
             case 2:
                 v = sym_quant(c, e, 5);
-                if(mant_cnt[1] == 0) {
+                if (mant_cnt[1] == 0) {
                     qmant_ptr[1] = &qmant[i];
                     v = 25 * v;
-                } else if(mant_cnt[1] == 1) {
+                } else if (mant_cnt[1] == 1) {
                     *qmant_ptr[1] += 5 * v;
                     v = 128;
                 } else {
@@ -843,7 +840,7 @@ quant_mant_ch(FLOAT *mdct_coef, uint8_t *exp, uint8_t *bap, uint16_t *qmant,
                 break;
             case 4:
                 v = sym_quant(c, e, 11);
-                if(mant_cnt[2]== 0) {
+                if (mant_cnt[2]== 0) {
                     qmant_ptr[2] = &qmant[i];
                     v = 11 * v;
                 } else {
@@ -878,11 +875,11 @@ quantize_mantissas(A52ThreadContext *tctx)
     int blk, ch;
     int mant_cnt[3];
 
-    for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+    for (blk = 0; blk < A52_NUM_BLOCKS; blk++) {
         block = &frame->blocks[blk];
         mant_cnt[0] = mant_cnt[1] = mant_cnt[2] = 0;
         qmant_ptr[0] = qmant_ptr[1] = qmant_ptr[2] = NULL;
-        for(ch=0; ch<ctx->n_all_channels; ch++) {
+        for (ch = 0; ch < ctx->n_all_channels; ch++) {
             quant_mant_ch(block->mdct_coef[ch], block->exp[ch], block->bap[ch],
                           block->qmant[ch], frame->ncoefs[ch], qmant_ptr,
                           mant_cnt);
@@ -901,28 +898,25 @@ output_audio_blocks(A52ThreadContext *tctx)
     int blk, ch, i, baie, rbnd;
 
     bw = &tctx->bw;
-    for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+    for (blk = 0; blk < A52_NUM_BLOCKS; blk++) {
         block = &frame->blocks[blk];
-        for(ch=0; ch<ctx->n_channels; ch++) {
+        for (ch = 0; ch < ctx->n_channels; ch++)
             bitwriter_writebits(bw, 1, block->blksw[ch]);
-        }
-        for(ch=0; ch<ctx->n_channels; ch++) {
+        for (ch = 0; ch < ctx->n_channels; ch++)
             bitwriter_writebits(bw, 1, block->dithflag[ch]);
-        }
-        if(ctx->params.dynrng_profile == DYNRNG_PROFILE_NONE) {
+        if (ctx->params.dynrng_profile == DYNRNG_PROFILE_NONE) {
             bitwriter_writebits(bw, 1, 0); // no dynamic range
-            if(ctx->acmod == A52_ACMOD_DUAL_MONO) {
+            if (ctx->acmod == A52_ACMOD_DUAL_MONO)
                 bitwriter_writebits(bw, 1, 0); // no dynamic range 2
-            }
         } else {
             bitwriter_writebits(bw, 1, 1);
             bitwriter_writebits(bw, 8, block->dynrng);
-            if(ctx->acmod == A52_ACMOD_DUAL_MONO) {
+            if (ctx->acmod == A52_ACMOD_DUAL_MONO) {
                 bitwriter_writebits(bw, 1, 1);
                 bitwriter_writebits(bw, 8, block->dynrng);
             }
         }
-        if(block->block_num == 0) {
+        if (block->block_num == 0) {
             // must define coupling strategy in block 0
             bitwriter_writebits(bw, 1, 1); // new coupling strategy
             bitwriter_writebits(bw, 1, 0); // no coupling in use
@@ -930,52 +924,47 @@ output_audio_blocks(A52ThreadContext *tctx)
             bitwriter_writebits(bw, 1, 0); // no new coupling strategy
         }
 
-        if(ctx->acmod == A52_ACMOD_STEREO) {
+        if (ctx->acmod == A52_ACMOD_STEREO) {
             int rematstr = !blk;
             bitwriter_writebits(bw, 1, rematstr);
-            if(rematstr) {
-                for(rbnd=0; rbnd<4; rbnd++) {
+            if (rematstr) {
+                for (rbnd = 0; rbnd < 4; rbnd++)
                     bitwriter_writebits(bw, 1, frame->rematflg[rbnd]);
-                }
             }
         }
 
         // exponent strategy
-        for(ch=0; ch<ctx->n_channels; ch++) {
+        for (ch = 0; ch < ctx->n_channels; ch++)
             bitwriter_writebits(bw, 2, block->exp_strategy[ch]);
-        }
 
-        if(ctx->lfe) {
+        if (ctx->lfe)
             bitwriter_writebits(bw, 1, block->exp_strategy[ctx->lfe_channel]);
-        }
 
-        for(ch=0; ch<ctx->n_channels; ch++) {
-            if(block->exp_strategy[ch] != EXP_REUSE)
+        for (ch = 0; ch < ctx->n_channels; ch++) {
+            if (block->exp_strategy[ch] != EXP_REUSE)
                 bitwriter_writebits(bw, 6, frame->bwcode);
         }
 
         // exponents
-        for(ch=0; ch<ctx->n_all_channels; ch++) {
-            if(block->exp_strategy[ch] != EXP_REUSE) {
+        for (ch = 0; ch < ctx->n_all_channels; ch++) {
+            if (block->exp_strategy[ch] != EXP_REUSE) {
                 // first exponent
                 bitwriter_writebits(bw, 4, block->grp_exp[ch][0]);
 
                 // delta-encoded exponent groups
-                for(i=1; i<=block->nexpgrps[ch]; i++) {
+                for (i = 1; i <= block->nexpgrps[ch]; i++)
                     bitwriter_writebits(bw, 7, block->grp_exp[ch][i]);
-                }
 
                 // gain range info
-                if(ch != ctx->lfe_channel) {
+                if (ch != ctx->lfe_channel)
                     bitwriter_writebits(bw, 2, 0);
-                }
             }
         }
 
         // bit allocation info
         baie = (block->block_num == 0);
         bitwriter_writebits(bw, 1, baie);
-        if(baie) {
+        if (baie) {
             bitwriter_writebits(bw, 2, frame->sdecaycod);
             bitwriter_writebits(bw, 2, frame->fdecaycod);
             bitwriter_writebits(bw, 2, frame->sgaincod);
@@ -985,9 +974,9 @@ output_audio_blocks(A52ThreadContext *tctx)
 
         // snr offset
         bitwriter_writebits(bw, 1, block->write_snr);
-        if(block->write_snr) {
+        if (block->write_snr) {
             bitwriter_writebits(bw, 6, frame->csnroffst);
-            for(ch=0; ch<ctx->n_all_channels; ch++) {
+            for (ch = 0; ch < ctx->n_all_channels; ch++) {
                 bitwriter_writebits(bw, 4, frame->fsnroffst);
                 bitwriter_writebits(bw, 3, block->fgaincod[ch]);
             }
@@ -997,12 +986,12 @@ output_audio_blocks(A52ThreadContext *tctx)
         bitwriter_writebits(bw, 1, 0); // no data to skip
 
         // mantissas
-        for(ch=0; ch<ctx->n_all_channels; ch++) {
+        for (ch = 0; ch < ctx->n_all_channels; ch++) {
             int b, q;
-            for(i=0; i<frame->ncoefs[ch]; i++) {
+            for (i = 0; i < frame->ncoefs[ch]; i++) {
                 q = block->qmant[ch][i];
                 b = block->bap[ch][i];
-                switch(b) {
+                switch (b) {
                     case 0:  break;
                     case 1:  if(q != 128) bitwriter_writebits(bw, 5, q);
                              break;
@@ -1036,12 +1025,13 @@ output_frame_end(A52ThreadContext *tctx)
     frame = tctx->bw.buffer;
     bitcount = bitwriter_bitcount(&tctx->bw);
     n = (fs << 1) - 2 - (bitcount >> 3);
-    if(n < 0) {
+    if (n < 0) {
         fprintf(stderr, "data size exceeds frame size (frame=%d data=%d)\n",
                 (fs << 1) - 2, bitcount >> 3);
         return -1;
     }
-    if(n > 0) memset(&tctx->bw.buffer[bitcount>>3], 0, n);
+    if (n > 0)
+        memset(&tctx->bw.buffer[bitcount>>3], 0, n);
 
     // compute crc1 for 1st 5/8 of frame
     fs58 = (fs >> 1) + (fs >> 3);
@@ -1051,7 +1041,8 @@ output_frame_end(A52ThreadContext *tctx)
     frame[3] = crc1;
     // double-check
     crc1 = calc_crc16(&frame[2], (fs58<<1)-2);
-    if(crc1 != 0) fprintf(stderr, "CRC ERROR\n");
+    if (crc1 != 0)
+        fprintf(stderr, "CRC ERROR\n");
 
     // compute crc2 for final 3/8 of frame
     crc2 = calc_crc16(&frame[fs58<<1], ((fs - fs58) << 1) - 2);
@@ -1089,31 +1080,31 @@ copy_samples(A52ThreadContext *tctx)
         windows_event_reset(&tctx->ts.samples_event);
     }
 #endif
-    for(ch=0; ch<ctx->n_all_channels; ch++) {
+    for (ch = 0; ch < ctx->n_all_channels; ch++) {
         out_audio = buffer;
         in_audio = frame->input_audio[ch];
         // DC-removal high-pass filter
-        if(ctx->params.use_dc_filter) {
+        if (ctx->params.use_dc_filter) {
             filter_run(&ctx->dc_filter[ch], out_audio, in_audio,
                        A52_SAMPLES_PER_FRAME);
             SWAP_BUFFERS
         }
         if (ch < ctx->n_channels) {
             // channel bandwidth filter
-            if(ctx->params.use_bw_filter) {
+            if (ctx->params.use_bw_filter) {
                 filter_run(&ctx->bw_filter[ch], out_audio, in_audio,
                            A52_SAMPLES_PER_FRAME);
                 SWAP_BUFFERS
             }
             // block-switching high-pass filter
-            if(ctx->params.use_block_switching) {
+            if (ctx->params.use_block_switching) {
                 filter_run(&ctx->bs_filter[ch], out_audio, in_audio,
                            A52_SAMPLES_PER_FRAME);
                 memcpy(frame->blocks[0].transient_samples[ch],
                        ctx->last_transient_samples[ch], 256 * sizeof(FLOAT));
                 memcpy(&frame->blocks[0].transient_samples[ch][256], out_audio,
                        256 * sizeof(FLOAT));
-                for(blk=1; blk<A52_NUM_BLOCKS; blk++) {
+                for (blk = 1; blk < A52_NUM_BLOCKS; blk++) {
                     memcpy(frame->blocks[blk].transient_samples[ch],
                            &out_audio[256*(blk-1)], 512 * sizeof(FLOAT));
                 }
@@ -1122,7 +1113,7 @@ copy_samples(A52ThreadContext *tctx)
             }
         } else {
             // LFE bandwidth low-pass filter
-            if(ctx->params.use_lfe_filter) {
+            if (ctx->params.use_lfe_filter) {
                 assert(ch == ctx->lfe_channel);
                 filter_run(&ctx->lfe_filter, out_audio, in_audio,
                            A52_SAMPLES_PER_FRAME);
@@ -1134,7 +1125,7 @@ copy_samples(A52ThreadContext *tctx)
                256 * sizeof(FLOAT));
         memcpy(&frame->blocks[0].input_samples[ch][256], in_audio,
                256 * sizeof(FLOAT));
-        for(blk=1; blk<A52_NUM_BLOCKS; blk++) {
+        for (blk = 1; blk < A52_NUM_BLOCKS; blk++) {
             memcpy(frame->blocks[blk].input_samples[ch], &in_audio[256*(blk-1)],
                    512 * sizeof(FLOAT));
         }
@@ -1171,39 +1162,32 @@ detect_transient(FLOAT *in)
     FLOAT t3 = FCONST(0.050);
 
     // level 1 (2 x 256)
-    for(i=0; i<2; i++) {
+    for (i = 0; i < 2; i++) {
         level1[i] = 0;
-        for(j=0; j<256; j++) {
+        for (j = 0; j < 256; j++)
             level1[i] = MAX(AFT_FABS(xx[i*256+j]), level1[i]);
-        }
-        if(level1[i] < tmax) {
+        if (level1[i] < tmax)
             return 0;
-        }
-        if((i > 0) && (level1[i] * t1 > level1[i-1])) {
+        if ((i > 0) && (level1[i] * t1 > level1[i-1]))
             return 1;
-        }
     }
 
     // level 2 (4 x 128)
-    for(i=1; i<4; i++) {
+    for (i = 1; i < 4; i++) {
         level2[i] = 0;
-        for(j=0; j<128; j++) {
+        for (j = 0; j < 128; j++)
             level2[i] = MAX(AFT_FABS(xx[i*128+j]), level2[i]);
-        }
-        if((i > 1) && (level2[i] * t2 > level2[i-1])) {
+        if ((i > 1) && (level2[i] * t2 > level2[i-1]))
             return 1;
-        }
     }
 
     // level 3 (8 x 64)
-    for(i=3; i<8; i++) {
+    for (i = 3; i < 8; i++) {
         level3[i] = 0;
-        for(j=0; j<64; j++) {
+        for (j = 0; j < 64; j++)
             level3[i] = MAX(AFT_FABS(xx[i*64+j]), level3[i]);
-        }
-        if((i > 3) && (level3[i] * t3 > level3[i-1])) {
+        if ((i > 3) && (level3[i] * t3 > level3[i-1]))
             return 1;
-        }
     }
 
     return 0;
@@ -1220,23 +1204,20 @@ generate_coefs(A52ThreadContext *tctx)
         ctx->mdct_ctx_512.mdct;
     int blk, ch, i;
 
-    for(ch=0; ch<ctx->n_all_channels; ch++) {
-        for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+    for (ch = 0; ch < ctx->n_all_channels; ch++) {
+        for (blk = 0; blk < A52_NUM_BLOCKS; blk++) {
             block = &tctx->frame.blocks[blk];
-            if(ctx->params.use_block_switching) {
+            if (ctx->params.use_block_switching)
                 block->blksw[ch] = detect_transient(block->transient_samples[ch]);
-            } else {
+            else
                 block->blksw[ch] = 0;
-            }
             ctx->apply_a52_window(block->input_samples[ch]);
-            if(block->blksw[ch]) {
+            if (block->blksw[ch])
                 mdct_256(tctx, block->mdct_coef[ch], block->input_samples[ch]);
-            } else {
+            else
                 mdct_512(tctx, block->mdct_coef[ch], block->input_samples[ch]);
-            }
-            for(i=tctx->frame.ncoefs[ch]; i<256; i++) {
+            for (i = tctx->frame.ncoefs[ch]; i < 256; i++)
                 block->mdct_coef[ch][i] = 0.0;
-            }
         }
     }
 }
@@ -1252,23 +1233,22 @@ calc_rematrixing(A52ThreadContext *tctx)
     int blk, bnd, i;
 
     // initialize flags to zero
-    for(bnd=0; bnd<4; bnd++) {
+    for (bnd = 0; bnd < 4; bnd++)
         frame->rematflg[bnd] = 0;
-    }
 
     // if rematrixing is disabled, return
-    if(!ctx->params.use_rematrixing) {
+    if (!ctx->params.use_rematrixing)
         return;
-    }
 
     // calculate rematrixing flags and apply rematrixing to coefficients
-    for(bnd=0; bnd<4; bnd++) {
+    for (bnd = 0; bnd < 4; bnd++) {
         // calculate sums for this band for all blocks
         sum[bnd][0] = sum[bnd][1] = sum[bnd][2] = sum[bnd][3] = 0;
-        for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+        for (blk = 0; blk < A52_NUM_BLOCKS; blk++) {
             block = &frame->blocks[blk];
-            for(i=rematbndtab[bnd]; i<rematbndtab[bnd+1]; i++) {
-                if(i == frame->ncoefs[0]) break;
+            for (i = rematbndtab[bnd]; i < rematbndtab[bnd+1]; i++) {
+                if (i == frame->ncoefs[0])
+                    break;
                 lt = block->mdct_coef[0][i];
                 rt = block->mdct_coef[1][i];
                 sum[bnd][0] += lt * lt;
@@ -1278,13 +1258,14 @@ calc_rematrixing(A52ThreadContext *tctx)
             }
         }
         // compare sums to determine if rematrixing is used for this band
-        if(sum[bnd][0]+sum[bnd][1] > (sum[bnd][2]+sum[bnd][3])/2.0) {
+        if (sum[bnd][0]+sum[bnd][1] > (sum[bnd][2]+sum[bnd][3])/2.0) {
             frame->rematflg[bnd] = 1;
             // apply rematrixing in this band for all blocks
-            for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+            for (blk = 0; blk < A52_NUM_BLOCKS; blk++) {
                 block = &frame->blocks[blk];
-                for(i=rematbndtab[bnd]; i<rematbndtab[bnd+1]; i++) {
-                    if(i == frame->ncoefs[0]) break;
+                for (i = rematbndtab[bnd]; i < rematbndtab[bnd+1]; i++) {
+                    if (i == frame->ncoefs[0])
+                        break;
                     ctmp1 = block->mdct_coef[0][i] * 0.5;
                     ctmp2 = block->mdct_coef[1][i] * 0.5;
                     block->mdct_coef[0][i] = ctmp1 + ctmp2;
@@ -1305,7 +1286,7 @@ adjust_frame_size(A52ThreadContext *tctx)
     uint32_t srate = ctx->sample_rate;
     int add;
 
-    while(tctx->bit_cnt >= kbps && tctx->sample_cnt >= srate) {
+    while (tctx->bit_cnt >= kbps && tctx->sample_cnt >= srate) {
         tctx->bit_cnt -= kbps;
         tctx->sample_cnt -= srate;
     }
@@ -1322,14 +1303,13 @@ compute_dither_strategy(A52ThreadContext *tctx)
     int blk, ch;
 
     block0 = NULL;
-    for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+    for (blk = 0; blk < A52_NUM_BLOCKS; blk++) {
         block1 = &tctx->frame.blocks[blk];
-        for(ch=0; ch<channels; ch++) {
-            if(block1->blksw[ch] || ((blk>0) && block0->blksw[ch])) {
+        for (ch = 0; ch < channels; ch++) {
+            if (block1->blksw[ch] || ((blk>0) && block0->blksw[ch]))
                 block1->dithflag[ch] = 0;
-            } else {
+            else
                 block1->dithflag[ch] = 1;
-            }
         }
         block0 = block1;
     }
@@ -1342,10 +1322,10 @@ calculate_dynrng(A52ThreadContext *tctx)
     A52Block *block;
     int blk;
 
-    if(ctx->params.dynrng_profile == DYNRNG_PROFILE_NONE)
+    if (ctx->params.dynrng_profile == DYNRNG_PROFILE_NONE)
         return;
 
-    for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+    for (blk = 0; blk < A52_NUM_BLOCKS; blk++) {
         block = &tctx->frame.blocks[blk];
         block->dynrng = calculate_block_dynrng(block->input_samples,
                                                ctx->n_all_channels,
@@ -1378,7 +1358,7 @@ process_frame(A52ThreadContext *tctx, uint8_t *output_frame_buffer)
     A52Context *ctx = tctx->ctx;
     A52Frame *frame = &tctx->frame;
 
-    if(frame_init(tctx)) {
+    if (frame_init(tctx)) {
         fprintf(stderr, "Encoding has not properly initialized\n");
         return -1;
     }
@@ -1388,12 +1368,11 @@ process_frame(A52ThreadContext *tctx, uint8_t *output_frame_buffer)
 
     compute_dither_strategy(tctx);
 
-    if(ctx->acmod == A52_ACMOD_STEREO) {
+    if (ctx->acmod == A52_ACMOD_STEREO)
         calc_rematrixing(tctx);
-    }
 
     // variable bandwidth
-    if(ctx->params.bwcode == -2) {
+    if (ctx->params.bwcode == -2) {
         // process exponents at full bandwidth
         ctx->process_exponents(tctx);
         // run bit allocation at q=240 to calculate bandwidth
@@ -1402,11 +1381,10 @@ process_frame(A52ThreadContext *tctx, uint8_t *output_frame_buffer)
 
     ctx->process_exponents(tctx);
 
-    if(ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR) {
+    if (ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR)
         adjust_frame_size(tctx);
-    }
 
-    if(compute_bit_allocation(tctx)) {
+    if (compute_bit_allocation(tctx)) {
         fprintf(stderr, "Error in bit allocation\n");
         tctx->framesize = 0;
         return -1;
@@ -1437,7 +1415,7 @@ convert_samples_from_src(A52ThreadContext *tctx, const void *vsrc, int count)
     ctx->fmt_convert_from_src(tctx->frame.input_audio, vsrc, ctx->n_all_channels, count);
     if (count < A52_SAMPLES_PER_FRAME) {
         int ch;
-        for(ch=0; ch<ctx->n_all_channels; ++ch)
+        for (ch = 0; ch < ctx->n_all_channels; ch++)
             memset(&tctx->frame.input_audio[ch][count], 0, (A52_SAMPLES_PER_FRAME - count) * sizeof(FLOAT));
     }
     return 0;
@@ -1465,7 +1443,7 @@ threaded_worker(void* vtctx)
     ++tctx->ctx->ts.threads_running;//no need to lock, as thread creater waits
     posix_mutex_lock(&tctx->ts.enter_mutex);
     posix_cond_signal(&tctx->ts.enter_cond);
-    while(1) {
+    while (1) {
         posix_cond_wait(&tctx->ts.enter_cond, &tctx->ts.enter_mutex);
         posix_mutex_lock(&tctx->ts.confirm_mutex);
         posix_cond_signal(&tctx->ts.confirm_cond);
@@ -1535,7 +1513,7 @@ process_frame_parallel(AftenContext *s, uint8_t *frame_buffer, const void *sampl
             if (tctx->state == START) {
                 tctx->state = WORK;
             } else {
-                if(tctx->framesize > 0) {
+                if (tctx->framesize > 0) {
                     framesize = tctx->framesize;
                     memcpy(frame_buffer, tctx->frame_buffer, framesize);
                    // update encoding status
@@ -1558,7 +1536,7 @@ process_frame_parallel(AftenContext *s, uint8_t *frame_buffer, const void *sampl
 end:
         ++ctx->ts.current_thread_num;
         ctx->ts.current_thread_num %= ctx->n_threads;
-    } while(ctx->ts.threads_to_abort);
+    } while (ctx->ts.threads_to_abort);
 
     return framesize;
 }
@@ -1599,7 +1577,7 @@ aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, const void *samples, 
     A52ThreadContext *tctx;
     A52Frame *frame;
 
-    if(s == NULL || frame_buffer == NULL || (samples == NULL && count)) {
+    if (s == NULL || frame_buffer == NULL || (samples == NULL && count)) {
         fprintf(stderr, "One or more NULL parameters passed to aften_encode_frame\n");
         return -1;
     }
@@ -1643,7 +1621,7 @@ aften_encode_close(AftenContext *s)
     int ch;
     int ret_val = 0;
 
-    if(s != NULL && s->private_context != NULL) {
+    if (s != NULL && s->private_context != NULL) {
         A52Context *ctx = s->private_context;
 
 #ifndef NO_THREADS
@@ -1660,7 +1638,7 @@ aften_encode_close(AftenContext *s)
                 ctx->tctx[0].mdct_tctx_512.mdct_thread_close(&ctx->tctx[0]);
             else {
                 int i;
-                for (i=0; i<ctx->n_threads; ++i) {
+                for (i = 0; i < ctx->n_threads; i++) {
                     A52ThreadContext *cur_tctx = ctx->tctx + i;
                     thread_join(cur_tctx->ts.thread);
                     cur_tctx->mdct_tctx_512.mdct_thread_close(cur_tctx);
@@ -1680,7 +1658,7 @@ aften_encode_close(AftenContext *s)
             }
             if (s->mode == AFTEN_TRANSCODE) {
                 int i;
-                for (i=0; i<ctx->n_threads; ++i) {
+                for (i = 0; i < ctx->n_threads; i++) {
                     A52ThreadContext *cur_tctx = ctx->tctx + i;
                     a52_decode_deinit_thread(cur_tctx);
                     free(cur_tctx->dctx);
@@ -1693,7 +1671,7 @@ aften_encode_close(AftenContext *s)
 
         // close input filters
         filter_close(&ctx->lfe_filter);
-        for(ch=0; ch<A52_MAX_CHANNELS; ch++) {
+        for (ch = 0; ch < A52_MAX_CHANNELS; ch++) {
             filter_close(&ctx->bs_filter[ch]);
             filter_close(&ctx->dc_filter[ch]);
             filter_close(&ctx->bw_filter[ch]);

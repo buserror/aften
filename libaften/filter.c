@@ -98,27 +98,22 @@ biquad_init(FilterContext *f)
     BiquadContext *b = f->private_context;
     FLOAT fc;
 
-    if(f->samplerate <= 0) {
+    if (f->samplerate <= 0)
         return -1;
-    }
-    if(f->cutoff < 0 || f->cutoff > (f->samplerate/FCONST(2.0))) {
+    if (f->cutoff < 0 || f->cutoff > (f->samplerate/FCONST(2.0)))
         return -1;
-    }
     fc = f->cutoff / f->samplerate;
 
-    if(f->type == FILTER_TYPE_LOWPASS) {
+    if (f->type == FILTER_TYPE_LOWPASS)
         biquad_generate_lowpass(b, fc);
-    } else if(f->type == FILTER_TYPE_HIGHPASS) {
+    else if (f->type == FILTER_TYPE_HIGHPASS)
         biquad_generate_highpass(b, fc);
-    } else {
+    else
         return -1;
-    }
 
-    for(j=0; j<2; j++) {
-        for(i=0; i<5; i++) {
+    for (j = 0; j < 2; j++)
+        for (i = 0; i < 5; i++)
             b->state[j][i] = 0.0;
-        }
-    }
 
     return 0;
 }
@@ -131,9 +126,9 @@ biquad_i_run_filter(FilterContext *f, FLOAT *out, FLOAT *in, int n)
     FLOAT *tmp = in;
     int i, j;
 
-    for(j=0; j<1+f->cascaded; j++) {
+    for (j = 0; j < 1+f->cascaded; j++) {
         FLOAT *state_j = b->state[j];
-        for(i=0; i<n; i++) {
+        for (i = 0; i < n; i++) {
             FLOAT v = 0;
             state_j[0] = tmp[i];
 
@@ -163,9 +158,9 @@ biquad_ii_run_filter(FilterContext *f, FLOAT *out, FLOAT *in, int n)
     int i, j;
     FLOAT v;
 
-    for(j=0; j<1+f->cascaded; j++) {
+    for (j = 0; j < 1+f->cascaded; j++) {
         FLOAT *state_j = b->state[j];
-        for(i=0; i<n; i++) {
+        for (i = 0; i < n; i++) {
             state_j[0] = tmp[i];
 
             v = coefs[0] * state_j[0] + state_j[1];
@@ -227,27 +222,22 @@ butterworth_init(FilterContext *f)
     BiquadContext *b = f->private_context;
     FLOAT fc;
 
-    if(f->samplerate <= 0) {
+    if (f->samplerate <= 0)
         return -1;
-    }
-    if(f->cutoff < 0 || f->cutoff > (f->samplerate/FCONST(2.0))) {
+    if (f->cutoff < 0 || f->cutoff > (f->samplerate/FCONST(2.0)))
         return -1;
-    }
     fc = f->cutoff / f->samplerate;
 
-    if(f->type == FILTER_TYPE_LOWPASS) {
+    if (f->type == FILTER_TYPE_LOWPASS)
         butterworth_generate_lowpass(b, fc);
-    } else if(f->type == FILTER_TYPE_HIGHPASS) {
+    else if (f->type == FILTER_TYPE_HIGHPASS)
         butterworth_generate_highpass(b, fc);
-    } else {
+    else
         return -1;
-    }
 
-    for(j=0; j<2; j++) {
-        for(i=0; i<5; i++) {
+    for (j = 0; j < 2; j++)
+        for (i = 0; i < 5; i++)
             b->state[j][i] = 0.0;
-        }
-    }
 
     return 0;
 }
@@ -304,25 +294,21 @@ onepole_init(FilterContext *f)
     OnePoleContext *o = f->private_context;
     FLOAT fc;
 
-    if(f->cascaded) {
+    if (f->cascaded)
         return -1;
-    }
 
-    if(f->samplerate <= 0) {
+    if (f->samplerate <= 0)
         return -1;
-    }
-    if(f->cutoff < 0 || f->cutoff > (f->samplerate/FCONST(2.0))) {
+    if (f->cutoff < 0 || f->cutoff > (f->samplerate/FCONST(2.0)))
         return -1;
-    }
     fc = f->cutoff / f->samplerate;
 
-    if(f->type == FILTER_TYPE_LOWPASS) {
+    if (f->type == FILTER_TYPE_LOWPASS)
         onepole_generate_lowpass(o, fc);
-    } else if(f->type == FILTER_TYPE_HIGHPASS) {
+    else if (f->type == FILTER_TYPE_HIGHPASS)
         onepole_generate_highpass(o, fc);
-    } else {
+    else
         return -1;
-    }
 
     return 0;
 }
@@ -335,13 +321,12 @@ onepole_run_filter(FilterContext *f, FLOAT *out, FLOAT *in, int n)
     FLOAT p1 = 0;
     OnePoleContext *o = f->private_context;
 
-    if(f->type == FILTER_TYPE_LOWPASS) {
+    if (f->type == FILTER_TYPE_LOWPASS)
         p1 = FCONST(1.0) - o->p;
-    } else if(f->type == FILTER_TYPE_HIGHPASS) {
+    else if(f->type == FILTER_TYPE_HIGHPASS)
         p1 = o->p - FCONST(1.0);
-    }
 
-    for(i=0; i<n; i++) {
+    for (i = 0; i < n; i++) {
         v = (p1 * in[i]) + (o->p * o->last);
         o->last = out[i] = CLIP(v, -FCONST(1.0), FCONST(1.0));
     }
@@ -361,7 +346,7 @@ filter_init(FilterContext *f, enum FilterID id)
 {
     if(f == NULL) return -1;
 
-    switch(id) {
+    switch (id) {
         case FILTER_ID_BIQUAD_I:        f->filter = &biquad_i_filter;
                                         break;
         case FILTER_ID_BIQUAD_II:       f->filter = &biquad_ii_filter;
@@ -389,8 +374,9 @@ filter_run(FilterContext *f, FLOAT *out, FLOAT *in, int n)
 void
 filter_close(FilterContext *f)
 {
-    if(!f) return;
-    if(f->private_context) {
+    if (!f)
+        return;
+    if (f->private_context) {
         free(f->private_context);
         f->private_context = NULL;
     }

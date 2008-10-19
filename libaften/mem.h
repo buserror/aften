@@ -62,7 +62,7 @@ aligned_malloc(long size)
     void *mem;
     long diff;
     mem = malloc(size+32);
-    if(!mem)
+    if (!mem)
         return mem;
     diff = ((long)mem & 15) - 32;
     mem -= diff;
@@ -73,7 +73,7 @@ aligned_malloc(long size)
 static inline void
 aligned_free(void *ptr)
 {
-    if(ptr)
+    if (ptr)
         free(ptr + ((int*)ptr)[-1]);
 }
 

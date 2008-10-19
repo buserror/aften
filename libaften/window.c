@@ -40,7 +40,7 @@ static void
 apply_a52_window(FLOAT *samples)
 {
     int i;
-    for(i=0; i<512; i+=2) {
+    for (i = 0; i < 512; i += 2) {
         samples[i  ] *= a52_window[i  ];
         samples[i+1] *= a52_window[i+1];
     }
@@ -64,17 +64,16 @@ kbd_window_init(A52Context *ctx, FLOAT alpha, FLOAT *window, int n, int iter)
     a = alpha * AFT_PI / n2;
     a = a*a;
     sum = 0.0;
-    for(i=0; i<n2; i++) {
+    for (i = 0; i < n2; i++) {
         x = i * (n2 - i) * a;
         bessel = FCONST(1.0);
-        for(j=iter; j>0; j--) {
+        for (j = iter; j > 0; j--)
             bessel = (bessel * x / (j*j)) + FCONST(1.0);
-        }
         sum += bessel;
         window[i] = sum;
     }
     sum += FCONST(1.0);
-    for(i=0; i<n2; i++) {
+    for (i = 0; i < n2; i++) {
         window[i] = AFT_SQRT(window[i] / sum);
         window[n-1-i] = window[i];
     }

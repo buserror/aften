@@ -120,24 +120,22 @@ compute_exponent_strategy(A52ThreadContext *tctx)
     uint8_t *exp[A52_MAX_CHANNELS][A52_NUM_BLOCKS];
     int ch, blk, str;
 
-    for(ch=0; ch<ctx->n_channels; ch++) {
+    for (ch = 0; ch < ctx->n_channels; ch++) {
         str = str_predef_priority[0];
         if (ctx->params.expstr_search > 1) {
-            for(blk=0; blk<A52_NUM_BLOCKS; blk++)
+            for (blk = 0; blk < A52_NUM_BLOCKS; blk++)
                 exp[ch][blk] = blocks[blk].exp[ch];
             str = compute_expstr_ch(exp[ch], ncoefs[ch], ctx->params.expstr_search);
         }
-        for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+        for (blk = 0; blk < A52_NUM_BLOCKS; blk++)
             blocks[blk].exp_strategy[ch] = str_predef[str][blk];
-        }
         frame->expstr_set[ch] = str;
     }
 
     // lfe channel
-    if(ctx->lfe) {
-        for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+    if (ctx->lfe) {
+        for (blk = 0; blk < A52_NUM_BLOCKS; blk++)
             blocks[blk].exp_strategy[ctx->lfe_channel] = str_predef[0][blk];
-        }
     }
 }
 
@@ -158,11 +156,11 @@ group_exponents(A52ThreadContext *tctx)
     int exp0, exp1, exp2, exp3;
 
     bits = 0;
-    for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+    for (blk = 0; blk < A52_NUM_BLOCKS; blk++) {
         block = &frame->blocks[blk];
-        for(ch=0; ch<ctx->n_all_channels; ch++) {
+        for (ch = 0; ch < ctx->n_all_channels; ch++) {
             expstr = block->exp_strategy[ch];
-            if(expstr == EXP_REUSE) {
+            if (expstr == EXP_REUSE) {
                 block->nexpgrps[ch] = 0;
                 continue;
             }
@@ -174,7 +172,7 @@ group_exponents(A52ThreadContext *tctx)
             exp1 = *p++;
             block->grp_exp[ch][0] = exp1;
 
-            for(i=1; i<=block->nexpgrps[ch]; i++) {
+            for (i = 1; i <= block->nexpgrps[ch]; i++) {
                 /* merge three delta into one code */
                 exp0 = exp1;
                 exp1 = p[0];
@@ -211,23 +209,22 @@ encode_exponents(A52ThreadContext *tctx)
     int *ncoefs = frame->ncoefs;
     int ch, i, j, k;
 
-    for(ch=0; ch<ctx->n_all_channels; ch++) {
+    for (ch = 0; ch < ctx->n_all_channels; ch++) {
         // compute the exponents as the decoder will see them. The
         // EXP_REUSE case must be handled carefully : we select the
         // min of the exponents
         i = 0;
-        while(i < A52_NUM_BLOCKS) {
+        while (i < A52_NUM_BLOCKS) {
             j = i + 1;
-            while(j < A52_NUM_BLOCKS && blocks[j].exp_strategy[ch]==EXP_REUSE) {
+            while (j < A52_NUM_BLOCKS && blocks[j].exp_strategy[ch]==EXP_REUSE) {
                 exponent_min(blocks[i].exp[ch], blocks[j].exp[ch], ncoefs[ch]);
                 j++;
             }
             encode_exp_blk_ch(blocks[i].exp[ch], ncoefs[ch],
                               blocks[i].exp_strategy[ch]);
             // copy encoded exponents for reuse case
-            for(k=i+1; k<j; k++) {
+            for (k = i+1; k < j; k++)
                 memcpy(blocks[k].exp[ch], blocks[i].exp[ch], ncoefs[ch]);
-            }
             i = j;
         }
     }
@@ -245,10 +242,10 @@ extract_exponents(A52ThreadContext *tctx)
     int blk, ch, j;
     uint32_t v1, v2;
 
-    for(ch=0; ch<all_channels; ch++) {
-        for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+    for (ch = 0; ch < all_channels; ch++) {
+        for (blk = 0; blk < A52_NUM_BLOCKS; blk++) {
             block = &frame->blocks[blk];
-            for(j=0; j<256; j+=2) {
+            for (j = 0; j < 256; j += 2) {
                 v1 = (uint32_t)AFT_FABS(block->mdct_coef[ch][j  ] * FCONST(16777216.0));
                 v2 = (uint32_t)AFT_FABS(block->mdct_coef[ch][j+1] * FCONST(16777216.0));
                 block->exp[ch][j  ] = (v1 == 0)? 24 : 23 - log2i(v1);

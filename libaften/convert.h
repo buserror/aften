@@ -30,5 +30,4 @@
 
 struct A52Context;
 
-void
-set_converter(A52Context *ctx, A52SampleFormat sample_format);
+void set_converter(A52Context *ctx, A52SampleFormat sample_format);

@@ -41,26 +41,25 @@ exponent_init(A52Context *ctx)
 {
     int i, j, grpsize, ngrps, nc, blk;
 
-    for(i=1; i<4; i++) {
-        for(j=0; j<256; j++) {
+    for (i = 1; i < 4; i++) {
+        for (j = 0; j < 256; j++) {
             grpsize = i + (i == EXP_D45);
             ngrps = 0;
-            if(j == 7) {
+            if (j == 7)
                 ngrps = 2;
-            } else {
+            else
                 ngrps = (j + (grpsize * 3) - 4) / (3 * grpsize);
-            }
             nexpgrptab[i-1][j] = ngrps;
         }
     }
 
-    for(i=0; i<6; i++) {
+    for (i = 0; i < 6; i++) {
         uint16_t *expbits = expstr_set_bits[i];
-        for(nc=0; nc<=253; nc++) {
+        for (nc = 0; nc <= 253; nc++) {
             uint16_t bits = 0;
-            for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+            for (blk = 0; blk < A52_NUM_BLOCKS; blk++) {
                 uint8_t es = str_predef[i][blk];
-                if(es != EXP_REUSE)
+                if (es != EXP_REUSE)
                     bits += (4 + (nexpgrptab[es-1][nc] * 7));
             }
             expbits[nc] = bits;
@@ -82,14 +81,13 @@ exponent_init(A52Context *ctx)
     ctx->process_exponents = process_exponents;
 }
 
-/* set exp[i] to min(exp[i], exp1[i]) */
+/** Set exp[i] to min(exp[i], exp1[i]) */
 static void
 exponent_min(uint8_t *exp, uint8_t *exp1, int n)
 {
     int i;
-    for(i=0; i<n; i++) {
+    for (i = 0; i < n; i++)
         exp[i] = MIN(exp[i], exp1[i]);
-    }
 }
 
 
@@ -115,9 +113,9 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
 
         // Decrease the delta between each groups to within 2
         // so that they can be differentially encoded
-        for(i=1; i<=ngrps; i++)
+        for (i = 1; i <= ngrps; i++)
             exp[i] = MIN(exp[i], exp[i-1]+2);
-        for(i=ngrps-1; i>=0; i--)
+        for (i = ngrps-1; i >= 0; i--)
             exp[i] = MIN(exp[i], exp[i+1]+2);
 
         return;
@@ -125,12 +123,12 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
 
     // for each group, compute the minimum exponent
     if (grpsize == 2) {
-        for(i=0,k=1; i<ngrps; i++) {
+        for (i = 0, k = 1; i < ngrps; i++) {
             exp1[i] = MIN(exp[k], exp[k+1]);
             k += 2;
         }
     } else {
-        for(i=0,k=1; i<ngrps; i++) {
+        for (i = 0, k = 1; i < ngrps; i++) {
             exp_min1 = MIN(exp[k  ], exp[k+1]);
             exp_min2 = MIN(exp[k+2], exp[k+3]);
             exp1[i]  = MIN(exp_min1, exp_min2);
@@ -143,22 +141,22 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
     // Decrease the delta between each groups to within 2
     // so that they can be differentially encoded
     exp1[0] = MIN(exp1[0], exp[0]+2);
-    for(i=1; i<ngrps; i++)
+    for (i = 1; i < ngrps; i++)
         exp1[i] = MIN(exp1[i], exp1[i-1]+2);
-    for(i=ngrps-2; i>=0; i--)
+    for (i = ngrps-2; i >= 0; i--)
         exp1[i] = MIN(exp1[i], exp1[i+1]+2);
     // now we have the exponent values the decoder will see
     exp[0] = MIN(exp[0], exp1[0]+2); // DC exponent is handled separately
 
     if (grpsize == 2) {
-        for(i=0,k=1; i<ngrps; i++) {
+        for (i = 0, k = 1; i < ngrps; i++) {
             v = exp1[i];
             exp[k] = v;
             exp[k+1] = v;
             k += 2;
         }
     } else {
-        for(i=0,k=1; i<ngrps; i++) {
+        for (i = 0, k = 1; i < ngrps; i++) {
             v = exp1[i];
             exp[k] = v;
             exp[k+1] = v;
@@ -184,42 +182,39 @@ compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs, int search_size)
     uint8_t exponents[A52_NUM_BLOCKS][256];
 
     min_error = 0;
-    for(s=0; s<search_size; s++) {
+    for (s = 0; s < search_size; s++) {
         str = str_predef_priority[s];
 
         // collect exponents
-        for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+        for (blk = 0; blk < A52_NUM_BLOCKS; blk++)
             memcpy(exponents[blk], exp[blk], 256);
-        }
 
         // encode exponents
         i = 0;
-        while(i < A52_NUM_BLOCKS) {
+        while (i < A52_NUM_BLOCKS) {
             j = i + 1;
-            while(j < A52_NUM_BLOCKS && str_predef[str][j]==EXP_REUSE) {
+            while (j < A52_NUM_BLOCKS && str_predef[str][j]==EXP_REUSE) {
                 exponent_min(exponents[i], exponents[j], ncoefs);
                 j++;
             }
             encode_exp_blk_ch(exponents[i], ncoefs, str_predef[str][i]);
-            for(k=i+1; k<j; k++) {
+            for (k = i+1; k < j; k++)
                 memcpy(exponents[k], exponents[i], 256);
-            }
             i = j;
         }
 
         // select strategy based on minimum error from unencoded exponents
         exp_error[str] = 0;
-        for(blk=0; blk<A52_NUM_BLOCKS; blk++) {
+        for (blk = 0; blk < A52_NUM_BLOCKS; blk++) {
             uint8_t *exp_blk = exp[blk];
             uint8_t *exponents_blk = exponents[blk];
-            for(i=0; i<ncoefs; i++) {
+            for (i = 0; i < ncoefs; i++) {
                 err = exp_blk[i] - exponents_blk[i];
                 exp_error[str] += (err * err);
             }
         }
-        if(exp_error[str] < exp_error[min_error]) {
+        if (exp_error[str] < exp_error[min_error])
             min_error = str;
-        }
     }
     return min_error;
 }

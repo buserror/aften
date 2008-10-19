@@ -78,7 +78,7 @@ dynrng_init(void)
 #if 0
     int i, logscale;
 
-    for(i=0; i<256; i++) {
+    for (i = 0; i < 256; i++) {
         logscale = ((i >> 5) + 4) & 7;
         dynrngscaletab[i] = (1 << (logscale+5)) + ((i & 31) << logscale);
     }
@@ -128,16 +128,16 @@ calculate_gain_from_profile(FLOAT rms, int dialnorm, int profile)
 
     max_ecut = ps.early_cut_start + ((ps.cut_start - ps.early_cut_start) * ps.early_cut_ratio);
     gain = 0;
-    if(rms <= ps.boost_start) {
+    if (rms <= ps.boost_start) {
         gain = (ps.null_start - ps.boost_start) * ps.boost_ratio;
-    } else if(rms <= ps.null_start) {
+    } else if (rms <= ps.null_start) {
         gain = (ps.null_start - rms) * ps.boost_ratio;
-    } else if(rms <= ps.early_cut_start) {
+    } else if (rms <= ps.early_cut_start) {
         gain = 0;
-    } else if(rms <= ps.cut_start) {
+    } else if (rms <= ps.cut_start) {
         target = ps.early_cut_start + ((rms - ps.early_cut_start) * ps.early_cut_ratio);
         gain = target - rms;
-    } else if(rms <= ps.cut_end) {
+    } else if (rms <= ps.cut_end) {
         target = max_ecut + ((rms - ps.cut_start) * ps.cut_ratio);
         gain = target - rms;
     } else {
@@ -155,15 +155,14 @@ calculate_rms(FLOAT *samples[A52_MAX_CHANNELS], int ch, int n)
     int i;
 
     // For now, use only the left and right channels to calculate loudness
-    if(ch == 1) {
+    if (ch == 1) {
         rms_all = 0;
-        for(i=0; i<n; i++) {
+        for (i = 0; i < n; i++)
             rms_all += (samples[0][i] * samples[0][i]);
-        }
         rms_all /= n;
     } else {
         rms_left = rms_right = 0;
-        for(i=0; i<n; i++) {
+        for (i = 0; i < n; i++) {
             rms_left  += (samples[0][i] * samples[0][i]);
             rms_right += (samples[1][i] * samples[1][i]);
         }
@@ -182,15 +181,14 @@ calculate_block_dynrng(FLOAT *samples[A52_MAX_CHANNELS], int num_ch,
     int ch, i;
     FLOAT max_gain, rms, gain;
 
-    if(profile == DYNRNG_PROFILE_NONE) return 0;
+    if (profile == DYNRNG_PROFILE_NONE)
+        return 0;
 
     // Find the maximum dB gain that can be used without clipping
     max_gain = 0;
-    for(ch=0; ch<num_ch; ch++) {
-        for(i=0; i<256; i++) {
+    for (ch = 0; ch < num_ch; ch++)
+        for (i = 0; i < 256; i++)
             max_gain = MAX(AFT_FABS(samples[ch][i]), max_gain);
-        }
-    }
     max_gain = SCALE_TO_DB(FCONST(1.0) / max_gain);
 
     rms = calculate_rms(samples, num_ch, 256);

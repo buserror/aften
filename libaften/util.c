@@ -63,7 +63,7 @@ aften_wav_channels_to_acmod(int ch, unsigned int chmask, int *acmod, int *lfe)
     int tmp_lfe, tmp_acmod;
 
     // check for null output pointers
-    if(acmod == NULL || lfe == NULL) {
+    if (acmod == NULL || lfe == NULL) {
         fprintf(stderr, "One or more NULL parameters passed to aften_wav_chmask_to_acmod\n");
         return -1;
     }
@@ -71,53 +71,53 @@ aften_wav_channels_to_acmod(int ch, unsigned int chmask, int *acmod, int *lfe)
     *lfe = tmp_lfe = -1;
 
     // check for valid number of channels
-    if(ch < 1 || ch > A52_MAX_CHANNELS) {
+    if (ch < 1 || ch > A52_MAX_CHANNELS) {
         fprintf(stderr, "Unsupported # of channels passed to aften_wav_chmask_to_acmod\n");
         return -1;
     }
 
-    if(chmask & 0x80000000) {
+    if (chmask & 0x80000000) {
         // set values for plain WAVE format or unknown configuration
         tmp_lfe = (ch == 6);
-        if(tmp_lfe) ch--;
+        if (tmp_lfe)
+            ch--;
         tmp_acmod = ch_to_acmod[ch];
     } else {
         // read chmask value for LFE channel
         tmp_lfe = !!(chmask & 0x08);
-        if(tmp_lfe) {
+        if (tmp_lfe) {
             ch--;
             chmask -= 0x08;
         }
 
         // check for fbw channel layouts which are compatible with A/52
-        if(chmask == 0x04 && ch == 1) {
+        if (chmask == 0x04 && ch == 1) {
             // 1/0 mode (C)
             tmp_acmod = A52_ACMOD_MONO;
-        } else if(chmask == 0x03 && ch == 2) {
+        } else if (chmask == 0x03 && ch == 2) {
             // 2/0 mode (L,R)
             tmp_acmod = A52_ACMOD_STEREO;
-        } else if(chmask == 0x07 && ch == 3) {
+        } else if (chmask == 0x07 && ch == 3) {
             // 3/0 mode (L,C,R)
             tmp_acmod = A52_ACMOD_3_0;
-        } else if(chmask == 0x103 && ch == 3) {
+        } else if (chmask == 0x103 && ch == 3) {
             // 2/1 mode (L,R,S)
             tmp_acmod = A52_ACMOD_2_1;
-        } else if(chmask == 0x107 && ch == 4) {
+        } else if (chmask == 0x107 && ch == 4) {
             // 3/1 mode (L,C,R,S)
             tmp_acmod = A52_ACMOD_3_1;
-        } else if(chmask == 0x33 && ch == 4) {
+        } else if (chmask == 0x33 && ch == 4) {
             // 2/2 mode (L,R,SL,SR)
             tmp_acmod = A52_ACMOD_2_2;
-        } else if((chmask == 0x37 || chmask == 0x607) && ch == 5) {
+        } else if ((chmask == 0x37 || chmask == 0x607) && ch == 5) {
             // 3/2 mode (L,C,R,SL,SR)
             // supports either back-left/back-right or side-left/side-right
             tmp_acmod = A52_ACMOD_3_2;
         } else {
             // use default
             tmp_acmod = ch_to_acmod[ch];
-            if(tmp_acmod < 0) {
+            if (tmp_acmod < 0)
                 return -1;
-            }
         }
     }
 
@@ -142,28 +142,26 @@ static const int wav_chmap_7[6] = { 0, 2, 1, 4, 5, 3 };
     DATA_TYPE *smp = samples; \
     DATA_TYPE tmp[6]; \
     int sample_size = sizeof(DATA_TYPE); \
-    if(acmod < 3 || ((acmod == 4 || acmod == 6) && lfe)) { \
+    if (acmod < 3 || ((acmod == 4 || acmod == 6) && lfe)) \
         return; \
-    } \
-    if(acmod == 3 || (acmod == 5 && !lfe) || (acmod == 7 && !lfe)) { \
-        for(i=0; i<n*ch; i+=ch) { \
+    if (acmod == 3 || (acmod == 5 && !lfe) || (acmod == 7 && !lfe)) { \
+        for (i = 0; i < n*ch; i += ch) { \
             tmp[0] = smp[i+1]; \
             smp[i+1] = smp[i+2]; \
             smp[i+2] = tmp[0]; \
         } \
     } else { \
         const int *wav_chmap = NULL; \
-        switch(acmod) { \
+        switch (acmod) { \
             case 4: wav_chmap = wav_chmap_4; break; \
             case 5: wav_chmap = wav_chmap_5; break; \
             case 6: wav_chmap = wav_chmap_6; break; \
             case 7: wav_chmap = wav_chmap_7; break; \
         } \
-        for(i=0; i<n*ch; i+=ch) { \
+        for (i = 0; i < n*ch; i += ch) { \
             memcpy(tmp, &smp[i], ch*sample_size); \
-            for(j=0; j<ch; j++) { \
+            for (j = 0; j < ch; j++) \
                 smp[i+j] = tmp[wav_chmap[j]]; \
-            } \
         } \
     } \
 }
@@ -174,16 +172,16 @@ aften_remap_wav_to_a52(void *samples, int n, int ch, A52SampleFormat fmt,
 {
     int lfe;
 
-    if(samples == NULL) {
+    if (samples == NULL) {
         fprintf(stderr, "NULL parameter passed to aften_remap_wav_to_a52\n");
         return;
     }
 
     lfe = 0;
-    if(ch > a52_channels_tab[acmod])
+    if (ch > a52_channels_tab[acmod])
         lfe = 1;
 
-    switch(fmt) {
+    switch (fmt) {
         case A52_SAMPLE_FMT_U8:  REMAP_WAV_TO_A52_COMMON(uint8_t)
                                  break;
         case A52_SAMPLE_FMT_S8:  REMAP_WAV_TO_A52_COMMON(int8_t)
@@ -210,7 +208,7 @@ aften_remap_wav_to_a52(void *samples, int n, int ch, A52SampleFormat fmt,
 { \
     int i; \
     DATA_TYPE *smp = samples; \
-    for(i=0; i<n*ch; i+=ch) { \
+    for (i = 0; i < n*ch; i += ch) { \
         DATA_TYPE tmp = smp[i]; \
         smp[i] = smp[i+1]; \
         smp[i+1] = tmp; \
@@ -221,15 +219,15 @@ void
 aften_remap_mpeg_to_a52(void *samples, int n, int ch, A52SampleFormat fmt,
                         int acmod)
 {
-    if(samples == NULL) {
+    if (samples == NULL) {
         fprintf(stderr, "NULL parameter passed to aften_remap_mpeg_to_a52\n");
         return;
     }
 
-    if(acmod <= 2 || !(acmod & 1))
+    if (acmod <= 2 || !(acmod & 1))
         return;
 
-    switch(fmt) {
+    switch (fmt) {
         case A52_SAMPLE_FMT_U8:  REMAP_MPEG_TO_A52_COMMON(uint8_t)
                                  break;
         case A52_SAMPLE_FMT_S8:  REMAP_MPEG_TO_A52_COMMON(int8_t)
