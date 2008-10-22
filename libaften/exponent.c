@@ -162,7 +162,7 @@ compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs, int search_size)
     int err;
     uint8_t exponents[A52_NUM_BLOCKS][256];
 
-    min_error = 0;
+    min_error = str_predef_priority[0];
     for (s = 0; s < search_size; s++) {
         str = str_predef_priority[s];
 

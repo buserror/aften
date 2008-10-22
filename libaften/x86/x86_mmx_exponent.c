@@ -256,7 +256,7 @@ compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs, int search_size)
     int min_error, exp_error[A52_EXPSTR_SETS];
     int err;
 
-    min_error = 0;
+    min_error = str_predef_priority[0];
     for (s = 0; s < search_size; s++) {
         str = str_predef_priority[s];
 
