@@ -457,7 +457,7 @@ found:
 
     crc_init();
     a52_window_init(ctx);
-    exponent_init(ctx);
+    exponent_init(&ctx->expf);
     dynrng_init();
 
     last_quality = 240;
@@ -1374,12 +1374,12 @@ process_frame(A52ThreadContext *tctx, uint8_t *output_frame_buffer)
     // variable bandwidth
     if (ctx->params.bwcode == -2) {
         // process exponents at full bandwidth
-        ctx->process_exponents(tctx);
+        a52_process_exponents(tctx);
         // run bit allocation at q=240 to calculate bandwidth
         vbw_bit_allocation(tctx);
     }
 
-    ctx->process_exponents(tctx);
+    a52_process_exponents(tctx);
 
     if (ctx->params.encoding_mode == AFTEN_ENC_MODE_CBR)
         adjust_frame_size(tctx);

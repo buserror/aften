@@ -33,7 +33,7 @@ uint16_t expstr_set_bits[A52_EXPSTR_SETS][256] = {{0}};
 
 
 /** Set exp[i] to min(exp[i], exp1[i]) */
-static void
+void
 exponent_min(uint8_t *exp, uint8_t *exp1, int n)
 {
     int i;
@@ -47,7 +47,7 @@ exponent_min(uint8_t *exp, uint8_t *exp1, int n)
  * Constrain DC exponent, group exponents based on strategy, constrain delta
  * between adjacent exponents to +2/-2.
  */
-static void
+void
 encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
 {
     int i, k;
@@ -102,7 +102,7 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
 }
 
 
-static int
+int
 exponent_sum_square_error(uint8_t *exp0, uint8_t *exp1, int ncoefs)
 {
     int i, err;
@@ -119,8 +119,8 @@ exponent_sum_square_error(uint8_t *exp0, uint8_t *exp1, int ncoefs)
 /**
  * Runs all the processes in extracting, analyzing, and encoding exponents
  */
-static void
-process_exponents(A52ThreadContext *tctx)
+void
+a52_process_exponents(A52ThreadContext *tctx)
 {
     extract_exponents(tctx);
 
@@ -136,7 +136,7 @@ process_exponents(A52ThreadContext *tctx)
  * Initialize exponent group size table
  */
 void
-exponent_init(A52Context *ctx)
+exponent_init(A52ExponentFunctions *expf)
 {
     int i, j, grpsize, ngrps, nc, blk;
 
@@ -165,15 +165,21 @@ exponent_init(A52Context *ctx)
         }
     }
 
-    ctx->process_exponents = process_exponents;
+    expf->exponent_min = exponent_min;
+    expf->encode_exp_blk_ch = encode_exp_blk_ch;
+    expf->exponent_sum_square_error = exponent_sum_square_error;
 #ifdef HAVE_MMX
     if (cpu_caps_have_mmx()) {
-        ctx->process_exponents = mmx_process_exponents;
+        expf->exponent_min = exponent_min_mmx;
+        expf->encode_exp_blk_ch = encode_exp_blk_ch_mmx;
+        expf->exponent_sum_square_error = exponent_sum_square_error_mmx;
     }
 #endif /* HAVE_MMX */
 #ifdef HAVE_SSE2
     if (cpu_caps_have_sse2()) {
-        ctx->process_exponents = sse2_process_exponents;
+        expf->exponent_min = exponent_min_sse2;
+        expf->encode_exp_blk_ch = encode_exp_blk_ch_sse2;
+        expf->exponent_sum_square_error = exponent_sum_square_error_sse2;
     }
 #endif /* HAVE_SSE2 */
 }

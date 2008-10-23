@@ -35,16 +35,10 @@
 #include "exponent.h"
 
 /**
- * LUT for number of exponent groups present.
- * expsizetab[exponent strategy][number of coefficients]
- */
-extern int nexpgrptab[3][256];
-
-/**
  * Pre-defined sets of exponent strategies. A strategy set is selected for
  * each channel in a frame.
  */
-static const uint8_t str_predef[A52_EXPSTR_SETS][6] = {
+const uint8_t str_predef[A52_EXPSTR_SETS][6] = {
     { EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE, EXP_REUSE, EXP_REUSE },
     { EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE, EXP_REUSE,   EXP_D45 },
     { EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE,   EXP_D25, EXP_REUSE },
@@ -82,28 +76,10 @@ static const uint8_t str_predef[A52_EXPSTR_SETS][6] = {
 /**
  * Pre-defined strategy set indices, sorted most to least common.
  */
-static const uint8_t str_predef_priority[A52_EXPSTR_SETS] = {
+const uint8_t str_predef_priority[A52_EXPSTR_SETS] = {
      2,  8, 10, 17, 24,  3, 14, 13, 22, 21, 26, 11, 30, 15, 23, 31,
     29,  0, 27, 16,  1,  6, 12, 28, 20,  7,  5,  9, 18, 25, 19,  4
 };
-
-/* set exp[i] to min(exp[i], exp1[i]) */
-static void
-exponent_min(uint8_t *exp, uint8_t *exp1, int n);
-
-/**
- * Update the exponents so that they are the ones the decoder will decode.
- * Constrain DC exponent, group exponents based on strategy, constrain delta
- * between adjacent exponents to +2/-2.
- */
-static void
-encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy);
-
-/**
- * Calculate the sum of squared error between 2 sets of exponents.
- */
-static int
-exponent_sum_square_error(uint8_t *exp0, uint8_t *exp1, int ncoefs);
 
 
 /**
@@ -112,7 +88,8 @@ exponent_sum_square_error(uint8_t *exp0, uint8_t *exp1, int ncoefs);
  * and the most accurate strategy set (all blocks EXP_D15).
  */
 static int
-compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs, int search_size)
+compute_expstr_ch(A52ExponentFunctions *expf, uint8_t *exp[A52_NUM_BLOCKS],
+                  int ncoefs, int search_size)
 {
     ALIGN16(uint8_t) exponents[A52_NUM_BLOCKS][256];
     int blk, s, str, i, j, k;
@@ -131,10 +108,10 @@ compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs, int search_size)
         while (i < A52_NUM_BLOCKS) {
             j = i + 1;
             while (j < A52_NUM_BLOCKS && str_predef[str][j]==EXP_REUSE) {
-                exponent_min(exponents[i], exponents[j], ncoefs);
+                expf->exponent_min(exponents[i], exponents[j], ncoefs);
                 j++;
             }
-            encode_exp_blk_ch(exponents[i], ncoefs, str_predef[str][i]);
+            expf->encode_exp_blk_ch(exponents[i], ncoefs, str_predef[str][i]);
             for (k = i+1; k < j; k++)
                 memcpy(exponents[k], exponents[i], 256);
             i = j;
@@ -143,7 +120,7 @@ compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs, int search_size)
         // select strategy based on minimum error from unencoded exponents
         exp_error[str] = 0;
         for (blk = 0; blk < A52_NUM_BLOCKS; blk++) {
-            exp_error[str] += exponent_sum_square_error(exp[blk],
+            exp_error[str] += expf->exponent_sum_square_error(exp[blk],
                                                         exponents[blk],
                                                         ncoefs);
         }
@@ -171,7 +148,7 @@ compute_exponent_strategy(A52ThreadContext *tctx)
         if (ctx->params.expstr_search > 1) {
             for (blk = 0; blk < A52_NUM_BLOCKS; blk++)
                 exp[ch][blk] = blocks[blk].exp[ch];
-            str = compute_expstr_ch(exp[ch], ncoefs[ch], ctx->params.expstr_search);
+            str = compute_expstr_ch(&ctx->expf, exp[ch], ncoefs[ch], ctx->params.expstr_search);
         }
         for (blk = 0; blk < A52_NUM_BLOCKS; blk++)
             blocks[blk].exp_strategy[ch] = str_predef[str][blk];
@@ -263,10 +240,10 @@ encode_exponents(A52ThreadContext *tctx)
         while (i < A52_NUM_BLOCKS) {
             j = i + 1;
             while (j < A52_NUM_BLOCKS && blocks[j].exp_strategy[ch]==EXP_REUSE) {
-                exponent_min(blocks[i].exp[ch], blocks[j].exp[ch], ncoefs[ch]);
+                ctx->expf.exponent_min(blocks[i].exp[ch], blocks[j].exp[ch], ncoefs[ch]);
                 j++;
             }
-            encode_exp_blk_ch(blocks[i].exp[ch], ncoefs[ch],
+            ctx->expf.encode_exp_blk_ch(blocks[i].exp[ch], ncoefs[ch],
                               blocks[i].exp_strategy[ch]);
             // copy encoded exponents for reuse case
             for (k = i+1; k < j; k++)

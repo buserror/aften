@@ -26,15 +26,23 @@
  * A/52 sse2 optimized exponent functions
  */
 
-#include "exponent_common.c"
+#include "common.h"
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "a52enc.h"
+
+
 #include "x86_simd_support.h"
 
 #include <emmintrin.h>
 
 
 /* set exp[i] to min(exp[i], exp1[i]) */
-static void
-exponent_min(uint8_t *exp, uint8_t *exp1, int n)
+void
+exponent_min_sse2(uint8_t *exp, uint8_t *exp1, int n)
 {
     int i;
 
@@ -54,8 +62,8 @@ exponent_min(uint8_t *exp, uint8_t *exp1, int n)
  * Constrain DC exponent, group exponents based on strategy, constrain delta
  * between adjacent exponents to +2/-2.
  */
-static void
-encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
+void
+encode_exp_blk_ch_sse2(uint8_t *exp, int ncoefs, int exp_strategy)
 {
     int grpsize, ngrps, i, k, exp_min1, exp_min2;
     uint8_t v;
@@ -272,8 +280,8 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
     }
 }
 
-static int
-exponent_sum_square_error(uint8_t *exp0, uint8_t *exp1, int ncoefs)
+int
+exponent_sum_square_error_sse2(uint8_t *exp0, uint8_t *exp1, int ncoefs)
 {
     int i, err;
     int exp_error = 0;
@@ -315,20 +323,4 @@ exponent_sum_square_error(uint8_t *exp0, uint8_t *exp1, int ncoefs)
         exp_error += (err * err);
     }
     return exp_error;
-}
-
-
-/**
- * Runs all the processes in extracting, analyzing, and encoding exponents
- */
-void
-sse2_process_exponents(A52ThreadContext *tctx)
-{
-    extract_exponents(tctx);
-
-    compute_exponent_strategy(tctx);
-
-    encode_exponents(tctx);
-
-    group_exponents(tctx);
 }

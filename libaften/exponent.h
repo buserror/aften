@@ -28,20 +28,40 @@
 #ifndef EXPONENT_H
 #define EXPONENT_H
 
-struct A52Context;
+#ifdef HAVE_MMX
+#include "x86/exponent.h"
+#endif
+
 struct A52ThreadContext;
 
 #define A52_EXPSTR_SETS 32
 
+extern int nexpgrptab[3][256];
 extern uint16_t expstr_set_bits[A52_EXPSTR_SETS][256];
+extern const uint8_t str_predef[A52_EXPSTR_SETS][6];
+extern const uint8_t str_predef_priority[A52_EXPSTR_SETS];
 
-extern void exponent_init(struct A52Context *ctx);
+typedef struct A52ExponentFunctions {
 
-#ifdef HAVE_SSE2
-extern void sse2_process_exponents(struct A52ThreadContext *tctx);
-#endif /* HAVE_SSE2 */
-#ifdef HAVE_MMX
-extern void mmx_process_exponents(struct A52ThreadContext *tctx);
-#endif /* HAVE_MMX */
+    /** Set exp[i] to min(exp[i], exp1[i]) */
+    void (*exponent_min)(uint8_t *exp, uint8_t *exp1, int n);
+
+    /**
+     * Update the exponents so that they are the ones the decoder will decode.
+     * Constrain DC exponent, group exponents based on strategy, constrain delta
+     * between adjacent exponents to +2/-2.
+     */
+    void (*encode_exp_blk_ch)(uint8_t *exp, int ncoefs, int exp_strategy);
+
+    /**
+     * Calculate sum of squared error between 2 sets of exponents.
+     */
+    int (*exponent_sum_square_error)(uint8_t *exp0, uint8_t *exp1, int ncoefs);
+
+} A52ExponentFunctions;
+
+extern void exponent_init(A52ExponentFunctions *expf);
+
+extern void a52_process_exponents(struct A52ThreadContext *tctx);
 
 #endif /* EXPONENT_H */

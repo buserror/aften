@@ -26,7 +26,15 @@
  * A/52 mmx optimized exponent functions
  */
 
-#include "exponent_common.c"
+#include "common.h"
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "a52enc.h"
+
+
 #include "x86_simd_support.h"
 
 #include <mmintrin.h>
@@ -36,8 +44,8 @@
 #endif
 
 /* set exp[i] to min(exp[i], exp1[i]) */
-static void
-exponent_min(uint8_t *exp, uint8_t *exp1, int n)
+void
+exponent_min_mmx(uint8_t *exp, uint8_t *exp1, int n)
 {
     int i;
 
@@ -74,6 +82,7 @@ exponent_min(uint8_t *exp, uint8_t *exp1, int n)
     case 0:
         ;
     }
+    _mm_empty();
 }
 
 
@@ -82,8 +91,8 @@ exponent_min(uint8_t *exp, uint8_t *exp1, int n)
  * Constrain DC exponent, group exponents based on strategy, constrain delta
  * between adjacent exponents to +2/-2.
  */
-static void
-encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
+void
+encode_exp_blk_ch_mmx(uint8_t *exp, int ncoefs, int exp_strategy)
 {
     int grpsize, ngrps, i, k, exp_min1, exp_min2;
     uint8_t v;
@@ -104,7 +113,7 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
         for (i = ngrps-1; i >= 0; i--)
             exp[i] = MIN(exp[i], exp[i+1]+2);
 
-        return;
+        break;
     }
     // for each group, compute the minimum exponent
     case 2: {
@@ -178,7 +187,7 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
         case 0:
             ;
         }
-        return;
+        break;
         }
     default: {
         ALIGN16(uint32_t) exp1[256];
@@ -237,14 +246,15 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
             exp[k+2] = v;
             exp[k+3] = v;
         }
-        return;
+        break;
     }
     }
+    _mm_empty();
 }
 
 
-static int
-exponent_sum_square_error(uint8_t *exp0, uint8_t *exp1, int ncoefs)
+int
+exponent_sum_square_error_mmx(uint8_t *exp0, uint8_t *exp1, int ncoefs)
 {
     int i, err;
     int exp_error = 0;
@@ -310,22 +320,6 @@ exponent_sum_square_error(uint8_t *exp0, uint8_t *exp1, int ncoefs)
     case 0:
         ;
     }
-    return exp_error;
-}
-
-
-/**
- * Runs all the processes in extracting, analyzing, and encoding exponents
- */
-void
-mmx_process_exponents(A52ThreadContext *tctx)
-{
-    extract_exponents(tctx);
-
-    compute_exponent_strategy(tctx);
-
-    encode_exponents(tctx);
-
-    group_exponents(tctx);
     _mm_empty();
+    return exp_error;
 }
