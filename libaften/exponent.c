@@ -31,53 +31,6 @@
 
 uint16_t expstr_set_bits[A52_EXPSTR_SETS][256] = {{0}};
 
-static void process_exponents(A52ThreadContext *tctx);
-
-/**
- * Initialize exponent group size table
- */
-void
-exponent_init(A52Context *ctx)
-{
-    int i, j, grpsize, ngrps, nc, blk;
-
-    for (i = 1; i < 4; i++) {
-        for (j = 0; j < 256; j++) {
-            grpsize = i + (i == EXP_D45);
-            ngrps = 0;
-            if (j == 7)
-                ngrps = 2;
-            else
-                ngrps = (j + (grpsize * 3) - 4) / (3 * grpsize);
-            nexpgrptab[i-1][j] = ngrps;
-        }
-    }
-
-    for (i = 0; i < 6; i++) {
-        uint16_t *expbits = expstr_set_bits[i];
-        for (nc = 0; nc <= 253; nc++) {
-            uint16_t bits = 0;
-            for (blk = 0; blk < A52_NUM_BLOCKS; blk++) {
-                uint8_t es = str_predef[i][blk];
-                if (es != EXP_REUSE)
-                    bits += (4 + (nexpgrptab[es-1][nc] * 7));
-            }
-            expbits[nc] = bits;
-        }
-    }
-
-    ctx->process_exponents = process_exponents;
-#ifdef HAVE_MMX
-    if (cpu_caps_have_mmx()) {
-        ctx->process_exponents = mmx_process_exponents;
-    }
-#endif /* HAVE_MMX */
-#ifdef HAVE_SSE2
-    if (cpu_caps_have_sse2()) {
-        ctx->process_exponents = sse2_process_exponents;
-    }
-#endif /* HAVE_SSE2 */
-}
 
 /** Set exp[i] to min(exp[i], exp1[i]) */
 static void
@@ -176,4 +129,51 @@ process_exponents(A52ThreadContext *tctx)
     encode_exponents(tctx);
 
     group_exponents(tctx);
+}
+
+
+/**
+ * Initialize exponent group size table
+ */
+void
+exponent_init(A52Context *ctx)
+{
+    int i, j, grpsize, ngrps, nc, blk;
+
+    for (i = 1; i < 4; i++) {
+        for (j = 0; j < 256; j++) {
+            grpsize = i + (i == EXP_D45);
+            ngrps = 0;
+            if (j == 7)
+                ngrps = 2;
+            else
+                ngrps = (j + (grpsize * 3) - 4) / (3 * grpsize);
+            nexpgrptab[i-1][j] = ngrps;
+        }
+    }
+
+    for (i = 0; i < 6; i++) {
+        uint16_t *expbits = expstr_set_bits[i];
+        for (nc = 0; nc <= 253; nc++) {
+            uint16_t bits = 0;
+            for (blk = 0; blk < A52_NUM_BLOCKS; blk++) {
+                uint8_t es = str_predef[i][blk];
+                if (es != EXP_REUSE)
+                    bits += (4 + (nexpgrptab[es-1][nc] * 7));
+            }
+            expbits[nc] = bits;
+        }
+    }
+
+    ctx->process_exponents = process_exponents;
+#ifdef HAVE_MMX
+    if (cpu_caps_have_mmx()) {
+        ctx->process_exponents = mmx_process_exponents;
+    }
+#endif /* HAVE_MMX */
+#ifdef HAVE_SSE2
+    if (cpu_caps_have_sse2()) {
+        ctx->process_exponents = sse2_process_exponents;
+    }
+#endif /* HAVE_SSE2 */
 }
