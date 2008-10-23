@@ -100,12 +100,58 @@ static void
 encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy);
 
 /**
+ * Calculate the sum of squared error between 2 sets of exponents.
+ */
+static int
+exponent_sum_square_error(uint8_t *exp0, uint8_t *exp1, int ncoefs);
+
+
+/**
  * Determine a good exponent strategy for all blocks of a single channel.
  * A pre-defined set of strategies is chosen based on the SSE between each set
  * and the most accurate strategy set (all blocks EXP_D15).
  */
 static int
-compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs, int search_size);
+compute_expstr_ch(uint8_t *exp[A52_NUM_BLOCKS], int ncoefs, int search_size)
+{
+    ALIGN16(uint8_t) exponents[A52_NUM_BLOCKS][256];
+    int blk, s, str, i, j, k;
+    int min_error, exp_error[A52_EXPSTR_SETS];
+
+    min_error = str_predef_priority[0];
+    for (s = 0; s < search_size; s++) {
+        str = str_predef_priority[s];
+
+        // collect exponents
+        for (blk = 0; blk < A52_NUM_BLOCKS; blk++)
+            memcpy(exponents[blk], exp[blk], 256);
+
+        // encode exponents
+        i = 0;
+        while (i < A52_NUM_BLOCKS) {
+            j = i + 1;
+            while (j < A52_NUM_BLOCKS && str_predef[str][j]==EXP_REUSE) {
+                exponent_min(exponents[i], exponents[j], ncoefs);
+                j++;
+            }
+            encode_exp_blk_ch(exponents[i], ncoefs, str_predef[str][i]);
+            for (k = i+1; k < j; k++)
+                memcpy(exponents[k], exponents[i], 256);
+            i = j;
+        }
+
+        // select strategy based on minimum error from unencoded exponents
+        exp_error[str] = 0;
+        for (blk = 0; blk < A52_NUM_BLOCKS; blk++) {
+            exp_error[str] += exponent_sum_square_error(exp[blk],
+                                                        exponents[blk],
+                                                        ncoefs);
+        }
+        if (exp_error[str] < exp_error[min_error])
+            min_error = str;
+    }
+    return min_error;
+}
 
 /**
  * Runs the per-channel exponent strategy decision function for all channels
