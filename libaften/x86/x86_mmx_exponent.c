@@ -248,68 +248,68 @@ exponent_sum_square_error(uint8_t *exp0, uint8_t *exp1, int ncoefs)
 {
     int i, err;
     int exp_error = 0;
-            union {
-                __m64 v;
-                int32_t res[2];
-            } ures;
-            __m64 vzero = _mm_setzero_si64();
-            __m64 vres = vzero;
+    union {
+        __m64 v;
+        int32_t res[2];
+    } ures;
+    __m64 vzero = _mm_setzero_si64();
+    __m64 vres = vzero;
 
-            for (i = 0; i < (ncoefs & ~7); i += 8) {
-                __m64 vexp = *(__m64*)&exp0[i];
-                __m64 vexp2 = *(__m64*)&exp1[i];
+    for (i = 0; i < (ncoefs & ~7); i += 8) {
+        __m64 vexp = *(__m64*)&exp0[i];
+        __m64 vexp2 = *(__m64*)&exp1[i];
 #if 0
-                //safer but needed?
-                __m64 vexphi = _mm_unpackhi_pi8(vexp, vzero);
-                __m64 vexp2hi = _mm_unpackhi_pi8(vexp2, vzero);
-                __m64 vexplo = _mm_unpacklo_pi8(vexp, vzero);
-                __m64 vexp2lo = _mm_unpacklo_pi8(vexp2, vzero);
-                __m64 verrhi = _mm_sub_pi16(vexphi, vexp2hi);
-                __m64 verrlo = _mm_sub_pi16(vexplo, vexp2lo);
+        //safer but needed?
+        __m64 vexphi = _mm_unpackhi_pi8(vexp, vzero);
+        __m64 vexp2hi = _mm_unpackhi_pi8(vexp2, vzero);
+        __m64 vexplo = _mm_unpacklo_pi8(vexp, vzero);
+        __m64 vexp2lo = _mm_unpacklo_pi8(vexp2, vzero);
+        __m64 verrhi = _mm_sub_pi16(vexphi, vexp2hi);
+        __m64 verrlo = _mm_sub_pi16(vexplo, vexp2lo);
 #else
-                __m64 verr = _mm_sub_pi8(vexp, vexp2);
-                __m64 vsign = _mm_cmpgt_pi8(vzero, verr);
-                __m64 verrhi = _mm_unpackhi_pi8(verr, vsign);
-                __m64 verrlo = _mm_unpacklo_pi8(verr, vsign);
+        __m64 verr = _mm_sub_pi8(vexp, vexp2);
+        __m64 vsign = _mm_cmpgt_pi8(vzero, verr);
+        __m64 verrhi = _mm_unpackhi_pi8(verr, vsign);
+        __m64 verrlo = _mm_unpacklo_pi8(verr, vsign);
 #endif
-                verrhi = _mm_madd_pi16(verrhi, verrhi);
-                verrlo = _mm_madd_pi16(verrlo, verrlo);
-                verrhi = _mm_add_pi32(verrhi, verrlo);
-                vres = _mm_add_pi32(vres, verrhi);
-            }
-            ures.v = vres;
-            exp_error += ures.res[0]+ures.res[1];
-            switch (ncoefs & 7) {
-            case 7:
-                err = exp0[i] - exp1[i];
-                exp_error += (err * err);
-                ++i;
-            case 6:
-                err = exp0[i] - exp1[i];
-                exp_error += (err * err);
-                ++i;
-            case 5:
-                err = exp0[i] - exp1[i];
-                exp_error += (err * err);
-                ++i;
-            case 4:
-                err = exp0[i] - exp1[i];
-                exp_error += (err * err);
-                ++i;
-            case 3:
-                err = exp0[i] - exp1[i];
-                exp_error += (err * err);
-                ++i;
-            case 2:
-                err = exp0[i] - exp1[i];
-                exp_error += (err * err);
-                ++i;
-            case 1:
-                err = exp0[i] - exp1[i];
-                exp_error += (err * err);
-            case 0:
-                ;
-            }
+        verrhi = _mm_madd_pi16(verrhi, verrhi);
+        verrlo = _mm_madd_pi16(verrlo, verrlo);
+        verrhi = _mm_add_pi32(verrhi, verrlo);
+        vres = _mm_add_pi32(vres, verrhi);
+    }
+    ures.v = vres;
+    exp_error += ures.res[0]+ures.res[1];
+    switch (ncoefs & 7) {
+    case 7:
+        err = exp0[i] - exp1[i];
+        exp_error += (err * err);
+        ++i;
+    case 6:
+        err = exp0[i] - exp1[i];
+        exp_error += (err * err);
+        ++i;
+    case 5:
+        err = exp0[i] - exp1[i];
+        exp_error += (err * err);
+        ++i;
+    case 4:
+        err = exp0[i] - exp1[i];
+        exp_error += (err * err);
+        ++i;
+    case 3:
+        err = exp0[i] - exp1[i];
+        exp_error += (err * err);
+        ++i;
+    case 2:
+        err = exp0[i] - exp1[i];
+        exp_error += (err * err);
+        ++i;
+    case 1:
+        err = exp0[i] - exp1[i];
+        exp_error += (err * err);
+    case 0:
+        ;
+    }
     return exp_error;
 }
 

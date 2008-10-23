@@ -155,10 +155,10 @@ exponent_sum_square_error(uint8_t *exp0, uint8_t *exp1, int ncoefs)
     int i, err;
     int exp_error = 0;
 
-            for (i = 0; i < ncoefs; i++) {
-                err = exp0[i] - exp1[i];
-                exp_error += (err * err);
-            }
+    for (i = 0; i < ncoefs; i++) {
+        err = exp0[i] - exp1[i];
+        exp_error += (err * err);
+    }
     return exp_error;
 }
 
