@@ -38,7 +38,6 @@
 #include "x86_simd_support.h"
 
 
-/* set exp[i] to min(exp[i], exp1[i]) */
 void
 exponent_min_mmx(uint8_t *exp, uint8_t *exp1, int n)
 {
@@ -81,11 +80,6 @@ exponent_min_mmx(uint8_t *exp, uint8_t *exp1, int n)
 }
 
 
-/**
- * Update the exponents so that they are the ones the decoder will decode.
- * Constrain DC exponent, group exponents based on strategy, constrain delta
- * between adjacent exponents to +2/-2.
- */
 void
 encode_exp_blk_ch_mmx(uint8_t *exp, int ncoefs, int exp_strategy)
 {

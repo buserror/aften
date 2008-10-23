@@ -32,7 +32,6 @@
 uint16_t expstr_set_bits[A52_EXPSTR_SETS][256] = {{0}};
 
 
-/** Set exp[i] to min(exp[i], exp1[i]) */
 void
 exponent_min(uint8_t *exp, uint8_t *exp1, int n)
 {
@@ -42,11 +41,6 @@ exponent_min(uint8_t *exp, uint8_t *exp1, int n)
 }
 
 
-/**
- * Update the exponents so that they are the ones the decoder will decode.
- * Constrain DC exponent, group exponents based on strategy, constrain delta
- * between adjacent exponents to +2/-2.
- */
 void
 encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
 {
