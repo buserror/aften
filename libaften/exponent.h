@@ -35,13 +35,13 @@ struct A52ThreadContext;
 
 extern uint16_t expstr_set_bits[A52_EXPSTR_SETS][256];
 
-extern void exponent_init(A52Context *ctx);
+extern void exponent_init(struct A52Context *ctx);
 
 #ifdef HAVE_SSE2
-extern void sse2_process_exponents(A52ThreadContext *tctx);
+extern void sse2_process_exponents(struct A52ThreadContext *tctx);
 #endif /* HAVE_SSE2 */
 #ifdef HAVE_MMX
-extern void mmx_process_exponents(A52ThreadContext *tctx);
+extern void mmx_process_exponents(struct A52ThreadContext *tctx);
 #endif /* HAVE_MMX */
 
 #endif /* EXPONENT_H */
