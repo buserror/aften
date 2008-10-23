@@ -37,8 +37,6 @@
 
 #include "x86_simd_support.h"
 
-#include <emmintrin.h>
-
 
 /* set exp[i] to min(exp[i], exp1[i]) */
 void

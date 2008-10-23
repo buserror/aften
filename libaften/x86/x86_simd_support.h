@@ -30,6 +30,10 @@ union __m64ui {
     __m64 v;
 };
 
+#ifdef _MSC_VER
+    #pragma warning (disable: 4799)
+#endif
+
 #ifdef USE_SSE
 #include <xmmintrin.h>
 
