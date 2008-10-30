@@ -33,16 +33,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-#include "common.h"
 #include <altivec.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
 
 #include "a52enc.h"
-#include "mdct.h"
 #include "altivec_common.h"
 #include "mem.h"
 
