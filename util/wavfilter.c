@@ -24,11 +24,6 @@
 
 #include "common.h"
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
-
 #include "pcm.h"
 #include "filter.h"
 

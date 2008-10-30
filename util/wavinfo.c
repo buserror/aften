@@ -24,10 +24,6 @@
 
 #include "common.h"
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
 #ifdef _WIN32
 #include <io.h>
 #include <fcntl.h>
