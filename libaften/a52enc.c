@@ -449,7 +449,7 @@ found:
     }
 
     crc_init();
-    a52_window_init(ctx);
+    a52_window_init(&ctx->winf);
     exponent_init(&ctx->expf);
     dynrng_init();
 
@@ -1204,7 +1204,7 @@ generate_coefs(A52ThreadContext *tctx)
                 block->blksw[ch] = detect_transient(block->transient_samples[ch]);
             else
                 block->blksw[ch] = 0;
-            ctx->apply_a52_window(block->input_samples[ch]);
+            ctx->winf.apply_a52_window(block->input_samples[ch]);
             if (block->blksw[ch])
                 mdct_256(tctx, block->mdct_coef[ch], block->input_samples[ch]);
             else

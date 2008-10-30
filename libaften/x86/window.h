@@ -1,6 +1,6 @@
 /**
  * Aften: A/52 audio encoder
- * Copyright (c) 2006 Justin Ruggles
+ * Copyright (c) 2008 Justin Ruggles
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,23 +19,14 @@
 
 /**
  * @file window.h
- * A/52 Kaiser-Bessel Derived Window header
+ * A/52 Kaiser-Bessel Derived Window x86 header
  */
 
-#ifndef WINDOW_H
-#define WINDOW_H
+#ifndef X86_WINDOW_H
+#define X86_WINDOW_H
 
 #include "common.h"
 
-extern FLOAT a52_window[512];
+extern void apply_a52_window_sse(FLOAT *samples);
 
-typedef struct A52WindowFunctions {
-    /**
-     * Apply the A/52 window function to 512 input samples.
-     */
-    void (*apply_a52_window)(FLOAT *samples);
-} A52WindowFunctions;
-
-extern void a52_window_init(A52WindowFunctions *winf);
-
-#endif /* WINDOW_H */
+#endif /* X86_WINDOW_H */

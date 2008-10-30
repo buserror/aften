@@ -37,6 +37,7 @@
 #include "filter.h"
 #include "mdct.h"
 #include "threading.h"
+#include "window.h"
 #include "a52dec.h"
 
 
@@ -75,7 +76,7 @@ typedef struct A52Context {
     AftenMetadata meta;
     void (*fmt_convert_from_src)(FLOAT dest[A52_MAX_CHANNELS][A52_SAMPLES_PER_FRAME],
           const void *vsrc, int nch, int n);
-    void (*apply_a52_window)(FLOAT *samples);
+    A52WindowFunctions winf;
     A52ExponentFunctions expf;
 
     int n_threads;

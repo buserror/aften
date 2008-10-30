@@ -17,13 +17,13 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,      *
  * Boston, MA  02110-1301, USA.                                      *
  *********************************************************************/
-#include "a52enc.h"
-#include "window.h"
+
+#include "libaften/window.h"
 
 #include <xmmintrin.h>
 
 void
-sse_apply_a52_window(FLOAT *samples)
+apply_a52_window_sse(FLOAT *samples)
 {
     int i;
 

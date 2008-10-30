@@ -26,6 +26,9 @@
 #include "window.h"
 #include "cpu_caps.h"
 
+#ifdef HAVE_MMX
+#include "x86/window.h"
+#endif
 
 ALIGN16(FLOAT) a52_window[512] = {0};
 
@@ -41,14 +44,13 @@ apply_a52_window(FLOAT *samples)
 
 /**
  * Generate a Kaiser-Bessel Derived Window.
- * @param ctx           The context
  * @param alpha         Determines window shape
  * @param out_window    Array to fill with window values
  * @param n             Full window size
  * @param iter          Number of iterations to use in BesselI0
  */
 static void
-kbd_window_init(A52Context *ctx, FLOAT alpha, FLOAT *window, int n, int iter)
+kbd_window_init(FLOAT alpha, FLOAT *window, int n, int iter)
 {
     int i, j, n2;
     FLOAT a, x, bessel, sum;
@@ -70,19 +72,19 @@ kbd_window_init(A52Context *ctx, FLOAT alpha, FLOAT *window, int n, int iter)
         window[i] = AFT_SQRT(window[i] / sum);
         window[n-1-i] = window[i];
     }
-#ifndef CONFIG_DOUBLE
-#ifdef HAVE_SSE
-    if (cpu_caps_have_sse()) {
-        ctx->apply_a52_window = sse_apply_a52_window;
-        return;
-    }
-#endif /* HAVE_SSE */
-#endif /* CONFIG_DOUBLE */
-    ctx->apply_a52_window = apply_a52_window;
 }
 
 void
-a52_window_init(A52Context *ctx)
+a52_window_init(A52WindowFunctions *winf)
 {
-    kbd_window_init(ctx, 5.0, a52_window, 512, 50);
+    kbd_window_init(5.0, a52_window, 512, 50);
+
+    winf->apply_a52_window = apply_a52_window;
+#ifndef CONFIG_DOUBLE
+#ifdef HAVE_SSE
+    if (cpu_caps_have_sse()) {
+        winf->apply_a52_window = apply_a52_window_sse;
+    }
+#endif
+#endif
 }
