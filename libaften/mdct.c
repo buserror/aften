@@ -39,6 +39,7 @@
 
 #include "a52enc.h"
 #include "mdct.h"
+#include "cpu_caps.h"
 
 /**
  * Allocates and initializes lookup tables in the MDCT context.
@@ -579,6 +580,27 @@ mdct_thread_close(A52ThreadContext *tctx)
 void
 mdct_init(A52Context *ctx)
 {
+#ifndef CONFIG_DOUBLE
+#ifdef HAVE_SSE3
+    if (cpu_caps_have_sse3()) {
+        sse3_mdct_init(ctx);
+        return;
+    }
+#endif
+#ifdef HAVE_SSE
+    if (cpu_caps_have_sse()) {
+        sse_mdct_init(ctx);
+        return;
+    }
+#endif
+#ifdef HAVE_ALTIVEC
+    if (cpu_caps_have_altivec()) {
+        mdct_init_altivec(ctx);
+        return;
+    }
+#endif
+#endif /* CONFIG_DOUBLE */
+
     ctx_init(&ctx->mdct_ctx_512, 512);
     ctx_init(&ctx->mdct_ctx_256, 256);
 
@@ -592,6 +614,27 @@ mdct_init(A52Context *ctx)
 void
 mdct_thread_init(A52ThreadContext *tctx)
 {
+#ifndef CONFIG_DOUBLE
+#ifdef HAVE_SSE3
+    if (cpu_caps_have_sse3()) {
+        sse3_mdct_thread_init(tctx);
+        return;
+    }
+#endif
+#ifdef HAVE_SSE
+    if (cpu_caps_have_sse()) {
+        sse_mdct_thread_init(tctx);
+        return;
+    }
+#endif
+#ifdef HAVE_ALTIVEC
+    if (cpu_caps_have_altivec()) {
+        mdct_thread_init_altivec(tctx);
+        return;
+    }
+#endif
+#endif /* CONFIG_DOUBLE */
+
     tctx_init(&tctx->mdct_tctx_512, 512);
     tctx_init(&tctx->mdct_tctx_256, 256);
 

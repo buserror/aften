@@ -226,58 +226,6 @@ aften_set_defaults(AftenContext *s)
     s->initial_samples = NULL;
 }
 
-static void
-select_mdct(A52Context *ctx)
-{
-#ifndef CONFIG_DOUBLE
-#ifdef HAVE_SSE3
-    if (cpu_caps_have_sse3()) {
-        sse3_mdct_init(ctx);
-        return;
-    }
-#endif
-#ifdef HAVE_SSE
-    if (cpu_caps_have_sse()) {
-        sse_mdct_init(ctx);
-        return;
-    }
-#endif
-#ifdef HAVE_ALTIVEC
-    if (cpu_caps_have_altivec()) {
-        mdct_init_altivec(ctx);
-        return;
-    }
-#endif
-#endif /* CONFIG_DOUBLE */
-    mdct_init(ctx);
-}
-
-static void
-select_mdct_thread(A52ThreadContext *tctx)
-{
-#ifndef CONFIG_DOUBLE
-#ifdef HAVE_SSE3
-    if (cpu_caps_have_sse3()) {
-        sse3_mdct_thread_init(tctx);
-        return;
-    }
-#endif
-#ifdef HAVE_SSE
-    if (cpu_caps_have_sse()) {
-        sse_mdct_thread_init(tctx);
-        return;
-    }
-#endif
-#ifdef HAVE_ALTIVEC
-    if (cpu_caps_have_altivec()) {
-        mdct_thread_init_altivec(tctx);
-        return;
-    }
-#endif
-#endif /* CONFIG_DOUBLE */
-    mdct_thread_init(tctx);
-}
-
 int
 aften_encode_init(AftenContext *s)
 {
@@ -297,7 +245,7 @@ aften_encode_init(AftenContext *s)
         fprintf(stderr, "error allocating memory for A52Context\n");
         return -1;
     }
-    select_mdct(ctx);
+    mdct_init(ctx);
     s->private_context = ctx;
     ctx->params = s->params;
     ctx->meta = s->meta;
@@ -320,7 +268,7 @@ aften_encode_init(AftenContext *s)
         ctx->tctx = tctx;
         ctx->tctx->ctx = ctx;
         tctx->dctx = calloc(sizeof(A52DecodeContext), 1);
-        select_mdct_thread(ctx->tctx);
+        mdct_thread_init(ctx->tctx);
 
         a52_decode_init();
         a52_decode_init_thread(ctx->tctx);
@@ -574,7 +522,7 @@ found:
         cur_tctx->ctx = ctx;
         cur_tctx->thread_num = j;
 
-        select_mdct_thread(cur_tctx);
+        mdct_thread_init(cur_tctx);
 
         cur_tctx->bit_cnt = 0;
         cur_tctx->sample_cnt = 0;
