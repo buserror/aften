@@ -121,7 +121,7 @@ main(int argc, char **argv)
     int i;
     FilterContext f[6];
     int ftype=0;
-    int read_format;
+    enum PcmSampleFormat read_format;
 
     if (argc != 5) {
         fprintf(stderr, "\n%s\n\n", usage);

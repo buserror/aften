@@ -86,7 +86,7 @@ main(int argc, char **argv)
     int frame_size, nr, rms;
     uint64_t avg_rms, avg_cnt;
     uint64_t time_ms;
-    int read_format;
+    enum PcmSampleFormat read_format;
 
     /* open file */
     if (argc < 2 || argc > 4) {

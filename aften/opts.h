@@ -28,6 +28,7 @@
 #include <stdio.h>
 
 #include "aften.h"
+#include "pcm.h"
 
 #define A52_NUM_SPEAKERS 9
 
@@ -40,7 +41,7 @@ typedef struct {
     int pad_start;
     int read_to_eof;
     int raw_input;
-    int raw_fmt;
+    enum PcmSampleFormat raw_fmt;
     int raw_order;
     int raw_sr;
     int raw_ch;

@@ -275,16 +275,16 @@ parse_raw_fmt(PARSE_PARAMS)
         "u8", "s8", "s16_", "s20_", "s24_", "s32_", "float_",
         "double_"
     };
-    int j;
+    enum PcmSampleFormat j;
 
     // parse format
-    for (j = 0; j < 8; j++) {
+    for (j = PCM_SAMPLE_FMT_U8; j <= PCM_SAMPLE_FMT_DBL; j++) {
         if (!strncmp(param, raw_fmt_strs[j], strlen(raw_fmt_strs[j]))) {
             opts->raw_fmt = j;
             break;
         }
     }
-    if (j >= 8) {
+    if (j > PCM_SAMPLE_FMT_DBL) {
         fprintf(stderr, "invalid raw_fmt: %s\n", param);
         return 1;
     }

@@ -54,7 +54,7 @@ typedef struct PcmContext {
  * @return non-zero value if an error occurs.
  */
 extern int pcm_init(PcmContext *pc, int num_files, FILE **fp_list,
-                    int read_format, int file_format);
+                    enum PcmSampleFormat read_format, int file_format);
 
 /**
  * Frees memory from internal buffer.
@@ -64,12 +64,12 @@ extern void pcm_close(PcmContext *pc);
 /**
  * Sets the source sample format for all files
  */
-extern void pcm_set_source_format(PcmContext *pc, int fmt);
+extern void pcm_set_source_format(PcmContext *pc, enum PcmSampleFormat fmt);
 
 /**
  * Sets source audio information for all files
  */
-extern void pcm_set_source_params(PcmContext *pc, int ch, int fmt, int order, int sr);
+extern void pcm_set_source_params(PcmContext *pc, int ch, enum PcmSampleFormat fmt, int order, int sr);
 
 /**
  * Sets source audio information for all files
@@ -84,7 +84,7 @@ extern void pcm_set_read_to_eof(PcmContext *pc, int read_to_eof);
 /**
  * Sets the requested read format
  */
-extern void pcm_set_read_format(PcmContext *pc, int read_format);
+extern void pcm_set_read_format(PcmContext *pc, enum PcmSampleFormat read_format);
 
 /**
  * Prints out a description of the pcm format to the specified
