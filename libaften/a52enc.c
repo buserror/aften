@@ -1568,7 +1568,6 @@ aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, const void *samples, 
 {
     A52Context *ctx;
     A52ThreadContext *tctx;
-    A52Frame *frame;
 
     if (s == NULL || frame_buffer == NULL || (samples == NULL && count)) {
         fprintf(stderr, "One or more NULL parameters passed to aften_encode_frame\n");
@@ -1595,7 +1594,6 @@ aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, const void *samples, 
         return 0;
 
     tctx = ctx->tctx;
-    frame = &tctx->frame;
     convert_samples_from_src(tctx, samples, count);
 
     process_frame(tctx, frame_buffer);
