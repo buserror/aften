@@ -103,7 +103,8 @@ caff_probe(uint8_t *data, int size)
 static int
 caff_init(PcmFile *pf)
 {
-    int id, found_data, src_fmt, format_flags;
+    int id, found_data, format_flags;
+    enum PcmSampleFormat src_fmt;
     uint64_t chunksize;
 
     // read "caff" id
