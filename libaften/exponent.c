@@ -275,7 +275,7 @@ extract_exponents(A52ThreadContext *tctx)
     }
 }
 
-void
+static void
 exponent_min(uint8_t *exp, uint8_t *exp1, int n)
 {
     int i;
@@ -284,7 +284,7 @@ exponent_min(uint8_t *exp, uint8_t *exp1, int n)
 }
 
 
-void
+static void
 encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
 {
     int i, k;
@@ -339,7 +339,7 @@ encode_exp_blk_ch(uint8_t *exp, int ncoefs, int exp_strategy)
 }
 
 
-int
+static int
 exponent_sum_square_error(uint8_t *exp0, uint8_t *exp1, int ncoefs)
 {
     int i, err;
