@@ -1535,6 +1535,7 @@ end:
 }
 #endif
 
+#if 0
 int
 aften_transcode_frame(AftenContext *s, uint8_t *input_frame_buffer, int input_frame_buffer_size, uint8_t *output_frame_buffer, int* want_bytes)
 {
@@ -1561,7 +1562,7 @@ aften_transcode_frame(AftenContext *s, uint8_t *input_frame_buffer, int input_fr
 
     return tctx->framesize;
 }
-
+#endif
 
 int
 aften_encode_frame(AftenContext *s, uint8_t *frame_buffer, const void *samples, int count)
