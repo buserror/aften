@@ -22,16 +22,10 @@
  * raw PCM multi-file decoder
  */
 
-#include "common.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
 #include "pcm.h"
 
 int
-pcm_init(PcmContext *pc, int num_files, FILE **fp_list, int read_format,
+pcm_init(PcmContext *pc, int num_files, FILE **fp_list, enum PcmSampleFormat read_format,
          int file_format)
 {
     int i;
@@ -93,7 +87,7 @@ pcm_close(PcmContext *pc)
 }
 
 void
-pcm_set_source_format(PcmContext *pc, int fmt)
+pcm_set_source_format(PcmContext *pc, enum PcmSampleFormat fmt)
 {
     int i;
     for (i = 0; i < pc->num_files; i++)
@@ -101,7 +95,7 @@ pcm_set_source_format(PcmContext *pc, int fmt)
 }
 
 void
-pcm_set_source_params(PcmContext *pc, int ch, int fmt, int order, int sr)
+pcm_set_source_params(PcmContext *pc, int ch, enum PcmSampleFormat fmt, int order, int sr)
 {
     int i;
     if (pc->num_files > 1 && ch != 1) {
@@ -136,7 +130,7 @@ pcm_set_read_to_eof(PcmContext *pc, int read_to_eof)
 }
 
 void
-pcm_set_read_format(PcmContext *pc, int read_format)
+pcm_set_read_format(PcmContext *pc, enum PcmSampleFormat read_format)
 {
     int i;
     pc->read_format = read_format;

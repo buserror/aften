@@ -27,8 +27,6 @@
 
 #include "common.h"
 
-#include <stdio.h>
-
 #include "byteio.h"
 #include "formats.h"
 
@@ -97,8 +95,8 @@ typedef struct PcmFile {
     int block_align;        ///< bytes in each sample, for all channels
     int bit_width;          ///< bits-per-sample
 
-    int source_format;      ///< sample type in the input file
-    int read_format;        ///< sample type to convert to when reading
+    enum PcmSampleFormat source_format; ///< sample type in the input file
+    enum PcmSampleFormat read_format;   ///< sample type to convert to when reading
 
     int internal_fmt;       ///< internal format (e.g. WAVE wFormatTag)
 } PcmFile;
@@ -110,7 +108,7 @@ typedef struct PcmFile {
  * pointer aligned at start of data when it exits.
  * Returns non-zero value if an error occurs.
  */
-extern int pcmfile_init(PcmFile *pf, FILE *fp, int read_format, int file_format);
+extern int pcmfile_init(PcmFile *pf, FILE *fp, enum PcmSampleFormat read_format, int file_format);
 
 /**
  * Frees memory from internal buffer.
@@ -120,17 +118,17 @@ extern void pcmfile_close(PcmFile *pf);
 /**
  * Sets the source sample format
  */
-extern void pcmfile_set_source_format(PcmFile *pf, int fmt);
+extern void pcmfile_set_source_format(PcmFile *pf, enum PcmSampleFormat fmt);
 
 /**
  * Sets source audio information
  */
-extern void pcmfile_set_source_params(PcmFile *pf, int ch, int fmt, int order, int sr);
+extern void pcmfile_set_source_params(PcmFile *pf, int ch, enum PcmSampleFormat fmt, int order, int sr);
 
 /**
  * Sets the requested read format
  */
-extern void pcmfile_set_read_format(PcmFile *pf, int read_format);
+extern void pcmfile_set_read_format(PcmFile *pf, enum PcmSampleFormat read_format);
 
 /**
  * Prints out a description of the pcm format to the specified

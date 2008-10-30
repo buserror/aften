@@ -22,12 +22,6 @@
  * raw PCM file i/o
  */
 
-#include "common.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
 #include "pcmfile.h"
 
 #ifdef WORDS_BIGENDIAN

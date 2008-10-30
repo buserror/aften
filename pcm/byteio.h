@@ -27,8 +27,6 @@
 
 #include "common.h"
 
-#include <stdio.h>
-
 #define BYTEIO_BUFFER_SIZE 16384
 
 typedef struct ByteIOContext {

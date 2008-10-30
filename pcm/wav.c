@@ -22,12 +22,6 @@
  * WAV file format
  */
 
-#include "common.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
 #include "pcm.h"
 
 /* chunk id's */
@@ -81,7 +75,8 @@ wave_probe(uint8_t *data, int size)
 static int
 wave_init(PcmFile *pf)
 {
-    int id, found_data, found_fmt, chunksize, src_fmt;
+    int id, found_data, found_fmt, chunksize;
+    enum PcmSampleFormat src_fmt;
 
     // read RIFF id. ignore size.
     id = read4le(pf);

@@ -27,10 +27,6 @@
 
 #include "common.h"
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
 #include "pcm.h"
 
 /* IEEE 80 bits extended float */

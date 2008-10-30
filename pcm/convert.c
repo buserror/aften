@@ -22,12 +22,6 @@
  * Raw audio sample format conversion
  */
 
-#include "common.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
 #include "pcm.h"
 
 static void
@@ -696,28 +690,28 @@ fmt_convert_double_to_double(void *dest_v, void *src_v, int n)
 
 #define SET_FMT_CONVERT_FROM(srcfmt, pf) \
 { \
-    enum PcmSampleFormat fmt = pf->read_format; \
+    enum PcmSampleFormat rfmt = pf->read_format; \
 \
-    if (fmt == PCM_SAMPLE_FMT_U8) \
+    if (rfmt == PCM_SAMPLE_FMT_U8) \
         pf->fmt_convert = fmt_convert_##srcfmt##_to_u8; \
-    else if (fmt == PCM_SAMPLE_FMT_S8) \
+    else if (rfmt == PCM_SAMPLE_FMT_S8) \
         pf->fmt_convert = fmt_convert_##srcfmt##_to_s8; \
-    else if (fmt == PCM_SAMPLE_FMT_S16) \
+    else if (rfmt == PCM_SAMPLE_FMT_S16) \
         pf->fmt_convert = fmt_convert_##srcfmt##_to_s16; \
-    else if (fmt == PCM_SAMPLE_FMT_S20) \
+    else if (rfmt == PCM_SAMPLE_FMT_S20) \
         pf->fmt_convert = fmt_convert_##srcfmt##_to_s20; \
-    else if (fmt == PCM_SAMPLE_FMT_S24) \
+    else if (rfmt == PCM_SAMPLE_FMT_S24) \
         pf->fmt_convert = fmt_convert_##srcfmt##_to_s24; \
-    else if (fmt == PCM_SAMPLE_FMT_S32) \
+    else if (rfmt == PCM_SAMPLE_FMT_S32) \
         pf->fmt_convert = fmt_convert_##srcfmt##_to_s32; \
-    else if (fmt == PCM_SAMPLE_FMT_FLT) \
+    else if (rfmt == PCM_SAMPLE_FMT_FLT) \
         pf->fmt_convert = fmt_convert_##srcfmt##_to_float; \
-    else if (fmt == PCM_SAMPLE_FMT_DBL) \
+    else if (rfmt == PCM_SAMPLE_FMT_DBL) \
         pf->fmt_convert = fmt_convert_##srcfmt##_to_double; \
 }
 
 void
-pcmfile_set_source_format(PcmFile *pf, int fmt)
+pcmfile_set_source_format(PcmFile *pf, enum PcmSampleFormat fmt)
 {
     static const int fmt_bits[8] = { 8, 8, 16, 20, 24, 32, 32, 64 };
 
@@ -743,7 +737,7 @@ pcmfile_set_source_format(PcmFile *pf, int fmt)
 }
 
 void
-pcmfile_set_source_params(PcmFile *pf, int ch, int fmt, int order, int sr)
+pcmfile_set_source_params(PcmFile *pf, int ch, enum PcmSampleFormat fmt, int order, int sr)
 {
     pf->channels = MAX(ch, 1);
     pf->ch_mask = pcm_get_default_ch_mask(ch);
@@ -753,7 +747,7 @@ pcmfile_set_source_params(PcmFile *pf, int ch, int fmt, int order, int sr)
 }
 
 void
-pcmfile_set_read_format(PcmFile *pf, int read_format)
+pcmfile_set_read_format(PcmFile *pf, enum PcmSampleFormat read_format)
 {
     pf->read_format = CLIP(read_format, PCM_SAMPLE_FMT_U8, PCM_SAMPLE_FMT_DBL);
     pcmfile_set_source_format(pf, pf->source_format);

@@ -25,10 +25,6 @@
 #ifndef PCM_H
 #define PCM_H
 
-#include "common.h"
-
-#include <stdio.h>
-
 #include "pcmfile.h"
 
 typedef struct PcmContext {

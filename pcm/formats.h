@@ -30,8 +30,6 @@
 
 #include "common.h"
 
-#include <stdio.h>
-
 /* supported file formats */
 enum PcmFileFormat {
     PCM_FORMAT_UNKNOWN = -1,

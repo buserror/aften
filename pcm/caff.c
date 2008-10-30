@@ -22,12 +22,6 @@
  * Apple Core Audio File Format (CAFF)
  */
 
-#include "common.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
 #include "pcm.h"
 
 #define CAFF_ID 0x63616666

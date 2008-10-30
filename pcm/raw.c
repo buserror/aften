@@ -22,15 +22,9 @@
  * Raw file format
  */
 
-#include "common.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
 #include "pcm.h"
 
-int
+static int
 raw_probe(uint8_t *data, int size)
 {
     if (data == NULL || size < 0)
@@ -38,7 +32,7 @@ raw_probe(uint8_t *data, int size)
     return 1;
 }
 
-int
+static int
 raw_init(PcmFile *pf)
 {
     pf->data_size = 0;

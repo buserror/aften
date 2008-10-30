@@ -22,12 +22,6 @@
  * raw PCM decoder
  */
 
-#include "common.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
 #include "pcmfile.h"
 
 int
