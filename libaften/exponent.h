@@ -40,8 +40,6 @@ struct A52ThreadContext;
 
 extern int nexpgrptab[3][256];
 extern uint16_t expstr_set_bits[A52_EXPSTR_SETS][256];
-extern const uint8_t str_predef[A52_EXPSTR_SETS][6];
-extern const uint8_t str_predef_priority[A52_EXPSTR_SETS];
 
 typedef struct A52ExponentFunctions {
 

@@ -35,7 +35,7 @@ uint16_t expstr_set_bits[A52_EXPSTR_SETS][256] = {{0}};
  * Pre-defined sets of exponent strategies. A strategy set is selected for
  * each channel in a frame.
  */
-const uint8_t str_predef[A52_EXPSTR_SETS][6] = {
+static const uint8_t str_predef[A52_EXPSTR_SETS][6] = {
     { EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE, EXP_REUSE, EXP_REUSE },
     { EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE, EXP_REUSE,   EXP_D45 },
     { EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE,   EXP_D25, EXP_REUSE },
@@ -73,7 +73,7 @@ const uint8_t str_predef[A52_EXPSTR_SETS][6] = {
 /**
  * Pre-defined strategy set indices, sorted most to least common.
  */
-const uint8_t str_predef_priority[A52_EXPSTR_SETS] = {
+static const uint8_t str_predef_priority[A52_EXPSTR_SETS] = {
      2,  8, 10, 17, 24,  3, 14, 13, 22, 21, 26, 11, 30, 15, 23, 31,
     29,  0, 27, 16,  1,  6, 12, 28, 20,  7,  5,  9, 18, 25, 19,  4
 };
