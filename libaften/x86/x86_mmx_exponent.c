@@ -26,15 +26,7 @@
  * A/52 mmx optimized exponent functions
  */
 
-#include "common.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
 #include "a52enc.h"
-
-
 #include "x86_simd_support.h"
 
 

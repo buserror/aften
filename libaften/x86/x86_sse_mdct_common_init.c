@@ -39,13 +39,6 @@
  * Modified Discrete Cosine Transform
  */
 
-#include "common.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
-
 #include "a52.h"
 #include "mdct.h"
 

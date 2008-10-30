@@ -28,7 +28,7 @@
 #ifndef X86_EXPONENT_H
 #define X86_EXPONENT_H
 
-#include <stdint.h>
+#include "common.h"
 
 #ifdef HAVE_SSE2
 extern void exponent_min_sse2(uint8_t *exp, uint8_t *exp1, int n);
