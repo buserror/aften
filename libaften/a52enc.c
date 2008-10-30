@@ -306,9 +306,10 @@ aften_encode_init(AftenContext *s)
 
     switch (s->mode) {
     case AFTEN_TRANSCODE: {
-        A52ThreadContext *tctx;
         fprintf(stderr, "Sorry, trancoding support is not complete, yet.");
         return -1;
+#if 0
+        A52ThreadContext *tctx;
 
         if (!s->initial_samples) {
             fprintf(stderr, "At least one initial frame must be provided via initial_samples when transcoding.");
@@ -347,6 +348,7 @@ aften_encode_init(AftenContext *s)
         free(tctx->dctx);
         free(ctx->tctx);
         break;
+#endif
     }
     case AFTEN_ENCODE:
         set_converter(ctx, s->sample_format);
