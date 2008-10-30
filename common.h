@@ -32,6 +32,10 @@
 #include "config.h"
 #endif
 
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <assert.h>
 #include <math.h>
 
 #ifdef HAVE_INTTYPES_H

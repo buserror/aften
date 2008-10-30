@@ -25,13 +25,6 @@
  * Bitwise file writer
  */
 
-#include "common.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
-
 #include "bitio.h"
 
 void

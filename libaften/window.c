@@ -22,13 +22,6 @@
  * A/52 Kaiser-Bessel Derived Window
  */
 
-#include "common.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
-
 #include "a52enc.h"
 #include "window.h"
 #include "cpu_caps.h"

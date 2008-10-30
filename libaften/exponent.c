@@ -25,13 +25,7 @@
  * A/52 exponent functions
  */
 
-#include "common.h"
-
-#include <string.h>
-
 #include "a52enc.h"
-#include "exponent.h"
-
 #include "cpu_caps.h"
 
 uint16_t expstr_set_bits[A52_EXPSTR_SETS][256] = {{0}};

@@ -28,6 +28,8 @@
 #ifndef A52ENC_H
 #define A52ENC_H
 
+#include "common.h"
+
 #include "a52.h"
 #include "bitio.h"
 #include "aften.h"

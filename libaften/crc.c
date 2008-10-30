@@ -25,11 +25,6 @@
  * CRC-16 calculation
  */
 
-#include "common.h"
-
-#include <stdlib.h>
-#include <assert.h>
-
 #include "crc.h"
 
 #define CRC16_POLY  0x18005

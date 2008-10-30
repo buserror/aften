@@ -28,6 +28,8 @@
 #ifndef EXPONENT_H
 #define EXPONENT_H
 
+#include "common.h"
+
 #ifdef HAVE_MMX
 #include "x86/exponent.h"
 #endif

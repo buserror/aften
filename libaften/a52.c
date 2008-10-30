@@ -25,9 +25,6 @@
  * Common code between A/52 encoder and decoder.
  */
 
-#include <string.h>
-
-#include "common.h"
 #include "a52.h"
 
 static uint8_t band_start_tab[51];

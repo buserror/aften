@@ -26,19 +26,10 @@
  * A/52 encoder
  */
 
-#include "common.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
-
 #include "a52enc.h"
 #include "bitalloc.h"
 #include "crc.h"
-#include "mdct.h"
 #include "window.h"
-#include "exponent.h"
 #include "dynrng.h"
 #include "cpu_caps.h"
 #include "convert.h"

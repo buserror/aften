@@ -31,7 +31,7 @@ struct A52Context;
 
 extern FLOAT a52_window[512];
 
-extern void a52_window_init(A52Context *ctx);
+extern void a52_window_init(struct A52Context *ctx);
 
 #ifndef CONFIG_DOUBLE
 #ifdef HAVE_SSE

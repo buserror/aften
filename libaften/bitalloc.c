@@ -26,15 +26,8 @@
  * A/52 bit allocation
  */
 
-#include "common.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
 #include "a52enc.h"
 #include "bitalloc.h"
-#include "exponent.h"
 
 /**
  * A52 bit allocation preparation to speed up matching left bits.

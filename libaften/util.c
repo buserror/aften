@@ -22,13 +22,6 @@
  * libaften utility functions
  */
 
-#include "common.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
-#include "aften.h"
 #include "a52.h"
 
 static const int ch_to_acmod[7] = { -1, 1, 2, 3, 6, 7, 7 };

@@ -22,10 +22,7 @@
  * A/52 Dynamic Range Compression
  */
 
-#include "common.h"
-
-#include "aften.h"
-#include "a52.h"
+#include "a52enc.h"
 #include "dynrng.h"
 
 typedef struct {
