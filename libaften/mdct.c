@@ -40,6 +40,7 @@
 #include "a52enc.h"
 #include "mdct.h"
 #include "cpu_caps.h"
+#include "mem.h"
 
 /**
  * Allocates and initializes lookup tables in the MDCT context.
@@ -49,8 +50,8 @@
 void
 mdct_ctx_init(MDCTContext *mdct, int n)
 {
-    int *bitrev = calloc((n/4), sizeof(int));
-    FLOAT *trig = calloc((n+n/4), sizeof(FLOAT));
+    int *bitrev = aligned_malloc((n/4) * sizeof(int));
+    FLOAT *trig = aligned_malloc((n+n/4) * sizeof(FLOAT));
     int i;
     int n2 = (n >> 1);
     int log2n = mdct->log2n = log2i(n);
@@ -96,9 +97,9 @@ ctx_close(MDCTContext *mdct)
 {
     if (mdct) {
         if (mdct->trig)
-            free(mdct->trig);
+            aligned_free(mdct->trig);
         if (mdct->bitrev)
-            free(mdct->bitrev);
+            aligned_free(mdct->bitrev);
         memset(mdct, 0, sizeof(MDCTContext));
     }
 }
