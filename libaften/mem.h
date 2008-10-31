@@ -31,13 +31,6 @@
 
 #include "common.h"
 
-#ifdef HAVE_MM_MALLOC
-
-#define aligned_malloc(X) _mm_malloc(X,16)
-
-#define aligned_free(X) _mm_free(X)
-
-#else
 #ifdef HAVE_POSIX_MEMALIGN
 
 #define _XOPEN_SOURCE 600
@@ -78,7 +71,5 @@ aligned_free(void *ptr)
 }
 
 #endif /* HAVE_POSIX_MEMALIGN */
-
-#endif /* HAVE_MM_MALLOC */
 
 #endif /* MEM_H */
