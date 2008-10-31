@@ -19,6 +19,7 @@
  *********************************************************************/
 
 #include "libaften/window.h"
+#include "x86/window.h"
 
 #include <xmmintrin.h>
 
