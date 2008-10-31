@@ -54,51 +54,14 @@ static const union __m128ui PCS_RRRR = {{0x80000000, 0x80000000, 0x80000000, 0x8
 void
 sse_mdct_ctx_init(MDCTContext *mdct, int n)
 {
-    int *bitrev = aligned_malloc((n/4) * sizeof(int));
-    FLOAT *trig = aligned_malloc((n+n/4) * sizeof(FLOAT));
-    int i;
-    int n2 = (n >> 1);
-    int log2n = mdct->log2n = log2i(n);
-    mdct->n = n;
-    mdct->trig = trig;
-    mdct->bitrev = bitrev;
-
-    // trig lookups
-    for (i = 0; i < n/4; i++) {
-        trig[i*2]      =  AFT_COS((AFT_PI/n)*(4*i));
-        trig[i*2+1]    = -AFT_SIN((AFT_PI/n)*(4*i));
-        trig[n2+i*2]   =  AFT_COS((AFT_PI/(2*n))*(2*i+1));
-        trig[n2+i*2+1] =  AFT_SIN((AFT_PI/(2*n))*(2*i+1));
-    }
-    for (i = 0; i < n/8; i++) {
-        trig[n+i*2]    =  AFT_COS((AFT_PI/n)*(4*i+2))*0.5f;
-        trig[n+i*2+1]  = -AFT_SIN((AFT_PI/n)*(4*i+2))*0.5f;
-    }
-
-    // bitreverse lookup
-    {
-        int j, acc;
-        int mask = (1 << (log2n-1)) - 1;
-        int msb = (1 << (log2n-2));
-        for (i = 0; i < n/8; i++) {
-            acc = 0;
-            for (j = 0; msb>>j; j++) {
-                if ((msb>>j)&i)
-                    acc |= (1 << j);
-            }
-            bitrev[i*2]= ((~acc) & mask) - 1;
-            bitrev[i*2+1] = acc;
-        }
-    }
-
-    // MDCT scale used in AC3
-    mdct->scale = -2.0f / n;
+    mdct_ctx_init(mdct, n);
     {
         __m128  pscalem  = _mm_set_ps1(mdct->scale);
         float *T, *S;
+        int n2   = n>>1;
         int n4   = n>>2;
         int n8   = n>>3;
-        int j;
+        int i, j;
         /*
             for mdct_bitreverse
         */

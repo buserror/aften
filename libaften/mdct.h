@@ -86,6 +86,7 @@ typedef struct {
     FLOAT *buffer1;
 } MDCTThreadContext;
 
+extern void mdct_ctx_init(MDCTContext *mdct, int n);
 extern void mdct_init(struct A52Context *ctx);
 extern void mdct_thread_init(struct A52ThreadContext *tctx);
 

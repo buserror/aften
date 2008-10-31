@@ -46,8 +46,8 @@
  * @param mdct  The MDCT context
  * @param n     Number of time-domain samples used in the MDCT transform
  */
-static void
-ctx_init(MDCTContext *mdct, int n)
+void
+mdct_ctx_init(MDCTContext *mdct, int n)
 {
     int *bitrev = calloc((n/4), sizeof(int));
     FLOAT *trig = calloc((n+n/4), sizeof(FLOAT));
@@ -601,8 +601,8 @@ mdct_init(A52Context *ctx)
 #endif
 #endif /* CONFIG_DOUBLE */
 
-    ctx_init(&ctx->mdct_ctx_512, 512);
-    ctx_init(&ctx->mdct_ctx_256, 256);
+    mdct_ctx_init(&ctx->mdct_ctx_512, 512);
+    mdct_ctx_init(&ctx->mdct_ctx_256, 256);
 
     ctx->mdct_ctx_512.mdct = mdct_512;
     ctx->mdct_ctx_256.mdct = mdct_256;
