@@ -88,6 +88,7 @@ typedef struct {
 
 extern void mdct_ctx_init(MDCTContext *mdct, int n);
 extern void mdct_init(struct A52Context *ctx);
+extern void mdct_close(struct A52Context *ctx);
 extern void mdct_thread_init(struct A52ThreadContext *tctx);
 
 extern void alloc_block_buffers(struct A52ThreadContext *tctx);

@@ -93,13 +93,31 @@ mdct_ctx_init(MDCTContext *mdct, int n)
 
 /** Deallocates memory use by the lookup tables in the MDCT context. */
 static void
-ctx_close(MDCTContext *mdct)
+mdct_ctx_close(MDCTContext *mdct)
 {
     if (mdct) {
         if (mdct->trig)
             aligned_free(mdct->trig);
         if (mdct->bitrev)
             aligned_free(mdct->bitrev);
+#ifndef CONFIG_DOUBLE
+#ifdef HAVE_SSE
+        if (mdct->trig_bitreverse)
+            aligned_free(mdct->trig_bitreverse);
+        if (mdct->trig_forward)
+            aligned_free(mdct->trig_forward);
+        if (mdct->trig_butterfly_first)
+            aligned_free(mdct->trig_butterfly_first);
+        if (mdct->trig_butterfly_generic8)
+            aligned_free(mdct->trig_butterfly_generic8);
+        if (mdct->trig_butterfly_generic16)
+            aligned_free(mdct->trig_butterfly_generic16);
+        if (mdct->trig_butterfly_generic32)
+            aligned_free(mdct->trig_butterfly_generic32);
+        if (mdct->trig_butterfly_generic64)
+            aligned_free(mdct->trig_butterfly_generic64);
+#endif
+#endif
         memset(mdct, 0, sizeof(MDCTContext));
     }
 }
@@ -562,11 +580,11 @@ alloc_block_buffers(A52ThreadContext *tctx)
     }
 }
 
-static void
+void
 mdct_close(A52Context *ctx)
 {
-    ctx_close(&ctx->mdct_ctx_512);
-    ctx_close(&ctx->mdct_ctx_256);
+    mdct_ctx_close(&ctx->mdct_ctx_512);
+    mdct_ctx_close(&ctx->mdct_ctx_256);
 }
 
 static void

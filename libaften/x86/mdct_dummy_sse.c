@@ -21,13 +21,6 @@
 #include "mdct_common_sse.c"
 
 static void
-sse_mdct_close(A52Context *ctx)
-{
-    sse_mdct_ctx_close(&ctx->mdct_ctx_512);
-    sse_mdct_ctx_close(&ctx->mdct_ctx_256);
-}
-
-static void
 sse_mdct_thread_close(A52ThreadContext *tctx)
 {
     sse_mdct_tctx_close(&tctx->mdct_tctx_512);
@@ -45,8 +38,8 @@ sse_mdct_init(A52Context *ctx)
     ctx->mdct_ctx_512.mdct = mdct_512;
     ctx->mdct_ctx_256.mdct = mdct_256;
 
-    ctx->mdct_ctx_512.mdct_close = sse_mdct_close;
-    ctx->mdct_ctx_256.mdct_close = sse_mdct_close;
+    ctx->mdct_ctx_512.mdct_close = mdct_close;
+    ctx->mdct_ctx_256.mdct_close = mdct_close;
 }
 
 void
