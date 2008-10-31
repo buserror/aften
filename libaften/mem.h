@@ -33,9 +33,6 @@
 
 #ifdef HAVE_POSIX_MEMALIGN
 
-#define _XOPEN_SOURCE 600
-#include <stdlib.h>
-
 static inline void *
 aligned_malloc(size_t size)
 {
