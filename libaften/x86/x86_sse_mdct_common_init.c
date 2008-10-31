@@ -40,7 +40,6 @@
  */
 
 #include "a52.h"
-#include "mdct.h"
 
 #include "x86_simd_support.h"
 #include "x86_sse_mdct_common_init.h"

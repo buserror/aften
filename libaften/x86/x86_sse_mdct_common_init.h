@@ -20,7 +20,7 @@
 #ifndef X86_SSE_MDCT_COMMON_INIT_H
 #define X86_SSE_MDCT_COMMON_INIT_H
 
-#include "mdct.h"
+#include "libaften/mdct.h"
 
 void sse_mdct_ctx_init(MDCTContext *mdct, int n);
 void sse_mdct_ctx_close(MDCTContext *mdct);
