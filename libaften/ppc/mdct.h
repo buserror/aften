@@ -1,7 +1,8 @@
 /**
  * Aften: A/52 audio encoder
  *
- * This file is derived from libvorbis
+ * Copyright (c) 2007, David Conrad
+ * Copyright (c) 2006, Ryan C. Gordon
  * Copyright (c) 2002, Xiph.org Foundation
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,71 +34,23 @@
  */
 
 /**
- * @file mdct.h
- * MDCT header
+ * @file ppc/mdct.h
+ * MDCT PPC header
  */
 
-#ifndef MDCT_H
-#define MDCT_H
+#ifndef PPC_MDCT_H
+#define PPC_MDCT_H
 
 #include "common.h"
-
-#ifdef HAVE_ALTIVEC
-#include "ppc/mdct.h"
-#endif
-
-#define ONE FCONST(1.0)
-#define TWO FCONST(2.0)
-#define AFT_PI3_8 FCONST(0.38268343236508977175)
-#define AFT_PI2_8 FCONST(0.70710678118654752441)
-#define AFT_PI1_8 FCONST(0.92387953251128675613)
 
 struct A52Context;
 struct A52ThreadContext;
 
-typedef struct {
-    void (*mdct)(struct A52ThreadContext *ctx, FLOAT *out, FLOAT *in);
-    void (*mdct_close)(struct A52Context *ctx);
-    FLOAT *trig;
 #ifndef CONFIG_DOUBLE
-#ifdef HAVE_SSE
-    FLOAT *trig_bitreverse;
-    FLOAT *trig_forward;
-    FLOAT *trig_butterfly_first;
-    FLOAT *trig_butterfly_generic8;
-    FLOAT *trig_butterfly_generic16;
-    FLOAT *trig_butterfly_generic32;
-    FLOAT *trig_butterfly_generic64;
+#ifdef HAVE_ALTIVEC
+extern void mdct_init_altivec(struct A52Context *ctx);
+extern void mdct_thread_init_altivec(struct A52ThreadContext *tctx);
 #endif
-#endif /* CONFIG_DOUBLE */
-    int *bitrev;
-    FLOAT scale;
-    int n;
-    int log2n;
-} MDCTContext;
-
-typedef struct {
-    MDCTContext *mdct;
-    void (*mdct_thread_close)(struct A52ThreadContext *ctx);
-    FLOAT *buffer;
-    FLOAT *buffer1;
-} MDCTThreadContext;
-
-extern void mdct_init(struct A52Context *ctx);
-extern void mdct_thread_init(struct A52ThreadContext *tctx);
-
-extern void alloc_block_buffers(struct A52ThreadContext *tctx);
-
-#ifndef CONFIG_DOUBLE
-#ifdef HAVE_SSE
-extern void sse_mdct_init(struct A52Context *ctx);
-extern void sse_mdct_thread_init(struct A52ThreadContext *tctx);
 #endif
 
-#ifdef HAVE_SSE3
-extern void sse3_mdct_init(struct A52Context *ctx);
-extern void sse3_mdct_thread_init(struct A52ThreadContext *tctx);
-#endif
-#endif /* CONFIG_DOUBLE */
-
-#endif /* MDCT_H */
+#endif /* PPC_MDCT_H */
