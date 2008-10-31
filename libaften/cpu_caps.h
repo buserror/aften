@@ -21,9 +21,9 @@
 #define CPU_CAPS_H
 
 #if defined(HAVE_MMX)
-#include "x86_cpu_caps.h"
+#include "x86/cpu_caps.h"
 #elif defined(HAVE_ALTIVEC)
-#include "ppc_cpu_caps.h"
+#include "ppc/cpu_caps.h"
 #else
 static inline void cpu_caps_detect(void){}
 static inline void apply_simd_restrictions(AftenSimdInstructions *simd_instructions){}

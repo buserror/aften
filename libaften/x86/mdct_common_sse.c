@@ -40,7 +40,7 @@
  */
 
 #include "a52enc.h"
-#include "x86_simd_support.h"
+#include "x86/simd_support.h"
 
 
 static const union __m128ui PCS_NNRR = {{0x80000000, 0x80000000, 0x00000000, 0x00000000}};

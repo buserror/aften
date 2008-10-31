@@ -16,8 +16,8 @@
  * License along with this library; if not, write to the Free Software          *
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA *
  ********************************************************************************/
-#include "x86_sse_mdct_common_init.h"
-#include "x86_sse_mdct_common.c"
+#include "mdct_common_init_sse.h"
+#include "mdct_common_sse.c"
 
 static void
 sse3_mdct_close(A52Context *ctx)

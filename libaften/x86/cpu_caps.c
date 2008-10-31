@@ -18,7 +18,7 @@
  * Boston, MA  02110-1301, USA.                                      *
  *********************************************************************/
 
-#include "x86_cpu_caps.h"
+#include "x86/cpu_caps.h"
 
 /* caps1 */
 #define MMX_BIT             23

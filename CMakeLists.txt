@@ -59,19 +59,19 @@ SET(LIBAFTEN_SRCS libaften/a52enc.c
                   libaften/util.c
                   libaften/convert.c)
 
-SET(LIBAFTEN_X86_SRCS libaften/x86/x86_cpu_caps.c)
+SET(LIBAFTEN_X86_SRCS libaften/x86/cpu_caps.c)
 
-SET(LIBAFTEN_X86_MMX_SRCS libaften/x86/x86_mmx_exponent.c)
+SET(LIBAFTEN_X86_MMX_SRCS libaften/x86/exponent_mmx.c)
 
-SET(LIBAFTEN_X86_SSE_SRCS libaften/x86/x86_sse_mdct_dummy.c
-                          libaften/x86/x86_sse_mdct_common_init.c
-                          libaften/x86/x86_sse_window.c)
+SET(LIBAFTEN_X86_SSE_SRCS libaften/x86/mdct_dummy_sse.c
+                          libaften/x86/mdct_common_init_sse.c
+                          libaften/x86/window_sse.c)
 
-SET(LIBAFTEN_X86_SSE2_SRCS libaften/x86/x86_sse2_exponent.c)
+SET(LIBAFTEN_X86_SSE2_SRCS libaften/x86/exponent_sse2.c)
 
-SET(LIBAFTEN_X86_SSE3_SRCS libaften/x86/x86_sse3_mdct_dummy.c)
+SET(LIBAFTEN_X86_SSE3_SRCS libaften/x86/mdct_dummy_sse3.c)
 
-SET(LIBAFTEN_PPC_SRCS libaften/ppc/ppc_cpu_caps.c)
+SET(LIBAFTEN_PPC_SRCS libaften/ppc/cpu_caps.c)
 SET(LIBAFTEN_ALTIVEC_SRCS libaften/ppc/mdct_altivec.c)
 
 SET(AFTEN_SRCS aften/aften.c aften/opts.c)

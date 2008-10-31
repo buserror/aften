@@ -22,7 +22,7 @@
 
 #include "common.h"
 #include "aften-types.h"
-#include "cpu_caps.h"
+#include "libaften/cpu_caps.h"
 
 extern int ppc_cpu_caps_altivec;
 

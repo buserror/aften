@@ -18,7 +18,7 @@
  */
 
 #include "common.h"
-#include "cpu_caps.h"
+#include "ppc/cpu_caps.h"
 
 int ppc_cpu_caps_altivec = 0;
 
