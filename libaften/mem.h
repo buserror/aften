@@ -52,7 +52,7 @@ aligned_malloc(size_t size)
 static inline void*
 aligned_malloc(long size)
 {
-    void *mem;
+    char *mem;
     long diff;
     mem = malloc(size+32);
     if (!mem)
@@ -67,7 +67,7 @@ static inline void
 aligned_free(void *ptr)
 {
     if (ptr)
-        free(ptr + ((int*)ptr)[-1]);
+        free((char*)ptr + ((int*)ptr)[-1]);
 }
 
 #endif /* HAVE_POSIX_MEMALIGN */
