@@ -32,6 +32,10 @@
 #include "config.h"
 #endif
 
+#ifdef HAVE_POSIX_MEMALIGN
+#define _XOPEN_SOURCE 600
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
