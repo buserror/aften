@@ -36,7 +36,7 @@
 
 /**
  * @file x86/mdct_dummy_sse.c
- * MDCT dummy file, optimized for the SSE instruction set
+ * MDCT, optimized for the SSE instruction set
  */
 
 #include "a52enc.h"
