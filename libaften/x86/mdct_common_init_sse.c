@@ -52,7 +52,7 @@ static const union __m128ui PCS_RNNR = {{0x80000000, 0x00000000, 0x00000000, 0x8
 static const union __m128ui PCS_RRRR = {{0x80000000, 0x80000000, 0x80000000, 0x80000000}};
 
 void
-sse_mdct_ctx_init(MDCTContext *mdct, int n)
+mdct_ctx_init_sse(MDCTContext *mdct, int n)
 {
     mdct_ctx_init(mdct, n);
     {

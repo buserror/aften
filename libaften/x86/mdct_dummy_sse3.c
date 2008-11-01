@@ -20,10 +20,10 @@
 #include "mdct_common_sse.c"
 
 void
-sse3_mdct_init(A52Context *ctx)
+mdct_init_sse3(A52Context *ctx)
 {
-    sse_mdct_ctx_init(&ctx->mdct_ctx_512, 512);
-    sse_mdct_ctx_init(&ctx->mdct_ctx_256, 256);
+    mdct_ctx_init_sse(&ctx->mdct_ctx_512, 512);
+    mdct_ctx_init_sse(&ctx->mdct_ctx_256, 256);
 
     ctx->mdct_ctx_512.mdct = mdct_512;
     ctx->mdct_ctx_256.mdct = mdct_256;

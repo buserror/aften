@@ -22,6 +22,6 @@
 
 #include "libaften/mdct.h"
 
-void sse_mdct_ctx_init(MDCTContext *mdct, int n);
+void mdct_ctx_init_sse(MDCTContext *mdct, int n);
 
 #endif /* MDCT_COMMON_INIT_SSE_H */

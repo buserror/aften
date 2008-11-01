@@ -602,13 +602,13 @@ mdct_init(A52Context *ctx)
 #ifndef CONFIG_DOUBLE
 #ifdef HAVE_SSE3
     if (cpu_caps_have_sse3()) {
-        sse3_mdct_init(ctx);
+        mdct_init_sse3(ctx);
         return;
     }
 #endif
 #ifdef HAVE_SSE
     if (cpu_caps_have_sse()) {
-        sse_mdct_init(ctx);
+        mdct_init_sse(ctx);
         return;
     }
 #endif

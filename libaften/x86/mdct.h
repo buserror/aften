@@ -49,11 +49,11 @@ struct A52ThreadContext;
 
 #ifndef CONFIG_DOUBLE
 #ifdef HAVE_SSE
-extern void sse_mdct_init(struct A52Context *ctx);
+extern void mdct_init_sse(struct A52Context *ctx);
 #endif
 
 #ifdef HAVE_SSE3
-extern void sse3_mdct_init(struct A52Context *ctx);
+extern void mdct_init_sse3(struct A52Context *ctx);
 #endif
 #endif
 
