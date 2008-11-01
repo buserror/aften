@@ -630,27 +630,6 @@ mdct_init(A52Context *ctx)
 void
 mdct_thread_init(A52ThreadContext *tctx)
 {
-#ifndef CONFIG_DOUBLE
-#ifdef HAVE_SSE3
-    if (cpu_caps_have_sse3()) {
-        sse3_mdct_thread_init(tctx);
-        return;
-    }
-#endif
-#ifdef HAVE_SSE
-    if (cpu_caps_have_sse()) {
-        sse_mdct_thread_init(tctx);
-        return;
-    }
-#endif
-#ifdef HAVE_ALTIVEC
-    if (cpu_caps_have_altivec()) {
-        mdct_thread_init_altivec(tctx);
-        return;
-    }
-#endif
-#endif /* CONFIG_DOUBLE */
-
     mdct_tctx_init(&tctx->mdct_tctx_512, 512);
     mdct_tctx_init(&tctx->mdct_tctx_256, 256);
 

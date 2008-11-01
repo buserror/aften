@@ -29,17 +29,3 @@ sse_mdct_init(A52Context *ctx)
     ctx->mdct_ctx_512.mdct = mdct_512;
     ctx->mdct_ctx_256.mdct = mdct_256;
 }
-
-void
-sse_mdct_thread_init(A52ThreadContext *tctx)
-{
-    mdct_tctx_init(&tctx->mdct_tctx_512, 512);
-    mdct_tctx_init(&tctx->mdct_tctx_256, 256);
-
-    tctx->mdct_tctx_512.mdct = &tctx->ctx->mdct_ctx_512;
-    tctx->mdct_tctx_256.mdct = &tctx->ctx->mdct_ctx_256;
-
-    tctx->frame.blocks[0].input_samples[0] =
-        aligned_malloc(A52_NUM_BLOCKS * A52_MAX_CHANNELS * (256 + 512) * sizeof(FLOAT));
-    alloc_block_buffers(tctx);
-}

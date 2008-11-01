@@ -49,7 +49,6 @@ struct A52ThreadContext;
 #ifndef CONFIG_DOUBLE
 #ifdef HAVE_ALTIVEC
 extern void mdct_init_altivec(struct A52Context *ctx);
-extern void mdct_thread_init_altivec(struct A52ThreadContext *tctx);
 #endif
 #endif
 
