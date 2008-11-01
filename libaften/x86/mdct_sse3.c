@@ -35,13 +35,13 @@
  */
 
 /**
- * @file x86/mdct_dummy_sse.c
+ * @file x86/mdct_sse.c
  * MDCT file, optimized for the SSE3 instruction set
  */
 
 #include "a52enc.h"
 #include "x86/simd_support.h"
-#include "mdct_common_init_sse.h"
+#include "mdct_common_sse.h"
 
 
 static const union __m128ui PCS_RNRN = {{0x00000000, 0x80000000, 0x00000000, 0x80000000}};

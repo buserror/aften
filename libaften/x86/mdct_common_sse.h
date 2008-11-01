@@ -35,12 +35,12 @@
  */
 
 /**
- * @file x86/mdct_common_init_sse.h
- * MDCT initialization header
+ * @file x86/mdct_common_sse.h
+ * MDCT SSE common header
  */
 
-#ifndef MDCT_COMMON_INIT_SSE_H
-#define MDCT_COMMON_INIT_SSE_H
+#ifndef MDCT_COMMON_SSE_H
+#define MDCT_COMMON_SSE_H
 
 #include "libaften/mdct.h"
 
@@ -52,4 +52,4 @@ void mdct_256_sse(struct A52ThreadContext *tctx, FLOAT *out, FLOAT *in);
 
 void mdct_ctx_init_sse(MDCTContext *mdct, int n);
 
-#endif /* MDCT_COMMON_INIT_SSE_H */
+#endif /* MDCT_COMMON_SSE_H */
