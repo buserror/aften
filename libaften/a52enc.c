@@ -1607,7 +1607,7 @@ aften_encode_close(AftenContext *s)
             free(ctx->tctx);
         }
         // mdct_close deinits both mdcts
-        ctx->mdct_ctx_512.mdct_close(ctx);
+        mdct_close(ctx);
 
         // close input filters
         filter_close(&ctx->lfe_filter);

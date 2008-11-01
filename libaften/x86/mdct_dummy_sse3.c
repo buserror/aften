@@ -27,9 +27,6 @@ sse3_mdct_init(A52Context *ctx)
 
     ctx->mdct_ctx_512.mdct = mdct_512;
     ctx->mdct_ctx_256.mdct = mdct_256;
-
-    ctx->mdct_ctx_512.mdct_close = mdct_close;
-    ctx->mdct_ctx_256.mdct_close = mdct_close;
 }
 
 void

@@ -60,7 +60,6 @@ struct A52ThreadContext;
 
 typedef struct {
     void (*mdct)(struct A52ThreadContext *ctx, FLOAT *out, FLOAT *in);
-    void (*mdct_close)(struct A52Context *ctx);
     FLOAT *trig;
 #ifndef CONFIG_DOUBLE
 #ifdef HAVE_SSE
