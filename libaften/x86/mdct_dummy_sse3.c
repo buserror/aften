@@ -44,8 +44,8 @@ sse3_mdct_init(A52Context *ctx)
 void
 sse3_mdct_thread_init(A52ThreadContext *tctx)
 {
-    sse_mdct_tctx_init(&tctx->mdct_tctx_512, 512);
-    sse_mdct_tctx_init(&tctx->mdct_tctx_256, 256);
+    mdct_tctx_init(&tctx->mdct_tctx_512, 512);
+    mdct_tctx_init(&tctx->mdct_tctx_256, 256);
 
     tctx->mdct_tctx_512.mdct_thread_close = sse3_mdct_thread_close;
     tctx->mdct_tctx_256.mdct_thread_close = sse3_mdct_thread_close;

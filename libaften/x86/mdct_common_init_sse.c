@@ -302,14 +302,6 @@ sse_mdct_ctx_init(MDCTContext *mdct, int n)
 }
 
 void
-sse_mdct_tctx_init(MDCTThreadContext *tmdct, int n)
-{
-    // internal mdct buffers
-    tmdct->buffer  = aligned_malloc((n+2) * sizeof(FLOAT));/* +2 to prevent illegal read in bitreverse*/
-    tmdct->buffer1 = aligned_malloc( n    * sizeof(FLOAT));
-}
-
-void
 sse_mdct_tctx_close(MDCTThreadContext *tmdct)
 {
     if (tmdct) {

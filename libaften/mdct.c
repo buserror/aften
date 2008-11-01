@@ -123,12 +123,12 @@ mdct_ctx_close(MDCTContext *mdct)
 }
 
 /** Allocates internal buffers for MDCT calculation. */
-static void
-tctx_init(MDCTThreadContext *tmdct, int n)
+void
+mdct_tctx_init(MDCTThreadContext *tmdct, int n)
 {
-     // internal mdct buffers
-    tmdct->buffer  = calloc(n, sizeof(FLOAT));
-    tmdct->buffer1 = calloc(n, sizeof(FLOAT));
+    // internal mdct buffers
+    tmdct->buffer  = aligned_malloc((n+2) * sizeof(FLOAT));/* +2 to prevent illegal read in bitreverse*/
+    tmdct->buffer1 = aligned_malloc( n    * sizeof(FLOAT));
 }
 
 /** Deallocates internal buffers for MDCT calculation. */
@@ -654,8 +654,8 @@ mdct_thread_init(A52ThreadContext *tctx)
 #endif
 #endif /* CONFIG_DOUBLE */
 
-    tctx_init(&tctx->mdct_tctx_512, 512);
-    tctx_init(&tctx->mdct_tctx_256, 256);
+    mdct_tctx_init(&tctx->mdct_tctx_512, 512);
+    mdct_tctx_init(&tctx->mdct_tctx_256, 256);
 
     tctx->mdct_tctx_512.mdct_thread_close = mdct_thread_close;
     tctx->mdct_tctx_256.mdct_thread_close = mdct_thread_close;
