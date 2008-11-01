@@ -692,48 +692,18 @@ mdct_256_altivec(A52ThreadContext *tctx, FLOAT *out, FLOAT *in)
 void
 mdct_init_altivec(A52Context *ctx)
 {
-    mdct_init(ctx);
+    mdct_ctx_init(&ctx->mdct_ctx_512, 512);
+    mdct_ctx_init(&ctx->mdct_ctx_256, 256);
 
     ctx->mdct_ctx_512.mdct = mdct_512_altivec;
     ctx->mdct_ctx_256.mdct = mdct_256_altivec;
 }
 
-static void
-mdct_tctx_init_altivec(MDCTThreadContext *tmdct, int n)
-{
-    // internal mdct buffers
-    tmdct->buffer = aligned_malloc(n * sizeof(FLOAT));
-    tmdct->buffer1 = aligned_malloc(n * sizeof(FLOAT));
-}
-
-static void
-mdct_tctx_close_altivec(MDCTThreadContext *tmdct)
-{
-    if (tmdct) {
-        if (tmdct->buffer)
-            aligned_free(tmdct->buffer);
-        if (tmdct->buffer1)
-            aligned_free(tmdct->buffer1);
-    }
-}
-
-static void
-mdct_thread_close_altivec(A52ThreadContext *tctx)
-{
-    mdct_tctx_close_altivec(&tctx->mdct_tctx_512);
-    mdct_tctx_close_altivec(&tctx->mdct_tctx_256);
-
-    aligned_free(tctx->frame.blocks[0].input_samples[0]);
-}
-
 void
 mdct_thread_init_altivec(A52ThreadContext *tctx)
 {
-    mdct_tctx_init_altivec(&tctx->mdct_tctx_512, 512);
-    mdct_tctx_init_altivec(&tctx->mdct_tctx_256, 256);
-
-    tctx->mdct_tctx_512.mdct_thread_close = mdct_thread_close_altivec;
-    tctx->mdct_tctx_256.mdct_thread_close = mdct_thread_close_altivec;
+    mdct_tctx_init(&tctx->mdct_tctx_512, 512);
+    mdct_tctx_init(&tctx->mdct_tctx_256, 256);
 
     tctx->mdct_tctx_512.mdct = &tctx->ctx->mdct_ctx_512;
     tctx->mdct_tctx_256.mdct = &tctx->ctx->mdct_ctx_256;
