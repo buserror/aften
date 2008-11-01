@@ -19,15 +19,6 @@
 #include "mdct_common_init_sse.h"
 #include "mdct_common_sse.c"
 
-static void
-sse3_mdct_thread_close(A52ThreadContext *tctx)
-{
-    sse_mdct_tctx_close(&tctx->mdct_tctx_512);
-    sse_mdct_tctx_close(&tctx->mdct_tctx_256);
-
-    aligned_free(tctx->frame.blocks[0].input_samples[0]);
-}
-
 void
 sse3_mdct_init(A52Context *ctx)
 {
@@ -47,8 +38,8 @@ sse3_mdct_thread_init(A52ThreadContext *tctx)
     mdct_tctx_init(&tctx->mdct_tctx_512, 512);
     mdct_tctx_init(&tctx->mdct_tctx_256, 256);
 
-    tctx->mdct_tctx_512.mdct_thread_close = sse3_mdct_thread_close;
-    tctx->mdct_tctx_256.mdct_thread_close = sse3_mdct_thread_close;
+    tctx->mdct_tctx_512.mdct_thread_close = mdct_thread_close;
+    tctx->mdct_tctx_256.mdct_thread_close = mdct_thread_close;
 
     tctx->mdct_tctx_512.mdct = &tctx->ctx->mdct_ctx_512;
     tctx->mdct_tctx_256.mdct = &tctx->ctx->mdct_ctx_256;

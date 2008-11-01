@@ -137,9 +137,9 @@ tctx_close(MDCTThreadContext *tmdct)
 {
     if (tmdct) {
         if(tmdct->buffer)
-            free(tmdct->buffer);
+            aligned_free(tmdct->buffer);
         if(tmdct->buffer1)
-            free(tmdct->buffer1);
+            aligned_free(tmdct->buffer1);
     }
 }
 
@@ -587,13 +587,13 @@ mdct_close(A52Context *ctx)
     mdct_ctx_close(&ctx->mdct_ctx_256);
 }
 
-static void
+void
 mdct_thread_close(A52ThreadContext *tctx)
 {
     tctx_close(&tctx->mdct_tctx_512);
     tctx_close(&tctx->mdct_tctx_256);
 
-    free(tctx->frame.blocks[0].input_samples[0]);
+    aligned_free(tctx->frame.blocks[0].input_samples[0]);
 }
 
 void
@@ -664,6 +664,6 @@ mdct_thread_init(A52ThreadContext *tctx)
     tctx->mdct_tctx_256.mdct = &tctx->ctx->mdct_ctx_256;
 
     tctx->frame.blocks[0].input_samples[0] =
-        malloc(A52_NUM_BLOCKS * A52_MAX_CHANNELS * (256 + 512) * sizeof(FLOAT));
+        aligned_malloc(A52_NUM_BLOCKS * A52_MAX_CHANNELS * (256 + 512) * sizeof(FLOAT));
     alloc_block_buffers(tctx);
 }

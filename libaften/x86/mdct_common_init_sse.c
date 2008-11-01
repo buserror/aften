@@ -300,14 +300,3 @@ sse_mdct_ctx_init(MDCTContext *mdct, int n)
         }
     }
 }
-
-void
-sse_mdct_tctx_close(MDCTThreadContext *tmdct)
-{
-    if (tmdct) {
-        if (tmdct->buffer)
-            aligned_free(tmdct->buffer);
-        if (tmdct->buffer1)
-            aligned_free(tmdct->buffer1);
-    }
-}
