@@ -89,8 +89,5 @@ extern void mdct_init(struct A52Context *ctx);
 extern void mdct_close(struct A52Context *ctx);
 extern void mdct_thread_init(struct A52ThreadContext *tctx);
 extern void mdct_thread_close(struct A52ThreadContext *tctx);
-extern void mdct_tctx_init(MDCTThreadContext *tmdct, int n);
-
-extern void alloc_block_buffers(struct A52ThreadContext *tctx);
 
 #endif /* MDCT_H */

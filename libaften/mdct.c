@@ -123,7 +123,7 @@ mdct_ctx_close(MDCTContext *mdct)
 }
 
 /** Allocates internal buffers for MDCT calculation. */
-void
+static void
 mdct_tctx_init(MDCTThreadContext *tmdct, int n)
 {
     // internal mdct buffers
@@ -555,7 +555,7 @@ mdct_256(A52ThreadContext *tctx, FLOAT *out, FLOAT *in)
 }
 #endif
 
-void
+static void
 alloc_block_buffers(A52ThreadContext *tctx)
 {
     A52Frame *frame = &tctx->frame;
