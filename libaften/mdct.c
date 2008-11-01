@@ -657,9 +657,6 @@ mdct_thread_init(A52ThreadContext *tctx)
     mdct_tctx_init(&tctx->mdct_tctx_512, 512);
     mdct_tctx_init(&tctx->mdct_tctx_256, 256);
 
-    tctx->mdct_tctx_512.mdct_thread_close = mdct_thread_close;
-    tctx->mdct_tctx_256.mdct_thread_close = mdct_thread_close;
-
     tctx->mdct_tctx_512.mdct = &tctx->ctx->mdct_ctx_512;
     tctx->mdct_tctx_256.mdct = &tctx->ctx->mdct_ctx_256;
 

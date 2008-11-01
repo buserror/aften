@@ -81,7 +81,6 @@ typedef struct {
 
 typedef struct {
     MDCTContext *mdct;
-    void (*mdct_thread_close)(struct A52ThreadContext *ctx);
     FLOAT *buffer;
     FLOAT *buffer1;
 } MDCTThreadContext;

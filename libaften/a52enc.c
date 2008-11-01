@@ -275,7 +275,7 @@ aften_encode_init(AftenContext *s)
         memcpy(tctx->dctx->input_frame_buffer, s->initial_samples, A52_MAX_CODED_FRAME_SIZE);
         tctx->dctx->input_frame_buffer_size = A52_MAX_CODED_FRAME_SIZE;
         a52_decode_frame(ctx->tctx);
-        ctx->tctx->mdct_tctx_512.mdct_thread_close(ctx->tctx);
+        mdct_thread_close(ctx->tctx);
 
         ctx->acmod = tctx->dctx->channel_mode;
         ctx->lfe = tctx->dctx->lfe_on;
@@ -1575,13 +1575,13 @@ aften_encode_close(AftenContext *s)
 #endif
         if (ctx->tctx) {
             if (ctx->n_threads == 1)
-                ctx->tctx[0].mdct_tctx_512.mdct_thread_close(&ctx->tctx[0]);
+                mdct_thread_close(&ctx->tctx[0]);
             else {
                 int i;
                 for (i = 0; i < ctx->n_threads; i++) {
                     A52ThreadContext *cur_tctx = ctx->tctx + i;
                     thread_join(cur_tctx->ts.thread);
-                    cur_tctx->mdct_tctx_512.mdct_thread_close(cur_tctx);
+                    mdct_thread_close(cur_tctx);
                     posix_cond_destroy(&cur_tctx->ts.enter_cond);
                     posix_cond_destroy(&cur_tctx->ts.confirm_cond);
                     posix_cond_destroy(&cur_tctx->ts.samples_cond);
