@@ -36,7 +36,7 @@
 
 /**
  * @file x86/mdct.h
- * MDCT x86 header
+ * x86 MDCT header
  */
 
 #ifndef X86_MDCT_H

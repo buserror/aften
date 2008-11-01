@@ -35,8 +35,8 @@
  */
 
 /**
- * @file mdct.c
- * Modified Discrete Cosine Transform
+ * @file x86/mdct_common_init_sse.c
+ * MDCT initialization, optimized for the SSE instruction set
  */
 
 #include "a52.h"

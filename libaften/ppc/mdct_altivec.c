@@ -33,6 +33,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file ppc/mdct_altivec.c
+ * MDCT, optimized for the AltiVec instruction set
+ */
+
 #include <altivec.h>
 
 #include "a52enc.h"
@@ -48,8 +53,9 @@ static const vec_u32_t vNNNN = VEC_U32
     (0x80000000, 0x80000000, 0x80000000, 0x80000000);
 
 
-static inline
-void mdct_butterfly_8_altivec(FLOAT *x){
+static inline void
+mdct_butterfly_8_altivec(FLOAT *x)
+{
     vector float x0to3, x4to7, vPlus, vMinus, v1, v2, v3, v4;
     vec_u8_t perm0101 = VPERMUTE4(0, 1, 0, 1);
     vec_u32_t vNNPP = vec_sld(vPNNP, vPNNP, 4);
@@ -346,12 +352,12 @@ mdct_butterflies_altivec(MDCTContext *mdct, FLOAT *x, int points)
     int stages = mdct->log2n-5;
     int i, j;
 
-    if (--stages > 0){
+    if (--stages > 0) {
         mdct_butterfly_first_altivec(trig,x,points);
         //mdct_butterfly_generic_altivec(trig,x,points,4);
     }
 
-    for (i = 1; --stages > 0; i++){
+    for (i = 1; --stages > 0; i++) {
         for (j = 0; j < (1<<i); j++)
             mdct_butterfly_generic_altivec(trig, x+(points>>i)*j, points>>i, 4<<i);
     }

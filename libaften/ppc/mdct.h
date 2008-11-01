@@ -35,7 +35,7 @@
 
 /**
  * @file ppc/mdct.h
- * MDCT PPC header
+ * PPC MDCT header
  */
 
 #ifndef PPC_MDCT_H

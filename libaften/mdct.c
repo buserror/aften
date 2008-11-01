@@ -126,8 +126,7 @@ mdct_ctx_close(MDCTContext *mdct)
 static void
 mdct_tctx_init(MDCTThreadContext *tmdct, int n)
 {
-    // internal mdct buffers
-    tmdct->buffer  = aligned_malloc((n+2) * sizeof(FLOAT));/* +2 to prevent illegal read in bitreverse*/
+    tmdct->buffer  = aligned_malloc((n+2) * sizeof(FLOAT)); /* +2 to prevent illegal read in bitreverse */
     tmdct->buffer1 = aligned_malloc( n    * sizeof(FLOAT));
 }
 
@@ -499,6 +498,7 @@ mdct_512(A52ThreadContext *tctx, FLOAT *out, FLOAT *in)
 }
 
 #if 0
+/** brute-force 256-point MDCT for reference purposes */
 static void
 mdct_256(A52Context *ctx, FLOAT *out, FLOAT *in)
 {
