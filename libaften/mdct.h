@@ -58,8 +58,12 @@
 struct A52Context;
 struct A52ThreadContext;
 
-typedef struct {
+typedef struct MDCTContext {
     void (*mdct)(struct A52ThreadContext *ctx, FLOAT *out, FLOAT *in);
+    void (*mdct_bitreverse)(struct MDCTContext *mdct, FLOAT *x);
+    void (*mdct_butterfly_generic)(struct MDCTContext *mdct, FLOAT *x, int points, int trigint);
+    void (*mdct_butterfly_first)(FLOAT *trig, FLOAT *x, int points);
+    void (*mdct_butterfly_32)(FLOAT *x);
     FLOAT *trig;
 #ifndef CONFIG_DOUBLE
 #ifdef HAVE_SSE

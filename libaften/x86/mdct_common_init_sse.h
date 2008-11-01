@@ -44,6 +44,12 @@
 
 #include "libaften/mdct.h"
 
+void mdct_butterfly_16_sse(FLOAT *x);
+
+void mdct_512_sse(struct A52ThreadContext *tctx, FLOAT *out, FLOAT *in);
+
+void mdct_256_sse(struct A52ThreadContext *tctx, FLOAT *out, FLOAT *in);
+
 void mdct_ctx_init_sse(MDCTContext *mdct, int n);
 
 #endif /* MDCT_COMMON_INIT_SSE_H */

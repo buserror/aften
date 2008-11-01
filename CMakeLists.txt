@@ -64,7 +64,7 @@ SET(LIBAFTEN_X86_SRCS libaften/x86/cpu_caps.c)
 SET(LIBAFTEN_X86_MMX_SRCS libaften/x86/exponent_mmx.c)
 
 SET(LIBAFTEN_X86_SSE_SRCS libaften/x86/mdct_dummy_sse.c
-                          libaften/x86/mdct_common_init_sse.c
+                          libaften/x86/mdct_common_sse.c
                           libaften/x86/window_sse.c)
 
 SET(LIBAFTEN_X86_SSE2_SRCS libaften/x86/exponent_sse2.c)
