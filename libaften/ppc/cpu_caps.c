@@ -79,7 +79,7 @@ void cpu_caps_detect(void)
 
         //Attempt to use AltiVec
         if(!sigsetjmp(g_env, 0)) {
-            asm volatile ( "vor v0, v0, v0" );
+            asm volatile ( "vor 0, 0, 0" );
         }
 
         //Restore the old signal handler
