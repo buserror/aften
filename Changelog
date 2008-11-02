@@ -34,6 +34,9 @@ version SVN : current
 - Multiple-file commandline input with channel designation
 - AIFF file support
 - CAFF file support
+- changed API to create a new exponent strategy decision with better quality
+  and more flexibility
+- rearranged code structure of SIMD optimizations
 
 version 0.08 :
 - fixed piped input from FFmpeg
