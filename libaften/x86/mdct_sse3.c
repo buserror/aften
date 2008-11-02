@@ -1,6 +1,7 @@
 /**
  * Aften: A/52 audio encoder
  *
+ * SSE3 MDCT functions
  * This file is derived from libvorbis lancer patch
  * Copyright (c) 2006-2007 prakash@punnoor.de
  * Copyright (c) 2006, blacksword8192@hotmail.com
