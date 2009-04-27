@@ -26,6 +26,7 @@
  */
 
 #include "a52tab.h"
+#include "a52.h"
 
 /**
  * Possible frame sizes in bits
@@ -240,3 +241,43 @@ const uint8_t a52_critical_band_size_tab[50]={
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3, 3, 3, 3,
     3, 6, 6, 6, 6, 6, 6, 12, 12, 12, 12, 24, 24, 24, 24, 24
 };
+
+/**
+ * Pre-defined sets of exponent strategies. A strategy set is selected for
+ * each channel in a frame.
+ */
+const uint8_t a52_expstr_set_tab[32][6] = {
+    { EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE, EXP_REUSE, EXP_REUSE },
+    { EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE, EXP_REUSE,   EXP_D45 },
+    { EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE,   EXP_D25, EXP_REUSE },
+    { EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE,   EXP_D45,   EXP_D45 },
+    { EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D25, EXP_REUSE, EXP_REUSE },
+    { EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D25, EXP_REUSE,   EXP_D45 },
+    { EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D45,   EXP_D25, EXP_REUSE },
+    { EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D45,   EXP_D45,   EXP_D45 },
+    { EXP_D25, EXP_REUSE,   EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE },
+    { EXP_D25, EXP_REUSE,   EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D45 },
+    { EXP_D25, EXP_REUSE,   EXP_D25, EXP_REUSE,   EXP_D25, EXP_REUSE },
+    { EXP_D25, EXP_REUSE,   EXP_D25, EXP_REUSE,   EXP_D45,   EXP_D45 },
+    { EXP_D25, EXP_REUSE,   EXP_D45,   EXP_D25, EXP_REUSE, EXP_REUSE },
+    { EXP_D25, EXP_REUSE,   EXP_D45,   EXP_D25, EXP_REUSE,   EXP_D45 },
+    { EXP_D25, EXP_REUSE,   EXP_D45,   EXP_D45,   EXP_D25, EXP_REUSE },
+    { EXP_D25, EXP_REUSE,   EXP_D45,   EXP_D45,   EXP_D45,   EXP_D45 },
+    { EXP_D45,   EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE, EXP_REUSE },
+    { EXP_D45,   EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE,   EXP_D45 },
+    { EXP_D45,   EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D25, EXP_REUSE },
+    { EXP_D45,   EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D45,   EXP_D45 },
+    { EXP_D45,   EXP_D25, EXP_REUSE,   EXP_D25, EXP_REUSE, EXP_REUSE },
+    { EXP_D45,   EXP_D25, EXP_REUSE,   EXP_D25, EXP_REUSE,   EXP_D45 },
+    { EXP_D45,   EXP_D25, EXP_REUSE,   EXP_D45,   EXP_D25, EXP_REUSE },
+    { EXP_D45,   EXP_D25, EXP_REUSE,   EXP_D45,   EXP_D45,   EXP_D45 },
+    { EXP_D45,   EXP_D45,   EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE },
+    { EXP_D45,   EXP_D45,   EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D45 },
+    { EXP_D45,   EXP_D45,   EXP_D25, EXP_REUSE,   EXP_D25, EXP_REUSE },
+    { EXP_D45,   EXP_D45,   EXP_D25, EXP_REUSE,   EXP_D45,   EXP_D45 },
+    { EXP_D45,   EXP_D45,   EXP_D45,   EXP_D25, EXP_REUSE, EXP_REUSE },
+    { EXP_D45,   EXP_D45,   EXP_D45,   EXP_D25, EXP_REUSE,   EXP_D45 },
+    { EXP_D45,   EXP_D45,   EXP_D45,   EXP_D45,   EXP_D25, EXP_REUSE },
+    { EXP_D45,   EXP_D45,   EXP_D45,   EXP_D45,   EXP_D45,   EXP_D45 }
+};
+

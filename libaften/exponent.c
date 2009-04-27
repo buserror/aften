@@ -32,45 +32,6 @@ uint16_t expstr_set_bits[A52_EXPSTR_SETS][256] = {{0}};
 
 
 /**
- * Pre-defined sets of exponent strategies. A strategy set is selected for
- * each channel in a frame.
- */
-static const uint8_t expstr_set_tab[A52_EXPSTR_SETS][6] = {
-    { EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE, EXP_REUSE, EXP_REUSE },
-    { EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE, EXP_REUSE,   EXP_D45 },
-    { EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE,   EXP_D25, EXP_REUSE },
-    { EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE,   EXP_D45,   EXP_D45 },
-    { EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D25, EXP_REUSE, EXP_REUSE },
-    { EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D25, EXP_REUSE,   EXP_D45 },
-    { EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D45,   EXP_D25, EXP_REUSE },
-    { EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D45,   EXP_D45,   EXP_D45 },
-    { EXP_D25, EXP_REUSE,   EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE },
-    { EXP_D25, EXP_REUSE,   EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D45 },
-    { EXP_D25, EXP_REUSE,   EXP_D25, EXP_REUSE,   EXP_D25, EXP_REUSE },
-    { EXP_D25, EXP_REUSE,   EXP_D25, EXP_REUSE,   EXP_D45,   EXP_D45 },
-    { EXP_D25, EXP_REUSE,   EXP_D45,   EXP_D25, EXP_REUSE, EXP_REUSE },
-    { EXP_D25, EXP_REUSE,   EXP_D45,   EXP_D25, EXP_REUSE,   EXP_D45 },
-    { EXP_D25, EXP_REUSE,   EXP_D45,   EXP_D45,   EXP_D25, EXP_REUSE },
-    { EXP_D25, EXP_REUSE,   EXP_D45,   EXP_D45,   EXP_D45,   EXP_D45 },
-    { EXP_D45,   EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE, EXP_REUSE },
-    { EXP_D45,   EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE,   EXP_D45 },
-    { EXP_D45,   EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D25, EXP_REUSE },
-    { EXP_D45,   EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D45,   EXP_D45 },
-    { EXP_D45,   EXP_D25, EXP_REUSE,   EXP_D25, EXP_REUSE, EXP_REUSE },
-    { EXP_D45,   EXP_D25, EXP_REUSE,   EXP_D25, EXP_REUSE,   EXP_D45 },
-    { EXP_D45,   EXP_D25, EXP_REUSE,   EXP_D45,   EXP_D25, EXP_REUSE },
-    { EXP_D45,   EXP_D25, EXP_REUSE,   EXP_D45,   EXP_D45,   EXP_D45 },
-    { EXP_D45,   EXP_D45,   EXP_D15, EXP_REUSE, EXP_REUSE, EXP_REUSE },
-    { EXP_D45,   EXP_D45,   EXP_D25, EXP_REUSE, EXP_REUSE,   EXP_D45 },
-    { EXP_D45,   EXP_D45,   EXP_D25, EXP_REUSE,   EXP_D25, EXP_REUSE },
-    { EXP_D45,   EXP_D45,   EXP_D25, EXP_REUSE,   EXP_D45,   EXP_D45 },
-    { EXP_D45,   EXP_D45,   EXP_D45,   EXP_D25, EXP_REUSE, EXP_REUSE },
-    { EXP_D45,   EXP_D45,   EXP_D45,   EXP_D25, EXP_REUSE,   EXP_D45 },
-    { EXP_D45,   EXP_D45,   EXP_D45,   EXP_D45,   EXP_D25, EXP_REUSE },
-    { EXP_D45,   EXP_D45,   EXP_D45,   EXP_D45,   EXP_D45,   EXP_D45 }
-};
-
-/**
  * Pre-defined strategy set indices, sorted most to least common.
  */
 static const uint8_t expstr_set_priority_tab[A52_EXPSTR_SETS] = {
@@ -104,11 +65,11 @@ compute_expstr_ch(A52ExponentFunctions *expf, uint8_t *exp[A52_NUM_BLOCKS],
         i = 0;
         while (i < A52_NUM_BLOCKS) {
             j = i + 1;
-            while (j < A52_NUM_BLOCKS && expstr_set_tab[str][j]==EXP_REUSE) {
+            while (j < A52_NUM_BLOCKS && a52_expstr_set_tab[str][j]==EXP_REUSE) {
                 expf->exponent_min(exponents[i], exponents[j], ncoefs);
                 j++;
             }
-            expf->encode_exp_blk_ch(exponents[i], ncoefs, expstr_set_tab[str][i]);
+            expf->encode_exp_blk_ch(exponents[i], ncoefs, a52_expstr_set_tab[str][i]);
             for (k = i+1; k < j; k++)
                 memcpy(exponents[k], exponents[i], 256);
             i = j;
@@ -148,14 +109,14 @@ compute_exponent_strategy(A52ThreadContext *tctx)
             str = compute_expstr_ch(&ctx->expf, exp[ch], ncoefs[ch], ctx->params.expstr_search);
         }
         for (blk = 0; blk < A52_NUM_BLOCKS; blk++)
-            blocks[blk].exp_strategy[ch] = expstr_set_tab[str][blk];
+            blocks[blk].exp_strategy[ch] = a52_expstr_set_tab[str][blk];
         frame->expstr_set[ch] = str;
     }
 
     // lfe channel
     if (ctx->lfe) {
         for (blk = 0; blk < A52_NUM_BLOCKS; blk++)
-            blocks[blk].exp_strategy[ctx->lfe_channel] = expstr_set_tab[0][blk];
+            blocks[blk].exp_strategy[ctx->lfe_channel] = a52_expstr_set_tab[0][blk];
     }
 }
 
@@ -394,7 +355,7 @@ exponent_init(A52ExponentFunctions *expf)
         for (nc = 0; nc <= 253; nc++) {
             uint16_t bits = 0;
             for (blk = 0; blk < A52_NUM_BLOCKS; blk++) {
-                uint8_t es = expstr_set_tab[i][blk];
+                uint8_t es = a52_expstr_set_tab[i][blk];
                 if (es != EXP_REUSE)
                     bits += (4 + (nexpgrptab[es-1][nc] * 7));
             }

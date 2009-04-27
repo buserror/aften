@@ -39,5 +39,6 @@ extern const uint16_t a52_db_per_bit_tab[4];
 extern const int16_t  a52_floor_tab[8];
 extern const uint16_t a52_fast_gain_tab[8];
 extern const uint8_t  a52_critical_band_size_tab[50];
+extern const uint8_t  a52_expstr_set_tab[32][6];
 
 #endif /* A52TAB_H */
