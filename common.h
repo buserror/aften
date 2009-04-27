@@ -162,12 +162,11 @@ typedef float FLOAT;
 #include "bswap.h"
 
 #if 0 /* TIMER USED FOR TESTING */
-static inline long long read_time(void)
+static inline uint64_t read_time(void)
 {
-    long long l;
-    __asm__ __volatile__("rdtsc\n\t"
-                 : "=A" (l));
-    return l;
+    uint32_t a, d;
+    __asm__ volatile("rdtsc" : "=a" (a), "=d" (d));
+    return ((uint64_t)d << 32) + a;
 }
 
 #define START_TIMER \
