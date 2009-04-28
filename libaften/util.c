@@ -49,6 +49,15 @@ const uint8_t log2tab[256] = {
 };
 
 
+static int
+chmask_get_num_channels(unsigned int chmask)
+{
+    int count;
+    for (count = 0; chmask; count++)
+        chmask &= chmask-1; // unset lowest set bit
+    return count;
+}
+
 /**
  * Determines the proper A/52 acmod and lfe parameters based on the
  * number of channels and the WAVE_FORMAT_EXTENSIBLE channel mask.  If the
@@ -63,66 +72,49 @@ aften_wav_channels_to_acmod(int ch, unsigned int chmask, int *acmod, int *lfe)
 {
     int tmp_lfe, tmp_acmod;
 
-    // check for null output pointers
-    if (acmod == NULL || lfe == NULL) {
-        fprintf(stderr, "One or more NULL parameters passed to aften_wav_chmask_to_acmod\n");
-        return -1;
-    }
-    *acmod = tmp_acmod = -1;
-    *lfe = tmp_lfe = -1;
-
     // check for valid number of channels
     if (ch < 1 || ch > A52_MAX_CHANNELS) {
         fprintf(stderr, "Unsupported # of channels passed to aften_wav_chmask_to_acmod\n");
         return -1;
     }
 
-    if (chmask & 0x80000000) {
+    chmask &= 0x7FFFFFFF;
+    if (!chmask) {
         // set values for plain WAVE format or unknown configuration
         tmp_lfe = (ch == 6);
         if (tmp_lfe)
             ch--;
-        tmp_acmod = ch_to_acmod[ch];
+        tmp_acmod = ch_to_acmod[ch-1];
     } else {
-        // read chmask value for LFE channel
-        tmp_lfe = !!(chmask & 0x08);
-        if (tmp_lfe) {
-            ch--;
-            chmask -= 0x08;
+        // check number of channel bits set in chmask and compare to ch
+        if (chmask_get_num_channels(chmask) != ch) {
+            fprintf(stderr, "channel mask and number of channels do not match\n");
+            return -1;
         }
 
+        // read chmask value for LFE channel
+        tmp_lfe = !!(chmask & 0x08);
+        if (tmp_lfe)
+            chmask -= 0x08;
+
         // check for fbw channel layouts which are compatible with A/52
-        if (chmask == 0x04 && ch == 1) {
-            // 1/0 mode (C)
-            tmp_acmod = A52_ACMOD_MONO;
-        } else if (chmask == 0x03 && ch == 2) {
-            // 2/0 mode (L,R)
-            tmp_acmod = A52_ACMOD_STEREO;
-        } else if (chmask == 0x07 && ch == 3) {
-            // 3/0 mode (L,C,R)
-            tmp_acmod = A52_ACMOD_3_0;
-        } else if (chmask == 0x103 && ch == 3) {
-            // 2/1 mode (L,R,S)
-            tmp_acmod = A52_ACMOD_2_1;
-        } else if (chmask == 0x107 && ch == 4) {
-            // 3/1 mode (L,C,R,S)
-            tmp_acmod = A52_ACMOD_3_1;
-        } else if (chmask == 0x33 && ch == 4) {
-            // 2/2 mode (L,R,SL,SR)
-            tmp_acmod = A52_ACMOD_2_2;
-        } else if ((chmask == 0x37 || chmask == 0x607) && ch == 5) {
-            // 3/2 mode (L,C,R,SL,SR)
-            // supports either back-left/back-right or side-left/side-right
-            tmp_acmod = A52_ACMOD_3_2;
-        } else {
-            // use default
-            tmp_acmod = ch_to_acmod[ch];
-            if (tmp_acmod < 0)
-                return -1;
+        switch (chmask) {
+        case 0x004: tmp_acmod = A52_ACMOD_MONO;     break;
+        case 0x003: tmp_acmod = A52_ACMOD_STEREO;   break;
+        case 0x007: tmp_acmod = A52_ACMOD_3_0;      break;
+        case 0x103: tmp_acmod = A52_ACMOD_2_1;      break;
+        case 0x107: tmp_acmod = A52_ACMOD_3_1;      break;
+        case 0x033:
+        case 0x603: tmp_acmod = A52_ACMOD_2_2;      break;
+        case 0x037:
+        case 0x607: tmp_acmod = A52_ACMOD_3_2;      break;
+        default:    tmp_acmod = ch_to_acmod[ch-1];  break;
         }
     }
 
+    if (acmod)
     *acmod = tmp_acmod;
+    if (lfe)
     *lfe = tmp_lfe;
     return 0;
 }
