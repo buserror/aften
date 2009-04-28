@@ -63,9 +63,8 @@ chmask_get_num_channels(unsigned int chmask)
  * number of channels and the WAVE_FORMAT_EXTENSIBLE channel mask.  If the
  * chmask value has the high bit set to 1 (e.g. 0xFFFFFFFF), then the default
  * plain WAVE channel selection is assumed.
- * On error, the acmod and lfe output params are set to -1 and the function
- * returns -1.  On success, the acmod and lfe params are set to appropriate
- * values and the function returns 0.
+ * On error, the function returns -1.  On success, the acmod and lfe params are
+ * set to appropriate values and the function returns 0.
  */
 int
 aften_wav_channels_to_acmod(int ch, unsigned int chmask, int *acmod, int *lfe)
