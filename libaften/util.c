@@ -124,10 +124,20 @@ aften_wav_channels_to_acmod(int ch, unsigned int chmask, int *acmod, int *lfe)
  * note: thanks to Tebasuna for help in getting this order right.
  */
 
-static const int wav_chmap_4[4] = { 0, 1, 3, 2 };
-static const int wav_chmap_5[5] = { 0, 2, 1, 4, 3 };
-static const int wav_chmap_6[5] = { 0, 1, 3, 4, 2 };
-static const int wav_chmap_7[6] = { 0, 2, 1, 4, 5, 3 };
+/**
+ * Table to remap channels from WAV order to A/52 order.
+ * [acmod][lfe][ch]
+ */
+static const uint8_t wav_chmap[8][2][6] = {
+    { { 0, 1,          }, { 0, 1, 2,         } },
+    { { 0,             }, { 0, 1,            } },
+    { { 0, 1,          }, { 0, 1, 2,         } },
+    { { 0, 2, 1,       }, { 0, 2, 1, 3,      } },
+    { { 0, 1, 2,       }, { 0, 1, 3, 2,      } },
+    { { 0, 2, 1, 3,    }, { 0, 2, 1, 4, 3,   } },
+    { { 0, 1, 2, 3, 4, }, { 0, 1, 3, 4, 2,   } },
+    { { 0, 2, 1, 3, 4, }, { 0, 2, 1, 4, 5, 3 } },
+};
 
 #define REMAP_WAV_TO_A52_COMMON(DATA_TYPE) \
 { \
@@ -135,28 +145,11 @@ static const int wav_chmap_7[6] = { 0, 2, 1, 4, 5, 3 };
     DATA_TYPE *smp = samples; \
     DATA_TYPE tmp[6]; \
     int sample_size = sizeof(DATA_TYPE); \
-    if (acmod < 3 || ((acmod == 4 || acmod == 6) && lfe)) \
-        return; \
-    if (acmod == 3 || (acmod == 5 && !lfe) || (acmod == 7 && !lfe)) { \
-        for (i = 0; i < n*ch; i += ch) { \
-            tmp[0] = smp[i+1]; \
-            smp[i+1] = smp[i+2]; \
-            smp[i+2] = tmp[0]; \
-        } \
-    } else { \
-        const int *wav_chmap = NULL; \
-        switch (acmod) { \
-            case 4: wav_chmap = wav_chmap_4; break; \
-            case 5: wav_chmap = wav_chmap_5; break; \
-            case 6: wav_chmap = wav_chmap_6; break; \
-            case 7: wav_chmap = wav_chmap_7; break; \
-        } \
         for (i = 0; i < n*ch; i += ch) { \
             memcpy(tmp, &smp[i], ch*sample_size); \
             for (j = 0; j < ch; j++) \
-                smp[i+j] = tmp[wav_chmap[j]]; \
+                smp[i+j] = tmp[wav_chmap[acmod][lfe][j]]; \
         } \
-    } \
 }
 
 void
@@ -173,6 +166,8 @@ aften_remap_wav_to_a52(void *samples, int n, int ch, A52SampleFormat fmt,
     lfe = 0;
     if (ch > a52_channels_tab[acmod])
         lfe = 1;
+    if (acmod < 3 || ((acmod == 4 || acmod == 6) && !lfe))
+        return;
 
     switch (fmt) {
         case A52_SAMPLE_FMT_U8:  REMAP_WAV_TO_A52_COMMON(uint8_t)
