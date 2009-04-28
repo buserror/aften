@@ -113,9 +113,9 @@ aften_wav_channels_to_acmod(int ch, unsigned int chmask, int *acmod, int *lfe)
     }
 
     if (acmod)
-    *acmod = tmp_acmod;
+        *acmod = tmp_acmod;
     if (lfe)
-    *lfe = tmp_lfe;
+        *lfe = tmp_lfe;
     return 0;
 }
 
