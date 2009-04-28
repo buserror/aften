@@ -25,7 +25,14 @@
 #include "aften.h"
 #include "a52.h"
 
-static const int ch_to_acmod[7] = { -1, 1, 2, 3, 6, 7, 7 };
+static const int8_t ch_to_acmod[6] = {
+    A52_ACMOD_MONO,
+    A52_ACMOD_STEREO,
+    A52_ACMOD_3_0,
+    A52_ACMOD_2_2,
+    A52_ACMOD_3_2,
+    A52_ACMOD_3_2
+};
 
 const uint8_t log2tab[256] = {
     0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4,
