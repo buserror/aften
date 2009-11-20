@@ -37,8 +37,8 @@ uint16_t expstr_set_bits[A52_EXPSTR_SETS][256] = {{0}};
  * frequency domain accuracy with different search sizes.
  */
 static const uint8_t expstr_set_search_order_tab[A52_EXPSTR_SETS] = {
-     2,  8, 10, 17, 24,  3, 14, 13, 22, 21, 26, 11, 30, 15, 23, 31,
-    29,  0, 27, 16,  1,  6, 12, 28, 20,  7,  5,  9, 18, 25, 19,  4
+     0, 31, 10,  2,  8, 17, 24, 22,  3, 21, 26, 13, 14, 23, 29, 11,
+    30, 27, 15, 16,  1,  9, 12,  4,  5,  6,  7, 18, 19, 20, 25, 28
 };
 
 
