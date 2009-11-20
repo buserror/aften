@@ -179,7 +179,6 @@ typedef struct {
     /**
      * Bandwidth low-pass filter option.
      * Set to 0 to disable the, 1 to enable it.
-     * This option cannot be enabled with variable bandwidth mode (bwcode=-2)
      * default is 0
      */
     int use_bw_filter;

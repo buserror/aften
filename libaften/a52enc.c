@@ -471,11 +471,9 @@ found:
         // butterworth 2nd order cascaded direct form II low-pass
         if (ctx->params.use_bw_filter) {
             int cutoff;
-            if (ctx->params.bwcode == -2) {
-                fprintf(stderr, "cannot use bandwidth filter with variable bandwidth\n");
-                return -1;
-            }
-            cutoff = (((ctx->fixed_bwcode * 3) + 73) * ctx->sample_rate) / 512;
+            int bwcode = ctx->params.bwcode == -2 ? ctx->params.max_bwcode :
+                                                    ctx->fixed_bwcode;
+            cutoff = (((bwcode * 3) + 73) * ctx->sample_rate) / 512;
             if (cutoff < 4000) {
                 // disable bandwidth filter if cutoff is below 4000 Hz
                 ctx->params.use_bw_filter = 0;

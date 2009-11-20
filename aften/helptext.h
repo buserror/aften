@@ -507,7 +507,9 @@ static const char *filter_options[FILTER_OPTIONS_COUNT] = {
 "                       The bandwidth low-pass filter pre-filters the input\n"
 "                       audio before converting to frequency-domain.  This\n"
 "                       smooths the cutoff frequency transition for slightly\n"
-"                       better quality.\n"
+"                       better quality.  When used with variable bandwidth\n"
+"                       mode, the maximum bandwidth setting used as the cutoff\n"
+"                       frequency.\n"
 "                       0 = do not apply filter (default)\n"
 "                       1 = apply filter\n",
 
