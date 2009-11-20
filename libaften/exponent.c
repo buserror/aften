@@ -32,9 +32,11 @@ uint16_t expstr_set_bits[A52_EXPSTR_SETS][256] = {{0}};
 
 
 /**
- * Pre-defined strategy set indices, sorted most to least common.
+ * Search order for the pre-defined strategy sets.
+ * The sets are arranged to give a good distribution of time domain vs.
+ * frequency domain accuracy with different search sizes.
  */
-static const uint8_t expstr_set_priority_tab[A52_EXPSTR_SETS] = {
+static const uint8_t expstr_set_search_order_tab[A52_EXPSTR_SETS] = {
      2,  8, 10, 17, 24,  3, 14, 13, 22, 21, 26, 11, 30, 15, 23, 31,
     29,  0, 27, 16,  1,  6, 12, 28, 20,  7,  5,  9, 18, 25, 19,  4
 };
@@ -53,9 +55,9 @@ compute_expstr_ch(A52ExponentFunctions *expf, uint8_t *exp[A52_NUM_BLOCKS],
     int blk, s, str, i, j, k;
     int min_error, exp_error[A52_EXPSTR_SETS];
 
-    min_error = expstr_set_priority_tab[0];
+    min_error = expstr_set_search_order_tab[0];
     for (s = 0; s < search_size; s++) {
-        str = expstr_set_priority_tab[s];
+        str = expstr_set_search_order_tab[s];
 
         // collect exponents
         for (blk = 0; blk < A52_NUM_BLOCKS; blk++)
@@ -102,7 +104,7 @@ compute_exponent_strategy(A52ThreadContext *tctx)
     int ch, blk, str;
 
     for (ch = 0; ch < ctx->n_channels; ch++) {
-        str = expstr_set_priority_tab[0];
+        str = expstr_set_search_order_tab[0];
         if (ctx->params.expstr_search > 1) {
             for (blk = 0; blk < A52_NUM_BLOCKS; blk++)
                 exp[ch][blk] = blocks[blk].exp[ch];
