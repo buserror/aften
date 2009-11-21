@@ -158,7 +158,7 @@ parse_nosimd(PARSE_PARAMS)
             wanted_simd_instructions->sse = 0;
         else if (!strncmp(&simd[i], "sse2", 5))
             wanted_simd_instructions->sse2 = 0;
-        else if (!strncmp(&simd[i], "sse3", 6))
+        else if (!strncmp(&simd[i], "sse3", 5))
             wanted_simd_instructions->sse3 = 0;
         else if (!strncmp(&simd[i], "altivec", 8))
             wanted_simd_instructions->altivec = 0;
