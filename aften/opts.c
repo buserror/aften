@@ -152,15 +152,15 @@ parse_nosimd(PARSE_PARAMS)
         }
         simd[j] = 0;
 
-        if (!strcmp(&simd[i], "mmx"))
+        if (!strncmp(&simd[i], "mmx", 4))
             wanted_simd_instructions->mmx = 0;
-        else if (!strcmp(&simd[i], "sse"))
+        else if (!strncmp(&simd[i], "sse", 4))
             wanted_simd_instructions->sse = 0;
-        else if (!strcmp(&simd[i], "sse2"))
+        else if (!strncmp(&simd[i], "sse2", 5))
             wanted_simd_instructions->sse2 = 0;
-        else if (!strcmp(&simd[i], "sse3"))
+        else if (!strncmp(&simd[i], "sse3", 6))
             wanted_simd_instructions->sse3 = 0;
-        else if (!strcmp(&simd[i], "altivec"))
+        else if (!strncmp(&simd[i], "altivec", 8))
             wanted_simd_instructions->altivec = 0;
         else {
             fprintf(stderr, "invalid simd instruction set: %s. must be mmx, sse, sse2, sse3 or altivec.\n", &simd[i]);
