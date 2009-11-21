@@ -74,16 +74,45 @@ parse_integer_value(int val, int min, int max, char *name, int *out)
 }
 
 static int
+parse_bool_or_int(const char *param, int *val)
+{
+    if (!strncmp(param, "no", 3) || !strncmp(param, "off", 4)) {
+        *val = 0;
+        return 0;
+    } else if (!strncmp(param, "yes", 4) || !strncmp(param, "on", 3)) {
+        *val = 1;
+        return 0;
+    } else {
+        char *endp;
+        int v = strtol(param, &endp, 0);
+        if (*endp)
+            return -1;
+        *val = v;
+        return 0;
+    }
+}
+
+static int
 parse_simple_int_s(PARSE_PARAMS)
 {
-    return parse_integer_value(atoi(param), item->min, item->max, arg,
+    int v=0;
+    if (parse_bool_or_int(param, &v)) {
+        fprintf(stderr, "invalid integer or boolean value: %s\n", param);
+        return 1;
+    }
+    return parse_integer_value(v, item->min, item->max, arg,
                                (int *)(((uint8_t *)opts->s) + item->offset));
 }
 
 static int
 parse_simple_int_o(PARSE_PARAMS)
 {
-    return parse_integer_value(atoi(param), item->min, item->max, arg,
+    int v=0;
+    if (parse_bool_or_int(param, &v)) {
+        fprintf(stderr, "invalid integer or boolean value: %s\n", param);
+        return 1;
+    }
+    return parse_integer_value(v, item->min, item->max, arg,
                                (int *)(((uint8_t *)opts) + item->offset));
 }
 
