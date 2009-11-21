@@ -1,7 +1,7 @@
 Aften TODO list
 ---------------
 - Channel coupling (this will be a large undertaking)
-- E/AC-3 bitstream format and encoding (need a good decoder & samples first)
+- E-AC-3 bitstream format and encoding
 - ABR encoding mode
 - 2-pass encoding
 - Frame parser / analyzer
