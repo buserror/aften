@@ -118,7 +118,7 @@ compute_exponent_strategy(A52ThreadContext *tctx)
     // lfe channel
     if (ctx->lfe) {
         for (blk = 0; blk < A52_NUM_BLOCKS; blk++)
-            blocks[blk].exp_strategy[ctx->lfe_channel] = a52_expstr_set_tab[0][blk];
+            blocks[blk].exp_strategy[ctx->lfe_channel] = !blk ? EXP_D15 : EXP_REUSE;
     }
 }
 
