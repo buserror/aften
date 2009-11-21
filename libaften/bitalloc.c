@@ -183,39 +183,46 @@ count_frame_bits(A52ThreadContext *tctx)
     // audio blocks
     for (blk = 0; blk < A52_NUM_BLOCKS; blk++) {
         block = &frame->blocks[blk];
-        frame_bits += ctx->n_channels * 2; // nch * (blksw[1] + dithflg[1])
-        frame_bits++; // dynrnge
-        if (ctx->acmod == 0)
-            frame_bits++; // dynrng2e
+        frame_bits += ctx->n_channels; // blksw
+        frame_bits += ctx->n_channels; // dithflg
+        frame_bits += 1 + (ctx->acmod == A52_ACMOD_DUAL_MONO); // dynrnge, dynrng2e
         if (ctx->params.dynrng_profile != DYNRNG_PROFILE_NONE) {
             frame_bits += 8; // dynrng
-            if (ctx->acmod == 0)
+            if (ctx->acmod == A52_ACMOD_DUAL_MONO)
                 frame_bits += 8; // dynrng2
         }
         frame_bits++; // cplstre
+        if (!blk) {
+            frame_bits++; // cplinu
+        }
         if (ctx->acmod == 2) {
             frame_bits++; // rematstr
             if (!blk)
                 frame_bits += 4; // rematflg
         }
-        frame_bits += 2 * ctx->n_channels; // nch * chexpstr[2]
+        frame_bits += 2 * ctx->n_channels; // chexpstr
         if (ctx->lfe)
             frame_bits++; // lfeexpstr
         for (ch = 0; ch < ctx->n_channels; ch++) {
-            if (block->exp_strategy[ch] != EXP_REUSE)
-                frame_bits += 6 + 2; // chbwcod[6], gainrng[2]
+            if (block->exp_strategy[ch] != EXP_REUSE) {
+                frame_bits += 6; // chbwcod
+                frame_bits += 2; // gainrng
+            }
         }
         frame_bits++; // baie
+        if (!blk) {
+            // sdcycod[2], fdcycod[2], sgaincod[2], dbpbcod[2], floorcod[3]
+            frame_bits += 2 + 2 + 2 + 2 + 3;
+        }
         frame_bits++; // snr
-        // csnroffset[6] + nch * (fsnoffset[4] + fgaincod[3])
-        if (block->write_snr)
-            frame_bits += 6 + ctx->n_all_channels * (4 + 3);
-        frame_bits += 2; // delta / skip
+        if (block->write_snr) {
+            frame_bits += 6; // csnroffset
+            frame_bits += ctx->n_all_channels * 4; // fsnroffset
+            frame_bits += ctx->n_all_channels * 3; // fgaincod
+        }
+        frame_bits++; // delta
+        frame_bits++; // skip
     }
-    frame_bits++; // cplinu for block 0
-
-    // sdcycod[2], fdcycod[2], sgaincod[2], dbpbcod[2], floorcod[3]
-    frame_bits += 2 + 2 + 2 + 2 + 3;
 
     // auxdatae, crcrsv
     frame_bits += 2;
