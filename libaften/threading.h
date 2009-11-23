@@ -82,6 +82,7 @@ get_ncpus()
     return get_nprocs();
 }
 #elif defined(SYS_DARWIN)
+#undef _POSIX_C_SOURCE
 #include <sys/sysctl.h>
 
 static inline int
