@@ -113,8 +113,8 @@ prepare_transcode(A52ThreadContext *tctx, const void *input_frame_buffer, int in
 const char *
 aften_get_version(void)
 {
-#ifdef SVN_VERSION
-    static const char *const str = AFTEN_VERSION "-r" SVN_VERSION;
+#ifdef GIT_VERSION
+    static const char *const str = AFTEN_VERSION "-" GIT_VERSION;
 #else
     static const char *const str = AFTEN_VERSION;
 #endif

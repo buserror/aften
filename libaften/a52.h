@@ -32,7 +32,7 @@
 #include "a52tab.h"
 #include "aften-types.h"
 
-#define AFTEN_VERSION "SVN"
+#define AFTEN_VERSION "git"
 
 #define A52_MAX_CHANNELS 6
 

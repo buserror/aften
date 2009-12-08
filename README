@@ -91,7 +91,7 @@ Some tips:
    - If you are interested in variables to set, take a look into
      CMakeCache.txt after having run the configuring stage.
 
-   - If you update your source tree via svn and want to rebuild an
+   - If you update your source tree via git and want to rebuild an
      previously built lib without cleaning, you better at least clear
      the CMake cache (remove CMakeCache.txt) otherwise a modified CMake
      project file could result in unwanted behaviour.
