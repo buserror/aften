@@ -1,6 +1,10 @@
 # CMake project file by Prakash Punnoor
 CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
 
+IF(COMMAND cmake_policy)
+  cmake_policy(SET CMP0003 NEW)
+ENDIF(COMMAND cmake_policy)
+
 IF(NOT DEFINED CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
 ENDIF(NOT DEFINED CMAKE_BUILD_TYPE)
