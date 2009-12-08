@@ -52,7 +52,7 @@ print_intro(FILE *out)
     const char *vers = aften_get_version();
     fprintf(out, "\nAften: A/52 audio encoder\n"
                  "Version %s\n"
-                 "(c) 2006-2007 Justin Ruggles, Prakash Punnoor, et al.\n\n",
+                 "(c) 2006-2009 Justin Ruggles, Prakash Punnoor, et al.\n\n",
                  vers);
 }
 
