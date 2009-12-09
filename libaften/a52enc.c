@@ -729,7 +729,7 @@ asym_quant(int c, int e, int qbits)
     m = (1 << (qbits-1));
     v = CLIP(v, -m, m-1);
 
-    return v & ((1 << qbits)-1);
+    return v;
 }
 
 static void
