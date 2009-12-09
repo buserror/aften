@@ -30,9 +30,6 @@
 static uint8_t band_start_tab[51];
 static uint8_t bin_to_band_tab[253];
 
-/* power spectral density table */
-static uint16_t psdtab[25];
-
 
 static inline int calc_lowcomp1(int a, int b0, int b1, int c)
 {
@@ -62,7 +59,7 @@ void a52_bit_alloc_calc_psd(uint8_t *exp, int start, int end, int16_t *psd,
 
     /* exponent mapping to PSD */
     for (bin = start; bin < end; bin++)
-        psd[bin] = psdtab[exp[bin]];
+        psd[bin] = 3072 - (exp[bin] << 7);
 
     /* PSD integration */
     j=start;
@@ -215,10 +212,6 @@ void a52_bit_alloc_calc_bap(int16_t *mask, int16_t *psd, int start, int end,
 void a52_common_init(void)
 {
    int i, j, k, l, v;
-
-    // compute psdtab
-    for (i = 0; i < 25; i++)
-        psdtab[i] = 3072 - (i << 7);
 
     // compute bndtab and masktab from bandsz
     k = 0;
