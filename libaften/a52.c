@@ -193,8 +193,7 @@ void a52_bit_alloc_calc_bap(int16_t *mask, int16_t *psd, int start, int end,
         int endj = MIN(band_start_tab[j] + a52_critical_band_size_tab[j], end);
         if ((endj-i) & 1) {
             int address = CLIP((psd[i] - v) >> 5, 0, 63);
-            bap[i] = a52_bap_tab[address];
-            ++i;
+            bap[i++] = a52_bap_tab[address];
         }
         while (i < endj) {
             int address1 = CLIP((psd[i  ] - v) >> 5, 0, 63);
