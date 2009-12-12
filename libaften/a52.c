@@ -161,8 +161,7 @@ void a52_bit_alloc_calc_mask(A52BitAllocParams *s, int16_t *band_psd,
                 delta = (dba_values[seg] - 4) << 7;
             }
             for (k = 0; k < dba_lengths[seg] && band < 50; k++) {
-                mask[band] += delta;
-                band++;
+                mask[band++] += delta;
             }
         }
     }
