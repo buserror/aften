@@ -178,7 +178,7 @@ void a52_bit_alloc_calc_mask(A52BitAllocParams *s, int16_t *band_psd,
 void a52_bit_alloc_calc_bap(int16_t *mask, int16_t *psd, int start, int end,
                             int snr_offset, int floor, uint8_t *bap)
 {
-    int i, j;
+    int bin, band;
 
     // special case, if snr offset is -960, set all bap's to zero
     if (snr_offset == -960) {
@@ -186,23 +186,23 @@ void a52_bit_alloc_calc_bap(int16_t *mask, int16_t *psd, int start, int end,
         return;
     }
 
-    i = start;
-    j = bin_to_band_tab[start];
+    bin = start;
+    band = bin_to_band_tab[start];
     do {
-        int v = (MAX(mask[j] - snr_offset - floor, 0) & 0x1FE0) + floor;
-        int endj = MIN(band_start_tab[j] + a52_critical_band_size_tab[j], end);
-        if ((endj-i) & 1) {
-            int address = CLIP((psd[i] - v) >> 5, 0, 63);
-            bap[i++] = a52_bap_tab[address];
+        int m = (MAX(mask[band] - snr_offset - floor, 0) & 0x1FE0) + floor;
+        int band_end = MIN(band_start_tab[band+1], end);
+        if ((band_end - bin) & 1) {
+            int address = CLIP((psd[bin] - m) >> 5, 0, 63);
+            bap[bin++] = a52_bap_tab[address];
         }
-        while (i < endj) {
-            int address1 = CLIP((psd[i  ] - v) >> 5, 0, 63);
-            int address2 = CLIP((psd[i+1] - v) >> 5, 0, 63);
-            bap[i  ] = a52_bap_tab[address1];
-            bap[i+1] = a52_bap_tab[address2];
-            i += 2;
+        while (bin < band_end) {
+            int address1 = CLIP((psd[bin  ] - m) >> 5, 0, 63);
+            int address2 = CLIP((psd[bin+1] - m) >> 5, 0, 63);
+            bap[bin  ] = a52_bap_tab[address1];
+            bap[bin+1] = a52_bap_tab[address2];
+            bin += 2;
         }
-    } while (end > band_start_tab[j++]);
+    } while (end > band_start_tab[band++]);
 }
 
 /**
