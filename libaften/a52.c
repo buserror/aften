@@ -53,27 +53,25 @@ static inline int calc_lowcomp(int a, int b0, int b1, int bin)
 void a52_bit_alloc_calc_psd(uint8_t *exp, int start, int end, int16_t *psd,
                                int16_t *band_psd)
 {
-    int bin, i, j, k, end1, v;
+    int bin, band;
 
     /* exponent mapping to PSD */
     for (bin = start; bin < end; bin++)
         psd[bin] = 3072 - (exp[bin] << 7);
 
     /* PSD integration */
-    j=start;
-    k=bin_to_band_tab[start];
+    bin  = start;
+    band = bin_to_band_tab[start];
     do {
-        v=psd[j];
-        j++;
-        end1 = MIN(band_start_tab[k+1], end);
-        for (i = j; i < end1; i++) { // logadd
-            int adr = MIN(ABS(v - psd[j]) >> 1, 255);
-            v = MAX(v, psd[j]) + a52_log_add_tab[adr];
-            j++;
+        int v = psd[bin++];
+        int band_end = MIN(band_start_tab[band+1], end);
+        for (; bin < band_end; bin++) {
+            /* logadd */
+            int adr = MIN(ABS(v - psd[bin]) >> 1, 255);
+            v = MAX(v, psd[bin]) + a52_log_add_tab[adr];
         }
-        band_psd[k]=v;
-        k++;
-    } while (end > band_start_tab[k]);
+        band_psd[band++] = v;
+    } while (end > band_start_tab[band]);
 }
 
 void a52_bit_alloc_calc_mask(A52BitAllocParams *s, int16_t *band_psd,
