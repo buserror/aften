@@ -99,12 +99,12 @@ void a52_bit_alloc_calc_mask(A52BitAllocParams *s, int16_t *band_psd,
         excite[1] = band_psd[1] - fast_gain - lowcomp;
         begin = 7;
         for (band = 2; band < 7; band++) {
-            if (band+1 < bndend)
+            if (!(bndend == 7 && band == 6))
                 lowcomp = calc_lowcomp1(lowcomp, band_psd[band], band_psd[band+1], 384);
             fastleak = band_psd[band] - fast_gain;
             slowleak = band_psd[band] - s->sgain;
             excite[band] = fastleak - lowcomp;
-            if (band+1 < bndend) {
+            if (!(bndend == 7 && band == 6)) {
                 if (band_psd[band] <= band_psd[band+1]) {
                     begin = band + 1;
                     break;
@@ -115,7 +115,7 @@ void a52_bit_alloc_calc_mask(A52BitAllocParams *s, int16_t *band_psd,
         end1 = MIN(bndend, 22);
 
         for (band = begin; band < end1; band++) {
-            if (band+1 < bndend)
+            if (!(bndend == 7 && band == 6))
                 lowcomp = calc_lowcomp(lowcomp, band_psd[band], band_psd[band+1], band);
 
             fastleak = MAX(fastleak - s->fdecay, band_psd[band] - fast_gain);
