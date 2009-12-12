@@ -83,7 +83,7 @@ void a52_bit_alloc_calc_mask(A52BitAllocParams *s, int16_t *band_psd,
                              int16_t *mask)
 {
     int16_t excite[50]; /* excitation */
-    int band, k;
+    int band;
     int bndstrt, bndend, begin, end1;
     int lowcomp, fastleak, slowleak;
 
@@ -147,7 +147,7 @@ void a52_bit_alloc_calc_mask(A52BitAllocParams *s, int16_t *band_psd,
 
     /* delta bit allocation */
     if (dba_mode == DBA_REUSE || dba_mode == DBA_NEW) {
-        int band, seg, delta;
+        int i, band, seg, delta;
         dba_nsegs = MIN(dba_nsegs, 8);
         band = 0;
         for (seg = 0; seg < dba_nsegs; seg++) {
@@ -156,7 +156,7 @@ void a52_bit_alloc_calc_mask(A52BitAllocParams *s, int16_t *band_psd,
                 delta = (dba_values[seg] - 3) << 7;
             else
                 delta = (dba_values[seg] - 4) << 7;
-            for (k = 0; k < dba_lengths[seg] && band < 50; k++)
+            for (i = 0; i < dba_lengths[seg] && band < 50; i++)
                 mask[band++] += delta;
         }
     }
