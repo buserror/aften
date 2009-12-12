@@ -211,17 +211,14 @@ void a52_bit_alloc_calc_bap(int16_t *mask, int16_t *psd, int start, int end,
  */
 void a52_common_init(void)
 {
-   int i, j, k, l, v;
-
-    // compute bndtab and masktab from bandsz
-    k = 0;
-    l = 0;
-    for (i = 0; i < 50; i++) {
-        band_start_tab[i] = l;
-        v = a52_critical_band_size_tab[i];
-        for (j = 0; j < v; j++)
-            bin_to_band_tab[k++]=i;
-        l += v;
+    /* populate band_start_tab[] and bin_to_band_tab[]
+       from a52_critical_band_size_tab[] */
+    int bin = 0, band;
+    for (band = 0; band < 50; band++) {
+        int band_end = bin + a52_critical_band_size_tab[band];
+        band_start_tab[band] = bin;
+        while (bin < band_end)
+            bin_to_band_tab[bin++] = band;
     }
-    band_start_tab[50] = l;
+    band_start_tab[50] = bin;
 }
