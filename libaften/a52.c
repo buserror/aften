@@ -83,7 +83,7 @@ void a52_bit_alloc_calc_mask(A52BitAllocParams *s, int16_t *band_psd,
                              int16_t *mask)
 {
     int16_t excite[50]; /* excitation */
-    int bin, k;
+    int band, k;
     int bndstrt, bndend, begin, end1;
     int lowcomp, fastleak, slowleak;
 
@@ -98,15 +98,15 @@ void a52_bit_alloc_calc_mask(A52BitAllocParams *s, int16_t *band_psd,
         lowcomp = calc_lowcomp1(lowcomp, band_psd[1], band_psd[2], 384);
         excite[1] = band_psd[1] - fast_gain - lowcomp;
         begin = 7;
-        for (bin = 2; bin < 7; bin++) {
-            if (bin+1 < bndend)
-                lowcomp = calc_lowcomp1(lowcomp, band_psd[bin], band_psd[bin+1], 384);
-            fastleak = band_psd[bin] - fast_gain;
-            slowleak = band_psd[bin] - s->sgain;
-            excite[bin] = fastleak - lowcomp;
-            if (bin+1 < bndend) {
-                if (band_psd[bin] <= band_psd[bin+1]) {
-                    begin = bin + 1;
+        for (band = 2; band < 7; band++) {
+            if (band+1 < bndend)
+                lowcomp = calc_lowcomp1(lowcomp, band_psd[band], band_psd[band+1], 384);
+            fastleak = band_psd[band] - fast_gain;
+            slowleak = band_psd[band] - s->sgain;
+            excite[band] = fastleak - lowcomp;
+            if (band+1 < bndend) {
+                if (band_psd[band] <= band_psd[band+1]) {
+                    begin = band + 1;
                     break;
                 }
             }
@@ -114,13 +114,13 @@ void a52_bit_alloc_calc_mask(A52BitAllocParams *s, int16_t *band_psd,
 
         end1 = MIN(bndend, 22);
 
-        for (bin = begin; bin < end1; bin++) {
-            if (bin+1 < bndend)
-                lowcomp = calc_lowcomp(lowcomp, band_psd[bin], band_psd[bin+1], bin);
+        for (band = begin; band < end1; band++) {
+            if (band+1 < bndend)
+                lowcomp = calc_lowcomp(lowcomp, band_psd[band], band_psd[band+1], band);
 
-            fastleak = MAX(fastleak - s->fdecay, band_psd[bin] - fast_gain);
-            slowleak = MAX(slowleak - s->sdecay, band_psd[bin] - s->sgain);
-            excite[bin] = MAX(fastleak - lowcomp, slowleak);
+            fastleak = MAX(fastleak - s->fdecay, band_psd[band] - fast_gain);
+            slowleak = MAX(slowleak - s->sdecay, band_psd[band] - s->sgain);
+            excite[band] = MAX(fastleak - lowcomp, slowleak);
         }
         begin = 22;
     } else {
@@ -130,19 +130,19 @@ void a52_bit_alloc_calc_mask(A52BitAllocParams *s, int16_t *band_psd,
         slowleak = (s->cplsleak << 8) + 768;
     }
 
-    for (bin = begin; bin < bndend; bin++) {
-        fastleak = MAX(fastleak - s->fdecay, band_psd[bin] - fast_gain);
-        slowleak = MAX(slowleak - s->sdecay, band_psd[bin] - s->sgain);
-        excite[bin] = MAX(fastleak, slowleak);
+    for (band = begin; band < bndend; band++) {
+        fastleak = MAX(fastleak - s->fdecay, band_psd[band] - fast_gain);
+        slowleak = MAX(slowleak - s->sdecay, band_psd[band] - s->sgain);
+        excite[band] = MAX(fastleak, slowleak);
     }
 
     /* compute masking curve */
 
-    for (bin = bndstrt; bin < bndend; bin++) {
-        int tmp = s->dbknee - band_psd[bin];
+    for (band = bndstrt; band < bndend; band++) {
+        int tmp = s->dbknee - band_psd[band];
         if (tmp > 0)
-            excite[bin] += tmp >> 2;
-        mask[bin] = MAX(a52_hearing_threshold_tab[bin >> s->halfratecod][s->fscod], excite[bin]);
+            excite[band] += tmp >> 2;
+        mask[band] = MAX(a52_hearing_threshold_tab[band >> s->halfratecod][s->fscod], excite[band]);
     }
 
     /* delta bit allocation */
