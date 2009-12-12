@@ -33,23 +33,21 @@ static uint8_t bin_to_band_tab[253];
 
 static inline int calc_lowcomp1(int a, int b0, int b1, int c)
 {
-    if ((b0 + 256) == b1) {
+    if ((b0 + 256) == b1)
         a = c;
-    } else if (b0 > b1) {
+    else if (b0 > b1)
         a = MAX(a - 64, 0);
-    }
     return a;
 }
 
 static inline int calc_lowcomp(int a, int b0, int b1, int bin)
 {
-    if (bin < 7) {
+    if (bin < 7)
         return calc_lowcomp1(a, b0, b1, 384);
-    } else if (bin < 20) {
+    else if (bin < 20)
         return calc_lowcomp1(a, b0, b1, 320);
-    } else {
+    else
         return MAX(a - 128, 0);
-    }
 }
 
 void a52_bit_alloc_calc_psd(uint8_t *exp, int start, int end, int16_t *psd,
@@ -142,9 +140,8 @@ void a52_bit_alloc_calc_mask(A52BitAllocParams *s, int16_t *band_psd,
 
     for (bin = bndstrt; bin < bndend; bin++) {
         tmp = s->dbknee - band_psd[bin];
-        if (tmp > 0) {
+        if (tmp > 0)
             excite[bin] += tmp >> 2;
-        }
         mask[bin] = MAX(a52_hearing_threshold_tab[bin >> s->halfratecod][s->fscod], excite[bin]);
     }
 
@@ -155,14 +152,12 @@ void a52_bit_alloc_calc_mask(A52BitAllocParams *s, int16_t *band_psd,
         band = 0;
         for (seg = 0; seg < dba_nsegs; seg++) {
             band += dba_offsets[seg];
-            if (dba_values[seg] >= 4) {
+            if (dba_values[seg] >= 4)
                 delta = (dba_values[seg] - 3) << 7;
-            } else {
+            else
                 delta = (dba_values[seg] - 4) << 7;
-            }
-            for (k = 0; k < dba_lengths[seg] && band < 50; k++) {
+            for (k = 0; k < dba_lengths[seg] && band < 50; k++)
                 mask[band++] += delta;
-            }
         }
     }
 }
