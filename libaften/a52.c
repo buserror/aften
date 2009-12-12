@@ -84,7 +84,7 @@ void a52_bit_alloc_calc_mask(A52BitAllocParams *s, int16_t *band_psd,
 {
     int16_t excite[50]; /* excitation */
     int bin, k;
-    int bndstrt, bndend, begin, end1, tmp;
+    int bndstrt, bndend, begin, end1;
     int lowcomp, fastleak, slowleak;
 
     /* excitation function */
@@ -139,7 +139,7 @@ void a52_bit_alloc_calc_mask(A52BitAllocParams *s, int16_t *band_psd,
     /* compute masking curve */
 
     for (bin = bndstrt; bin < bndend; bin++) {
-        tmp = s->dbknee - band_psd[bin];
+        int tmp = s->dbknee - band_psd[bin];
         if (tmp > 0)
             excite[bin] += tmp >> 2;
         mask[bin] = MAX(a52_hearing_threshold_tab[bin >> s->halfratecod][s->fscod], excite[bin]);
