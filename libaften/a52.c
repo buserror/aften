@@ -182,7 +182,7 @@ void a52_bit_alloc_calc_bap(int16_t *mask, int16_t *psd, int start, int end,
 
     // special case, if snr offset is -960, set all bap's to zero
     if (snr_offset == -960) {
-        memset(bap, 0, end-start);
+        memset(bap, 0, 256);
         return;
     }
 
