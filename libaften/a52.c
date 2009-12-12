@@ -151,6 +151,7 @@ void a52_bit_alloc_calc_mask(A52BitAllocParams *s, int16_t *band_psd,
     /* delta bit allocation */
     if (dba_mode == DBA_REUSE || dba_mode == DBA_NEW) {
         int band, seg, delta;
+        dba_nsegs = MIN(dba_nsegs, 8);
         band = 0;
         for (seg = 0; seg < dba_nsegs; seg++) {
             band += dba_offsets[seg];
@@ -159,7 +160,7 @@ void a52_bit_alloc_calc_mask(A52BitAllocParams *s, int16_t *band_psd,
             } else {
                 delta = (dba_values[seg] - 4) << 7;
             }
-            for (k = 0; k < dba_lengths[seg]; k++) {
+            for (k = 0; k < dba_lengths[seg] && band < 50; k++) {
                 mask[band] += delta;
                 band++;
             }
