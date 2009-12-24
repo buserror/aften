@@ -49,44 +49,91 @@ INCLUDE_DIRECTORIES(${Aften_SOURCE_DIR}/libaften)
 INCLUDE_DIRECTORIES(${Aften_SOURCE_DIR}/aften)
 INCLUDE_DIRECTORIES(${Aften_SOURCE_DIR}/pcm)
 
-SET(LIBAFTEN_SRCS libaften/a52enc.c
+SET(LIBAFTEN_SRCS libaften/a52enc.h
+                  libaften/a52enc.c
+                  libaften/a52.h
                   libaften/a52.c
+                  libaften/a52tab.h
                   libaften/a52tab.c
+                  libaften/bitalloc.h
                   libaften/bitalloc.c
+                  libaften/bitio.h
                   libaften/bitio.c
+                  libaften/crc.h
                   libaften/crc.c
+                  libaften/dynrng.h
                   libaften/dynrng.c
+                  libaften/window.h
                   libaften/window.c
+                  libaften/mdct.h
                   libaften/mdct.c
+                  libaften/exponent.h
                   libaften/exponent.c
+                  libaften/filter.h
                   libaften/filter.c
                   libaften/util.c
-                  libaften/convert.c)
+                  libaften/convert.h
+                  libaften/convert.c
+                  libaften/threading.h
+                  libaften/a52dec.h
+                  libaften/aften.h
+                  libaften/aften-types.h
+                  libaften/cpu_caps.h
+                  libaften/mem.h
+                  common.h
+                  bswap.h)
 
-SET(LIBAFTEN_X86_SRCS libaften/x86/cpu_caps.c)
+SET(LIBAFTEN_X86_SRCS libaften/x86/cpu_caps.c
+                      libaften/x86/cpu_caps.h
+                      libaften/x86/asm_common.h
+                      libaften/x86/asm_support.h
+                      libaften/x86/gas_support.h
+                      libaften/x86/intelas_support.h)
 
-SET(LIBAFTEN_X86_MMX_SRCS libaften/x86/exponent_mmx.c)
+SET(LIBAFTEN_X86_MMX_SRCS libaften/x86/exponent_mmx.c
+                          libaften/x86/exponent.h
+                          libaften/x86/simd_support.h)
 
 SET(LIBAFTEN_X86_SSE_SRCS libaften/x86/mdct_sse.c
                           libaften/x86/mdct_common_sse.c
-                          libaften/x86/window_sse.c)
+                          libaften/x86/mdct_common_sse.h
+                          libaften/x86/mdct.h
+                          libaften/x86/window_sse.c
+                          libaften/x86/window.h
+                          libaften/x86/simd_support.h)
 
-SET(LIBAFTEN_X86_SSE2_SRCS libaften/x86/exponent_sse2.c)
+SET(LIBAFTEN_X86_SSE2_SRCS libaften/x86/exponent_sse2.c
+                           libaften/x86/exponent.h
+                           libaften/x86/simd_support.h)
 
-SET(LIBAFTEN_X86_SSE3_SRCS libaften/x86/mdct_sse3.c)
+SET(LIBAFTEN_X86_SSE3_SRCS libaften/x86/mdct_sse3.c
+                           libaften/x86/mdct_common_sse.h
+                           libaften/x86/mdct.h
+                           libaften/x86/simd_support.h)
 
-SET(LIBAFTEN_PPC_SRCS libaften/ppc/cpu_caps.c)
-SET(LIBAFTEN_ALTIVEC_SRCS libaften/ppc/mdct_altivec.c)
+SET(LIBAFTEN_PPC_SRCS libaften/ppc/cpu_caps.c
+                      libaften/ppc/cpu_caps.h)
 
-SET(AFTEN_SRCS aften/aften.c aften/opts.c)
+SET(LIBAFTEN_ALTIVEC_SRCS libaften/ppc/mdct_altivec.c
+                          libaften/ppc/mdct.h
+                          libaften/ppc/altivec_common.h)
+
+SET(AFTEN_SRCS aften/aften.c
+               aften/opts.c
+               aften/opts.h
+               aften/helptext.h)
 
 SET(PCM_SRCS pcm/aiff.c
              pcm/byteio.c
+             pcm/byteio.h
              pcm/caff.c
              pcm/convert.c
              pcm/formats.c
+             pcm/formats.h
              pcm/pcm.c
+             pcm/pcm.h
              pcm/pcmfile.c
+             pcm/pcmfile.h
              pcm/pcm_io.c
              pcm/raw.c
              pcm/wav.c)
