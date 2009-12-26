@@ -24,11 +24,6 @@
 
 #include "a52enc.h"
 #include "window.h"
-#include "cpu_caps.h"
-
-#if defined(HAVE_MMX) || defined(HAVE_SSE)
-#include "x86/window.h"
-#endif
 
 ALIGN16(FLOAT) a52_window[512] = {0};
 
