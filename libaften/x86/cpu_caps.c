@@ -40,6 +40,19 @@
 
 
 #ifdef HAVE_CPU_CAPS_DETECTION
+#if defined(_WIN64) && defined(_MSC_VER)
+/* MSVC doesn't support inline assembly in x64 mode */
+#include <intrin.h>
+static void cpu_caps_detect_x86(uint32_t *caps1, uint32_t *caps2, uint32_t *caps3)
+{
+	int registers[4];
+	__cpuid(registers, 1);
+	*caps1 = registers[3];
+	*caps2 = registers[2];
+	__cpuid(registers, 0x80000001);
+	*caps3 = registers[3];
+}
+#else
 #include "asm_support.h"
 
 // derived from loki_cpuinfo.c, 1997-98 by H. Dietz and R. Fisher
@@ -88,6 +101,7 @@ static void cpu_caps_detect_x86(uint32_t *caps1, uint32_t *caps2, uint32_t *caps
     *caps2 = c2;
     *caps3 = c3;
 }
+#endif
 #endif
 
 static struct x86cpu_caps_s x86cpu_caps_compile = { 0, 0, 0, 0, 0, 0, 0, 0, 0};

@@ -20,6 +20,7 @@ Aften TODO list
 Aften Changelog
 ---------------
 version SVN : current
+- added Windows x64 support (tested with Visual Studio 2008)
 - added C# bindings with simple high level API
 - changed API to simplify its usage
 - added API.txt

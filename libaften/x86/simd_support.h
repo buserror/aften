@@ -38,6 +38,7 @@ union __m64ui {
     #pragma warning (disable: 4799)
 #endif
 
+#endif /* USE_MMX */
 #ifdef USE_SSE
 #include <xmmintrin.h>
 
@@ -79,5 +80,4 @@ union __m128iui {
 
 #define PM128(x) (*(__m128*)(x))
 #endif /* USE_SSE */
-#endif /* USE_MMX */
 #endif /* X86_SIMD_SUPPORT_H */

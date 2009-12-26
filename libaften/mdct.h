@@ -42,7 +42,7 @@
 
 #include "common.h"
 
-#ifdef HAVE_MMX
+#if defined(HAVE_MMX) || defined(HAVE_SSE)
 #include "x86/mdct.h"
 #endif
 #ifdef HAVE_ALTIVEC

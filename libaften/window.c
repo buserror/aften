@@ -26,7 +26,7 @@
 #include "window.h"
 #include "cpu_caps.h"
 
-#ifdef HAVE_MMX
+#if defined(HAVE_MMX) || defined(HAVE_SSE)
 #include "x86/window.h"
 #endif
 
