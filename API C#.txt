@@ -6,18 +6,18 @@ At the end of the document you can find a running example to hackishly convert a
 standard 44,1kHz 16bit PCM Stereo file, as you can find on CD-DA.
 
 The context object from the C API is just lightly wrapped, so bear with me. So, before
-initializing theencoder you should set up your context object. The best is, to get one
-filled with defautl values by calling the static GetDefaultsContext() method. Then set
+initializing the encoder you should set up your context object. The best is, to get one
+filled with default values by calling the static GetDefaultsContext() method. Then set
 it up and pass it to the constructor of the FrameEncoderTSample, where TSample denotes
 the type of samples you want to convert. If you have samples made of short integeres,
-you would use FrameEncoderInt16. If you don't cast the object, you will have stronlgy-
+you would use FrameEncoderInt16. If you don't cast the object, you will have strongly-
 typed Encode functions which take Arrays of TSamples. You can also cast down to the
 FrameEncoder base class, which takes generic Arrays. Nevertheless the allowed type is
 determined by the class you instantiate.
 
 Keep in mind that the context object is a value type! I stumbled a few times upon it...
 
-There will be severel overloads of Encode functions available, which allow passing of
+There will be several overloads of Encode functions available, which allow passing of
 arrays or streams. You can also decide whether you want to pass a stream where the
 output stream is written or you'll get a MemoryStream back (with position set at the
 end). (You are free to mix the functions if you like.) Remember to call the Flush
