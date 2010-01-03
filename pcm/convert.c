@@ -530,7 +530,7 @@ fmt_convert_u8_to_float(void *dest_v, void *src_v, int n)
     int i;
 
     for (i = 0; i < n; i++)
-        dest[i] = (src[i] - FCONST(128.0)) / FCONST(128.0);
+        dest[i] = (src[i] - 128.0) / 128.0;
 }
 
 static void
@@ -541,7 +541,7 @@ fmt_convert_s8_to_float(void *dest_v, void *src_v, int n)
     int i;
 
     for (i = 0; i < n; i++)
-        dest[i] = src[i] / FCONST(128.0);
+        dest[i] = src[i] / 128.0;
 }
 
 static void
@@ -552,7 +552,7 @@ fmt_convert_s16_to_float(void *dest_v, void *src_v, int n)
     int i;
 
     for (i = 0; i < n; i++)
-        dest[i] = src[i] / FCONST(32768.0);
+        dest[i] = src[i] / 32768.0;
 }
 
 static void
@@ -563,7 +563,7 @@ fmt_convert_s20_to_float(void *dest_v, void *src_v, int n)
     int i;
 
     for (i = 0; i < n; i++)
-        dest[i] = src[i] / FCONST(524288.0);
+        dest[i] = src[i] / 524288.0;
 }
 
 static void
@@ -574,7 +574,7 @@ fmt_convert_s24_to_float(void *dest_v, void *src_v, int n)
     int i;
 
     for (i = 0; i < n; i++)
-        dest[i] = src[i] / FCONST(8388608.0);
+        dest[i] = src[i] / 8388608.0;
 }
 
 static void
@@ -585,7 +585,7 @@ fmt_convert_s32_to_float(void *dest_v, void *src_v, int n)
     int i;
 
     for (i = 0; i < n; i++)
-        dest[i] = src[i] / FCONST(2147483648.0);
+        dest[i] = src[i] / 2147483648.0;
 }
 
 static void
@@ -613,7 +613,7 @@ fmt_convert_u8_to_double(void *dest_v, void *src_v, int n)
     int i;
 
     for (i = 0; i < n; i++)
-        dest[i] = (src[i] - FCONST(128.0)) / FCONST(128.0);
+        dest[i] = (src[i] - 128.0) / 128.0;
 }
 
 static void
@@ -624,7 +624,7 @@ fmt_convert_s8_to_double(void *dest_v, void *src_v, int n)
     int i;
 
     for (i = 0; i < n; i++)
-        dest[i] = src[i] / FCONST(128.0);
+        dest[i] = src[i] / 128.0;
 }
 
 static void
@@ -635,7 +635,7 @@ fmt_convert_s16_to_double(void *dest_v, void *src_v, int n)
     int i;
 
     for (i = 0; i < n; i++)
-        dest[i] = src[i] / FCONST(32768.0);
+        dest[i] = src[i] / 32768.0;
 }
 
 static void
@@ -646,7 +646,7 @@ fmt_convert_s20_to_double(void *dest_v, void *src_v, int n)
     int i;
 
     for (i = 0; i < n; i++)
-        dest[i] = src[i] / FCONST(524288.0);
+        dest[i] = src[i] / 524288.0;
 }
 
 static void
@@ -657,7 +657,7 @@ fmt_convert_s24_to_double(void *dest_v, void *src_v, int n)
     int i;
 
     for (i = 0; i < n; i++)
-        dest[i] = src[i] / FCONST(8388608.0);
+        dest[i] = src[i] / 8388608.0;
 }
 
 static void
@@ -668,7 +668,7 @@ fmt_convert_s32_to_double(void *dest_v, void *src_v, int n)
     int i;
 
     for (i = 0; i < n; i++)
-        dest[i] = src[i] / FCONST(2147483648.0);
+        dest[i] = src[i] / 2147483648.0;
 }
 
 static void
