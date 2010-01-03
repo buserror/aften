@@ -1192,8 +1192,8 @@ calc_rematrixing(A52ThreadContext *tctx)
                 rt = block->mdct_coef[1][i];
                 sum[bnd][0] += lt * lt;
                 sum[bnd][1] += rt * rt;
-                sum[bnd][2] += (lt + rt) * (lt + rt) / 4.0;
-                sum[bnd][3] += (lt - rt) * (lt - rt) / 4.0;
+                sum[bnd][2] += (lt + rt) * (lt + rt) / FCONST(4.0);
+                sum[bnd][3] += (lt - rt) * (lt - rt) / FCONST(4.0);
             }
         }
         // compare sums to determine if rematrixing is used for this band
@@ -1205,8 +1205,8 @@ calc_rematrixing(A52ThreadContext *tctx)
                 for (i = rematbndtab[bnd]; i < rematbndtab[bnd+1]; i++) {
                     if (i == frame->ncoefs[0])
                         break;
-                    ctmp1 = block->mdct_coef[0][i] * 0.5;
-                    ctmp2 = block->mdct_coef[1][i] * 0.5;
+                    ctmp1 = block->mdct_coef[0][i] * FCONST(0.5);
+                    ctmp2 = block->mdct_coef[1][i] * FCONST(0.5);
                     block->mdct_coef[0][i] = ctmp1 + ctmp2;
                     block->mdct_coef[1][i] = ctmp1 - ctmp2;
                 }

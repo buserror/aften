@@ -26,6 +26,11 @@
 #define WINDOW_H
 
 #include "common.h"
+#include "cpu_caps.h"
+
+#if defined(HAVE_MMX) || defined(HAVE_SSE)
+#include "x86/window.h"
+#endif
 
 extern FLOAT a52_window[512];
 

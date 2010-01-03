@@ -49,44 +49,91 @@ INCLUDE_DIRECTORIES(${Aften_SOURCE_DIR}/libaften)
 INCLUDE_DIRECTORIES(${Aften_SOURCE_DIR}/aften)
 INCLUDE_DIRECTORIES(${Aften_SOURCE_DIR}/pcm)
 
-SET(LIBAFTEN_SRCS libaften/a52enc.c
+SET(LIBAFTEN_SRCS libaften/a52enc.h
+                  libaften/a52enc.c
+                  libaften/a52.h
                   libaften/a52.c
+                  libaften/a52tab.h
                   libaften/a52tab.c
+                  libaften/bitalloc.h
                   libaften/bitalloc.c
+                  libaften/bitio.h
                   libaften/bitio.c
+                  libaften/crc.h
                   libaften/crc.c
+                  libaften/dynrng.h
                   libaften/dynrng.c
+                  libaften/window.h
                   libaften/window.c
+                  libaften/mdct.h
                   libaften/mdct.c
+                  libaften/exponent.h
                   libaften/exponent.c
+                  libaften/filter.h
                   libaften/filter.c
                   libaften/util.c
-                  libaften/convert.c)
+                  libaften/convert.h
+                  libaften/convert.c
+                  libaften/threading.h
+                  libaften/a52dec.h
+                  libaften/aften.h
+                  libaften/aften-types.h
+                  libaften/cpu_caps.h
+                  libaften/mem.h
+                  common.h
+                  bswap.h)
 
-SET(LIBAFTEN_X86_SRCS libaften/x86/cpu_caps.c)
+SET(LIBAFTEN_X86_SRCS libaften/x86/cpu_caps.c
+                      libaften/x86/cpu_caps.h
+                      libaften/x86/asm_common.h
+                      libaften/x86/asm_support.h
+                      libaften/x86/gas_support.h
+                      libaften/x86/intelas_support.h)
 
-SET(LIBAFTEN_X86_MMX_SRCS libaften/x86/exponent_mmx.c)
+SET(LIBAFTEN_X86_MMX_SRCS libaften/x86/exponent_mmx.c
+                          libaften/x86/exponent.h
+                          libaften/x86/simd_support.h)
 
 SET(LIBAFTEN_X86_SSE_SRCS libaften/x86/mdct_sse.c
                           libaften/x86/mdct_common_sse.c
-                          libaften/x86/window_sse.c)
+                          libaften/x86/mdct_common_sse.h
+                          libaften/x86/mdct.h
+                          libaften/x86/window_sse.c
+                          libaften/x86/window.h
+                          libaften/x86/simd_support.h)
 
-SET(LIBAFTEN_X86_SSE2_SRCS libaften/x86/exponent_sse2.c)
+SET(LIBAFTEN_X86_SSE2_SRCS libaften/x86/exponent_sse2.c
+                           libaften/x86/exponent.h
+                           libaften/x86/simd_support.h)
 
-SET(LIBAFTEN_X86_SSE3_SRCS libaften/x86/mdct_sse3.c)
+SET(LIBAFTEN_X86_SSE3_SRCS libaften/x86/mdct_sse3.c
+                           libaften/x86/mdct_common_sse.h
+                           libaften/x86/mdct.h
+                           libaften/x86/simd_support.h)
 
-SET(LIBAFTEN_PPC_SRCS libaften/ppc/cpu_caps.c)
-SET(LIBAFTEN_ALTIVEC_SRCS libaften/ppc/mdct_altivec.c)
+SET(LIBAFTEN_PPC_SRCS libaften/ppc/cpu_caps.c
+                      libaften/ppc/cpu_caps.h)
 
-SET(AFTEN_SRCS aften/aften.c aften/opts.c)
+SET(LIBAFTEN_ALTIVEC_SRCS libaften/ppc/mdct_altivec.c
+                          libaften/ppc/mdct.h
+                          libaften/ppc/altivec_common.h)
+
+SET(AFTEN_SRCS aften/aften.c
+               aften/opts.c
+               aften/opts.h
+               aften/helptext.h)
 
 SET(PCM_SRCS pcm/aiff.c
              pcm/byteio.c
+             pcm/byteio.h
              pcm/caff.c
              pcm/convert.c
              pcm/formats.c
+             pcm/formats.h
              pcm/pcm.c
+             pcm/pcm.h
              pcm/pcmfile.c
+             pcm/pcmfile.h
              pcm/pcm_io.c
              pcm/raw.c
              pcm/wav.c)
@@ -95,11 +142,15 @@ SET(PCM_SRCS pcm/aiff.c
 IF(CMAKE_UNAME)
   EXEC_PROGRAM(uname ARGS -m OUTPUT_VARIABLE CMAKE_SYSTEM_MACHINE)
 ELSE(CMAKE_UNAME)
-  MESSAGE("Could not detect machine type")
-  IF(CMAKE_SYSTEM MATCHES "Windows")
-    MESSAGE(STATUS "Assuming i386 machine")
-    SET(CMAKE_SYSTEM_MACHINE i386)
-  ENDIF(CMAKE_SYSTEM MATCHES "Windows")
+  IF(CMAKE_SYSTEM MATCHES "Windows" AND CMAKE_SYSTEM_PROCESSOR MATCHES "x86")
+	IF(CMAKE_SIZEOF_VOID_P MATCHES "8")
+      SET(CMAKE_SYSTEM_MACHINE "x86_64")
+	ELSE(CMAKE_SIZEOF_VOID_P MATCHES "8")
+      SET(CMAKE_SYSTEM_MACHINE "i386")
+	ENDIF(CMAKE_SIZEOF_VOID_P MATCHES "8")
+  ELSE(CMAKE_SYSTEM MATCHES "Windows" AND CMAKE_SYSTEM_PROCESSOR MATCHES "x86")
+	MESSAGE(FATAL_ERROR "Could not detect machine type")
+  ENDIF(CMAKE_SYSTEM MATCHES "Windows" AND CMAKE_SYSTEM_PROCESSOR MATCHES "x86")
 ENDIF(CMAKE_UNAME)
 
 DETECT_COMPILER()
@@ -192,51 +243,58 @@ CHECK_POSIX_MEMALIGN()
 # do SIMD stuff
 IF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
   CHECK_MMX()
-
-  IF(HAVE_MMX)
+  # MSVC doesn't have MMX support in x64 mode, so check for SSE independently
+  CHECK_SSE()
+  
+  IF(HAVE_MMX OR HAVE_SSE)
     INCLUDE_DIRECTORIES(${Aften_SOURCE_DIR}/libaften/x86)
     SET(LIBAFTEN_SRCS ${LIBAFTEN_SRCS} ${LIBAFTEN_X86_SRCS})
     ADD_DEFINE(HAVE_CPU_CAPS_DETECTION)
-
-    CHECK_SSE()
+  ENDIF(HAVE_MMX OR HAVE_SSE)
+  
+  IF(HAVE_MMX)
     SET(LIBAFTEN_SRCS ${LIBAFTEN_SRCS} ${LIBAFTEN_X86_MMX_SRCS})
+      SET(SIMD_FLAGS "${SIMD_FLAGS} ${MMX_FLAGS} -DUSE_MMX")
       FOREACH(SRC ${LIBAFTEN_X86_MMX_SRCS})
-        SET_SOURCE_FILES_PROPERTIES(${SRC} PROPERTIES COMPILE_FLAGS "${MMX_FLAGS} -DUSE_MMX")
+        SET_SOURCE_FILES_PROPERTIES(${SRC} PROPERTIES COMPILE_FLAGS ${SIMD_FLAGS})
       ENDFOREACH(SRC)
     ADD_DEFINE(HAVE_MMX)
+  ENDIF(HAVE_MMX)
 
-    IF(HAVE_SSE)
-      CHECK_SSE2()
-      IF(NOT DOUBLE)
+  IF(HAVE_SSE)
+    SET(SIMD_FLAGS "${SIMD_FLAGS} ${SSE_FLAGS} -DUSE_SSE")
+    IF(NOT DOUBLE)
       SET(LIBAFTEN_SRCS ${LIBAFTEN_SRCS} ${LIBAFTEN_X86_SSE_SRCS})
       FOREACH(SRC ${LIBAFTEN_X86_SSE_SRCS})
-        SET_SOURCE_FILES_PROPERTIES(${SRC} PROPERTIES COMPILE_FLAGS "${SSE_FLAGS} -DUSE_MMX -DUSE_SSE")
+        SET_SOURCE_FILES_PROPERTIES(${SRC} PROPERTIES COMPILE_FLAGS ${SIMD_FLAGS})
       ENDFOREACH(SRC)
-      ENDIF(NOT DOUBLE)
-      ADD_DEFINE(HAVE_SSE)
-    ENDIF(HAVE_SSE)
+    ENDIF(NOT DOUBLE)
+    ADD_DEFINE(HAVE_SSE)
 
+    CHECK_SSE2()
     IF(HAVE_SSE2)
-      CHECK_SSE3()
+      SET(SIMD_FLAGS "${SIMD_FLAGS} ${SSE2_FLAGS} -DUSE_SSE2")
       SET(LIBAFTEN_SRCS ${LIBAFTEN_SRCS} ${LIBAFTEN_X86_SSE2_SRCS})
       FOREACH(SRC ${LIBAFTEN_X86_SSE2_SRCS})
-        SET_SOURCE_FILES_PROPERTIES(${SRC} PROPERTIES COMPILE_FLAGS "${SSE2_FLAGS} -DUSE_MMX -DUSE_SSE -DUSE_SSE2")
+        SET_SOURCE_FILES_PROPERTIES(${SRC} PROPERTIES COMPILE_FLAGS ${SIMD_FLAGS})
       ENDFOREACH(SRC)
       ADD_DEFINE(HAVE_SSE2)
+
+      CHECK_SSE3()
+      IF(HAVE_SSE3)
+        SET(SIMD_FLAGS "${SIMD_FLAGS} ${SSE3_FLAGS} -DUSE_SSE3")
+        IF(NOT DOUBLE)
+          SET(LIBAFTEN_SRCS ${LIBAFTEN_SRCS} ${LIBAFTEN_X86_SSE3_SRCS})
+          FOREACH(SRC ${LIBAFTEN_X86_SSE3_SRCS})
+            SET_SOURCE_FILES_PROPERTIES(${SRC} PROPERTIES COMPILE_FLAGS ${SIMD_FLAGS})
+          ENDFOREACH(SRC)
+        ENDIF(NOT DOUBLE)
+        ADD_DEFINE(HAVE_SSE3)
+
+        CHECK_CASTSI128()
+      ENDIF(HAVE_SSE3)
     ENDIF(HAVE_SSE2)
-
-    IF(HAVE_SSE3)
-      IF(NOT DOUBLE)
-      SET(LIBAFTEN_SRCS ${LIBAFTEN_SRCS} ${LIBAFTEN_X86_SSE3_SRCS})
-      FOREACH(SRC ${LIBAFTEN_X86_SSE3_SRCS})
-        SET_SOURCE_FILES_PROPERTIES(${SRC} PROPERTIES COMPILE_FLAGS "${SSE3_FLAGS} -DUSE_MMX -DUSE_SSE -DUSE_SSE2 -DUSE_SSE3")
-      ENDFOREACH(SRC)
-      ENDIF(NOT DOUBLE)
-      ADD_DEFINE(HAVE_SSE3)
-
-      CHECK_CASTSI128()
-    ENDIF(HAVE_SSE3)
-  ENDIF(HAVE_MMX)
+  ENDIF(HAVE_SSE)
 ENDIF(CMAKE_SYSTEM_MACHINE MATCHES "i.86" OR CMAKE_SYSTEM_MACHINE MATCHES "x86_64")
 
 IF(CMAKE_SYSTEM_MACHINE MATCHES "Power Macintosh" OR CMAKE_SYSTEM_MACHINE MATCHES "ppc")

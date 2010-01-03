@@ -20,7 +20,7 @@
 #ifndef CPU_CAPS_H
 #define CPU_CAPS_H
 
-#if defined(HAVE_MMX)
+#if defined(HAVE_MMX) || defined(HAVE_SSE)
 #include "x86/cpu_caps.h"
 #elif defined(HAVE_ALTIVEC)
 #include "ppc/cpu_caps.h"
