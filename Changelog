@@ -16,6 +16,7 @@ Aften TODO list
 - Better error logging for libaften
 - pkg-config support or alike
 - Channel layout support in PCM decoder
+- Investigate claims of channel cross-contamination when rematrixing is used
 
 Aften Changelog
 ---------------
