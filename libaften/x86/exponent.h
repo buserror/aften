@@ -35,12 +35,12 @@
 #include "common.h"
 
 #ifdef HAVE_SSE2
-extern void exponent_min_sse2(uint8_t *exp, uint8_t *exp1, int n);
+extern void exponent_min_sse2(uint8_t *expTarget, uint8_t *exp, uint8_t *exp1, int n);
 extern void encode_exp_blk_ch_sse2(uint8_t *exp, int ncoefs, int exp_strategy);
 extern int exponent_sum_square_error_sse2(uint8_t *exp0, uint8_t *exp1, int ncoefs);
 #endif
 #ifdef HAVE_MMX
-extern void exponent_min_mmx(uint8_t *exp, uint8_t *exp1, int n);
+extern void exponent_min_mmx(uint8_t *expTarget, uint8_t *exp, uint8_t *exp1, int n);
 extern void encode_exp_blk_ch_mmx(uint8_t *exp, int ncoefs, int exp_strategy);
 extern int exponent_sum_square_error_mmx(uint8_t *exp0, uint8_t *exp1, int ncoefs);
 #endif

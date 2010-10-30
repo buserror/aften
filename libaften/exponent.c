@@ -51,37 +51,47 @@ static int
 compute_expstr_ch(A52ExponentFunctions *expf, uint8_t *exp[A52_NUM_BLOCKS],
                   int ncoefs, int search_size)
 {
-    ALIGN16(uint8_t) exponents[A52_NUM_BLOCKS][256];
-    int blk, s, str, i, j, k;
+    uint8_t exponents[A52_NUM_BLOCKS][256];
+	uint8_t* expSource[A52_NUM_BLOCKS];
+    int blk, s, i, j, k;
     int min_error, exp_error[A52_EXPSTR_SETS];
 
     min_error = expstr_set_search_order_tab[0];
     for (s = 0; s < search_size; s++) {
-        str = expstr_set_search_order_tab[s];
+        int str = expstr_set_search_order_tab[s];
+		const uint8_t* expstr_set_tab = a52_expstr_set_tab[str];
 
         // collect exponents
         for (blk = 0; blk < A52_NUM_BLOCKS; blk++)
-            memcpy(exponents[blk], exp[blk], 256);
+			expSource[blk] = exp[blk];
 
         // encode exponents
         i = 0;
         while (i < A52_NUM_BLOCKS) {
+			uint8_t* currentExp = exponents[i];
             j = i + 1;
-            while (j < A52_NUM_BLOCKS && a52_expstr_set_tab[str][j]==EXP_REUSE) {
-                expf->exponent_min(exponents[i], exponents[j], ncoefs);
+
+			// Special handling for first time, as exponents[i] != expSource[i]
+			if (j < A52_NUM_BLOCKS && expstr_set_tab[j]==EXP_REUSE) {
+				expf->exponent_min(currentExp, expSource[i], expSource[j], ncoefs);
+				j++;
+			}
+            while (j < A52_NUM_BLOCKS && expstr_set_tab[j]==EXP_REUSE) {
+				expf->exponent_min(currentExp, currentExp, expSource[j], ncoefs);
                 j++;
             }
-            expf->encode_exp_blk_ch(exponents[i], ncoefs, a52_expstr_set_tab[str][i]);
-            for (k = i+1; k < j; k++)
-                memcpy(exponents[k], exponents[i], 256);
-            i = j;
+            expf->encode_exp_blk_ch(currentExp, ncoefs, expstr_set_tab[i]);
+            for (k = i; k < j; k++)
+				expSource[k] = currentExp;
+
+			i = j;
         }
 
         // select strategy based on minimum error from unencoded exponents
         exp_error[str] = 0;
         for (blk = 0; blk < A52_NUM_BLOCKS; blk++) {
             exp_error[str] += expf->exponent_sum_square_error(exp[blk],
-                                                        exponents[blk],
+                                                        expSource[blk],
                                                         ncoefs);
         }
         if (exp_error[str] < exp_error[min_error])
@@ -200,7 +210,7 @@ encode_exponents(A52ThreadContext *tctx)
         while (i < A52_NUM_BLOCKS) {
             j = i + 1;
             while (j < A52_NUM_BLOCKS && blocks[j].exp_strategy[ch]==EXP_REUSE) {
-                ctx->expf.exponent_min(blocks[i].exp[ch], blocks[j].exp[ch], ncoefs[ch]);
+                ctx->expf.exponent_min(blocks[i].exp[ch], blocks[i].exp[ch], blocks[j].exp[ch], ncoefs[ch]);
                 j++;
             }
             ctx->expf.encode_exp_blk_ch(blocks[i].exp[ch], ncoefs[ch],
@@ -239,11 +249,11 @@ extract_exponents(A52ThreadContext *tctx)
 }
 
 static void
-exponent_min(uint8_t *exp, uint8_t *exp1, int n)
+exponent_min(uint8_t *expTarget, uint8_t *exp, uint8_t *exp1, int n)
 {
     int i;
     for (i = 0; i < n; i++)
-        exp[i] = MIN(exp[i], exp1[i]);
+        expTarget[i] = MIN(exp[i], exp1[i]);
 }
 
 
@@ -307,6 +317,9 @@ exponent_sum_square_error(uint8_t *exp0, uint8_t *exp1, int ncoefs)
 {
     int i, err;
     int exp_error = 0;
+
+	if (exp0 == exp1)
+		return 0;
 
     for (i = 0; i < ncoefs; i++) {
         err = exp0[i] - exp1[i];

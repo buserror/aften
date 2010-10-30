@@ -34,7 +34,7 @@
 
 
 void
-exponent_min_sse2(uint8_t *exp, uint8_t *exp1, int n)
+exponent_min_sse2(uint8_t *expTarget, uint8_t *exp, uint8_t *exp1, int n)
 {
     int i;
 
@@ -42,10 +42,10 @@ exponent_min_sse2(uint8_t *exp, uint8_t *exp1, int n)
         __m128i vexp = _mm_loadu_si128((__m128i*)&exp[i]);
         __m128i vexp1 = _mm_loadu_si128((__m128i*)&exp1[i]);
         vexp = _mm_min_epu8(vexp, vexp1);
-        _mm_storeu_si128 ((__m128i*)&exp[i], vexp);
+        _mm_storeu_si128 ((__m128i*)&expTarget[i], vexp);
     }
     for (; i < n; ++i)
-        exp[i] = MIN(exp[i], exp1[i]);
+        expTarget[i] = MIN(exp[i], exp1[i]);
 }
 
 
@@ -281,7 +281,7 @@ exponent_sum_square_error_sse2(uint8_t *exp0, uint8_t *exp1, int ncoefs)
 
     for (i = 0; i < (ncoefs & ~15); i+=16) {
         __m128i vexp = _mm_loadu_si128((__m128i*)&exp0[i]);
-        __m128i vexp2 = _mm_load_si128((__m128i*)&exp1[i]);
+        __m128i vexp2 = _mm_loadu_si128((__m128i*)&exp1[i]);
 #if 0
         //safer but needed?
         __m128i vexphi = _mm_unpackhi_epi8(vexp, vzero);

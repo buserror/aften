@@ -34,7 +34,7 @@
 
 
 void
-exponent_min_mmx(uint8_t *exp, uint8_t *exp1, int n)
+exponent_min_mmx(uint8_t *expTarget, uint8_t *exp, uint8_t *exp1, int n)
 {
     int i;
 
@@ -45,29 +45,29 @@ exponent_min_mmx(uint8_t *exp, uint8_t *exp1, int n)
         vexp = _mm_andnot_si64(vmask, vexp);
         vexp1 = _mm_and_si64(vmask, vexp1);
         vexp = _mm_or_si64(vexp, vexp1);
-        *(__m64*)&exp[i] = vexp;
+        *(__m64*)&expTarget[i] = vexp;
     }
     switch (n & 7) {
     case 7:
-        exp[i] = MIN(exp[i], exp1[i]);
+        expTarget[i] = MIN(exp[i], exp1[i]);
         ++i;
     case 6:
-        exp[i] = MIN(exp[i], exp1[i]);
+        expTarget[i] = MIN(exp[i], exp1[i]);
         ++i;
     case 5:
-        exp[i] = MIN(exp[i], exp1[i]);
+        expTarget[i] = MIN(exp[i], exp1[i]);
         ++i;
     case 4:
-        exp[i] = MIN(exp[i], exp1[i]);
+        expTarget[i] = MIN(exp[i], exp1[i]);
         ++i;
     case 3:
-        exp[i] = MIN(exp[i], exp1[i]);
+        expTarget[i] = MIN(exp[i], exp1[i]);
         ++i;
     case 2:
-        exp[i] = MIN(exp[i], exp1[i]);
+        expTarget[i] = MIN(exp[i], exp1[i]);
         ++i;
     case 1:
-        exp[i] = MIN(exp[i], exp1[i]);
+        expTarget[i] = MIN(exp[i], exp1[i]);
     case 0:
         ;
     }

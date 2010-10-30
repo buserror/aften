@@ -44,7 +44,7 @@ extern uint16_t expstr_set_bits[A52_EXPSTR_SETS][256];
 typedef struct A52ExponentFunctions {
 
     /** Set exp[i] to min(exp[i], exp1[i]) */
-    void (*exponent_min)(uint8_t *exp, uint8_t *exp1, int n);
+    void (*exponent_min)(uint8_t *expTarget, uint8_t *exp, uint8_t *exp1, int n);
 
     /**
      * Update the exponents so that they are the ones the decoder will decode.
