@@ -230,19 +230,19 @@ static void
 extract_exponents(A52ThreadContext *tctx)
 {
     A52Frame *frame = &tctx->frame;
-    A52Block *block;
     int all_channels = tctx->ctx->n_all_channels;
     int blk, ch, j;
-    uint32_t v1, v2;
 
     for (ch = 0; ch < all_channels; ch++) {
         for (blk = 0; blk < A52_NUM_BLOCKS; blk++) {
-            block = &frame->blocks[blk];
+            A52Block* block = &frame->blocks[blk];
+			uint8_t* currentExp = block->exp[ch];
+			FLOAT* currentCoef = block->mdct_coef[ch];
             for (j = 0; j < 256; j += 2) {
-                v1 = (uint32_t)AFT_FABS(block->mdct_coef[ch][j  ] * FCONST(16777216.0));
-                v2 = (uint32_t)AFT_FABS(block->mdct_coef[ch][j+1] * FCONST(16777216.0));
-                block->exp[ch][j  ] = (v1 == 0)? 24 : 23 - log2i(v1);
-                block->exp[ch][j+1] = (v2 == 0)? 24 : 23 - log2i(v2);
+                uint32_t v1 = (uint32_t)AFT_FABS(currentCoef[j  ] * FCONST(16777216.0));
+                uint32_t v2 = (uint32_t)AFT_FABS(currentCoef[j+1] * FCONST(16777216.0));
+                currentExp[j  ] = (v1 == 0)? 24 : 23 - log2i(v1);
+                currentExp[j+1] = (v2 == 0)? 24 : 23 - log2i(v2);
             }
         }
     }
