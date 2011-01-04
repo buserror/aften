@@ -16,7 +16,6 @@ Aften TODO list
 - Better error logging for libaften
 - pkg-config support or alike
 - Channel layout support in PCM decoder
-- Investigate claims of channel cross-contamination when rematrixing is used
 
 Aften Changelog
 ---------------
@@ -39,6 +38,7 @@ version SVN : current
 - changed API to create a new exponent strategy decision with better quality
   and more flexibility
 - rearranged code structure of SIMD optimizations
+- improved stereo rematrixing decision
 
 version 0.08 :
 - fixed piped input from FFmpeg
