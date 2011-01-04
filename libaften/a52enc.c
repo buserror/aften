@@ -1192,12 +1192,12 @@ calc_rematrixing(A52ThreadContext *tctx)
                 rt = block->mdct_coef[1][i];
                 sum[bnd][0] += lt * lt;
                 sum[bnd][1] += rt * rt;
-                sum[bnd][2] += (lt + rt) * (lt + rt) / FCONST(4.0);
-                sum[bnd][3] += (lt - rt) * (lt - rt) / FCONST(4.0);
+                sum[bnd][2] += (lt + rt) * (lt + rt);
+                sum[bnd][3] += (lt - rt) * (lt - rt);
             }
         }
         // compare sums to determine if rematrixing is used for this band
-        if (sum[bnd][0]+sum[bnd][1] > (sum[bnd][2]+sum[bnd][3])/2.0) {
+        if (MIN(sum[bnd][2], sum[bnd][3]) < MIN(sum[bnd][0], sum[bnd][1])) {
             frame->rematflg[bnd] = 1;
             // apply rematrixing in this band for all blocks
             for (blk = 0; blk < A52_NUM_BLOCKS; blk++) {
