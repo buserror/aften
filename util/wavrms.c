@@ -64,7 +64,7 @@ static void
 print_intro(FILE *stream)
 {
     fprintf(stream, "\nWavRMS: utility program to calculate AC-3 dialnorm.\n"
-                    "(c) 2006-2007 Justin Ruggles, et al.\n\n");
+                    "(c) 2006-2011 Justin Ruggles, et al.\n\n");
 }
 
 static void
