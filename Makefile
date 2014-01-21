@@ -88,10 +88,10 @@ ${OBJ}/%.o : %.c
 .PHONY: install clean all
 
 install:
-	mkdir -p ${DESTDIR}/lib
+	mkdir -p ${DESTDIR}/bin ${DESTDIR}/lib ${DESTDIR}/include/aften
 	cp -a ${LIB}/* ${DESTDIR}/lib/
-	mkdir -p ${DESTDIR}/include/aften
 	cp pcm/*.h libaften/*.h ${DESTDIR}/include/aften
+	cp ${BIN}/* ${DESTDIR}/bin/
 
 clean:
 	rm -rf ${BUILD}
